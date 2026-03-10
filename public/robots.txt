@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Disallow: /quiet-entry/7m4q9x2k/

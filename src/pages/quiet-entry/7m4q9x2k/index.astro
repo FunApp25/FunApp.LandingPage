@@ -1,0 +1,44 @@
+﻿---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Contact from "../../../components/Contact.astro";
+import FAQ from "../../../components/FAQ.astro";
+import Footer from "../../../components/Footer.astro";
+import Header from "../../../components/Header.astro";
+import Hero from "../../../components/Hero.astro";
+import HowItWorks from "../../../components/HowItWorks.astro";
+import Research from "../../../components/Research.astro";
+import {
+  contactDetails,
+  faqItems,
+  footerYear,
+  navLinks,
+  processSteps,
+  researchTopics,
+} from "../../../data/site";
+---
+
+<BaseLayout
+  title="FunApp | Shared time, designed with care"
+  description="FunApp is a research-led concept exploring how design can make shared experiences calmer, richer, and more human."
+  robots="noindex, nofollow, noarchive"
+>
+  <Header links={navLinks} />
+
+  <main>
+    <Hero
+      eyebrow="Research-led social design"
+      lineOne="Shared time becomes"
+      lineTwo="deeper by design."
+      description="FunApp studies how people find one another, move through places, and build rituals worth returning to. The result is a calmer approach to shaping shared experiences that feel generous, social, and lasting."
+      ctaLabel="Learn how it works"
+      ctaHref="#how-it-works"
+    />
+    <HowItWorks steps={processSteps} />
+    <Research topics={researchTopics} />
+    <FAQ items={faqItems} />
+    <Contact details={contactDetails} />
+  </main>
+
+  <Footer links={navLinks} year={footerYear} />
+</BaseLayout>
+
