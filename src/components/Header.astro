@@ -1,0 +1,85 @@
+﻿---
+import BrandMark from "./BrandMark.astro";
+import type { NavLink } from "../data/site";
+
+interface Props {
+  links: NavLink[];
+}
+
+const { links } = Astro.props;
+const leftLinks = links.slice(0, 2);
+const rightLinks = links.slice(2);
+---
+
+<header class="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 md:px-6">
+  <div class="mx-auto max-w-[74rem]">
+    <div class="nav-shell hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-8">
+      <nav class="flex items-center gap-6 lg:gap-8" aria-label="Primary">
+        {
+          leftLinks.map((link) => (
+            <a href={link.href} class="nav-link">
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="justify-self-center">
+        <BrandMark />
+      </div>
+
+      <nav class="flex items-center justify-end gap-6 lg:gap-8" aria-label="Secondary">
+        {
+          rightLinks.map((link) => (
+            <a href={link.href} class="nav-link">
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div class="nav-shell grid grid-cols-[2.75rem_1fr_auto] items-center gap-3 md:hidden">
+      <span class="h-11 w-11" aria-hidden="true"></span>
+      <div class="justify-self-center">
+        <BrandMark />
+      </div>
+      <details class="relative">
+        <summary class="flex h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/12 bg-white/6 px-3 text-[0.72rem] font-medium uppercase tracking-[0.22em] text-[var(--text)]">
+          Menu
+        </summary>
+        <div class="absolute right-0 top-full mt-3 w-[16rem] overflow-hidden rounded-[1.4rem] border border-white/12 bg-[rgba(17,10,24,0.94)] p-3 shadow-[0_22px_65px_rgba(0,0,0,0.32)] backdrop-blur-xl">
+          <nav class="flex flex-col" aria-label="Mobile navigation" data-mobile-nav>
+            {
+              links.map((link) => (
+                <a
+                  href={link.href}
+                  class="rounded-2xl px-4 py-3 text-sm font-medium text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)]"
+                  data-mobile-nav-link
+                >
+                  {link.label}
+                </a>
+              ))
+            }
+          </nav>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<script>
+  const mobileNavs = document.querySelectorAll("[data-mobile-nav]");
+  for (const nav of mobileNavs) {
+    nav.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!target.closest("[data-mobile-nav-link]")) return;
+      const details = nav.closest("details");
+      if (details instanceof HTMLDetailsElement) {
+        details.open = false;
+      }
+    });
+  }
+</script>
+

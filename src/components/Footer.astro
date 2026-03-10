@@ -1,0 +1,29 @@
+﻿---
+import BrandMark from "./BrandMark.astro";
+import type { NavLink } from "../data/site";
+
+interface Props {
+  links: NavLink[];
+  year: number;
+}
+
+const { links, year } = Astro.props;
+---
+
+<footer class="px-4 pb-8 pt-4 sm:px-6 sm:pb-10 lg:px-8">
+  <div class="mx-auto max-w-[72rem] border-t border-[var(--line)] pt-7">
+    <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <BrandMark />
+      <nav class="flex flex-wrap gap-x-5 gap-y-3" aria-label="Footer">
+        {
+          links.map((link) => (
+            <a href={link.href} class="nav-link">
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+    <p class="mt-6 text-sm text-[var(--muted)]">&copy; {year} FunApp. All rights reserved.</p>
+  </div>
+</footer>

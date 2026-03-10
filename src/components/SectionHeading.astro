@@ -1,0 +1,36 @@
+﻿---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  intro?: string;
+  align?: "left" | "center";
+  invert?: boolean;
+}
+
+const { eyebrow, title, intro, align = "left", invert = false } = Astro.props;
+const centered = align === "center";
+const headingTone = invert ? "text-[#231729]" : "text-[var(--text)]";
+const introTone = invert ? "text-[rgba(35,23,41,0.76)]" : "text-[var(--muted)]";
+const eyebrowTone = invert ? "text-[rgba(35,23,41,0.64)]" : "text-[rgba(245,239,231,0.64)]";
+---
+
+<div class:list={["max-w-3xl", centered && "mx-auto text-center"]}>
+  {
+    eyebrow && (
+      <div class:list={["eyebrow", eyebrowTone, centered && "justify-center"]}>
+        <span class="eyebrow-line" aria-hidden="true"></span>
+        <span>{eyebrow}</span>
+      </div>
+    )
+  }
+  <h2 class:list={["mt-6 text-balance text-4xl sm:text-5xl lg:text-[3.45rem]", headingTone]}>
+    {title}
+  </h2>
+  {
+    intro && (
+      <p class:list={["mt-5 text-base leading-8 sm:text-lg", introTone, centered ? "mx-auto max-w-2xl" : "max-w-2xl"]}>
+        {intro}
+      </p>
+    )
+  }
+</div>

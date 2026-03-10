@@ -1,0 +1,60 @@
+﻿---
+import SectionHeading from "./SectionHeading.astro";
+import type { ResearchTopic } from "../data/site";
+
+interface Props {
+  topics: ResearchTopic[];
+}
+
+const { topics } = Astro.props;
+const featuredTopic = topics[0];
+const supportingTopics = topics.slice(1);
+---
+
+<section id="research" class="section-divider scroll-mt-32 px-4 py-18 sm:px-6 sm:py-22 lg:px-8 lg:py-26">
+  <div class="mx-auto max-w-[72rem]">
+    <SectionHeading
+      eyebrow="Research"
+      title="Themes shaping the next chapter."
+      intro="These areas keep the work grounded in behavior, atmosphere, and the quiet choices that help people feel more connected."
+    />
+
+    <div class="mt-14 grid gap-4 lg:grid-cols-[1.08fr_0.92fr] lg:gap-5">
+      <article class="surface-card surface-card-strong relative overflow-hidden p-7 sm:p-8">
+        <div class="absolute right-0 top-0 h-40 w-40 rounded-full bg-[radial-gradient(circle,_rgba(124,73,188,0.32),_transparent_72%)]" aria-hidden="true"></div>
+        <p class="text-[0.7rem] uppercase tracking-[0.22em] text-[rgba(245,239,231,0.48)]">{featuredTopic.label}</p>
+        <h3 class="mt-5 max-w-[18ch] text-[2.35rem] leading-[1.02] text-[var(--text)] sm:text-[2.85rem]">{featuredTopic.title}</h3>
+        <p class="mt-5 max-w-[34rem] text-base leading-8 text-[var(--muted)] sm:text-lg">{featuredTopic.description}</p>
+        <ul class="mt-8 grid gap-3 text-sm text-[var(--text)] sm:grid-cols-3 sm:text-[0.95rem]">
+          {
+            featuredTopic.points.map((point) => (
+              <li class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">{point}</li>
+            ))
+          }
+        </ul>
+      </article>
+
+      <div class="grid gap-4 lg:gap-5">
+        {
+          supportingTopics.map((topic) => (
+            <article class="surface-card p-6 sm:p-7">
+              <p class="text-[0.7rem] uppercase tracking-[0.22em] text-[rgba(245,239,231,0.48)]">{topic.label}</p>
+              <h3 class="mt-5 text-[2rem] leading-[1.04] text-[var(--text)] sm:text-[2.25rem]">{topic.title}</h3>
+              <p class="mt-4 text-base leading-8 text-[var(--muted)]">{topic.description}</p>
+              <ul class="mt-6 grid gap-2 text-sm text-[var(--text)] sm:grid-cols-3 lg:grid-cols-1">
+                {
+                  topic.points.map((point) => (
+                    <li class="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/4 px-3 py-3">
+                      <span class="h-2 w-2 rounded-full bg-[var(--accent-warm)]" aria-hidden="true"></span>
+                      <span>{point}</span>
+                    </li>
+                  ))
+                }
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

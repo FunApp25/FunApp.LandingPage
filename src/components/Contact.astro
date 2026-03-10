@@ -1,0 +1,47 @@
+﻿---
+import SectionHeading from "./SectionHeading.astro";
+import type { ContactDetail } from "../data/site";
+
+interface Props {
+  details: ContactDetail[];
+}
+
+const { details } = Astro.props;
+const email = details[0]?.value ?? "hello@funapp.studio";
+---
+
+<section id="contact" class="section-divider scroll-mt-32 px-4 py-18 sm:px-6 sm:py-22 lg:px-8 lg:py-26">
+  <div class="mx-auto max-w-[72rem]">
+    <div class="contact-panel relative overflow-hidden px-6 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
+      <div class="absolute right-[-3rem] top-[-3rem] h-40 w-40 rounded-full bg-[radial-gradient(circle,_rgba(236,108,55,0.24),_transparent_70%)]" aria-hidden="true"></div>
+      <div class="absolute bottom-[-2rem] left-[-2rem] h-44 w-44 rounded-full bg-[radial-gradient(circle,_rgba(124,73,188,0.18),_transparent_72%)]" aria-hidden="true"></div>
+
+      <div class="relative z-10">
+        <SectionHeading
+          eyebrow="Contact"
+          title="Start a thoughtful conversation."
+          intro="If you are exploring hospitality, social rituals, or research-led product work, a short note is the best place to begin."
+          align="center"
+          invert={true}
+        />
+
+        <div class="mx-auto mt-12 grid max-w-5xl gap-4 md:grid-cols-3">
+          {
+            details.map((detail) => (
+              <div class="rounded-[1.6rem] border border-[rgba(35,23,41,0.08)] bg-white/60 p-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] backdrop-blur">
+                <p class="text-[0.7rem] uppercase tracking-[0.22em] text-[rgba(35,23,41,0.52)]">{detail.label}</p>
+                <p class="mt-4 text-base leading-7 text-[rgba(35,23,41,0.82)]">{detail.value}</p>
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="mt-10 flex justify-center">
+          <a href={`mailto:${email}`} class="contact-link">
+            {email}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

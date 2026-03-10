@@ -1,0 +1,36 @@
+﻿---
+import SectionHeading from "./SectionHeading.astro";
+import type { FaqItem } from "../data/site";
+
+interface Props {
+  items: FaqItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<section id="faq" class="section-divider scroll-mt-32 px-4 py-18 sm:px-6 sm:py-22 lg:px-8 lg:py-26">
+  <div class="mx-auto grid max-w-[72rem] gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+    <div>
+      <SectionHeading
+        eyebrow="FAQ"
+        title="Straight answers, kept brief."
+        intro="A few common questions about the direction, the research, and how to get in touch."
+      />
+    </div>
+
+    <div class="space-y-3">
+      {
+        items.map((item) => (
+          <details class="faq-item group">
+            <summary class="faq-summary">
+              <span class="pr-4 text-lg font-medium leading-7 text-[var(--text)] sm:text-[1.15rem]">{item.question}</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </summary>
+            <p class="pb-6 pr-12 text-base leading-8 text-[var(--muted)]">{item.answer}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

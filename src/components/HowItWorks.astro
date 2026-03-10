@@ -1,0 +1,39 @@
+﻿---
+import SectionHeading from "./SectionHeading.astro";
+import type { ProcessStep } from "../data/site";
+
+interface Props {
+  steps: ProcessStep[];
+}
+
+const { steps } = Astro.props;
+---
+
+<section id="how-it-works" class="section-divider scroll-mt-32 px-4 py-18 sm:px-6 sm:py-22 lg:px-8 lg:py-26">
+  <div class="mx-auto max-w-[72rem]">
+    <SectionHeading
+      eyebrow="How it works"
+      title="A clear process that stays close to real life."
+      intro="The work moves in a simple loop so insight, design, and testing remain connected instead of drifting apart."
+    />
+
+    <div class="mt-14 grid gap-4 lg:grid-cols-3 lg:gap-5">
+      {
+        steps.map((step) => (
+          <article class="surface-card flex h-full flex-col justify-between p-6 sm:p-7">
+            <div class="flex items-center justify-between gap-4">
+              <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-medium text-[var(--text)]">
+                {step.number}
+              </span>
+              <span class="text-[0.7rem] uppercase tracking-[0.22em] text-[rgba(245,239,231,0.45)]">Step</span>
+            </div>
+            <div class="mt-10">
+              <h3 class="text-2xl text-[var(--text)]">{step.title}</h3>
+              <p class="mt-4 text-base leading-8 text-[var(--muted)]">{step.description}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

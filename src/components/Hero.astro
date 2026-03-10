@@ -1,0 +1,48 @@
+﻿---
+interface Props {
+  eyebrow: string;
+  lineOne: string;
+  lineTwo: string;
+  description: string;
+  ctaLabel: string;
+  ctaHref: string;
+}
+
+const { eyebrow, lineOne, lineTwo, description, ctaLabel, ctaHref } = Astro.props;
+---
+
+<section
+  id="home"
+  class="relative isolate flex min-h-[100svh] scroll-mt-32 items-center overflow-hidden px-4 pb-18 pt-32 sm:px-6 sm:pb-20 sm:pt-36 lg:px-8"
+>
+  <div class="blob blob-left hidden md:block" aria-hidden="true"></div>
+  <div class="blob blob-right hidden md:block" aria-hidden="true"></div>
+  <div class="blob blob-bottom hidden lg:block" aria-hidden="true"></div>
+  <div class="absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_center,_rgba(139,94,209,0.18),_transparent_72%)]" aria-hidden="true"></div>
+  <div class="absolute inset-x-0 bottom-0 h-56 bg-[linear-gradient(180deg,_transparent,_rgba(10,7,15,0.18))]" aria-hidden="true"></div>
+
+  <div class="relative z-10 mx-auto flex w-full max-w-[72rem] flex-col items-center">
+    <div class="max-w-[58rem] text-center">
+      <div class="eyebrow mx-auto justify-center text-[rgba(245,239,231,0.68)]">
+        <span class="eyebrow-line" aria-hidden="true"></span>
+        <span>{eyebrow}</span>
+      </div>
+
+      <h1 class="hero-display mt-8 text-balance text-[var(--text)] sm:mt-10">
+        <span class="block">{lineOne}</span>
+        <em class="mt-1 block font-normal italic text-[var(--blob-neutral)]">{lineTwo}</em>
+      </h1>
+
+      <p class="mx-auto mt-8 max-w-[44rem] text-base leading-8 text-[var(--muted)] sm:text-lg lg:text-[1.2rem]">
+        {description}
+      </p>
+
+      <div class="mt-9 flex justify-center">
+        <a href={ctaHref} class="hero-link">
+          <span>{ctaLabel}</span>
+          <span aria-hidden="true">↘</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
