@@ -37,11 +37,21 @@ puro flutter gen-l10n
 
 Puro records the local selection in `.puro.json`. That file is currently excluded locally rather than committed, so each fresh checkout must create or select the environment.
 
+VS Code and VSCodium users should also generate local editor SDK settings:
+
+```bash
+puro use fun-app-landing --vscode --no-intellij
+```
+
+Those machine-specific settings remain ignored.
+
 ## Run Flutter Web
 
 ```bash
 puro flutter run -d chrome
 ```
+
+VS Code and VSCodium users can also launch `lib/main.dart` on Chrome in debug mode through the committed **Fun App Landing Page** run configuration.
 
 ## Localization
 
