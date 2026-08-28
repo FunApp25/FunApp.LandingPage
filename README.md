@@ -11,7 +11,10 @@ This repository owns the public Fun App website and landing page. The site is be
 ## Current repository state
 
 - A web-only Flutter project exists at the repository root with package name `fun_app_landing_page`.
-- The generated minimal Flutter UI is temporary bootstrap code, not the Fun App landing page.
+- A temporary Flutter application shell now uses Fun App branding and the shared visual-language foundation; it is not the redesigned landing page.
+- Reusable branding assets live under `assets/branding/`, with active widget paths centralized in project code.
+- The Flutter Web scaffold uses the Fun App symbol for its favicon and PWA icon artwork.
+- Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
 - The existing Astro implementation remains under `src/` while the migration proceeds.
 - GitHub Pages still builds and deploys Astro through `.github/workflows/deploy.yml`.
 - Production has not switched to the Flutter build.
@@ -46,12 +49,14 @@ puro flutter test
 puro flutter build web
 ```
 
-Run `puro flutter test` once tests exist. The current empty Flutter template does not include a test suite.
+The current widget tests cover the active application shell, branding, theme, and representative narrow and wide layouts.
 
 ## Repository structure
 
 ```text
 lib/                         Flutter application source
+assets/branding/             Shared Fun App logos and decorative brand shapes
+test/                        Flutter widget tests for active behavior
 web/                         Generated Flutter Web host scaffold
 src/                         Existing Astro implementation during migration
 public/                      Existing Astro public files

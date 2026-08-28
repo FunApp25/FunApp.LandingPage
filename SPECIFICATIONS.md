@@ -24,7 +24,11 @@ Current implementation is evidence of repository state, not automatically a perm
 - Flutter targets web only. Mobile and desktop platform scaffolds are out of scope.
 - Flutter and Dart commands use Puro environment `fun-app-landing`, which tracks Flutter stable.
 - Migration from Astro is incremental. The existing Astro source remains temporarily until replacement work is complete.
-- The generated minimal Flutter application is temporary bootstrap code, not the product UI.
+- The current Flutter application is a temporary branded bootstrap shell, not the redesigned product UI.
+- Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
+- The Flutter shell uses the platform-neutral Fun App color, typography, sizing, and Material 3 theme foundation adapted from the main Fun App application.
+- The Flutter Web host scaffold uses the Fun App symbol for favicon and PWA icon artwork.
+- Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
 - GitHub Pages is the current production hosting and deployment target at `https://funapp.world`.
 - The current GitHub Pages workflow still builds Astro and publishes `dist/`; Flutter is not deployed to production yet.
 
@@ -61,7 +65,9 @@ Current implementation is evidence of repository state, not automatically a perm
 
 The repository is intentionally transitional:
 
-- `lib/` contains the Flutter application bootstrap.
+- `lib/` contains the Flutter bootstrap and active presentation foundation.
+- `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
+- `test/` contains tests for active Flutter behavior.
 - `web/` contains the generated Flutter Web host scaffold.
 - `src/`, Astro configuration, npm files, and `public/` contain the still-active Astro implementation.
 - `.github/workflows/deploy.yml` remains the Astro GitHub Pages pipeline.
@@ -100,7 +106,7 @@ Do not introduce layers, folders, abstractions, or dependencies before active co
 - Define reusable design values centrally when a real design system is introduced.
 - Keyboard interaction, focus visibility, reduced motion, meaningful controls, and appropriate Flutter web semantics are part of implementation quality.
 
-Exact breakpoints, components, theme tokens, and visual behavior remain open until the redesign establishes them.
+The active presentation foundation centralizes established Fun App color, typography, sizing, and Material 3 theme values. Exact breakpoints, redesigned components, and final visual behavior remain open until the redesign establishes them.
 
 ## 8. User input and future backend direction
 
@@ -181,7 +187,7 @@ puro flutter test
 puro flutter build web
 ```
 
-Run `puro flutter test` when tests exist. Verification should grow with implemented behavior, not through placeholder tests or speculative tooling.
+The active widget test suite covers the current shell. Verification should grow with implemented behavior, not through placeholder tests or speculative tooling.
 
 The project tracks Flutter stable through Puro rather than establishing a permanent exact Flutter version pin.
 
