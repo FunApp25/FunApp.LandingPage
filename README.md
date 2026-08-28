@@ -15,6 +15,7 @@ This repository owns the public Fun App website and landing page. The site is be
 - Reusable branding assets live under `assets/branding/`, with active widget paths centralized in project code.
 - The Flutter Web scaffold uses the Fun App symbol for its favicon and PWA icon artwork.
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
+- Flutter localization supports English, Spanish, Welsh, and Belarusian, with English as the source and fallback language.
 - The existing Astro implementation remains under `src/` while the migration proceeds.
 - GitHub Pages still builds and deploys Astro through `.github/workflows/deploy.yml`.
 - Production has not switched to the Flutter build.
@@ -31,6 +32,7 @@ For a fresh checkout:
 puro create fun-app-landing stable
 puro use fun-app-landing
 puro flutter pub get
+puro flutter gen-l10n
 ```
 
 Puro records the local selection in `.puro.json`. That file is currently excluded locally rather than committed, so each fresh checkout must create or select the environment.
@@ -41,9 +43,22 @@ Puro records the local selection in `.puro.json`. That file is currently exclude
 puro flutter run -d chrome
 ```
 
+## Localization
+
+Localization source files live under `lib/l10n/` using Flutter ARB generation configured by `l10n.yaml`. English (`en`) is the source/default language; Spanish (`es`), Welsh (`cy`), and Belarusian (`be`) are also supported.
+
+Regenerate localization output after changing an ARB file:
+
+```bash
+puro flutter gen-l10n
+```
+
+Generated localization Dart files are local build inputs and are not committed.
+
 ## Validation
 
 ```bash
+puro flutter gen-l10n
 puro flutter analyze
 puro flutter test
 puro flutter build web
@@ -55,9 +70,11 @@ The current widget tests cover the active application shell, branding, theme, an
 
 ```text
 lib/                         Flutter application source
+lib/l10n/                    Localization ARB source files
 assets/branding/             Shared Fun App logos and decorative brand shapes
 test/                        Flutter widget tests for active behavior
 web/                         Generated Flutter Web host scaffold
+l10n.yaml                    Flutter localization generation configuration
 src/                         Existing Astro implementation during migration
 public/                      Existing Astro public files
 .github/workflows/deploy.yml Current Astro GitHub Pages workflow

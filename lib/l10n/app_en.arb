@@ -1,0 +1,11 @@
+{
+  "@@locale": "en",
+  "appTitle": "Fun App Landing Page",
+  "@appTitle": {
+    "description": "User-facing title for the Fun App landing-page application."
+  },
+  "brandName": "Fun App",
+  "@brandName": {
+    "description": "Accessible name for the Fun App brand wordmark."
+  }
+}

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/l10n/app_localizations.dart';
+import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing_page.dart';
 
@@ -7,14 +9,28 @@ final class FunAppLandingPageApp extends StatelessWidget {
   /// Creates the root landing-page application widget.
   const FunAppLandingPageApp({super.key});
 
-  /// Browser/application title used by the current Flutter shell.
-  static const title = 'Fun App Landing Page';
-
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: title,
+    onGenerateTitle: (context) => context.l10n.appTitle,
     theme: appTheme,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    localeListResolutionCallback: _resolveLocaleList,
     home: const LandingPage(),
   );
+}
+
+Locale _resolveLocaleList(
+  List<Locale>? preferredLocales,
+  Iterable<Locale> supportedLocales,
+) {
+  final browserLocales = preferredLocales ?? const <Locale>[];
+  final hasSupportedLocale = browserLocales.any(
+    AppLocalizations.delegate.isSupported,
+  );
+
+  return hasSupportedLocale
+      ? basicLocaleListResolution(browserLocales, supportedLocales)
+      : const Locale('en');
 }

@@ -9,8 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_svg: ^2.3.0
   google_fonts: ^8.2.1
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
@@ -22,6 +25,7 @@ flutter:
   assets:
     - assets/branding/logos/
     - assets/branding/shapes/
+  generate: true
   uses-material-design: true
 
 flutter_launcher_icons:

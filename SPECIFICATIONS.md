@@ -29,6 +29,7 @@ Current implementation is evidence of repository state, not automatically a perm
 - The Flutter shell uses the platform-neutral Fun App color, typography, sizing, and Material 3 theme foundation adapted from the main Fun App application.
 - The Flutter Web host scaffold uses the Fun App symbol for favicon and PWA icon artwork.
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
+- Flutter generated localization supports English, Spanish, Welsh, and Belarusian; English is the source and fallback language.
 - GitHub Pages is the current production hosting and deployment target at `https://funapp.world`.
 - The current GitHub Pages workflow still builds Astro and publishes `dist/`; Flutter is not deployed to production yet.
 
@@ -66,6 +67,7 @@ Current implementation is evidence of repository state, not automatically a perm
 The repository is intentionally transitional:
 
 - `lib/` contains the Flutter bootstrap and active presentation foundation.
+- `lib/l10n/` contains committed ARB localization inputs; generated localization Dart files remain uncommitted.
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the generated Flutter Web host scaffold.
@@ -107,6 +109,15 @@ Do not introduce layers, folders, abstractions, or dependencies before active co
 - Keyboard interaction, focus visibility, reduced motion, meaningful controls, and appropriate Flutter web semantics are part of implementation quality.
 
 The active presentation foundation centralizes established Fun App color, typography, sizing, and Material 3 theme values. Exact breakpoints, redesigned components, and final visual behavior remain open until the redesign establishes them.
+
+### Localization baseline
+
+- Supported locale identifiers are English (`en`), Spanish (`es`), Welsh (`cy`), and Belarusian (`be`). English is the authoritative source language and unsupported locales fall back to English.
+- Flutter's generated localization system uses ARB inputs under `lib/l10n/`, configured through `l10n.yaml`.
+- Locale negotiation follows the browser or platform locale. The application does not force a locale.
+- No language selector or persisted manual locale choice exists yet.
+- User-facing Flutter copy must come from generated localizations rather than hardcoded presentation strings. New source copy and its supported translations belong in the same implementation scope.
+- Locale-specific product and marketing copy remains subject to product and translation review as content expands.
 
 ## 8. User input and future backend direction
 
@@ -182,6 +193,7 @@ puro dart ...
 Current baseline verification is:
 
 ```bash
+puro flutter gen-l10n
 puro flutter analyze
 puro flutter test
 puro flutter build web
