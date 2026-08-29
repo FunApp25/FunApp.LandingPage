@@ -7,5 +7,49 @@
   "brandName": "Fun App",
   "@brandName": {
     "description": "Accessible name for the Fun App brand wordmark."
+  },
+  "landingHeaderOurBelief": "OUR BELIEF",
+  "@landingHeaderOurBelief": {
+    "description": "First visual navigation label in the landing-page header."
+  },
+  "landingHeaderMembership": "MEMBERSHIP",
+  "@landingHeaderMembership": {
+    "description": "Membership visual navigation label in the landing-page header."
+  },
+  "landingHeaderFoundingFriends": "FOUNDING FRIENDS",
+  "@landingHeaderFoundingFriends": {
+    "description": "Founding Friends visual navigation label in the landing-page header."
+  },
+  "landingHeaderForVenues": "FOR VENUES",
+  "@landingHeaderForVenues": {
+    "description": "Venues visual navigation label in the landing-page header."
+  },
+  "landingHeaderContactUs": "Contact Us",
+  "@landingHeaderContactUs": {
+    "description": "Visual contact call to action whose destination is not yet defined."
+  },
+  "landingHeroEyebrow": "A FRIENDLIER WAY TO CONNECT",
+  "@landingHeroEyebrow": {
+    "description": "Uppercase eyebrow above the landing-page hero headline."
+  },
+  "landingHeroHeadlineLeading": "Fun App started from a belief that creating connections should be",
+  "@landingHeroHeadlineLeading": {
+    "description": "Regular-style leading portion of the hero headline."
+  },
+  "landingHeroHeadlineEmphasis": "SO much better",
+  "@landingHeroHeadlineEmphasis": {
+    "description": "Italic emphasized ending of the hero headline."
+  },
+  "landingHeroSupporting": "Welcome to a friendlier future. Welcome to Fun App. Fun App believes friendship, group and dating platforms can be SO much better.",
+  "@landingHeroSupporting": {
+    "description": "Supporting paragraph beneath the hero headline."
+  },
+  "landingHeroJoinWaitlist": "Join the Waitlist",
+  "@landingHeroJoinWaitlist": {
+    "description": "Visual waitlist call to action whose destination is not yet defined."
+  },
+  "landingHeroImageDescription": "Three smiling people looking toward the camera.",
+  "@landingHeroImageDescription": {
+    "description": "Concise semantic description of the hero photograph."
   }
 }

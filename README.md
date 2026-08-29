@@ -14,10 +14,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 
 - The active web-only Flutter package is `fun_app_landing_page`.
 - The complete Flutter section skeleton for Figma `Landing Page - V1` is in
-  place. Detailed content and component implementation will replace its
-  temporary section placeholders incrementally.
+  place. The production header and hero now replace their temporary
+  placeholders; the remaining sections will be implemented incrementally.
 - Reusable branding assets live under `assets/branding/`, with active widget
-  paths centralized in project code.
+  paths centralized in project code. Figma assets consumed by implemented
+  landing sections live under `assets/landing/`.
 - Flutter localization supports English, Spanish, Welsh, and Belarusian, with
   English as the source and fallback language.
 - Dart analysis follows the main Fun App Flutter project's
@@ -97,6 +98,7 @@ theme, and representative narrow and wide layouts.
 lib/                         Active Flutter application source
 lib/l10n/                    Localization ARB source files
 assets/branding/             Shared Fun App logos and decorative brand shapes
+assets/landing/              Figma assets consumed by active landing sections
 test/                        Flutter widget tests for active behavior
 web/                         Flutter Web shell and web-root static inputs
 l10n.yaml                    Flutter localization generation configuration

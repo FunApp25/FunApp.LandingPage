@@ -86,6 +86,68 @@ abstract final class AppTextStyles {
     color: AppColors.textSecondary,
   );
 
+  /// Navigation label style from Figma header node `2190:1568`.
+  static final TextStyle landingHeaderNavigation = _manrope(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    height: 20 / 12,
+    letterSpacing: 0.96,
+    color: AppColors.textPrimary,
+  );
+
+  /// Compact call-to-action label from Figma header node `2190:1568`.
+  static final TextStyle landingHeaderCta = _manrope(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    height: 22 / 14,
+    color: AppColors.lightForeground,
+  );
+
+  /// Eyebrow label from Figma hero node `2190:1569`.
+  static final TextStyle landingHeroEyebrow = _manrope(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    height: 20 / 12,
+    letterSpacing: 0.96,
+    color: AppColors.blueMain,
+  );
+
+  /// Regular display treatment from Figma hero node `2190:1569`.
+  static final TextStyle landingHeroHeadline = _instrumentSerif(
+    fontSize: 60,
+    fontWeight: FontWeight.w400,
+    height: 70 / 60,
+    letterSpacing: -1.8,
+    color: AppColors.textPrimary,
+  );
+
+  /// Italic orange emphasis from Figma hero node `2190:1569`.
+  static final TextStyle landingHeroHeadlineEmphasis = _instrumentSerif(
+    fontSize: 60,
+    fontWeight: FontWeight.w400,
+    fontStyle: FontStyle.italic,
+    height: 70 / 60,
+    letterSpacing: -1.8,
+    color: AppColors.warmOrange,
+  );
+
+  /// Supporting copy treatment from Figma hero node `2190:1569`.
+  static final TextStyle landingHeroSupporting = _manrope(
+    fontSize: 20,
+    fontWeight: FontWeight.w500,
+    height: 28 / 20,
+    letterSpacing: 0.4,
+    color: AppColors.bodyGray,
+  );
+
+  /// Prominent call-to-action label from Figma hero node `2190:1569`.
+  static final TextStyle landingHeroCta = _manrope(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    height: 24 / 16,
+    color: AppColors.lightForeground,
+  );
+
   /// Shared text theme composed from the active baseline tokens.
   static final TextTheme textTheme = TextTheme(
     titleLarge: titleLarge,
@@ -104,6 +166,8 @@ abstract final class AppTextStyles {
     required FontWeight fontWeight,
     required double height,
     required Color color,
+    double? letterSpacing,
+    FontStyle? fontStyle,
   }) {
     if (_usesTestFontFallback) {
       return TextStyle(
@@ -111,14 +175,18 @@ abstract final class AppTextStyles {
         fontFamilyFallback: const [bodyFontFamily],
         fontSize: fontSize,
         fontWeight: fontWeight,
+        fontStyle: fontStyle,
         height: height,
+        letterSpacing: letterSpacing,
         color: color,
       );
     } else {
       return GoogleFonts.manrope(
         fontSize: fontSize,
         fontWeight: fontWeight,
+        fontStyle: fontStyle,
         height: height,
+        letterSpacing: letterSpacing,
         color: color,
       );
     }
@@ -129,6 +197,8 @@ abstract final class AppTextStyles {
     required FontWeight fontWeight,
     required double height,
     required Color color,
+    double? letterSpacing,
+    FontStyle? fontStyle,
   }) {
     if (_usesTestFontFallback) {
       return TextStyle(
@@ -136,14 +206,18 @@ abstract final class AppTextStyles {
         fontFamilyFallback: const [temporaryHeadlineFontFamily],
         fontSize: fontSize,
         fontWeight: fontWeight,
+        fontStyle: fontStyle,
         height: height,
+        letterSpacing: letterSpacing,
         color: color,
       );
     } else {
       return GoogleFonts.instrumentSerif(
         fontSize: fontSize,
         fontWeight: fontWeight,
+        fontStyle: fontStyle,
         height: height,
+        letterSpacing: letterSpacing,
         color: color,
       );
     }

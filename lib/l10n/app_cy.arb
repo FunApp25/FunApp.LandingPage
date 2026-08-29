@@ -1,5 +1,16 @@
 {
   "@@locale": "cy",
   "appTitle": "Tudalen lanio Fun App",
-  "brandName": "Fun App"
+  "brandName": "Fun App",
+  "landingHeaderOurBelief": "EIN CRED",
+  "landingHeaderMembership": "AELODAETH",
+  "landingHeaderFoundingFriends": "CYFEILLION SEFYDLU",
+  "landingHeaderForVenues": "AR GYFER LLEOLIADAU",
+  "landingHeaderContactUs": "Cysylltwch â Ni",
+  "landingHeroEyebrow": "FFORDD FWY CYFEILLGAR O GYSYLLTU",
+  "landingHeroHeadlineLeading": "Dechreuodd Fun App o’r gred y dylai creu cysylltiadau fod",
+  "landingHeroHeadlineEmphasis": "GYMAINT yn well",
+  "landingHeroSupporting": "Croeso i ddyfodol mwy cyfeillgar. Croeso i Fun App. Mae Fun App yn credu y gall llwyfannau cyfeillgarwch, grwpiau a dyddio fod GYMAINT yn well.",
+  "landingHeroJoinWaitlist": "Ymunwch â’r Rhestr Aros",
+  "landingHeroImageDescription": "Mae tri pherson sy’n gwenu yn edrych tuag at y camera."
 }

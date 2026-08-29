@@ -1,5 +1,16 @@
 {
   "@@locale": "es",
   "appTitle": "Página de destino de Fun App",
-  "brandName": "Fun App"
+  "brandName": "Fun App",
+  "landingHeaderOurBelief": "NUESTRA CREENCIA",
+  "landingHeaderMembership": "MEMBRESÍA",
+  "landingHeaderFoundingFriends": "AMIGOS FUNDADORES",
+  "landingHeaderForVenues": "PARA ESTABLECIMIENTOS",
+  "landingHeaderContactUs": "Contáctanos",
+  "landingHeroEyebrow": "UNA FORMA MÁS AMABLE DE CONECTAR",
+  "landingHeroHeadlineLeading": "Fun App nació de la convicción de que crear conexiones debería ser",
+  "landingHeroHeadlineEmphasis": "MUCHO mejor",
+  "landingHeroSupporting": "Te damos la bienvenida a un futuro más amable. Te damos la bienvenida a Fun App. Fun App cree que las plataformas de amistad, grupos y citas pueden ser MUCHO mejores.",
+  "landingHeroJoinWaitlist": "Únete a la lista de espera",
+  "landingHeroImageDescription": "Tres personas sonríen mirando a la cámara."
 }

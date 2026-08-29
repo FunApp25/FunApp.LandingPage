@@ -14,7 +14,7 @@ void main() {
 
     expect(find.byType(LandingPage), findsOneWidget);
     expect(find.byType(FunAppLogo), findsOneWidget);
-    expect(find.byType(SvgPicture), findsOneWidget);
+    expect(find.byType(SvgPicture), findsNWidgets(3));
     expect(find.bySemanticsLabel('Fun App'), findsOneWidget);
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
@@ -48,12 +48,14 @@ void main() {
     expect(theme.scaffoldBackgroundColor, AppColors.scaffoldBackground);
     expect(theme.textTheme.bodyMedium?.color, AppColors.bodyGray);
 
-    final logo = tester.widget<SvgPicture>(find.byType(SvgPicture));
+    final logo = tester.widget<SvgPicture>(
+      find.byKey(const Key('funAppLogo')),
+    );
     expect(logo.key, const Key('funAppLogo'));
     expect(logo.bytesLoader, isA<SvgAssetLoader>());
     expect(
       (logo.bytesLoader as SvgAssetLoader).assetName,
-      AppAssets.funAppWordmarkBlack,
+      AppAssets.funAppLogoV2,
     );
   });
 
