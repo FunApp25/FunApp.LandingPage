@@ -29,8 +29,20 @@ abstract final class AppColors {
   /// Supporting red used for errors and destructive status.
   static const Color cherryRed = Color(0xFFCE0237);
 
-  /// Warm neutral background color for scaffold-level surfaces.
+  /// Historical app-era warm neutral retained for established brand uses.
   static const Color softSand = Color(0xFFECE1CE);
+
+  /// Warm beige surface used throughout the current landing-page design.
+  static const Color beigeAccent = Color(0xFFFAF0DD);
+
+  /// Bright yellow accent used by the current landing-page design.
+  static const Color yellowAccent = Color(0xFFFFE66D);
+
+  /// Strong blue accent used by the current landing-page design.
+  static const Color blueMain = Color(0xFF1E4DFF);
+
+  /// Neutral gray used for supporting landing-page body copy.
+  static const Color bodyGray = Color(0xFF656563);
 
   /// Light foreground for dark or saturated brand surfaces.
   static const Color lightForeground = Color(0xFFFFFFFF);
@@ -42,7 +54,7 @@ abstract final class AppColors {
   static const Color onPrimary = lightForeground;
 
   /// Secondary theme color used for warm supporting highlights.
-  static const Color secondary = sunnyYellow;
+  static const Color secondary = yellowAccent;
 
   /// Foreground color paired with the secondary color.
   static const Color onSecondary = warmCharcoal;
@@ -60,16 +72,16 @@ abstract final class AppColors {
   static const Color onError = lightForeground;
 
   /// Base surface color for cards and elevated containers.
-  static const Color surface = softSand;
+  static const Color surface = lightForeground;
 
   /// Default background color for scaffold-level surfaces.
-  static const Color scaffoldBackground = softSand;
+  static const Color scaffoldBackground = lightForeground;
 
   /// Default high-contrast text color.
   static const Color textPrimary = warmCharcoal;
 
   /// Secondary text color for supporting copy.
-  static const Color textSecondary = warmCharcoalAccent;
+  static const Color textSecondary = bodyGray;
 
   /// Neutral outline color for subtle separators and strokes.
   static const Color outline = warmCharcoalAccent;
@@ -78,5 +90,5 @@ abstract final class AppColors {
   static const Color inverseSurface = warmCharcoalAccent;
 
   /// Foreground color paired with inverse surfaces.
-  static const Color onInverseSurface = softSand;
+  static const Color onInverseSurface = lightForeground;
 }

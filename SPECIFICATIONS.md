@@ -24,9 +24,14 @@ Current implementation is evidence of repository state, not automatically a perm
 - Flutter targets web only. Mobile and desktop platform scaffolds are out of scope.
 - Flutter and Dart commands use Puro environment `fun-app-landing`, which tracks Flutter stable.
 - Flutter Web is the active production implementation. The migration from Astro is complete.
-- The current Flutter application is an intentionally temporary branded production placeholder, not the redesigned product UI.
+- The current Flutter application establishes the complete structural skeleton
+  for Figma `Landing Page - V1`; detailed section content remains intentionally
+  unimplemented.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
-- The Flutter shell uses the platform-neutral Fun App color, typography, sizing, and Material 3 theme foundation adapted from the main Fun App application.
+- The Flutter shell retains the platform-neutral typography and Material 3
+  foundation adapted from the main Fun App application. The current Figma
+  landing-page design is authoritative when its visual tokens differ from that
+  starting point.
 - The Flutter Web host scaffold uses the Fun App symbol for favicon and PWA icon artwork.
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
 - Flutter generated localization supports English, Spanish, Welsh, and Belarusian; English is the source and fallback language.
@@ -110,7 +115,12 @@ Do not introduce layers, folders, abstractions, or dependencies before active co
 - Define reusable design values centrally when a real design system is introduced.
 - Keyboard interaction, focus visibility, reduced motion, meaningful controls, and appropriate Flutter web semantics are part of implementation quality.
 
-The active presentation foundation centralizes established Fun App color, typography, sizing, and Material 3 theme values. Exact breakpoints, redesigned components, and final visual behavior remain open until the redesign establishes them.
+The active presentation foundation centralizes established Fun App color,
+typography, sizing, and Material 3 theme values. The complete section topology
+and broad desktop color rhythm follow Figma `Landing Page - V1`; its temporary
+placeholder heights will be replaced by natural content sizing as sections are
+implemented. Exact breakpoints, detailed components, and final narrow-layout
+behavior remain open.
 
 ### Localization baseline
 

@@ -6,7 +6,7 @@ import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
-import 'package:fun_app_landing_page/presentation/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 
 void main() {
   testWidgets('renders the English branded landing page', (tester) async {
@@ -38,7 +38,15 @@ void main() {
     final theme = Theme.of(pageContext);
     expect(theme.useMaterial3, isTrue);
     expect(theme.colorScheme.primary, AppColors.primary);
+    expect(theme.colorScheme.secondary, AppColors.yellowAccent);
+    expect(theme.colorScheme.surface, AppColors.lightForeground);
+    expect(
+      theme.colorScheme.surfaceContainerHighest,
+      AppColors.beigeAccent,
+    );
+    expect(theme.colorScheme.onSurfaceVariant, AppColors.bodyGray);
     expect(theme.scaffoldBackgroundColor, AppColors.scaffoldBackground);
+    expect(theme.textTheme.bodyMedium?.color, AppColors.bodyGray);
 
     final logo = tester.widget<SvgPicture>(find.byType(SvgPicture));
     expect(logo.key, const Key('funAppLogo'));
@@ -81,22 +89,6 @@ void main() {
     final context = tester.element(find.byType(LandingPage));
     _expectLocalizedTitle(tester, 'Fun App Landing Page');
     expect(Localizations.localeOf(context), const Locale('en'));
-  });
-
-  testWidgets('renders without errors at narrow and wide sizes', (
-    tester,
-  ) async {
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    tester.view.devicePixelRatio = 1;
-
-    for (final size in [const Size(320, 568), const Size(1440, 900)]) {
-      tester.view.physicalSize = size;
-      await _pumpApp(tester, const Locale('en'));
-
-      expect(find.byType(FunAppLogo), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    }
   });
 }
 

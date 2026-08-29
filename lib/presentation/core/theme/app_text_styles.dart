@@ -51,7 +51,7 @@ abstract final class AppTextStyles {
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.5,
-    color: AppColors.textPrimary,
+    color: AppColors.textSecondary,
   );
 
   /// Default body style for compact reading content and inputs.
@@ -59,7 +59,7 @@ abstract final class AppTextStyles {
     fontSize: 14,
     fontWeight: FontWeight.w400,
     height: 1.45,
-    color: AppColors.textPrimary,
+    color: AppColors.textSecondary,
   );
 
   /// Small body style for hints and supporting copy.

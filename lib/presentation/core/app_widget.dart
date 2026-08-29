@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
-import 'package:fun_app_landing_page/presentation/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 
 /// Root widget for the Fun App landing-page application.
 final class FunAppLandingPageApp extends StatelessWidget {

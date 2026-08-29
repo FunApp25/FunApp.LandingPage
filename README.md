@@ -13,8 +13,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 ## Current repository state
 
 - The active web-only Flutter package is `fun_app_landing_page`.
-- The current branded Flutter placeholder is intentionally temporary; the new
-  landing-page design has not yet been implemented.
+- The complete Flutter section skeleton for Figma `Landing Page - V1` is in
+  place. Detailed content and component implementation will replace its
+  temporary section placeholders incrementally.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code.
 - Flutter localization supports English, Spanish, Welsh, and Belarusian, with
