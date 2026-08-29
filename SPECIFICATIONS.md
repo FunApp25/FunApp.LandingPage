@@ -23,24 +23,26 @@ Current implementation is evidence of repository state, not automatically a perm
 - This is a single Flutter project with package name `fun_app_landing_page`.
 - Flutter targets web only. Mobile and desktop platform scaffolds are out of scope.
 - Flutter and Dart commands use Puro environment `fun-app-landing`, which tracks Flutter stable.
-- Migration from Astro is incremental. The existing Astro source remains temporarily until replacement work is complete.
-- The current Flutter application is a temporary branded bootstrap shell, not the redesigned product UI.
+- Flutter Web is the active production implementation. The migration from Astro is complete.
+- The current Flutter application is an intentionally temporary branded production placeholder, not the redesigned product UI.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell uses the platform-neutral Fun App color, typography, sizing, and Material 3 theme foundation adapted from the main Fun App application.
 - The Flutter Web host scaffold uses the Fun App symbol for favicon and PWA icon artwork.
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
 - Flutter generated localization supports English, Spanish, Welsh, and Belarusian; English is the source and fallback language.
-- GitHub Pages is the current production hosting and deployment target at `https://funapp.world`.
-- The current GitHub Pages workflow still builds Astro and publishes `dist/`; Flutter is not deployed to production yet.
+- GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
+- GitHub Pages builds Flutter through Puro and publishes `build/web` from the repository root at base href `/`.
+- `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
+- `web/robots.txt` owns the active crawler policy.
+- The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
 
-### Observed transitional facts
+### Retired historical behavior
 
-- The Astro `/` route is the public Coming Soon page.
-- Astro `/quiet-entry/7m4q9x2k/` contains the fuller landing page and is discouraged from indexing through page metadata and `robots.txt`.
+- The archived Astro implementation previously served a Coming Soon page at `/`.
+- Its fuller `/quiet-entry/7m4q9x2k/` page is retired and is not part of Flutter routing or the active crawler policy.
 
 ### Open
 
-- Whether either existing route or content model survives the redesign.
 - The final landing-page content, information architecture, and interaction details.
 
 ## 4. Scope
@@ -49,7 +51,7 @@ Current implementation is evidence of repository state, not automatically a perm
 
 - Public Fun App product and brand communication.
 - Responsive Flutter Web presentation.
-- Deliberate preservation or replacement of public-web, accessibility, and SEO behavior during migration.
+- Deliberate public-web, accessibility, and SEO behavior throughout implementation and release work.
 
 ### Provisional
 
@@ -64,15 +66,15 @@ Current implementation is evidence of repository state, not automatically a perm
 
 ## 5. Repository shape
 
-The repository is intentionally transitional:
+The repository is an active Flutter Web project:
 
 - `lib/` contains the Flutter bootstrap and active presentation foundation.
 - `lib/l10n/` contains committed ARB localization inputs; generated localization Dart files remain uncommitted.
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
 - `test/` contains tests for active Flutter behavior.
-- `web/` contains the generated Flutter Web host scaffold.
-- `src/`, Astro configuration, npm files, and `public/` contain the still-active Astro implementation.
-- `.github/workflows/deploy.yml` remains the Astro GitHub Pages pipeline.
+- `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
+- `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
+- `.github/workflows/deploy.yml` validates and builds Flutter through Puro, uploads `build/web`, and deploys it through GitHub Pages.
 
 Future Flutter code may introduce `presentation`, `application`, `domain`, `data`, and `core` areas only when active behavior needs them. The landing-page repository aligns architectural concepts with the main Fun App Flutter application where appropriate, but the repositories do not currently share source code or packages.
 
@@ -168,7 +170,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The current Astro metadata and indexing behavior remains active until the production deployment changes. Whether the Coming Soon page or indexing-discouraged fuller route survives is open.
+The temporary Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -208,19 +210,19 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 ### Established
 
 - GitHub Pages is the production deployment target.
-- The production custom domain is `https://funapp.world` and currently assumes root `/` deployment.
-- The active workflow builds Astro with npm and publishes `dist/`.
-- Flutter deployment migration has not happened.
+- The production custom domain is `https://funapp.world` and uses root `/` deployment.
+- The active workflow installs Puro 1.5.0, creates the named `fun-app-landing` environment from Flutter stable, generates localizations, analyzes, tests, and builds Flutter Web.
+- The production artifact is `build/web`.
+- `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
+- The archived Astro project is not built or deployed.
 
 ### Provisional
 
-- A later workflow will build Flutter output in `build/web` and deploy it to GitHub Pages.
 - Azure hosting may be considered in the future.
 
 ### Open
 
-- Final Flutter GitHub Pages workflow details.
-- Routing and any required 404/deep-link strategy.
+- Routing and any required 404/deep-link strategy if multiple Flutter routes are introduced.
 - Future Azure hosting or topology.
 - Release automation beyond current needs.
 
@@ -238,5 +240,5 @@ Documentation must describe the implementation and decision status accurately. I
 - Preserve established decisions unless a change explicitly updates this specification and explains the consequence.
 - Do not let implementation silently resolve an open decision.
 - Introduce architecture, dependencies, state management, data boundaries, and configuration only when active requirements justify them.
-- Keep Astro and its deployment intact until a deliberate migration change replaces them.
+- Treat the archived Astro project as historical reference, not an active implementation surface. Do not restore its dependencies or deployment without an explicit project decision.
 - Update documentation in the same change when project truth or contributor workflow changes.

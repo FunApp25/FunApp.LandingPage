@@ -18,30 +18,50 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PURO_ENV_NAME: fun-app-landing
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Install Puro
+        env:
+          PURO_VERSION: 1.5.0
+        run: curl -o- https://puro.dev/install.sh | bash
+
+      - name: Add Puro to PATH
+        run: echo "$HOME/.puro/bin" >> "$GITHUB_PATH"
+
+      - name: Set up Flutter SDK with Puro
+        run: |
+          puro create "$PURO_ENV_NAME" stable
+          puro --env="$PURO_ENV_NAME" --version
+          puro --env="$PURO_ENV_NAME" flutter --version
+          puro --env="$PURO_ENV_NAME" dart --version
+
       - name: Install dependencies
-        run: npm ci
+        run: puro --env="$PURO_ENV_NAME" flutter pub get
+
+      - name: Generate localizations
+        run: puro --env="$PURO_ENV_NAME" flutter gen-l10n
+
+      - name: Analyze
+        run: puro --env="$PURO_ENV_NAME" flutter analyze
+
+      - name: Test
+        run: puro --env="$PURO_ENV_NAME" flutter test
 
       - name: Build site
-        run: npm run build
+        run: puro --env="$PURO_ENV_NAME" flutter build web
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: ./dist
+          path: ./build/web
 
   deploy:
     needs: build

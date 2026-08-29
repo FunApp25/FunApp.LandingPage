@@ -1,12 +1,11 @@
 {
-    "name": "fun_app_landing_page",
-    "short_name": "fun_app_landing_page",
-    "start_url": ".",
+    "name": "Fun App",
+    "short_name": "Fun App",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#ece1ce",
     "theme_color": "#ef6632",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "description": "The public website for Fun App.",
     "prefer_related_applications": false,
     "icons": [
         {

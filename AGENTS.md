@@ -16,7 +16,7 @@ These rules apply repository-wide. More specific nested `AGENTS.md` files may ad
 - Preserve established decisions and label provisional or open matters accurately.
 - Do not implement speculative features, folders, abstractions, integrations, or dependencies.
 - Do not create `PLANS.md`, architecture notes, or other governance files unless explicitly requested.
-- Keep the existing Astro site and deployment intact until a task explicitly migrates or removes them.
+- Treat `archive/astro_site/` as read-only historical reference by default. Do not implement production work there or restore Astro dependencies/build steps unless explicitly requested.
 - Review the complete diff, preserve unrelated work, and leave a clear handoff with verification results and remaining risks.
 
 ## Flutter Web and tooling
