@@ -28,8 +28,9 @@ Current implementation is evidence of repository state, not automatically a perm
   for Figma `Landing Page - V1`. The header and hero implement Figma nodes
   `2190:1568` and `2190:1569`; the problem statement, research statistics, and
   connection-experience sections implement nodes `2190:1581`, `2190:1587`, and
-  `2190:1596`. The remaining detailed section content remains intentionally
-  unimplemented.
+  `2190:1596`; the membership and limited-time-offer sections implement nodes
+  `2190:1606` and `2190:1613`. The remaining detailed section content remains
+  intentionally unimplemented.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell retains the platform-neutral typography and Material 3
   foundation adapted from the main Fun App application. The current Figma

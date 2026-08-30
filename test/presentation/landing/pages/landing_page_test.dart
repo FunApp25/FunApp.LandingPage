@@ -69,6 +69,8 @@ void main() {
       find.byType(ProblemStatementSection),
       find.byType(ResearchStatsSection),
       find.byType(ConnectionExperienceSection),
+      find.byType(MembershipSection),
+      find.byType(FoundingOfferSection),
     ]) {
       expect(
         find.descendant(
@@ -78,7 +80,7 @@ void main() {
         findsNothing,
       );
     }
-    expect(find.byType(LandingSectionPlaceholder), findsNWidgets(7));
+    expect(find.byType(LandingSectionPlaceholder), findsNWidgets(5));
   });
 
   testWidgets('renders the authoritative English header and hero copy', (
@@ -254,6 +256,8 @@ void main() {
         find.byType(ProblemStatementSection),
         find.byType(ResearchStatsSection),
         find.byType(ConnectionExperienceSection),
+        find.byType(MembershipSection),
+        find.byType(FoundingOfferSection),
         find.byType(FaqSection),
         find.byType(LandingFooter),
       ]) {

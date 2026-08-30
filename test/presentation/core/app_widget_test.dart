@@ -14,7 +14,7 @@ void main() {
 
     expect(find.byType(LandingPage), findsOneWidget);
     expect(find.byType(FunAppLogo), findsOneWidget);
-    expect(find.byType(SvgPicture), findsNWidgets(5));
+    expect(find.byType(SvgPicture), findsNWidgets(10));
     expect(find.bySemanticsLabel('Fun App'), findsOneWidget);
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));

@@ -238,6 +238,80 @@ abstract final class AppTextStyles {
     color: AppColors.bodyGray,
   );
 
+  /// Membership-card tier title from Figma node `2190:1610`.
+  static final TextStyle landingMembershipCardTitle = _instrumentSerif(
+    fontSize: 32,
+    fontWeight: FontWeight.w400,
+    height: 40 / 32,
+    letterSpacing: -0.32,
+    color: AppColors.lightForeground,
+  );
+
+  /// Membership-card price from Figma node `2190:1610`.
+  static final TextStyle landingMembershipPrice = _manrope(
+    fontSize: 40,
+    fontWeight: FontWeight.w600,
+    height: 50 / 40,
+    letterSpacing: -0.4,
+    color: AppColors.lightForeground,
+    fontFeatures: const [
+      FontFeature.liningFigures(),
+      FontFeature.tabularFigures(),
+    ],
+  );
+
+  /// Membership-card billing period from Figma node `2190:1610`.
+  static final TextStyle landingMembershipPriceUnit = _manrope(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 22 / 14,
+    letterSpacing: 0.28,
+    color: AppColors.lightForeground,
+  );
+
+  /// Membership-card description and supporting text.
+  static final TextStyle landingMembershipCardBody = _manrope(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 26 / 16,
+    letterSpacing: 0.32,
+    color: AppColors.lightForeground,
+  );
+
+  /// Visual, intentionally unwired membership-card link treatment.
+  static final TextStyle landingMembershipCardLink =
+      _manrope(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        height: 22 / 14,
+        letterSpacing: 1.12,
+        color: AppColors.yellowAccent,
+      ).copyWith(
+        decoration: TextDecoration.underline,
+        decorationColor: AppColors.blueMain.withValues(alpha: 0.3),
+        decorationThickness: 1.12,
+      );
+
+  /// Centered limited-time-offer statement from Figma node `2190:1613`.
+  static final TextStyle landingFoundingOfferStatement = _instrumentSerif(
+    fontSize: 50,
+    fontWeight: FontWeight.w400,
+    height: 60 / 50,
+    letterSpacing: -0.5,
+    color: AppColors.textPrimary,
+  );
+
+  /// Italic emphasis within the limited-time offer statement.
+  static final TextStyle landingFoundingOfferStatementEmphasis =
+      _instrumentSerif(
+        fontSize: 50,
+        fontWeight: FontWeight.w400,
+        fontStyle: FontStyle.italic,
+        height: 60 / 50,
+        letterSpacing: -0.5,
+        color: AppColors.textPrimary,
+      );
+
   /// Shared text theme composed from the active baseline tokens.
   static final TextTheme textTheme = TextTheme(
     titleLarge: titleLarge,

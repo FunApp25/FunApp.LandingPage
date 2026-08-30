@@ -139,5 +139,81 @@
   "landingConnectionImageDescription": "Four smiling people posing closely together outdoors.",
   "@landingConnectionImageDescription": {
     "description": "Concise semantic description of the connection photograph."
+  },
+  "landingMembershipHeading": "Membership",
+  "@landingMembershipHeading": {
+    "description": "Heading for the membership section."
+  },
+  "landingMembershipBody": "Connections for everyone. Choose the membership that works for you and enjoy a friendlier future with Fun App.",
+  "@landingMembershipBody": {
+    "description": "Supporting paragraph beside the membership cards."
+  },
+  "landingMembershipFreeTier": "Free Membership",
+  "@landingMembershipFreeTier": {
+    "description": "Title of the free membership tier."
+  },
+  "landingMembershipHereNowTier": "Here & Now Membership",
+  "@landingMembershipHereNowTier": {
+    "description": "Title of the paid Here & Now membership tier."
+  },
+  "landingMembershipFreePrice": "£0",
+  "@landingMembershipFreePrice": {
+    "description": "Visual price of the free membership tier."
+  },
+  "landingMembershipHereNowPrice": "£11",
+  "@landingMembershipHereNowPrice": {
+    "description": "Visual price of the Here & Now membership tier."
+  },
+  "landingMembershipBillingPeriod": "/ month",
+  "@landingMembershipBillingPeriod": {
+    "description": "Visual billing period displayed beside each membership price."
+  },
+  "landingMembershipFreePriceSemantics": "£0 per month",
+  "@landingMembershipFreePriceSemantics": {
+    "description": "Accessible spoken price for the free membership tier."
+  },
+  "landingMembershipHereNowPriceSemantics": "£11 per month",
+  "@landingMembershipHereNowPriceSemantics": {
+    "description": "Accessible spoken price for the Here & Now membership tier."
+  },
+  "landingMembershipFreeDescription": "Free membership will deliver a fully working app including some super attractive benefits.",
+  "@landingMembershipFreeDescription": {
+    "description": "Description of the free membership tier."
+  },
+  "landingMembershipHereNowDescription": "‘Here & Now’ membership will include EVERYTHING Fun App is busy developing.",
+  "@landingMembershipHereNowDescription": {
+    "description": "Description of the Here & Now membership tier."
+  },
+  "landingMembershipOfferHint": "However, see offer below...",
+  "@landingMembershipOfferHint": {
+    "description": "Membership-card note referring visually to the offer below."
+  },
+  "landingMembershipFoundingFriendLink": "BECOME A FOUNDING FRIEND",
+  "@landingMembershipFoundingFriendLink": {
+    "description": "Visual-only membership-card offer label; Founding Friend is a product term."
+  },
+  "landingFoundingOfferEyebrow": "LIMITED TIME OFFER",
+  "@landingFoundingOfferEyebrow": {
+    "description": "Uppercase eyebrow above the Founding Friend offer."
+  },
+  "landingFoundingOfferLeading": "Become A Fun App ",
+  "@landingFoundingOfferLeading": {
+    "description": "Regular leading portion of the Founding Friend offer statement."
+  },
+  "landingFoundingOfferFoundingFriend": "Founding Friend",
+  "@landingFoundingOfferFoundingFriend": {
+    "description": "Italic product term in the Founding Friend offer statement; do not translate."
+  },
+  "landingFoundingOfferMiddle": "... for free. Enjoy latest news ",
+  "@landingFoundingOfferMiddle": {
+    "description": "Regular middle portion of the Founding Friend offer statement."
+  },
+  "landingFoundingOfferPlus": "plus",
+  "@landingFoundingOfferPlus": {
+    "description": "Italic connective within the Founding Friend offer statement."
+  },
+  "landingFoundingOfferTrailing": " ‘Here & Now’ membership on us.",
+  "@landingFoundingOfferTrailing": {
+    "description": "Regular ending of the Founding Friend offer statement; Here & Now is a product term."
   }
 }

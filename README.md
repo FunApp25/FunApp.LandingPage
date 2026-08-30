@@ -15,8 +15,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 - The active web-only Flutter package is `fun_app_landing_page`.
 - The complete Flutter section skeleton for Figma `Landing Page - V1` is in
   place. The production header, hero, problem statement, research statistics,
-  and connection-experience sections now replace their temporary placeholders;
-  the remaining sections will be implemented incrementally.
+  connection-experience, membership, and limited-time-offer sections now
+  replace their temporary placeholders; the remaining sections will be
+  implemented incrementally.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

@@ -5,6 +5,7 @@ abstract final class AppAssets {
   static const _landingConnectionPath = 'assets/landing/connection';
   static const _landingHeaderPath = 'assets/landing/header';
   static const _landingHeroPath = 'assets/landing/hero';
+  static const _landingMembershipPath = 'assets/landing/membership';
 
   /// Warm charcoal Fun App wordmark SVG.
   static const String funAppWordmarkBlack =
@@ -34,4 +35,16 @@ abstract final class AppAssets {
   /// Figma-cropped group photograph used by the connection section.
   static const String connectionGroup =
       '$_landingConnectionPath/connection_group.png';
+
+  /// Check artwork used inside both membership cards.
+  static const String membershipCheck =
+      '$_landingMembershipPath/membership_check.svg';
+
+  /// Arrow artwork used by the visual membership-card link treatment.
+  static const String membershipArrowUpRight =
+      '$_landingMembershipPath/membership_arrow_up_right.svg';
+
+  /// Purple decorative glyph used by the limited-time offer eyebrow.
+  static const String foundingOfferGlyph =
+      '$_landingMembershipPath/founding_offer_glyph.svg';
 }

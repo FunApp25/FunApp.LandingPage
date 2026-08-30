@@ -28,6 +28,7 @@ flutter:
     - assets/landing/connection/
     - assets/landing/header/
     - assets/landing/hero/
+    - assets/landing/membership/
   generate: true
   uses-material-design: true
 
