@@ -114,8 +114,8 @@ final class _FooterLogoAndNavigation extends StatelessWidget {
       Wrap(
         key: const Key('footerNavigationWrap'),
         alignment: WrapAlignment.center,
-        spacing: 40,
-        runSpacing: 20,
+        spacing: 16,
+        runSpacing: 8,
         children: [
           for (var index = 0; index < items.length; index++)
             LandingNavigationItem(

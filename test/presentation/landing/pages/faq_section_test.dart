@@ -1,4 +1,4 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show PointerDeviceKind, Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -123,15 +123,30 @@ void main() {
     control.focusNode!.requestFocus();
     await tester.pump();
     expect(control.focusNode!.hasFocus, isTrue);
-    final focusSurface = tester.widget<ColoredBox>(
-      find.descendant(
-        of: find.byKey(const Key('faqQuestionControl1')),
-        matching: find.byType(ColoredBox),
-      ),
+    final visualFinder = find.byKey(const Key('faqItemVisualSurface1'));
+    final focusSurface = tester.widget<DecoratedBox>(visualFinder);
+    final focusDecoration = focusSurface.decoration as BoxDecoration;
+    final focusBackground = tester.widget<DecoratedBox>(
+      find.byKey(const Key('faqItemStateBackground1')),
     );
     expect(
-      focusSurface.color,
-      AppColors.energeticPlum.withValues(alpha: 0.1),
+      (focusBackground.decoration as BoxDecoration).color,
+      AppColors.energeticPlum.withValues(alpha: 0.08),
+    );
+    final focusBorder = focusDecoration.border! as Border;
+    expect(focusBorder.top.color, AppColors.energeticPlum);
+    expect(focusBorder.top.width, 2);
+    expect(
+      tester.getRect(visualFinder),
+      tester.getRect(find.byKey(const Key('faqItemSurface1'))),
+    );
+    expect(
+      tester
+          .getRect(visualFinder)
+          .contains(
+            tester.getCenter(find.byKey(const Key('faqAnswer1'))),
+          ),
+      isTrue,
     );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -148,6 +163,45 @@ void main() {
     await tester.tap(find.byKey(const Key('faqQuestionControl1')));
     await tester.pump();
     expect(find.byKey(const Key('faqAnswer1')), findsNothing);
+  });
+
+  testWidgets('hover treatment covers the complete FAQ item surface', (
+    tester,
+  ) async {
+    await _pumpFaq(tester);
+
+    final surfaceFinder = find.byKey(const Key('faqItemSurface0'));
+    final visualFinder = find.byKey(const Key('faqItemVisualSurface0'));
+    await tester.ensureVisible(surfaceFinder);
+    await tester.pump();
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(surfaceFinder));
+    await tester.pump();
+
+    final decoration =
+        tester
+                .widget<DecoratedBox>(
+                  find.byKey(const Key('faqItemStateBackground0')),
+                )
+                .decoration
+            as BoxDecoration;
+    expect(
+      decoration.color,
+      AppColors.energeticPlum.withValues(alpha: 0.06),
+    );
+    expect(tester.getRect(visualFinder), tester.getRect(surfaceFinder));
+    expect(
+      tester
+          .getRect(visualFinder)
+          .contains(
+            tester.getCenter(find.byKey(const Key('faqAnswer0'))),
+          ),
+      isTrue,
+    );
+
+    await mouse.removePointer();
   });
 
   testWidgets('toggles once from answer and padded item regions', (
@@ -253,6 +307,7 @@ void main() {
   ) async {
     for (final size in const [
       Size(320, 568),
+      Size(390, 844),
       Size(768, 1024),
       Size(1440, 900),
     ]) {

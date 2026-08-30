@@ -69,7 +69,7 @@ final class _WelcomeStatementContent extends StatelessWidget {
         .copyWith(
           fontSize: statementSize,
           letterSpacing: letterSpacing,
-          color: AppColors.warmOrange,
+          color: AppColors.warmOrangeLargeText,
         );
 
     return Column(

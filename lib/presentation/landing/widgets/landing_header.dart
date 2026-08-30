@@ -33,13 +33,23 @@ final class LandingHeader extends StatelessWidget {
   /// Reserved for the intentionally deferred Contact Us behavior.
   final VoidCallback? onContactSelected;
 
-  // Minimum width required by the complete localized horizontal composition.
-  // Below it, content wraps without hiding or inventing navigation behavior.
+  // The complete desktop row needs this width in every supported locale.
   static const _horizontalCompositionWidth = 1080.0;
 
+  // Below this width, four localized labels are more stable in two rows.
+  static const _intermediateCompositionWidth = 620.0;
+
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: AppColors.lightForeground,
+  Widget build(BuildContext context) => DecoratedBox(
+    key: const Key('landingHeaderBoundary'),
+    decoration: BoxDecoration(
+      color: AppColors.lightForeground,
+      border: Border(
+        bottom: BorderSide(
+          color: AppColors.warmCharcoal.withValues(alpha: 0.16),
+        ),
+      ),
+    ),
     child: LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.hasBoundedWidth
@@ -48,10 +58,7 @@ final class LandingHeader extends StatelessWidget {
         final pageGutter = AppSizes.pageGutterFor(availableWidth);
 
         return Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: pageGutter,
-            vertical: 16,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: pageGutter),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -80,18 +87,32 @@ final class LandingHeader extends StatelessWidget {
                   final usesHorizontalComposition =
                       contentConstraints.maxWidth >=
                       _horizontalCompositionWidth;
+                  final usesIntermediateComposition =
+                      contentConstraints.maxWidth >=
+                      _intermediateCompositionWidth;
 
-                  return usesHorizontalComposition
-                      ? _HorizontalHeader(
-                          navigationItems: navigationItems,
-                          contactLabel: context.l10n.landingHeaderContactUs,
-                          onContactSelected: onContactSelected,
-                        )
-                      : _WrappedHeader(
-                          navigationItems: navigationItems,
-                          contactLabel: context.l10n.landingHeaderContactUs,
-                          onContactSelected: onContactSelected,
-                        );
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: usesHorizontalComposition ? 13 : 8,
+                    ),
+                    child: usesHorizontalComposition
+                        ? _HorizontalHeader(
+                            navigationItems: navigationItems,
+                            contactLabel: context.l10n.landingHeaderContactUs,
+                            onContactSelected: onContactSelected,
+                          )
+                        : usesIntermediateComposition
+                        ? _IntermediateHeader(
+                            navigationItems: navigationItems,
+                            contactLabel: context.l10n.landingHeaderContactUs,
+                            onContactSelected: onContactSelected,
+                          )
+                        : _NarrowHeader(
+                            navigationItems: navigationItems,
+                            contactLabel: context.l10n.landingHeaderContactUs,
+                            onContactSelected: onContactSelected,
+                          ),
+                  );
                 },
               ),
             ),
@@ -119,8 +140,8 @@ final class _HorizontalHeader extends StatelessWidget {
     children: [
       const _HeaderLogo(),
       const Spacer(),
-      _NavigationRow(items: navigationItems),
-      const SizedBox(width: 56),
+      _NavigationRow(items: navigationItems, itemSpacing: 16),
+      const SizedBox(width: 44),
       LandingCtaButton(
         key: const Key('landingHeaderContactCta'),
         label: contactLabel,
@@ -131,8 +152,8 @@ final class _HorizontalHeader extends StatelessWidget {
   );
 }
 
-final class _WrappedHeader extends StatelessWidget {
-  const _WrappedHeader({
+final class _IntermediateHeader extends StatelessWidget {
+  const _IntermediateHeader({
     required this.navigationItems,
     required this.contactLabel,
     required this.onContactSelected,
@@ -144,30 +165,69 @@ final class _WrappedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-    key: const Key('landingHeaderWrappedLayout'),
-    crossAxisAlignment: CrossAxisAlignment.start,
+    key: const Key('landingHeaderIntermediateLayout'),
     children: [
-      const _HeaderLogo(),
-      const SizedBox(height: 16),
-      Wrap(
-        spacing: 24,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      Row(
         children: [
-          for (var index = 0; index < navigationItems.length; index++)
-            LandingNavigationItem(
-              key: Key('landingHeaderNavigationItem$index'),
-              label: navigationItems[index].label,
-              onSelected: navigationItems[index].onSelected,
+          const _HeaderLogo(),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: LandingCtaButton(
+                key: const Key('landingHeaderContactCta'),
+                label: contactLabel,
+                size: LandingCtaSize.compact,
+                onPressed: onContactSelected,
+              ),
             ),
-          LandingCtaButton(
-            key: const Key('landingHeaderContactCta'),
-            label: contactLabel,
-            size: LandingCtaSize.compact,
-            onPressed: onContactSelected,
           ),
         ],
       ),
+      const SizedBox(height: 4),
+      _NavigationRow(
+        items: navigationItems,
+        itemSpacing: 4,
+        expandItems: true,
+      ),
+    ],
+  );
+}
+
+final class _NarrowHeader extends StatelessWidget {
+  const _NarrowHeader({
+    required this.navigationItems,
+    required this.contactLabel,
+    required this.onContactSelected,
+  });
+
+  final List<_NavigationItem> navigationItems;
+  final String contactLabel;
+  final VoidCallback? onContactSelected;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('landingHeaderNarrowLayout'),
+    children: [
+      Row(
+        children: [
+          const _HeaderLogo(),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: LandingCtaButton(
+                key: const Key('landingHeaderContactCta'),
+                label: contactLabel,
+                size: LandingCtaSize.compact,
+                onPressed: onContactSelected,
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      _NavigationGrid(items: navigationItems),
     ],
   );
 }
@@ -186,19 +246,56 @@ final class _HeaderLogo extends StatelessWidget {
 }
 
 final class _NavigationRow extends StatelessWidget {
-  const _NavigationRow({required this.items});
+  const _NavigationRow({
+    required this.items,
+    required this.itemSpacing,
+    this.expandItems = false,
+  });
 
   final List<_NavigationItem> items;
+  final double itemSpacing;
+  final bool expandItems;
 
   @override
   Widget build(BuildContext context) => Row(
     children: [
       for (var index = 0; index < items.length; index++) ...[
-        if (index > 0) const SizedBox(width: 40),
-        LandingNavigationItem(
-          key: Key('landingHeaderNavigationItem$index'),
-          label: items[index].label,
-          onSelected: items[index].onSelected,
+        if (index > 0) SizedBox(width: itemSpacing),
+        if (expandItems) Expanded(child: _item(index)) else _item(index),
+      ],
+    ],
+  );
+
+  Widget _item(int index) => LandingNavigationItem(
+    key: Key('landingHeaderNavigationItem$index'),
+    label: items[index].label,
+    onSelected: items[index].onSelected,
+  );
+}
+
+final class _NavigationGrid extends StatelessWidget {
+  const _NavigationGrid({required this.items});
+
+  final List<_NavigationItem> items;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      for (var rowStart = 0; rowStart < items.length; rowStart += 2) ...[
+        if (rowStart > 0) const SizedBox(height: 4),
+        Row(
+          children: [
+            for (var index = rowStart; index < rowStart + 2; index++) ...[
+              if (index > rowStart) const SizedBox(width: 4),
+              Expanded(
+                child: LandingNavigationItem(
+                  key: Key('landingHeaderNavigationItem$index'),
+                  label: items[index].label,
+                  onSelected: items[index].onSelected,
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     ],

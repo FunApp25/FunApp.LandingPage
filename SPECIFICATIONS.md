@@ -123,6 +123,7 @@ Do not introduce layers, folders, abstractions, or dependencies before active co
 - Keep app-owned widgets focused and reusable; avoid deeply nested monolithic `build` methods.
 - Define reusable design values centrally when a real design system is introduced.
 - Keyboard interaction, focus visibility, reduced motion, meaningful controls, and appropriate Flutter web semantics are part of implementation quality.
+- Accessible contrast may intentionally override literal Figma color values while preserving the established brand character.
 
 The active presentation foundation centralizes established Fun App color,
 typography, sizing, and Material 3 theme values. The complete section topology
@@ -135,7 +136,12 @@ Implemented landing sections preserve their Figma desktop compositions. Their
 narrower wrapping, stacking, and card reflow are constraint-driven
 implementation inferences because Figma provides no responsive variants. Header
 and footer section navigation scrolls within the single landing page while the
-header remains fixed above the scrolling content. The established mapping is
+header remains fixed above the scrolling content. The fixed header uses wide,
+intermediate, and narrow constraint-driven compositions so that its navigation
+remains compact without introducing a disclosure menu. Internal navigation
+controls provide at least a 44px effective target and an explicit keyboard-focus
+outline; hover and focus treatments cover the complete padded control surface.
+The established mapping is
 Our Belief to Hero, Membership to Membership, Founding Friends to Founding
 Friends, and For Venues to Venue. Anchor positions derive from the rendered
 sections, and navigation movement becomes immediate when reduced motion is
@@ -150,7 +156,9 @@ landing-page composition; it does not use or require a sliver-based page
 architecture. The complete visible surface of an FAQ item toggles it for
 pointer input, while the question remains the focused expanded/collapsed
 control for keyboard and assistive technology and expanded answer text remains
-independently readable semantic content. Safe Guard, Footprint, reporting,
+independently readable semantic content. Hover and keyboard-focus treatments
+cover that complete clickable surface without merging the answer into the
+question control's semantic label. Safe Guard, Footprint, reporting,
 subscription, and moderation statements in FAQ copy describe future product
 behavior only and do not establish those capabilities as implemented.
 
@@ -159,6 +167,7 @@ behavior only and do not establish those capabilities as implemented.
 - Supported locale identifiers are English (`en`), Spanish (`es`), Welsh (`cy`), and Belarusian (`be`). English is the authoritative source language and unsupported locales fall back to English.
 - Flutter's generated localization system uses ARB inputs under `lib/l10n/`, configured through `l10n.yaml`.
 - Locale negotiation follows the browser or platform locale. The application does not force a locale.
+- The host document language follows Flutter's resolved application locale; the static web shell defaults to English before Flutter starts.
 - No language selector or persisted manual locale choice exists yet.
 - User-facing Flutter copy must come from generated localizations rather than hardcoded presentation strings. New source copy and its supported translations belong in the same implementation scope.
 - Locale-specific product and marketing copy remains subject to product and translation review as content expands.

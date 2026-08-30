@@ -107,7 +107,7 @@ final class _ConnectionTitle extends StatelessWidget {
       SectionEyebrow(
         label: context.l10n.landingConnectionEyebrow,
         glyphAsset: AppAssets.roundedSparkleDiamond,
-        foregroundColor: AppColors.warmOrange,
+        foregroundColor: AppColors.warmOrangeText,
         glyphSize: const Size.square(12),
         glyphKey: const Key('connectionEyebrowGlyph'),
       ),

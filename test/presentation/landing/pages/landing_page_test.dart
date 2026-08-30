@@ -1,9 +1,12 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
@@ -291,6 +294,50 @@ void main() {
     expect(activationCount, 2);
   });
 
+  testWidgets('navigation exposes a full hover and keyboard-focus surface', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LandingNavigationItem(
+            label: 'OUR BELIEF',
+            onSelected: () {},
+          ),
+        ),
+      ),
+    );
+
+    final itemFinder = find.byType(LandingNavigationItem);
+    final visualFinder = find.descendant(
+      of: itemFinder,
+      matching: find.byKey(const Key('landingNavigationVisualSurface')),
+    );
+    expect(tester.getSize(itemFinder).height, greaterThanOrEqualTo(44));
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(itemFinder));
+    await tester.pump();
+    expect(
+      tester.widget<Material>(visualFinder).color,
+      AppColors.energeticPlum.withValues(alpha: 0.06),
+    );
+    await mouse.removePointer();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    final focusedMaterial = tester.widget<Material>(visualFinder);
+    final focusedShape = focusedMaterial.shape! as RoundedRectangleBorder;
+    expect(
+      focusedMaterial.color,
+      AppColors.energeticPlum.withValues(alpha: 0.08),
+    );
+    expect(focusedShape.side.color, AppColors.energeticPlum);
+    expect(focusedShape.side.width, 2);
+    expect(tester.getSize(itemFinder).height, greaterThanOrEqualTo(44));
+  });
+
   testWidgets('navigation is accessible while Contact Us stays unwired', (
     tester,
   ) async {
@@ -311,9 +358,16 @@ void main() {
           find.descendant(of: itemFinder, matching: find.byType(InkWell)),
         );
         expect(inkWell.mouseCursor, SystemMouseCursors.click);
-        expect(inkWell.focusColor, isNot(Colors.transparent));
+        expect(tester.getSize(itemFinder).height, greaterThanOrEqualTo(44));
       }
     }
+
+    final headerBoundary = tester.widget<DecoratedBox>(
+      find.byKey(const Key('landingHeaderBoundary')),
+    );
+    final headerDecoration = headerBoundary.decoration as BoxDecoration;
+    final headerBorder = headerDecoration.border! as Border;
+    expect(headerBorder.bottom.color.a, greaterThan(0));
 
     final contact = tester
         .getSemantics(find.text('Contact Us'))
@@ -340,6 +394,7 @@ void main() {
 
     for (final size in [
       const Size(320, 568),
+      const Size(390, 844),
       const Size(768, 1024),
       const Size(1024, 768),
       const Size(1440, 900),
@@ -354,6 +409,19 @@ void main() {
         reason: 'No layout exception is expected at $size.',
       );
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
+      expect(find.text('Contact Us'), findsOneWidget);
+
+      for (final prefix in [
+        'landingHeaderNavigationItem',
+        'footerNavigationItem',
+      ]) {
+        for (var index = 0; index < 4; index++) {
+          expect(
+            tester.getSize(find.byKey(Key('$prefix$index'))).height,
+            greaterThanOrEqualTo(44),
+          );
+        }
+      }
 
       await _moveToPageEnd(tester);
       await tester.tap(
@@ -363,18 +431,31 @@ void main() {
       _expectTargetBelowHeader(tester, MembershipSection);
       expect(tester.takeException(), isNull);
 
-      if (size.width == 1440) {
+      if (size.width >= 1080) {
         expect(
           find.byKey(const Key('landingHeaderHorizontalLayout')),
           findsOneWidget,
         );
         expect(find.byKey(const Key('heroDesktopLayout')), findsOneWidget);
-      } else {
+      } else if (size.width >= 768) {
         expect(
-          find.byKey(const Key('landingHeaderWrappedLayout')),
+          find.byKey(const Key('landingHeaderIntermediateLayout')),
           findsOneWidget,
         );
         expect(find.byKey(const Key('heroStackedLayout')), findsOneWidget);
+      } else {
+        expect(
+          find.byKey(const Key('landingHeaderNarrowLayout')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('heroStackedLayout')), findsOneWidget);
+      }
+
+      final headerHeight = tester.getSize(find.byType(LandingHeader)).height;
+      if (size.width <= 390) {
+        expect(headerHeight, lessThanOrEqualTo(152));
+      } else if (size.width < 1080) {
+        expect(headerHeight, lessThanOrEqualTo(104));
       }
 
       for (final finder in [
@@ -395,6 +476,32 @@ void main() {
       }
     }
   });
+
+  testWidgets(
+    'long localized header labels fit intermediate and narrow layouts',
+    (
+      tester,
+    ) async {
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      tester.view.devicePixelRatio = 1;
+
+      for (final size in const [Size(320, 568), Size(768, 1024)]) {
+        tester.view.physicalSize = size;
+        await _pumpApp(tester, locale: const Locale('be'));
+
+        expect(find.text('СЯБРЫ-ЗАСНАВАЛЬНІКІ'), findsNWidgets(2));
+        expect(find.text('Звязацца з намі'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        expect(
+          size.width == 320
+              ? find.byKey(const Key('landingHeaderNarrowLayout'))
+              : find.byKey(const Key('landingHeaderIntermediateLayout')),
+          findsOneWidget,
+        );
+      }
+    },
+  );
 
   testWidgets('exposes one hero heading and image semantic description', (
     tester,

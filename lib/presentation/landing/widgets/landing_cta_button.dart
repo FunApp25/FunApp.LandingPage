@@ -63,7 +63,7 @@ final class LandingCtaButton extends StatelessWidget {
         LandingCtaAppearance.brandYellow => AppColors.yellowAccent,
       };
       final foregroundColor = switch (appearance) {
-        LandingCtaAppearance.brandOrange ||
+        LandingCtaAppearance.brandOrange => AppColors.textPrimary,
         LandingCtaAppearance.brandBlue => AppColors.lightForeground,
         LandingCtaAppearance.brandYellow => AppColors.textPrimary,
       };

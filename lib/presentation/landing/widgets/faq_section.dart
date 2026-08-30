@@ -162,53 +162,64 @@ final class _FaqItemState extends State<_FaqItem> {
           onTap: widget.onToggle,
           excludeFromSemantics: true,
           child: DecoratedBox(
+            key: Key('faqItemVisualSurface${widget.index}'),
             decoration: BoxDecoration(
-              color: _isHovered
-                  ? AppColors.energeticPlum.withValues(alpha: 0.06)
-                  : Colors.transparent,
-              border: Border(
-                bottom: BorderSide(
-                  color: AppColors.warmCharcoal.withValues(alpha: 0.2),
+              border: Border.all(
+                color: _isFocused
+                    ? AppColors.energeticPlum
+                    : Colors.transparent,
+                width: 2,
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+            ),
+            position: DecorationPosition.foreground,
+            child: DecoratedBox(
+              key: Key('faqItemStateBackground${widget.index}'),
+              decoration: BoxDecoration(
+                color: _isFocused || _isHovered
+                    ? AppColors.energeticPlum.withValues(
+                        alpha: _isFocused ? 0.08 : 0.06,
+                      )
+                    : Colors.transparent,
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.warmCharcoal.withValues(alpha: 0.2),
+                  ),
                 ),
               ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Semantics(
-                  key: Key('faqQuestionSemantics${widget.index}'),
-                  container: true,
-                  label: widget.content.question,
-                  button: true,
-                  expanded: widget.isExpanded,
-                  onTap: widget.onToggle,
-                  excludeSemantics: true,
-                  child: FocusableActionDetector(
-                    key: Key('faqQuestionControl${widget.index}'),
-                    focusNode: widget.focusNode,
-                    mouseCursor: SystemMouseCursors.click,
-                    shortcuts: const <ShortcutActivator, Intent>{
-                      SingleActivator(LogicalKeyboardKey.enter):
-                          ActivateIntent(),
-                      SingleActivator(LogicalKeyboardKey.space):
-                          ActivateIntent(),
-                    },
-                    actions: <Type, Action<Intent>>{
-                      ActivateIntent: CallbackAction<ActivateIntent>(
-                        onInvoke: (_) {
-                          widget.onToggle();
-                          return null;
-                        },
-                      ),
-                    },
-                    onFocusChange: (value) {
-                      setState(() => _isFocused = value);
-                    },
-                    child: ColoredBox(
-                      color: _isFocused
-                          ? AppColors.energeticPlum.withValues(alpha: 0.1)
-                          : Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Semantics(
+                    key: Key('faqQuestionSemantics${widget.index}'),
+                    container: true,
+                    label: widget.content.question,
+                    button: true,
+                    expanded: widget.isExpanded,
+                    onTap: widget.onToggle,
+                    excludeSemantics: true,
+                    child: FocusableActionDetector(
+                      key: Key('faqQuestionControl${widget.index}'),
+                      focusNode: widget.focusNode,
+                      mouseCursor: SystemMouseCursors.click,
+                      shortcuts: const <ShortcutActivator, Intent>{
+                        SingleActivator(LogicalKeyboardKey.enter):
+                            ActivateIntent(),
+                        SingleActivator(LogicalKeyboardKey.space):
+                            ActivateIntent(),
+                      },
+                      actions: <Type, Action<Intent>>{
+                        ActivateIntent: CallbackAction<ActivateIntent>(
+                          onInvoke: (_) {
+                            widget.onToggle();
+                            return null;
+                          },
+                        ),
+                      },
+                      onFocusChange: (value) {
+                        setState(() => _isFocused = value);
+                      },
                       child: Padding(
                         padding: EdgeInsets.only(
                           top: 32,
@@ -237,35 +248,35 @@ final class _FaqItemState extends State<_FaqItem> {
                       ),
                     ),
                   ),
-                ),
-                if (widget.isExpanded)
-                  Padding(
-                    key: Key('faqAnswer${widget.index}'),
-                    padding: EdgeInsets.only(
-                      top: 20,
-                      right: answerRightPadding,
-                      bottom: 32,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (
-                          var paragraphIndex = 0;
-                          paragraphIndex < widget.content.paragraphs.length;
-                          paragraphIndex++
-                        ) ...[
-                          _FaqAnswerParagraph(
-                            paragraph:
-                                widget.content.paragraphs[paragraphIndex],
-                          ),
-                          if (paragraphIndex <
-                              widget.content.paragraphs.length - 1)
-                            const SizedBox(height: 12),
+                  if (widget.isExpanded)
+                    Padding(
+                      key: Key('faqAnswer${widget.index}'),
+                      padding: EdgeInsets.only(
+                        top: 20,
+                        right: answerRightPadding,
+                        bottom: 32,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (
+                            var paragraphIndex = 0;
+                            paragraphIndex < widget.content.paragraphs.length;
+                            paragraphIndex++
+                          ) ...[
+                            _FaqAnswerParagraph(
+                              paragraph:
+                                  widget.content.paragraphs[paragraphIndex],
+                            ),
+                            if (paragraphIndex <
+                                widget.content.paragraphs.length - 1)
+                              const SizedBox(height: 12),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

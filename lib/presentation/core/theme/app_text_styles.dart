@@ -119,7 +119,7 @@ abstract final class AppTextStyles {
     fontStyle: FontStyle.italic,
     height: 70 / 60,
     letterSpacing: -1.8,
-    color: AppColors.warmOrange,
+    color: AppColors.warmOrangeLargeText,
   );
 
   /// Supporting copy treatment from Figma hero node `2190:1569`.
@@ -154,7 +154,7 @@ abstract final class AppTextStyles {
     fontWeight: FontWeight.w400,
     height: 60 / 50,
     letterSpacing: -0.5,
-    color: AppColors.blueMain.withValues(alpha: 0.4),
+    color: AppColors.blueMain.withValues(alpha: 0.65),
   );
 
   /// Italic emphasis within the research statement.
@@ -202,10 +202,10 @@ abstract final class AppTextStyles {
         fontWeight: FontWeight.w600,
         height: 26 / 16,
         letterSpacing: 0.32,
-        color: AppColors.warmOrange,
+        color: AppColors.warmOrangeText,
       ).copyWith(
         decoration: TextDecoration.underline,
-        decorationColor: AppColors.warmOrange,
+        decorationColor: AppColors.warmOrangeText,
         decorationThickness: 0.8,
       );
 

@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 
@@ -91,6 +92,24 @@ void main() {
     final context = tester.element(find.byType(LandingPage));
     _expectLocalizedTitle(tester, 'Fun App Landing Page');
     expect(Localizations.localeOf(context), const Locale('en'));
+  });
+
+  testWidgets('maps each resolved locale to the host document language', (
+    tester,
+  ) async {
+    for (final locale in AppLocalizations.supportedLocales) {
+      await _pumpApp(tester, locale);
+
+      final context = tester.element(find.byType(LandingPage));
+      expect(
+        documentLanguageFor(Localizations.localeOf(context)),
+        locale.languageCode,
+      );
+    }
+
+    await _pumpApp(tester, const Locale('fr'));
+    final context = tester.element(find.byType(LandingPage));
+    expect(documentLanguageFor(Localizations.localeOf(context)), 'en');
   });
 }
 
