@@ -12,7 +12,6 @@ import 'package:fun_app_landing_page/presentation/landing/widgets/founding_offer
 import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_header.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_section_placeholder.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/problem_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/research_stats_section.dart';
@@ -52,39 +51,12 @@ void main() {
       orderedEquals(expectedTypes),
     );
     expect(
-      find.descendant(
-        of: find.byType(LandingHeader),
-        matching: find.byType(LandingSectionPlaceholder),
+      find.byWidgetPredicate(
+        (widget) =>
+            widget.runtimeType.toString() == 'LandingSectionPlaceholder',
       ),
       findsNothing,
     );
-    expect(
-      find.descendant(
-        of: find.byType(HeroSection),
-        matching: find.byType(LandingSectionPlaceholder),
-      ),
-      findsNothing,
-    );
-    for (final implementedSection in [
-      find.byType(ProblemStatementSection),
-      find.byType(ResearchStatsSection),
-      find.byType(ConnectionExperienceSection),
-      find.byType(MembershipSection),
-      find.byType(FoundingOfferSection),
-      find.byType(FoundingFriendsSection),
-      find.byType(VenueSection),
-      find.byType(WelcomeStatementSection),
-      find.byType(LandingFooter),
-    ]) {
-      expect(
-        find.descendant(
-          of: implementedSection,
-          matching: find.byType(LandingSectionPlaceholder),
-        ),
-        findsNothing,
-      );
-    }
-    expect(find.byType(LandingSectionPlaceholder), findsOneWidget);
   });
 
   testWidgets('renders the authoritative English header and hero copy', (
@@ -215,6 +187,9 @@ void main() {
       find.byType(SingleChildScrollView),
     );
     expect(scrollView.scrollDirection, Axis.vertical);
+    expect(find.byType(CustomScrollView), findsNothing);
+    expect(find.byType(SliverList), findsNothing);
+    expect(find.byType(SliverToBoxAdapter), findsNothing);
 
     final initialHeaderTop = tester.getTopLeft(find.byType(LandingHeader)).dy;
     await tester.drag(

@@ -3,6 +3,7 @@ abstract final class AppAssets {
   static const _brandingLogoPath = 'assets/branding/logos';
   static const _brandingShapePath = 'assets/branding/shapes';
   static const _landingConnectionPath = 'assets/landing/connection';
+  static const _landingFaqPath = 'assets/landing/faq';
   static const _landingFoundingFriendsPath = 'assets/landing/founding_friends';
   static const _landingFooterPath = 'assets/landing/footer';
   static const _landingHeaderPath = 'assets/landing/header';
@@ -39,6 +40,15 @@ abstract final class AppAssets {
   /// Figma-cropped group photograph used by the connection section.
   static const String connectionGroup =
       '$_landingConnectionPath/connection_group.png';
+
+  /// Exact purple decorative glyph used by the FAQ eyebrow.
+  static const String faqGlyph = '$_landingFaqPath/faq_glyph.svg';
+
+  /// Exact collapsed-state icon used by FAQ question controls.
+  static const String faqPlus = '$_landingFaqPath/faq_plus.svg';
+
+  /// Exact expanded-state icon used by FAQ question controls.
+  static const String faqMinus = '$_landingFaqPath/faq_minus.svg';
 
   /// Check artwork used inside both membership cards.
   static const String membershipCheck =

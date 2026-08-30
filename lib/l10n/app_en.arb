@@ -283,5 +283,209 @@
   "landingWelcomeStatementEmphasis": "Welcome to a friendlier future.",
   "@landingWelcomeStatementEmphasis": {
     "description": "Italic orange ending of the closing welcome statement."
+  },
+  "landingFaqEyebrow": "FAQ",
+  "@landingFaqEyebrow": {
+    "description": "Eyebrow above the FAQ section heading."
+  },
+  "landingFaqHeading": "Everything You Need To Know",
+  "@landingFaqHeading": {
+    "description": "Heading for the FAQ section."
+  },
+  "landingFaqFreeQuestion": "Is Fun App free?",
+  "@landingFaqFreeQuestion": {
+    "description": "FAQ question about the cost of Fun App."
+  },
+  "landingFaqFreeAnswer1": "Yes. The core Fun App experience is free because finding someone to grab coffee with should not require a financial strategy.",
+  "@landingFaqFreeAnswer1": {
+    "description": "First paragraph answering whether Fun App is free."
+  },
+  "landingFaqFreeAnswer2": "We offer an optional subscription for extra features, higher limits, and additional storage. Nice to have, not required to enjoy using the app. However, join early as a Founding Friend and the subscription is included for free.",
+  "@landingFaqFreeAnswer2": {
+    "description": "Second paragraph answering whether Fun App is free."
+  },
+  "landingFaqLifetimeQuestion": "Is a Founding Friend subscription really lifetime?",
+  "@landingFaqLifetimeQuestion": {
+    "description": "FAQ question about the lifetime Founding Friend subscription."
+  },
+  "landingFaqLifetimeAnswer1": "Yep. Lifetime means lifetime.",
+  "@landingFaqLifetimeAnswer1": {
+    "description": "First paragraph answering the lifetime subscription question."
+  },
+  "landingFaqLifetimeAnswer2": "The one obvious exception: if your account is banned for violating our rules or misconduct reported by other users, the subscription does not come with diplomatic immunity.",
+  "@landingFaqLifetimeAnswer2": {
+    "description": "Second paragraph answering the lifetime subscription question."
+  },
+  "landingFaqCancelQuestion": "Can I change my mind and cancel my subscription?",
+  "@landingFaqCancelQuestion": {
+    "description": "FAQ question about cancelling a subscription."
+  },
+  "landingFaqCancelAnswer1": "Of course.",
+  "@landingFaqCancelAnswer1": {
+    "description": "First paragraph answering the cancellation question."
+  },
+  "landingFaqCancelAnswer2": "After launch and the initial one-month trial period, you can cancel your Founding Friend free subscription, and after 14 days for other, later, free and paid subscription types. We want you here because the Fun App is useful and enjoyable, not because you forgot where the cancel button is.",
+  "@landingFaqCancelAnswer2": {
+    "description": "Second paragraph answering the cancellation question."
+  },
+  "landingFaqPhotoQuestion": "What photo should I use?",
+  "@landingFaqPhotoQuestion": {
+    "description": "FAQ question about profile photos."
+  },
+  "landingFaqPhotoAnswer1": "The one where it’s actually you.",
+  "@landingFaqPhotoAnswer1": {
+    "description": "First paragraph answering the profile photo question."
+  },
+  "landingFaqPhotoAnswer2": "Clear face, decent light, preferably taken sometime this decade. Group photos, random landscapes, memes, and pictures without you may be removed from discovery.",
+  "@landingFaqPhotoAnswer2": {
+    "description": "Second paragraph answering the profile photo question."
+  },
+  "landingFaqPhotoAnswer3": "People are trying to figure out who they are meeting. Give them a fighting chance.",
+  "@landingFaqPhotoAnswer3": {
+    "description": "Third paragraph answering the profile photo question."
+  },
+  "landingFaqBioQuestion": "What should I put in my bio?",
+  "@landingFaqBioQuestion": {
+    "description": "FAQ question about profile biography content."
+  },
+  "landingFaqBioAnswer1": "Anything from two lines to a small autobiography.",
+  "@landingFaqBioAnswer1": {
+    "description": "First paragraph answering the biography question."
+  },
+  "landingFaqBioAnswer2": "Tell people what you enjoy, what you are curious about, or what you’d happily leave the house for.",
+  "@landingFaqBioAnswer2": {
+    "description": "Second paragraph answering the biography question."
+  },
+  "landingFaqBioAnswer3": "Fun App isn’t a dating app. You don’t need to sell yourself as “fluent in sarcasm and travel.” You are here to find someone to see a movie with, grab coffee, play tennis, visit an exhibition, or do something else in the real world.",
+  "@landingFaqBioAnswer3": {
+    "description": "Third paragraph answering the biography question."
+  },
+  "landingFaqEventsQuestion": "Can regular users create events?",
+  "@landingFaqEventsQuestion": {
+    "description": "FAQ question about creating events."
+  },
+  "landingFaqEventsAnswer1": "Yes.",
+  "@landingFaqEventsAnswer1": {
+    "description": "First paragraph answering the event creation question."
+  },
+  "landingFaqEventsAnswer2": "Verified users can create a limited number of events each month. You don’t need to be a professional organizer, nightlife promoter, or person with a clipboard. Have a plan? Invite people.",
+  "@landingFaqEventsAnswer2": {
+    "description": "Second paragraph answering the event creation question."
+  },
+  "landingFaqMatchingQuestion": "How does matching work?",
+  "@landingFaqMatchingQuestion": {
+    "description": "FAQ question about matching."
+  },
+  "landingFaqMatchingAnswer1": "It doesn’t. We don’t have matches.",
+  "@landingFaqMatchingAnswer1": {
+    "description": "First paragraph answering the matching question."
+  },
+  "landingFaqMatchingAnswer2": "Fun App gives you plenty of ways to search for the right person, but we care more about shared intent than algorithmic destiny.",
+  "@landingFaqMatchingAnswer2": {
+    "description": "Second paragraph answering the matching question."
+  },
+  "landingFaqSharedIntentTerm": "shared intent",
+  "@landingFaqSharedIntentTerm": {
+    "description": "Localized phrase emphasized within the matching answer."
+  },
+  "landingFaqMatchingAnswer3": "You want to go climbing tonight. Someone else wants to go climbing tonight. That’s already more useful than knowing you are both Capricorns.",
+  "@landingFaqMatchingAnswer3": {
+    "description": "Third paragraph answering the matching question."
+  },
+  "landingFaqLoveQuestion": "Can I find love on Fun App?",
+  "@landingFaqLoveQuestion": {
+    "description": "FAQ question about finding love."
+  },
+  "landingFaqLoveAnswer1": "Anything can happen here.",
+  "@landingFaqLoveAnswer1": {
+    "description": "First paragraph answering the finding love question."
+  },
+  "landingFaqLoveAnswer2": "We just don’t believe an algorithm can calculate chemistry for you. Chemistry has an annoying habit of happening in real life.",
+  "@landingFaqLoveAnswer2": {
+    "description": "Second paragraph answering the finding love question."
+  },
+  "landingFaqLoveAnswer3": "Find events. Meet actual people. See what happens.",
+  "@landingFaqLoveAnswer3": {
+    "description": "Third paragraph answering the finding love question."
+  },
+  "landingFaqSafetyQuestion": "Is Fun App safe?",
+  "@landingFaqSafetyQuestion": {
+    "description": "FAQ question about safety."
+  },
+  "landingFaqSafetyAnswer1": "No app can honestly promise that meeting strangers is 100% safe and we won’t pretend otherwise.",
+  "@landingFaqSafetyAnswer1": {
+    "description": "First paragraph answering the safety question."
+  },
+  "landingFaqSafetyAnswer2": "Features like Safe Guard and Footprint are designed to add an extra layer of safety, not replace your judgment.",
+  "@landingFaqSafetyAnswer2": {
+    "description": "Second paragraph answering the safety question."
+  },
+  "landingFaqSafetyAnswer3": "Meet in public places. Prefer daytime for first meetings. Don’t get into a stranger’s car or go to a private location. And if something feels even slightly off, you do not owe anyone the benefit of the doubt.",
+  "@landingFaqSafetyAnswer3": {
+    "description": "Third paragraph answering the safety question."
+  },
+  "landingFaqSafeGuardQuestion": "What is Safe Guard?",
+  "@landingFaqSafeGuardQuestion": {
+    "description": "FAQ question about the future Safe Guard feature."
+  },
+  "landingFaqSafeGuardAnswer1": "Safe Guard lets you tell a trusted person where you are going, who you are meeting, and when they should expect to hear from you, even if they don’t use Fun App.",
+  "@landingFaqSafeGuardAnswer1": {
+    "description": "First paragraph describing the future Safe Guard feature."
+  },
+  "landingFaqSafeGuardAnswer2": "You can also set a timer. If you don’t check in before it expires, your chosen contact can be notified automatically.",
+  "@landingFaqSafeGuardAnswer2": {
+    "description": "Second paragraph describing the future Safe Guard feature."
+  },
+  "landingFaqSafeGuardAnswer3": "Basically: someone has your back without needing to join the group chat.",
+  "@landingFaqSafeGuardAnswer3": {
+    "description": "Third paragraph describing the future Safe Guard feature."
+  },
+  "landingFaqFootprintQuestion": "What is Footprint?",
+  "@landingFaqFootprintQuestion": {
+    "description": "FAQ question about the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer1": "With both users’ consent, Footprint can temporarily share or track your location during a meeting.",
+  "@landingFaqFootprintAnswer1": {
+    "description": "First paragraph describing the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer2": "It only works when both people agree.",
+  "@landingFaqFootprintAnswer2": {
+    "description": "Second paragraph describing the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer3": "If you are meeting someone for the first time and they strongly refuse to use a safety feature you’d feel more comfortable having, that doesn’t automatically mean something is wrong. It does mean you are allowed to reconsider the meeting.",
+  "@landingFaqFootprintAnswer3": {
+    "description": "Third paragraph describing the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer4": "Comfort beats politeness.",
+  "@landingFaqFootprintAnswer4": {
+    "description": "Fourth paragraph describing the future Footprint feature."
+  },
+  "landingFaqGroupsQuestion": "Isn’t saving people into groups a little weird?",
+  "@landingFaqGroupsQuestion": {
+    "description": "FAQ question about saving profiles into groups."
+  },
+  "landingFaqGroupsAnswer1": "Fun App is built around doing different things with different people. You might have someone you love running with, someone you visit galleries with, and someone who will actually discuss the book instead of saying, “Yeah, I started it.”",
+  "@landingFaqGroupsAnswer1": {
+    "description": "First paragraph answering the saved groups question."
+  },
+  "landingFaqGroupsAnswer2": "Saved profiles and filters simply help you find the right companions for the right plans.",
+  "@landingFaqGroupsAnswer2": {
+    "description": "Second paragraph answering the saved groups question."
+  },
+  "landingFaqHarassmentQuestion": "What happens if someone harasses me or uses hate speech?",
+  "@landingFaqHarassmentQuestion": {
+    "description": "FAQ question about harassment and hate speech."
+  },
+  "landingFaqHarassmentAnswer1": "Fun App has no tolerance for harassment, threats, discriminatory abuse, or hate speech targeting people based on identity or protected characteristics.",
+  "@landingFaqHarassmentAnswer1": {
+    "description": "First paragraph answering the harassment question."
+  },
+  "landingFaqHarassmentAnswer2": "Accounts that violate our rules may be restricted or banned.",
+  "@landingFaqHarassmentAnswer2": {
+    "description": "Second paragraph answering the harassment question."
+  },
+  "landingFaqHarassmentAnswer3": "If someone makes you uncomfortable, report them through their profile. You are never required to keep interacting just to be polite. Connections made through Fun App should be enjoyable.",
+  "@landingFaqHarassmentAnswer3": {
+    "description": "Third paragraph answering the harassment question."
   }
 }

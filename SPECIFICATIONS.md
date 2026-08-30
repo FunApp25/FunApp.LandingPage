@@ -31,9 +31,11 @@ Current implementation is evidence of repository state, not automatically a perm
   `2190:1596`; the membership and limited-time-offer sections implement nodes
   `2190:1606` and `2190:1613`; the Founding Friends and venue sections implement
   nodes `2190:1620`, `2190:1627`, and `2190:1631`; the welcome statement and
-  footer implement nodes `2190:1638` and `2190:1664`. Only the detailed FAQ
-  content remains intentionally unimplemented in the current Ready-for-Dev
-  static design.
+  footer implement nodes `2190:1638` and `2190:1664`; the FAQ implements node
+  `2190:1644`. The current Ready-for-Dev static Figma design is fully
+  represented in Flutter. Whole-page cleanup, alignment, responsive and
+  accessibility polish remain separate follow-up work, followed by restrained
+  motion before business, domain, application, or data implementation.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell retains the platform-neutral typography and Material 3
   foundation adapted from the main Fun App application. The current Figma
@@ -134,6 +136,15 @@ narrower wrapping, stacking, and card reflow are constraint-driven
 implementation inferences because Figma provides no responsive variants. Header
 navigation and contact or waitlist CTA destinations remain open and are
 intentionally unwired.
+
+The approved FAQ contains 13 independently expandable items. Expansion state
+is local to the presentation widget, the first item starts expanded, and the
+remaining items start collapsed. Expanding one item does not collapse another.
+FAQ expansion grows naturally within the existing `SingleChildScrollView`
+landing-page composition; it does not use or require a sliver-based page
+architecture. Safe Guard, Footprint, reporting, subscription, and moderation
+statements in FAQ copy describe future product behavior only and do not
+establish those capabilities as implemented.
 
 ### Localization baseline
 

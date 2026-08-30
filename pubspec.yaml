@@ -26,6 +26,7 @@ flutter:
     - assets/branding/logos/
     - assets/branding/shapes/
     - assets/landing/connection/
+    - assets/landing/faq/
     - assets/landing/founding_friends/
     - assets/landing/footer/
     - assets/landing/header/

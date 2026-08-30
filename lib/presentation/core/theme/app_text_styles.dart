@@ -336,6 +336,33 @@ abstract final class AppTextStyles {
         decorationThickness: 1.28,
       );
 
+  /// FAQ question treatment from Figma node `2190:1644`.
+  static final TextStyle landingFaqQuestion = _instrumentSerif(
+    fontSize: 32,
+    fontWeight: FontWeight.w400,
+    height: 40 / 32,
+    letterSpacing: -0.32,
+    color: AppColors.textPrimary,
+  );
+
+  /// FAQ answer treatment from Figma node `2190:1644`.
+  static final TextStyle landingFaqAnswer = _manrope(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 24 / 16,
+    letterSpacing: 0.32,
+    color: AppColors.bodyGray,
+  );
+
+  /// Approved emphasis within selected FAQ answers.
+  static final TextStyle landingFaqAnswerEmphasis = _manrope(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    height: 24 / 16,
+    letterSpacing: 0.32,
+    color: AppColors.bodyGray,
+  );
+
   /// Shared text theme composed from the active baseline tokens.
   static final TextTheme textTheme = TextTheme(
     titleLarge: titleLarge,
