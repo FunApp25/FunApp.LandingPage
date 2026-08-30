@@ -103,15 +103,6 @@ abstract final class AppTextStyles {
     color: AppColors.lightForeground,
   );
 
-  /// Eyebrow label from Figma hero node `2190:1569`.
-  static final TextStyle landingHeroEyebrow = _manrope(
-    fontSize: 12,
-    fontWeight: FontWeight.w700,
-    height: 20 / 12,
-    letterSpacing: 0.96,
-    color: AppColors.blueMain,
-  );
-
   /// Regular display treatment from Figma hero node `2190:1569`.
   static final TextStyle landingHeroHeadline = _instrumentSerif(
     fontSize: 60,
@@ -148,6 +139,105 @@ abstract final class AppTextStyles {
     color: AppColors.lightForeground,
   );
 
+  /// Shared eyebrow label used by implemented landing-page sections.
+  static final TextStyle landingSectionEyebrow = _manrope(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    height: 20 / 12,
+    letterSpacing: 0.96,
+    color: AppColors.textPrimary,
+  );
+
+  /// Centered research statement from Figma node `2190:1581`.
+  static final TextStyle landingProblemStatement = _instrumentSerif(
+    fontSize: 50,
+    fontWeight: FontWeight.w400,
+    height: 60 / 50,
+    letterSpacing: -0.5,
+    color: AppColors.blueMain.withValues(alpha: 0.4),
+  );
+
+  /// Italic emphasis within the research statement.
+  static final TextStyle landingProblemStatementEmphasis = _instrumentSerif(
+    fontSize: 50,
+    fontWeight: FontWeight.w400,
+    fontStyle: FontStyle.italic,
+    height: 60 / 50,
+    letterSpacing: -0.5,
+    color: AppColors.blueMain,
+  );
+
+  /// Shared section heading from Figma nodes `2190:1587` and `2190:1596`.
+  static final TextStyle landingSectionHeading = _instrumentSerif(
+    fontSize: 44,
+    fontWeight: FontWeight.w400,
+    height: 54 / 44,
+    letterSpacing: -0.44,
+    color: AppColors.textPrimary,
+  );
+
+  /// Research attribution treatment from Figma node `2190:1587`.
+  static final TextStyle landingStatsAttribution = _manrope(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 26 / 16,
+    letterSpacing: 0.32,
+    color: AppColors.bodyGray,
+  );
+
+  /// Highlighted research-source treatment from Figma node `2190:1587`.
+  static final TextStyle landingStatsAttributionSource =
+      _manrope(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 26 / 16,
+        letterSpacing: 0.32,
+        color: AppColors.warmOrange,
+      ).copyWith(
+        decoration: TextDecoration.underline,
+        decorationColor: AppColors.warmOrange,
+        decorationThickness: 0.8,
+      );
+
+  /// Separators between the visual research-source labels.
+  static final TextStyle landingStatsAttributionSeparator = _manrope(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    height: 26 / 16,
+    letterSpacing: 0.32,
+    color: AppColors.bodyGray,
+  );
+
+  /// Percentage treatment used by the research statistic cards.
+  static final TextStyle landingStatValue = _manrope(
+    fontSize: 64,
+    fontWeight: FontWeight.w600,
+    height: 72 / 64,
+    color: AppColors.textPrimary,
+    fontFeatures: const [
+      FontFeature.liningFigures(),
+      FontFeature.tabularFigures(),
+    ],
+  );
+
+  /// Supporting copy used by the research statistic cards.
+  static final TextStyle landingStatBody = _manrope(
+    fontSize: 18,
+    fontWeight: FontWeight.w500,
+    height: 26 / 18,
+    letterSpacing: 0.36,
+    color: AppColors.bodyGray,
+  );
+
+  /// Explanatory body copy from Figma node `2190:1596`.
+  static final TextStyle landingSectionBody = _manrope(
+    fontSize: 18,
+    fontWeight: FontWeight.w500,
+    height: 28 / 18,
+    letterSpacing: 0.36,
+    color: AppColors.bodyGray,
+  );
+
   /// Shared text theme composed from the active baseline tokens.
   static final TextTheme textTheme = TextTheme(
     titleLarge: titleLarge,
@@ -168,6 +258,7 @@ abstract final class AppTextStyles {
     required Color color,
     double? letterSpacing,
     FontStyle? fontStyle,
+    List<FontFeature>? fontFeatures,
   }) {
     if (_usesTestFontFallback) {
       return TextStyle(
@@ -178,6 +269,7 @@ abstract final class AppTextStyles {
         fontStyle: fontStyle,
         height: height,
         letterSpacing: letterSpacing,
+        fontFeatures: fontFeatures,
         color: color,
       );
     } else {
@@ -187,6 +279,7 @@ abstract final class AppTextStyles {
         fontStyle: fontStyle,
         height: height,
         letterSpacing: letterSpacing,
+        fontFeatures: fontFeatures,
         color: color,
       );
     }

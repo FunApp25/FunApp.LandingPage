@@ -51,5 +51,93 @@
   "landingHeroImageDescription": "Three smiling people looking toward the camera.",
   "@landingHeroImageDescription": {
     "description": "Concise semantic description of the hero photograph."
+  },
+  "landingProblemEyebrow": "THE PROBLEM",
+  "@landingProblemEyebrow": {
+    "description": "Uppercase eyebrow above the problem statement."
+  },
+  "landingProblemStatementLeading": "Widespread research highlights shocking statistics about ",
+  "@landingProblemStatementLeading": {
+    "description": "Regular-style leading portion of the problem statement."
+  },
+  "landingProblemStatementEmphasis": "a loneliness epidemic across the UK and the world,",
+  "@landingProblemStatementEmphasis": {
+    "description": "Italic emphasized portion of the problem statement."
+  },
+  "landingProblemStatementTrailing": " especially amongst young adults.",
+  "@landingProblemStatementTrailing": {
+    "description": "Regular-style ending of the problem statement."
+  },
+  "landingStatsHeading": "Did you know that in the UK?",
+  "@landingStatsHeading": {
+    "description": "Heading above the UK research statistic cards."
+  },
+  "landingStatsAttributionIntro": "Recent UK research from",
+  "@landingStatsAttributionIntro": {
+    "description": "Introduction to the research organization names."
+  },
+  "landingStatsBelongingForum": "Belonging Forum",
+  "@landingStatsBelongingForum": {
+    "description": "Research organization proper name; do not translate."
+  },
+  "landingStatsMarmaladeTrust": "Marmalade Trust",
+  "@landingStatsMarmaladeTrust": {
+    "description": "Research organization proper name; do not translate."
+  },
+  "landingStatsBacpYouGov": "BACP / YouGov.",
+  "@landingStatsBacpYouGov": {
+    "description": "Research organization proper names; do not translate."
+  },
+  "landingStatsAttributionThanks": "With thanks to The Great Friendship Project, London, for compiling these figures.",
+  "@landingStatsAttributionThanks": {
+    "description": "Acknowledgement following the research organization names."
+  },
+  "landingStatsFirstValue": "49%",
+  "@landingStatsFirstValue": {
+    "description": "First UK research statistic value."
+  },
+  "landingStatsFirstDescription": "of 18-24 year old women feel lonely some or all of the time",
+  "@landingStatsFirstDescription": {
+    "description": "Explanation for the 49 percent statistic."
+  },
+  "landingStatsSecondValue": "67%",
+  "@landingStatsSecondValue": {
+    "description": "Second UK research statistic value."
+  },
+  "landingStatsSecondDescription": "of 18-29 year olds feel lonely at least once a week",
+  "@landingStatsSecondDescription": {
+    "description": "Explanation for the 67 percent statistic."
+  },
+  "landingStatsThirdValue": "70%",
+  "@landingStatsThirdValue": {
+    "description": "Third UK research statistic value."
+  },
+  "landingStatsThirdDescription": "of 16-24 year olds say loneliness negatively affects their mental health",
+  "@landingStatsThirdDescription": {
+    "description": "Explanation for the 70 percent statistic."
+  },
+  "landingStatsFourthValue": "44%",
+  "@landingStatsFourthValue": {
+    "description": "Fourth UK research statistic value."
+  },
+  "landingStatsFourthDescription": "of all young people find it difficult to move from screen to making friends IRL",
+  "@landingStatsFourthDescription": {
+    "description": "Explanation for the 44 percent statistic."
+  },
+  "landingConnectionEyebrow": "A DIFFERENT WAY TO CONNECT",
+  "@landingConnectionEyebrow": {
+    "description": "Uppercase eyebrow above the connection section heading."
+  },
+  "landingConnectionHeading": "Do you recognise any of these experiences?",
+  "@landingConnectionHeading": {
+    "description": "Heading for the alternative connection experience section."
+  },
+  "landingConnectionBody": "What if the existing introductions app culture — where users are largely viewed as an asset to generate profit for the connection platforms — was replaced with a warm, welcoming and respectful environment where users meet others IRL, free of charge, in thousands of venues of all shapes, sizes and types around the country?",
+  "@landingConnectionBody": {
+    "description": "Explanatory paragraph in the alternative connection section."
+  },
+  "landingConnectionImageDescription": "Four smiling people posing closely together outdoors.",
+  "@landingConnectionImageDescription": {
+    "description": "Concise semantic description of the connection photograph."
   }
 }

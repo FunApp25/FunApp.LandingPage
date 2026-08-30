@@ -26,8 +26,10 @@ Current implementation is evidence of repository state, not automatically a perm
 - Flutter Web is the active production implementation. The migration from Astro is complete.
 - The current Flutter application establishes the complete structural skeleton
   for Figma `Landing Page - V1`. The header and hero implement Figma nodes
-  `2190:1568` and `2190:1569`; the remaining detailed section content remains
-  intentionally unimplemented.
+  `2190:1568` and `2190:1569`; the problem statement, research statistics, and
+  connection-experience sections implement nodes `2190:1581`, `2190:1587`, and
+  `2190:1596`. The remaining detailed section content remains intentionally
+  unimplemented.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell retains the platform-neutral typography and Material 3
   foundation adapted from the main Fun App application. The current Figma
@@ -123,10 +125,11 @@ placeholder heights will be replaced by natural content sizing as sections are
 implemented. Exact breakpoints, detailed components, and final narrow-layout
 behavior remain open.
 
-The header and hero preserve their Figma desktop compositions. Their narrower
-wrapping and stacked layouts are constraint-driven implementation inferences
-because Figma provides no responsive variants. Header navigation and contact or
-waitlist CTA destinations remain open and are intentionally unwired.
+Implemented landing sections preserve their Figma desktop compositions. Their
+narrower wrapping, stacking, and card reflow are constraint-driven
+implementation inferences because Figma provides no responsive variants. Header
+navigation and contact or waitlist CTA destinations remain open and are
+intentionally unwired.
 
 ### Localization baseline
 

@@ -19,6 +19,12 @@ abstract final class AppSizes {
   /// Smallest safe page gutter when the desktop composition cannot fit.
   static const double minimumPageGutter = 16;
 
+  /// Vertical inset used by complete desktop landing-page sections.
+  static const double desktopSectionVerticalPadding = 128;
+
+  /// Smallest vertical section inset used when width is constrained.
+  static const double minimumSectionVerticalPadding = 64;
+
   /// Maximum width available inside the desktop page gutters.
   static const double maxContentWidth = 1360;
 
@@ -40,4 +46,12 @@ abstract final class AppSizes {
         minimumPageGutter,
         desktopPageGutter,
       );
+
+  /// Resolves fluid section spacing capped by the exact desktop value.
+  static double sectionVerticalPaddingFor(double availableWidth) =>
+      (availableWidth * (desktopSectionVerticalPadding / desktopPageWidth))
+          .clamp(
+            minimumSectionVerticalPadding,
+            desktopSectionVerticalPadding,
+          );
 }

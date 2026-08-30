@@ -25,6 +25,7 @@ flutter:
   assets:
     - assets/branding/logos/
     - assets/branding/shapes/
+    - assets/landing/connection/
     - assets/landing/header/
     - assets/landing/hero/
   generate: true

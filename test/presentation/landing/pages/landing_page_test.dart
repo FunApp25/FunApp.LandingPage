@@ -65,7 +65,20 @@ void main() {
       ),
       findsNothing,
     );
-    expect(find.byType(LandingSectionPlaceholder), findsNWidgets(10));
+    for (final implementedSection in [
+      find.byType(ProblemStatementSection),
+      find.byType(ResearchStatsSection),
+      find.byType(ConnectionExperienceSection),
+    ]) {
+      expect(
+        find.descendant(
+          of: implementedSection,
+          matching: find.byType(LandingSectionPlaceholder),
+        ),
+        findsNothing,
+      );
+    }
+    expect(find.byType(LandingSectionPlaceholder), findsNWidgets(7));
   });
 
   testWidgets('renders the authoritative English header and hero copy', (
@@ -238,6 +251,9 @@ void main() {
       for (final finder in [
         find.byType(LandingHeader),
         find.byType(HeroSection),
+        find.byType(ProblemStatementSection),
+        find.byType(ResearchStatsSection),
+        find.byType(ConnectionExperienceSection),
         find.byType(FaqSection),
         find.byType(LandingFooter),
       ]) {

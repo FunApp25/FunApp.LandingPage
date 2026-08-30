@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
 /// Landing-page hero from Figma wrapper node `2190:1569`.
 final class HeroSection extends StatelessWidget {
@@ -149,23 +149,12 @@ final class _HeroContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            SvgPicture.asset(
-              AppAssets.heroEyebrowGlyph,
-              key: const Key('heroEyebrowGlyph'),
-              width: 18,
-              height: 12,
-              excludeFromSemantics: true,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                context.l10n.landingHeroEyebrow,
-                style: AppTextStyles.landingHeroEyebrow,
-              ),
-            ),
-          ],
+        SectionEyebrow(
+          label: context.l10n.landingHeroEyebrow,
+          glyphAsset: AppAssets.heroEyebrowGlyph,
+          foregroundColor: AppColors.blueMain,
+          glyphSize: const Size(18, 12),
+          glyphKey: const Key('heroEyebrowGlyph'),
         ),
         const SizedBox(height: 14),
         Semantics(
