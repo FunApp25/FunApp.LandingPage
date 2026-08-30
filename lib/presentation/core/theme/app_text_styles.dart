@@ -176,6 +176,16 @@ abstract final class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
+  /// Italic orange emphasis within a standard landing section heading.
+  static final TextStyle landingSectionHeadingEmphasis = _instrumentSerif(
+    fontSize: 44,
+    fontWeight: FontWeight.w400,
+    fontStyle: FontStyle.italic,
+    height: 54 / 44,
+    letterSpacing: -0.44,
+    color: AppColors.warmOrange,
+  );
+
   /// Research attribution treatment from Figma node `2190:1587`.
   static final TextStyle landingStatsAttribution = _manrope(
     fontSize: 16,

@@ -3,9 +3,11 @@ abstract final class AppAssets {
   static const _brandingLogoPath = 'assets/branding/logos';
   static const _brandingShapePath = 'assets/branding/shapes';
   static const _landingConnectionPath = 'assets/landing/connection';
+  static const _landingFoundingFriendsPath = 'assets/landing/founding_friends';
   static const _landingHeaderPath = 'assets/landing/header';
   static const _landingHeroPath = 'assets/landing/hero';
   static const _landingMembershipPath = 'assets/landing/membership';
+  static const _landingVenuesPath = 'assets/landing/venues';
 
   /// Warm charcoal Fun App wordmark SVG.
   static const String funAppWordmarkBlack =
@@ -47,4 +49,11 @@ abstract final class AppAssets {
   /// Purple decorative glyph used by the limited-time offer eyebrow.
   static const String foundingOfferGlyph =
       '$_landingMembershipPath/founding_offer_glyph.svg';
+
+  /// Masked photograph used by the Founding Friends promotional card.
+  static const String foundingFriendsGroup =
+      '$_landingFoundingFriendsPath/founding_friends_group.png';
+
+  /// Masked photograph used by the venue promotional card.
+  static const String venueGroup = '$_landingVenuesPath/venue_group.png';
 }

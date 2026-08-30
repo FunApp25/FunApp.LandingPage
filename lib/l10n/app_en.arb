@@ -215,5 +215,61 @@
   "landingFoundingOfferTrailing": " ‘Here & Now’ membership on us.",
   "@landingFoundingOfferTrailing": {
     "description": "Regular ending of the Founding Friend offer statement; Here & Now is a product term."
+  },
+  "landingFoundingFriendsHeading": "Founding Friends are Very Special",
+  "@landingFoundingFriendsHeading": {
+    "description": "Heading in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsBodyFirst": "Thank you for joining Fun App so early as a Founding Friend. You will maintain Founding Friend status forever and help Fun App change the way the world makes friends.",
+  "@landingFoundingFriendsBodyFirst": {
+    "description": "First paragraph in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsBodySecond": "Welcome aboard, this is going to be an exciting journey. Let’s change the world together.",
+  "@landingFoundingFriendsBodySecond": {
+    "description": "Second paragraph in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsCta": "Become a Founding Friend",
+  "@landingFoundingFriendsCta": {
+    "description": "Visual-only CTA in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsImageDescription": "Two people posing closely together outdoors.",
+  "@landingFoundingFriendsImageDescription": {
+    "description": "Concise semantic description of the Founding Friends photograph."
+  },
+  "landingVenueHeadingLeading": "I Run a ",
+  "@landingVenueHeadingLeading": {
+    "description": "Regular leading portion of the venue introduction heading."
+  },
+  "landingVenueHeadingEmphasis": "Venue",
+  "@landingVenueHeadingEmphasis": {
+    "description": "Italic orange emphasis in the venue introduction heading."
+  },
+  "landingVenueHeadingTrailing": "...",
+  "@landingVenueHeadingTrailing": {
+    "description": "Trailing ellipsis in the venue introduction heading."
+  },
+  "landingVenueIntroductionFirst": "Venues and events of every shape, size, type and location will be central to Fun App’s mission to make the world a friendlier place.",
+  "@landingVenueIntroductionFirst": {
+    "description": "First paragraph in the venue section introduction."
+  },
+  "landingVenueIntroductionSecond": "Venues love what Fun App is doing. Fun App loves talking to venues.",
+  "@landingVenueIntroductionSecond": {
+    "description": "Second paragraph in the venue section introduction."
+  },
+  "landingVenueCardHeading": "I Run a Venue...",
+  "@landingVenueCardHeading": {
+    "description": "Heading in the venue promotional card."
+  },
+  "landingVenueCardSupporting": "How can I help change the world?",
+  "@landingVenueCardSupporting": {
+    "description": "Supporting question in the venue promotional card."
+  },
+  "landingVenueCta": "Let’s Start a Conversation",
+  "@landingVenueCta": {
+    "description": "Visual-only CTA in the venue promotional card."
+  },
+  "landingVenueImageDescription": "Five people lying in a circle with their heads together.",
+  "@landingVenueImageDescription": {
+    "description": "Concise semantic description of the venue photograph."
   }
 }

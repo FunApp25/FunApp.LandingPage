@@ -26,9 +26,11 @@ flutter:
     - assets/branding/logos/
     - assets/branding/shapes/
     - assets/landing/connection/
+    - assets/landing/founding_friends/
     - assets/landing/header/
     - assets/landing/hero/
     - assets/landing/membership/
+    - assets/landing/venues/
   generate: true
   uses-material-design: true
 
