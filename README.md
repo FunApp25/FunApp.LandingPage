@@ -16,8 +16,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 - The complete Flutter section skeleton for Figma `Landing Page - V1` is in
   place. The production header, hero, problem statement, research statistics,
   connection-experience, membership, limited-time-offer, Founding Friends, and
-  venue sections now replace their temporary placeholders; the welcome
-  statement, FAQ, and footer will be implemented incrementally.
+  venue, welcome-statement, and footer sections now replace their temporary
+  placeholders; only the FAQ remains to complete the current Ready-for-Dev
+  static design.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

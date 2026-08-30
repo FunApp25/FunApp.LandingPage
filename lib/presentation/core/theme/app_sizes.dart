@@ -40,6 +40,12 @@ abstract final class AppSizes {
   /// Height of the V2 wordmark in the Figma landing-page header.
   static const double headerWordmarkHeight = 29;
 
+  /// Width of the V2 wordmark in the Figma landing-page footer.
+  static const double footerWordmarkWidth = 123;
+
+  /// Height of the V2 wordmark in the Figma landing-page footer.
+  static const double footerWordmarkHeight = 40;
+
   /// Resolves a fluid page gutter capped by the exact desktop value.
   static double pageGutterFor(double availableWidth) =>
       (availableWidth * 0.05).clamp(

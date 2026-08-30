@@ -13,9 +13,9 @@ void main() {
     await _pumpApp(tester, const Locale('en'));
 
     expect(find.byType(LandingPage), findsOneWidget);
-    expect(find.byType(FunAppLogo), findsOneWidget);
-    expect(find.byType(SvgPicture), findsNWidgets(12));
-    expect(find.bySemanticsLabel('Fun App'), findsOneWidget);
+    expect(find.byType(FunAppLogo), findsNWidgets(2));
+    expect(find.byType(SvgPicture), findsNWidgets(15));
+    expect(find.bySemanticsLabel('Fun App'), findsNWidgets(2));
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     final pageContext = tester.element(find.byType(LandingPage));

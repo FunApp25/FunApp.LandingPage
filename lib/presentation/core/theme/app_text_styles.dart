@@ -322,6 +322,20 @@ abstract final class AppTextStyles {
         color: AppColors.textPrimary,
       );
 
+  /// Contact-address treatment from Figma footer node `2190:1664`.
+  static final TextStyle landingFooterEmail =
+      _manrope(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        height: 24 / 16,
+        letterSpacing: 0.32,
+        color: AppColors.blueMain,
+      ).copyWith(
+        decoration: TextDecoration.underline,
+        decorationColor: AppColors.blueMain.withValues(alpha: 0.3),
+        decorationThickness: 1.28,
+      );
+
   /// Shared text theme composed from the active baseline tokens.
   static final TextTheme textTheme = TextTheme(
     titleLarge: titleLarge,

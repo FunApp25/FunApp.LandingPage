@@ -4,10 +4,12 @@ abstract final class AppAssets {
   static const _brandingShapePath = 'assets/branding/shapes';
   static const _landingConnectionPath = 'assets/landing/connection';
   static const _landingFoundingFriendsPath = 'assets/landing/founding_friends';
+  static const _landingFooterPath = 'assets/landing/footer';
   static const _landingHeaderPath = 'assets/landing/header';
   static const _landingHeroPath = 'assets/landing/hero';
   static const _landingMembershipPath = 'assets/landing/membership';
   static const _landingVenuesPath = 'assets/landing/venues';
+  static const _landingWelcomePath = 'assets/landing/welcome';
 
   /// Warm charcoal Fun App wordmark SVG.
   static const String funAppWordmarkBlack =
@@ -56,4 +58,11 @@ abstract final class AppAssets {
 
   /// Masked photograph used by the venue promotional card.
   static const String venueGroup = '$_landingVenuesPath/venue_group.png';
+
+  /// Exact decorative glyph used by the welcome-statement eyebrow.
+  static const String welcomeGlyph = '$_landingWelcomePath/welcome_glyph.svg';
+
+  /// Exact envelope artwork used by the landing-page footer.
+  static const String footerEnvelope =
+      '$_landingFooterPath/envelope_simple.svg';
 }

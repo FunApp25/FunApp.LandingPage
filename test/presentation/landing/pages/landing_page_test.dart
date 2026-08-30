@@ -73,6 +73,8 @@ void main() {
       find.byType(FoundingOfferSection),
       find.byType(FoundingFriendsSection),
       find.byType(VenueSection),
+      find.byType(WelcomeStatementSection),
+      find.byType(LandingFooter),
     ]) {
       expect(
         find.descendant(
@@ -82,7 +84,7 @@ void main() {
         findsNothing,
       );
     }
-    expect(find.byType(LandingSectionPlaceholder), findsNWidgets(3));
+    expect(find.byType(LandingSectionPlaceholder), findsOneWidget);
   });
 
   testWidgets('renders the authoritative English header and hero copy', (
@@ -95,6 +97,10 @@ void main() {
       'MEMBERSHIP',
       'FOUNDING FRIENDS',
       'FOR VENUES',
+    ]) {
+      expect(find.text(label), findsNWidgets(2));
+    }
+    for (final label in [
       'Contact Us',
       'A FRIENDLIER WAY TO CONNECT',
       'Join the Waitlist',
@@ -170,8 +176,12 @@ void main() {
   ) async {
     await _pumpApp(tester);
 
-    final logoWidget = tester.widget<FunAppLogo>(find.byType(FunAppLogo));
-    expect(logoWidget.variant, FunAppLogoVariant.landingV2);
+    final logoWidgets = tester.widgetList<FunAppLogo>(find.byType(FunAppLogo));
+    expect(logoWidgets, hasLength(2));
+    expect(
+      logoWidgets.map((logo) => logo.variant),
+      everyElement(FunAppLogoVariant.landingV2),
+    );
     _expectSvgAsset(
       tester,
       const Key('funAppLogo'),
@@ -262,6 +272,7 @@ void main() {
         find.byType(FoundingOfferSection),
         find.byType(FoundingFriendsSection),
         find.byType(VenueSection),
+        find.byType(WelcomeStatementSection),
         find.byType(FaqSection),
         find.byType(LandingFooter),
       ]) {
@@ -295,7 +306,7 @@ void main() {
       'Three smiling people looking toward the camera.',
     );
     expect(imageSemantics.flagsCollection.isImage, isTrue);
-    expect(find.bySemanticsLabel('Fun App'), findsOneWidget);
+    expect(find.bySemanticsLabel('Fun App'), findsNWidgets(2));
 
     final eyebrowGlyph = tester.widget<SvgPicture>(
       find.byKey(const Key('heroEyebrowGlyph')),

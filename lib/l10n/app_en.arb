@@ -271,5 +271,17 @@
   "landingVenueImageDescription": "Five people lying in a circle with their heads together.",
   "@landingVenueImageDescription": {
     "description": "Concise semantic description of the venue photograph."
+  },
+  "landingWelcomeEyebrow": "Welcome to Fun App",
+  "@landingWelcomeEyebrow": {
+    "description": "Eyebrow above the closing welcome statement."
+  },
+  "landingWelcomeStatementLeading": "Fun App believes friendship, group and dating platforms can be SO much better.",
+  "@landingWelcomeStatementLeading": {
+    "description": "Regular leading portion of the closing welcome statement."
+  },
+  "landingWelcomeStatementEmphasis": "Welcome to a friendlier future.",
+  "@landingWelcomeStatementEmphasis": {
+    "description": "Italic orange ending of the closing welcome statement."
   }
 }

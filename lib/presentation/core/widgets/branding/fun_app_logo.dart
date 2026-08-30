@@ -20,6 +20,7 @@ final class FunAppLogo extends StatelessWidget {
     this.variant = FunAppLogoVariant.charcoal,
     this.semanticLabel,
     this.excludeFromSemantics = true,
+    this.svgKey = const Key('funAppLogo'),
     super.key,
   });
 
@@ -38,13 +39,16 @@ final class FunAppLogo extends StatelessWidget {
   /// Whether this wordmark should be hidden from semantics.
   final bool excludeFromSemantics;
 
+  /// Key applied to the underlying SVG presentation boundary.
+  final Key? svgKey;
+
   @override
   Widget build(BuildContext context) => SvgPicture.asset(
     switch (variant) {
       FunAppLogoVariant.charcoal => AppAssets.funAppWordmarkBlack,
       FunAppLogoVariant.landingV2 => AppAssets.funAppLogoV2,
     },
-    key: const Key('funAppLogo'),
+    key: svgKey,
     width: width,
     height: height,
     semanticsLabel: semanticLabel,
