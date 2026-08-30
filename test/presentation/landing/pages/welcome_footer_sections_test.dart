@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
@@ -116,6 +117,14 @@ void main() {
       expect(asset, startsWith('assets/'));
       expect(asset, isNot(contains('figma.com')));
     }
+
+    final envelopeSvg = await rootBundle.loadString(AppAssets.footerEnvelope);
+    expect(
+      envelopeSvg,
+      contains('width="16" height="16" viewBox="0 0 16 16"'),
+    );
+    expect(envelopeSvg, contains('M14.0264 2.90039'));
+    expect(envelopeSvg, isNot(contains('figma.com')));
   });
 
   testWidgets('adapts statement and footer wrapping by constraints', (
@@ -154,7 +163,7 @@ void main() {
     }
   });
 
-  testWidgets('exposes coherent static semantics without interaction roles', (
+  testWidgets('exposes navigation controls and keeps email static', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -199,7 +208,7 @@ void main() {
           .getSemantics(find.byKey(Key('footerNavigationItem$index')))
           .getSemanticsData();
       expect(navigation.flagsCollection.isLink, isFalse);
-      expect(navigation.flagsCollection.isButton, isFalse);
+      expect(navigation.flagsCollection.isButton, isTrue);
     }
     expect(
       find.descendant(

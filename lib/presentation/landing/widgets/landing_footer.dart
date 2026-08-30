@@ -6,11 +6,30 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/landing_navigation_item.dart';
 
-/// Static landing-page footer from Figma node `2190:1664`.
+/// Landing-page footer from Figma node `2190:1664`.
 final class LandingFooter extends StatelessWidget {
   /// Creates the landing footer.
-  const LandingFooter({super.key});
+  const LandingFooter({
+    required this.onOurBeliefSelected,
+    required this.onMembershipSelected,
+    required this.onFoundingFriendsSelected,
+    required this.onVenuesSelected,
+    super.key,
+  });
+
+  /// Scrolls to the hero section.
+  final VoidCallback onOurBeliefSelected;
+
+  /// Scrolls to the membership section.
+  final VoidCallback onMembershipSelected;
+
+  /// Scrolls to the Founding Friends section.
+  final VoidCallback onFoundingFriendsSelected;
+
+  /// Scrolls to the venue section.
+  final VoidCallback onVenuesSelected;
 
   /// Visible contact address whose interaction remains intentionally deferred.
   static const contactEmail = 'info@funapp.world';
@@ -29,11 +48,23 @@ final class LandingFooter extends StatelessWidget {
               64.0,
               88.0,
             );
-        final navigationLabels = <String>[
-          context.l10n.landingHeaderOurBelief,
-          context.l10n.landingHeaderMembership,
-          context.l10n.landingHeaderFoundingFriends,
-          context.l10n.landingHeaderForVenues,
+        final navigationItems = <_NavigationItem>[
+          (
+            label: context.l10n.landingHeaderOurBelief,
+            onSelected: onOurBeliefSelected,
+          ),
+          (
+            label: context.l10n.landingHeaderMembership,
+            onSelected: onMembershipSelected,
+          ),
+          (
+            label: context.l10n.landingHeaderFoundingFriends,
+            onSelected: onFoundingFriendsSelected,
+          ),
+          (
+            label: context.l10n.landingHeaderForVenues,
+            onSelected: onVenuesSelected,
+          ),
         ];
 
         return Padding(
@@ -49,7 +80,7 @@ final class LandingFooter extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _FooterLogoAndNavigation(labels: navigationLabels),
+                  _FooterLogoAndNavigation(items: navigationItems),
                   const SizedBox(height: 80),
                   const _FooterEmail(),
                 ],
@@ -63,9 +94,9 @@ final class LandingFooter extends StatelessWidget {
 }
 
 final class _FooterLogoAndNavigation extends StatelessWidget {
-  const _FooterLogoAndNavigation({required this.labels});
+  const _FooterLogoAndNavigation({required this.items});
 
-  final List<String> labels;
+  final List<_NavigationItem> items;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -86,22 +117,19 @@ final class _FooterLogoAndNavigation extends StatelessWidget {
         spacing: 40,
         runSpacing: 20,
         children: [
-          for (var index = 0; index < labels.length; index++)
-            Semantics(
+          for (var index = 0; index < items.length; index++)
+            LandingNavigationItem(
               key: Key('footerNavigationItem$index'),
-              label: labels[index],
-              excludeSemantics: true,
-              child: Text(
-                labels[index],
-                maxLines: 1,
-                style: AppTextStyles.landingHeaderNavigation,
-              ),
+              label: items[index].label,
+              onSelected: items[index].onSelected,
             ),
         ],
       ),
     ],
   );
 }
+
+typedef _NavigationItem = ({String label, VoidCallback onSelected});
 
 final class _FooterEmail extends StatelessWidget {
   const _FooterEmail();

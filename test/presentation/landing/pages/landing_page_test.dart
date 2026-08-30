@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
@@ -12,6 +15,7 @@ import 'package:fun_app_landing_page/presentation/landing/widgets/founding_offer
 import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_header.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/landing_navigation_item.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/problem_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/research_stats_section.dart';
@@ -24,8 +28,7 @@ void main() {
 
     expect(find.byType(LandingPage), findsOneWidget);
 
-    const expectedTypes = <Type>[
-      LandingHeader,
+    const expectedSectionTypes = <Type>[
       HeroSection,
       ProblemStatementSection,
       ResearchStatsSection,
@@ -39,7 +42,8 @@ void main() {
       LandingFooter,
     ];
 
-    for (final type in expectedTypes) {
+    expect(find.byType(LandingHeader), findsOneWidget);
+    for (final type in expectedSectionTypes) {
       expect(find.byType(type), findsOneWidget);
     }
 
@@ -48,7 +52,7 @@ void main() {
     );
     expect(
       sections.children.map((widget) => widget.runtimeType),
-      orderedEquals(expectedTypes),
+      orderedEquals(expectedSectionTypes),
     );
     expect(
       find.byWidgetPredicate(
@@ -180,18 +184,31 @@ void main() {
     );
   });
 
-  testWidgets('uses a vertically scrollable page composition', (tester) async {
+  testWidgets('keeps the header outside the single scrolling page body', (
+    tester,
+  ) async {
     await _pumpApp(tester);
 
+    expect(find.byType(SingleChildScrollView), findsOneWidget);
     final scrollView = tester.widget<SingleChildScrollView>(
       find.byType(SingleChildScrollView),
     );
     expect(scrollView.scrollDirection, Axis.vertical);
+    expect(scrollView.controller, isNotNull);
     expect(find.byType(CustomScrollView), findsNothing);
     expect(find.byType(SliverList), findsNothing);
     expect(find.byType(SliverToBoxAdapter), findsNothing);
+    expect(find.byType(SliverPersistentHeader), findsNothing);
+    expect(
+      find.ancestor(
+        of: find.byType(LandingHeader),
+        matching: find.byType(SingleChildScrollView),
+      ),
+      findsNothing,
+    );
 
     final initialHeaderTop = tester.getTopLeft(find.byType(LandingHeader)).dy;
+    final initialHeroTop = tester.getTopLeft(find.byType(HeroSection)).dy;
     await tester.drag(
       find.byType(SingleChildScrollView),
       const Offset(0, -400),
@@ -200,8 +217,118 @@ void main() {
 
     expect(
       tester.getTopLeft(find.byType(LandingHeader)).dy,
-      lessThan(initialHeaderTop),
+      initialHeaderTop,
     );
+    expect(
+      tester.getTopLeft(find.byType(HeroSection)).dy,
+      lessThan(initialHeroTop),
+    );
+  });
+
+  testWidgets('maps header and footer navigation to anchored sections', (
+    tester,
+  ) async {
+    const targets = <Type>[
+      HeroSection,
+      MembershipSection,
+      FoundingFriendsSection,
+      VenueSection,
+    ];
+
+    for (var index = 0; index < targets.length; index++) {
+      await _pumpApp(tester);
+      await _moveToPageEnd(tester);
+      await tester.tap(
+        find.byKey(Key('landingHeaderNavigationItem$index')),
+      );
+      await tester.pumpAndSettle();
+      _expectTargetBelowHeader(tester, targets[index]);
+
+      await _moveToPageEnd(tester);
+      await tester.tap(find.byKey(Key('footerNavigationItem$index')));
+      await tester.pumpAndSettle();
+      _expectTargetBelowHeader(tester, targets[index]);
+    }
+  });
+
+  testWidgets('navigation respects reduced motion', (
+    tester,
+  ) async {
+    await _pumpLandingPage(tester, disableAnimations: true);
+    await _moveToPageEnd(tester);
+
+    final scrollController = _scrollController(tester);
+    await tester.tap(
+      find.byKey(const Key('landingHeaderNavigationItem0')),
+    );
+    expect(scrollController.offset, scrollController.position.minScrollExtent);
+    _expectTargetBelowHeader(tester, HeroSection);
+  });
+
+  testWidgets('navigation items support Enter and Space activation', (
+    tester,
+  ) async {
+    var activationCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LandingNavigationItem(
+            label: 'OUR BELIEF',
+            onSelected: () => activationCount++,
+          ),
+        ),
+      ),
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(activationCount, 1);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+    expect(activationCount, 2);
+  });
+
+  testWidgets('navigation is accessible while Contact Us stays unwired', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await _pumpApp(tester);
+
+    for (final prefix in [
+      'landingHeaderNavigationItem',
+      'footerNavigationItem',
+    ]) {
+      for (var index = 0; index < 4; index++) {
+        final itemFinder = find.byKey(Key('$prefix$index'));
+        final itemSemantics = tester
+            .getSemantics(itemFinder)
+            .getSemanticsData();
+        expect(itemSemantics.flagsCollection.isButton, isTrue);
+        final inkWell = tester.widget<InkWell>(
+          find.descendant(of: itemFinder, matching: find.byType(InkWell)),
+        );
+        expect(inkWell.mouseCursor, SystemMouseCursors.click);
+        expect(inkWell.focusColor, isNot(Colors.transparent));
+      }
+    }
+
+    final contact = tester
+        .getSemantics(find.text('Contact Us'))
+        .getSemanticsData();
+    expect(contact.label, 'Contact Us');
+    expect(contact.flagsCollection.isButton, isFalse);
+    expect(contact.flagsCollection.isLink, isFalse);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('landingHeaderContactCta')),
+        matching: find.byType(InkWell),
+      ),
+      findsNothing,
+    );
+    semantics.dispose();
   });
 
   testWidgets('renders safely at narrow, intermediate, and wide widths', (
@@ -214,14 +341,27 @@ void main() {
     for (final size in [
       const Size(320, 568),
       const Size(768, 1024),
+      const Size(1024, 768),
       const Size(1440, 900),
     ]) {
       tester.view.physicalSize = size;
       await _pumpApp(tester);
 
       expect(find.byType(LandingPage), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'No layout exception is expected at $size.',
+      );
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
+
+      await _moveToPageEnd(tester);
+      await tester.tap(
+        find.byKey(const Key('landingHeaderNavigationItem1')),
+      );
+      await tester.pumpAndSettle();
+      _expectTargetBelowHeader(tester, MembershipSection);
+      expect(tester.takeException(), isNull);
 
       if (size.width == 1440) {
         expect(
@@ -305,6 +445,44 @@ Future<void> _pumpApp(
 
   await tester.pumpWidget(const FunAppLandingPageApp());
   await tester.pump();
+}
+
+Future<void> _pumpLandingPage(
+  WidgetTester tester, {
+  required bool disableAnimations,
+}) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: appTheme,
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: MediaQuery(
+        data: MediaQueryData(disableAnimations: disableAnimations),
+        child: const LandingPage(),
+      ),
+    ),
+  );
+  await tester.pump();
+}
+
+ScrollController _scrollController(WidgetTester tester) => tester
+    .widget<SingleChildScrollView>(
+      find.byKey(const Key('landingPageScrollView')),
+    )
+    .controller!;
+
+Future<void> _moveToPageEnd(WidgetTester tester) async {
+  final controller = _scrollController(tester);
+  controller.jumpTo(controller.position.maxScrollExtent);
+  await tester.pump();
+}
+
+void _expectTargetBelowHeader(WidgetTester tester, Type targetType) {
+  final headerBottom = tester.getBottomLeft(find.byType(LandingHeader)).dy;
+  final targetTop = tester.getTopLeft(find.byType(targetType)).dy;
+  expect(targetTop, closeTo(headerBottom, 1));
 }
 
 void _expectSvgAsset(

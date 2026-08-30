@@ -14,10 +14,13 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 
 - The active web-only Flutter package is `fun_app_landing_page`.
 - Every section in Figma `Landing Page - V1` now has a static Flutter
-  implementation, including the independently expandable FAQ. Full-page
-  cleanup, visual alignment, responsive and accessibility polish come next;
-  restrained motion follows that work, before any business, domain,
-  application, or data implementation.
+  implementation. The header remains fixed above the scrolling page, repeated
+  header/footer navigation moves to the corresponding page sections, and the
+  independently expandable FAQ supports its complete item surface. Contact and
+  product CTAs remain intentionally unwired. Full-page cleanup, visual
+  alignment, responsive and accessibility polish come next; restrained motion
+  follows that work, before any business, domain, application, or data
+  implementation.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

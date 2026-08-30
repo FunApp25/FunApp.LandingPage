@@ -2,18 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/landing_navigation_item.dart';
 
 /// Landing-page header from Figma node `2190:1568`.
 final class LandingHeader extends StatelessWidget {
   /// Creates the landing-page header.
-  const LandingHeader({super.key});
+  const LandingHeader({
+    required this.onOurBeliefSelected,
+    required this.onMembershipSelected,
+    required this.onFoundingFriendsSelected,
+    required this.onVenuesSelected,
+    this.onContactSelected,
+    super.key,
+  });
+
+  /// Scrolls to the hero section.
+  final VoidCallback onOurBeliefSelected;
+
+  /// Scrolls to the membership section.
+  final VoidCallback onMembershipSelected;
+
+  /// Scrolls to the Founding Friends section.
+  final VoidCallback onFoundingFriendsSelected;
+
+  /// Scrolls to the venue section.
+  final VoidCallback onVenuesSelected;
+
+  /// Reserved for the intentionally deferred Contact Us behavior.
+  final VoidCallback? onContactSelected;
 
   // Minimum width required by the complete localized horizontal composition.
   // Below it, content wraps without hiding or inventing navigation behavior.
-  static const _horizontalCompositionWidth = 880.0;
+  static const _horizontalCompositionWidth = 1080.0;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -37,11 +59,23 @@ final class LandingHeader extends StatelessWidget {
               ),
               child: LayoutBuilder(
                 builder: (context, contentConstraints) {
-                  final navigationLabels = <String>[
-                    context.l10n.landingHeaderOurBelief,
-                    context.l10n.landingHeaderMembership,
-                    context.l10n.landingHeaderFoundingFriends,
-                    context.l10n.landingHeaderForVenues,
+                  final navigationItems = <_NavigationItem>[
+                    (
+                      label: context.l10n.landingHeaderOurBelief,
+                      onSelected: onOurBeliefSelected,
+                    ),
+                    (
+                      label: context.l10n.landingHeaderMembership,
+                      onSelected: onMembershipSelected,
+                    ),
+                    (
+                      label: context.l10n.landingHeaderFoundingFriends,
+                      onSelected: onFoundingFriendsSelected,
+                    ),
+                    (
+                      label: context.l10n.landingHeaderForVenues,
+                      onSelected: onVenuesSelected,
+                    ),
                   ];
                   final usesHorizontalComposition =
                       contentConstraints.maxWidth >=
@@ -49,12 +83,14 @@ final class LandingHeader extends StatelessWidget {
 
                   return usesHorizontalComposition
                       ? _HorizontalHeader(
-                          navigationLabels: navigationLabels,
+                          navigationItems: navigationItems,
                           contactLabel: context.l10n.landingHeaderContactUs,
+                          onContactSelected: onContactSelected,
                         )
                       : _WrappedHeader(
-                          navigationLabels: navigationLabels,
+                          navigationItems: navigationItems,
                           contactLabel: context.l10n.landingHeaderContactUs,
+                          onContactSelected: onContactSelected,
                         );
                 },
               ),
@@ -68,12 +104,14 @@ final class LandingHeader extends StatelessWidget {
 
 final class _HorizontalHeader extends StatelessWidget {
   const _HorizontalHeader({
-    required this.navigationLabels,
+    required this.navigationItems,
     required this.contactLabel,
+    required this.onContactSelected,
   });
 
-  final List<String> navigationLabels;
+  final List<_NavigationItem> navigationItems;
   final String contactLabel;
+  final VoidCallback? onContactSelected;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -81,12 +119,13 @@ final class _HorizontalHeader extends StatelessWidget {
     children: [
       const _HeaderLogo(),
       const Spacer(),
-      _NavigationRow(labels: navigationLabels),
+      _NavigationRow(items: navigationItems),
       const SizedBox(width: 56),
       LandingCtaButton(
         key: const Key('landingHeaderContactCta'),
         label: contactLabel,
         size: LandingCtaSize.compact,
+        onPressed: onContactSelected,
       ),
     ],
   );
@@ -94,12 +133,14 @@ final class _HorizontalHeader extends StatelessWidget {
 
 final class _WrappedHeader extends StatelessWidget {
   const _WrappedHeader({
-    required this.navigationLabels,
+    required this.navigationItems,
     required this.contactLabel,
+    required this.onContactSelected,
   });
 
-  final List<String> navigationLabels;
+  final List<_NavigationItem> navigationItems;
   final String contactLabel;
+  final VoidCallback? onContactSelected;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -113,11 +154,17 @@ final class _WrappedHeader extends StatelessWidget {
         runSpacing: 12,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          for (final label in navigationLabels) _NavigationLabel(label: label),
+          for (var index = 0; index < navigationItems.length; index++)
+            LandingNavigationItem(
+              key: Key('landingHeaderNavigationItem$index'),
+              label: navigationItems[index].label,
+              onSelected: navigationItems[index].onSelected,
+            ),
           LandingCtaButton(
             key: const Key('landingHeaderContactCta'),
             label: contactLabel,
             size: LandingCtaSize.compact,
+            onPressed: onContactSelected,
           ),
         ],
       ),
@@ -139,30 +186,23 @@ final class _HeaderLogo extends StatelessWidget {
 }
 
 final class _NavigationRow extends StatelessWidget {
-  const _NavigationRow({required this.labels});
+  const _NavigationRow({required this.items});
 
-  final List<String> labels;
+  final List<_NavigationItem> items;
 
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      for (var index = 0; index < labels.length; index++) ...[
+      for (var index = 0; index < items.length; index++) ...[
         if (index > 0) const SizedBox(width: 40),
-        _NavigationLabel(label: labels[index]),
+        LandingNavigationItem(
+          key: Key('landingHeaderNavigationItem$index'),
+          label: items[index].label,
+          onSelected: items[index].onSelected,
+        ),
       ],
     ],
   );
 }
 
-final class _NavigationLabel extends StatelessWidget {
-  const _NavigationLabel({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    label,
-    maxLines: 1,
-    style: AppTextStyles.landingHeaderNavigation,
-  );
-}
+typedef _NavigationItem = ({String label, VoidCallback onSelected});

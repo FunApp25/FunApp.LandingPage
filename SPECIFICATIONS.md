@@ -134,17 +134,25 @@ behavior remain open.
 Implemented landing sections preserve their Figma desktop compositions. Their
 narrower wrapping, stacking, and card reflow are constraint-driven
 implementation inferences because Figma provides no responsive variants. Header
-navigation and contact or waitlist CTA destinations remain open and are
-intentionally unwired.
+and footer section navigation scrolls within the single landing page while the
+header remains fixed above the scrolling content. The established mapping is
+Our Belief to Hero, Membership to Membership, Founding Friends to Founding
+Friends, and For Venues to Venue. Anchor positions derive from the rendered
+sections, and navigation movement becomes immediate when reduced motion is
+requested. Contact Us, waitlist, product, email, and other marketing CTA
+destinations remain open and are intentionally unwired.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.
 FAQ expansion grows naturally within the existing `SingleChildScrollView`
 landing-page composition; it does not use or require a sliver-based page
-architecture. Safe Guard, Footprint, reporting, subscription, and moderation
-statements in FAQ copy describe future product behavior only and do not
-establish those capabilities as implemented.
+architecture. The complete visible surface of an FAQ item toggles it for
+pointer input, while the question remains the focused expanded/collapsed
+control for keyboard and assistive technology and expanded answer text remains
+independently readable semantic content. Safe Guard, Footprint, reporting,
+subscription, and moderation statements in FAQ copy describe future product
+behavior only and do not establish those capabilities as implemented.
 
 ### Localization baseline
 

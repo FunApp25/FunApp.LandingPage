@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
@@ -123,7 +124,7 @@ final class _FaqSectionState extends State<FaqSection> {
   }
 }
 
-final class _FaqItem extends StatelessWidget {
+final class _FaqItem extends StatefulWidget {
   const _FaqItem({
     required this.index,
     required this.content,
@@ -139,94 +140,134 @@ final class _FaqItem extends StatelessWidget {
   final VoidCallback onToggle;
 
   @override
+  State<_FaqItem> createState() => _FaqItemState();
+}
+
+final class _FaqItemState extends State<_FaqItem> {
+  bool _isFocused = false;
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final answerRightPadding = constraints.maxWidth >= 520 ? 44.0 : 0.0;
 
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: AppColors.warmCharcoal.withValues(alpha: 0.2),
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          key: Key('faqItemSurface${widget.index}'),
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onToggle,
+          excludeFromSemantics: true,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: _isHovered
+                  ? AppColors.energeticPlum.withValues(alpha: 0.06)
+                  : Colors.transparent,
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.warmCharcoal.withValues(alpha: 0.2),
+                ),
+              ),
             ),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Semantics(
-              key: Key('faqQuestionSemantics$index'),
-              label: content.question,
-              button: true,
-              expanded: isExpanded,
-              onTap: onToggle,
-              excludeSemantics: true,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  key: Key('faqQuestionControl$index'),
-                  focusNode: focusNode,
-                  onTap: onToggle,
-                  excludeFromSemantics: true,
-                  mouseCursor: SystemMouseCursors.click,
-                  focusColor: AppColors.energeticPlum.withValues(alpha: 0.1),
-                  hoverColor: AppColors.energeticPlum.withValues(alpha: 0.06),
-                  splashColor: Colors.transparent,
-                  highlightColor: Colors.transparent,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: 32,
-                      bottom: isExpanded ? 0 : 32,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            content.question,
-                            style: AppTextStyles.landingFaqQuestion,
-                          ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Semantics(
+                  key: Key('faqQuestionSemantics${widget.index}'),
+                  container: true,
+                  label: widget.content.question,
+                  button: true,
+                  expanded: widget.isExpanded,
+                  onTap: widget.onToggle,
+                  excludeSemantics: true,
+                  child: FocusableActionDetector(
+                    key: Key('faqQuestionControl${widget.index}'),
+                    focusNode: widget.focusNode,
+                    mouseCursor: SystemMouseCursors.click,
+                    shortcuts: const <ShortcutActivator, Intent>{
+                      SingleActivator(LogicalKeyboardKey.enter):
+                          ActivateIntent(),
+                      SingleActivator(LogicalKeyboardKey.space):
+                          ActivateIntent(),
+                    },
+                    actions: <Type, Action<Intent>>{
+                      ActivateIntent: CallbackAction<ActivateIntent>(
+                        onInvoke: (_) {
+                          widget.onToggle();
+                          return null;
+                        },
+                      ),
+                    },
+                    onFocusChange: (value) {
+                      setState(() => _isFocused = value);
+                    },
+                    child: ColoredBox(
+                      color: _isFocused
+                          ? AppColors.energeticPlum.withValues(alpha: 0.1)
+                          : Colors.transparent,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          top: 32,
+                          bottom: widget.isExpanded ? 0 : 32,
                         ),
-                        const SizedBox(width: 16),
-                        SvgPicture.asset(
-                          isExpanded ? AppAssets.faqMinus : AppAssets.faqPlus,
-                          key: Key('faqIcon$index'),
-                          width: 28,
-                          height: 28,
-                          excludeFromSemantics: true,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.content.question,
+                                style: AppTextStyles.landingFaqQuestion,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            SvgPicture.asset(
+                              widget.isExpanded
+                                  ? AppAssets.faqMinus
+                                  : AppAssets.faqPlus,
+                              key: Key('faqIcon${widget.index}'),
+                              width: 28,
+                              height: 28,
+                              excludeFromSemantics: true,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+                if (widget.isExpanded)
+                  Padding(
+                    key: Key('faqAnswer${widget.index}'),
+                    padding: EdgeInsets.only(
+                      top: 20,
+                      right: answerRightPadding,
+                      bottom: 32,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (
+                          var paragraphIndex = 0;
+                          paragraphIndex < widget.content.paragraphs.length;
+                          paragraphIndex++
+                        ) ...[
+                          _FaqAnswerParagraph(
+                            paragraph:
+                                widget.content.paragraphs[paragraphIndex],
+                          ),
+                          if (paragraphIndex <
+                              widget.content.paragraphs.length - 1)
+                            const SizedBox(height: 12),
+                        ],
+                      ],
+                    ),
+                  ),
+              ],
             ),
-            if (isExpanded)
-              Padding(
-                key: Key('faqAnswer$index'),
-                padding: EdgeInsets.only(
-                  top: 20,
-                  right: answerRightPadding,
-                  bottom: 32,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (
-                      var paragraphIndex = 0;
-                      paragraphIndex < content.paragraphs.length;
-                      paragraphIndex++
-                    ) ...[
-                      _FaqAnswerParagraph(
-                        paragraph: content.paragraphs[paragraphIndex],
-                      ),
-                      if (paragraphIndex < content.paragraphs.length - 1)
-                        const SizedBox(height: 12),
-                    ],
-                  ],
-                ),
-              ),
-          ],
+          ),
         ),
       );
     },

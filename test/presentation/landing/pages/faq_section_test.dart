@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
@@ -116,13 +117,22 @@ void main() {
     expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
     expect(find.byKey(const Key('faqAnswer1')), findsOneWidget);
 
-    final control = tester.widget<InkWell>(
+    final control = tester.widget<FocusableActionDetector>(
       find.byKey(const Key('faqQuestionControl1')),
     );
     control.focusNode!.requestFocus();
     await tester.pump();
     expect(control.focusNode!.hasFocus, isTrue);
-    expect(control.focusColor, isNot(Colors.transparent));
+    final focusSurface = tester.widget<ColoredBox>(
+      find.descendant(
+        of: find.byKey(const Key('faqQuestionControl1')),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    expect(
+      focusSurface.color,
+      AppColors.energeticPlum.withValues(alpha: 0.1),
+    );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
@@ -138,6 +148,26 @@ void main() {
     await tester.tap(find.byKey(const Key('faqQuestionControl1')));
     await tester.pump();
     expect(find.byKey(const Key('faqAnswer1')), findsNothing);
+  });
+
+  testWidgets('toggles once from answer and padded item regions', (
+    tester,
+  ) async {
+    await _pumpFaq(tester);
+
+    await tester.tap(find.byKey(const Key('faqAnswer0')));
+    await tester.pump();
+    expect(find.byKey(const Key('faqAnswer0')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('faqQuestionControl0')));
+    await tester.pump();
+    final questionRect = tester.getRect(
+      find.byKey(const Key('faqQuestionControl0')),
+    );
+    await tester.tapAt(Offset(questionRect.left + 4, questionRect.top + 4));
+    await tester.pump();
+    expect(find.byKey(const Key('faqAnswer0')), findsNothing);
+    expect(_svgAsset(tester, const Key('faqIcon0')), AppAssets.faqPlus);
   });
 
   for (final example in const [
@@ -273,6 +303,27 @@ void main() {
       ),
       findsOneWidget,
     );
+    final answer = tester
+        .getSemantics(
+          find.text(
+            'Yes. The core Fun App experience is free because '
+            'finding someone to grab coffee with should not require a '
+            'financial strategy.',
+          ),
+        )
+        .getSemanticsData();
+    expect(
+      answer.label,
+      contains(
+        'Yes. The core Fun App experience is free because finding someone to '
+        'grab coffee with should not require a financial strategy.',
+      ),
+    );
+    expect(answer.flagsCollection.isButton, isFalse);
+    final firstControl = tester.widget<FocusableActionDetector>(
+      find.byKey(const Key('faqQuestionControl0')),
+    );
+    expect(firstControl.mouseCursor, SystemMouseCursors.click);
     semantics.dispose();
   });
 }

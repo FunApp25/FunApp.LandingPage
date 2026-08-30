@@ -26,12 +26,7 @@ enum LandingCtaAppearance {
   brandYellow,
 }
 
-/// Presents a landing-page CTA without claiming unresolved interaction.
-///
-/// Figma defines these CTA visuals but does not define their destinations.
-/// This widget therefore intentionally has no gesture, link, or button
-/// semantics. A real interactive boundary can wrap this presentation once a
-/// destination and behavior are approved.
+/// Presents a landing-page CTA with optional approved interaction.
 final class LandingCtaButton extends StatelessWidget {
   /// Creates a visual landing-page CTA.
   const LandingCtaButton({
@@ -39,6 +34,7 @@ final class LandingCtaButton extends StatelessWidget {
     required this.size,
     this.appearance = LandingCtaAppearance.brandOrange,
     this.arrowKey,
+    this.onPressed,
     super.key,
   });
 
@@ -53,6 +49,9 @@ final class LandingCtaButton extends StatelessWidget {
 
   /// Optional key for distinguishing prominent CTA arrow instances in tests.
   final Key? arrowKey;
+
+  /// Approved activation callback, or null while behavior remains deferred.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -115,7 +114,7 @@ final class LandingCtaButton extends StatelessWidget {
         ),
       };
 
-      return DecoratedBox(
+      final visual = DecoratedBox(
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: const BorderRadius.all(
@@ -128,6 +127,34 @@ final class LandingCtaButton extends StatelessWidget {
             vertical: isProminent ? 12 : 8,
           ),
           child: content,
+        ),
+      );
+
+      final callback = onPressed;
+      if (callback == null) {
+        return visual;
+      }
+
+      return Semantics(
+        label: label,
+        button: true,
+        onTap: callback,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: callback,
+            excludeFromSemantics: true,
+            mouseCursor: SystemMouseCursors.click,
+            focusColor: AppColors.energeticPlum.withValues(alpha: 0.1),
+            hoverColor: AppColors.energeticPlum.withValues(alpha: 0.06),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            borderRadius: const BorderRadius.all(
+              Radius.circular(AppSizes.pillRadius),
+            ),
+            child: visual,
+          ),
         ),
       );
     },

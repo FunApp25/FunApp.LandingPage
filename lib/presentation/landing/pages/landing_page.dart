@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
@@ -13,32 +16,113 @@ import 'package:fun_app_landing_page/presentation/landing/widgets/venue_section.
 import 'package:fun_app_landing_page/presentation/landing/widgets/welcome_statement_section.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
-final class LandingPage extends StatelessWidget {
+final class LandingPage extends StatefulWidget {
   /// Creates the landing page.
   const LandingPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
+  State<LandingPage> createState() => _LandingPageState();
+}
+
+final class _LandingPageState extends State<LandingPage> {
+  static const _navigationDuration = Duration(milliseconds: 300);
+  static const Curve _navigationCurve = Curves.easeOutCubic;
+
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _heroKey = GlobalKey(debugLabel: 'landingHeroSection');
+  final GlobalKey _membershipKey = GlobalKey(
+    debugLabel: 'landingMembershipSection',
+  );
+  final GlobalKey _foundingFriendsKey = GlobalKey(
+    debugLabel: 'landingFoundingFriendsSection',
+  );
+  final GlobalKey _venueKey = GlobalKey(debugLabel: 'landingVenueSection');
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollTo(GlobalKey sectionKey, {bool retryAfterLayout = true}) {
+    final renderObject = sectionKey.currentContext?.findRenderObject();
+    if (!_scrollController.hasClients ||
+        renderObject == null ||
+        !renderObject.attached) {
+      if (retryAfterLayout) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _scrollTo(sectionKey, retryAfterLayout: false);
+          }
+        });
+      }
+      return;
+    }
+
+    final viewport = RenderAbstractViewport.of(renderObject);
+    final position = _scrollController.position;
+    final targetOffset = viewport
+        .getOffsetToReveal(renderObject, 0)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+    if (disableAnimations) {
+      position.jumpTo(targetOffset);
+      return;
+    }
+
+    unawaited(
+      position.animateTo(
+        targetOffset,
+        duration: _navigationDuration,
+        curve: _navigationCurve,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          key: Key('landingPageSections'),
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            LandingHeader(),
-            HeroSection(),
-            ProblemStatementSection(),
-            ResearchStatsSection(),
-            ConnectionExperienceSection(),
-            MembershipSection(),
-            FoundingOfferSection(),
-            FoundingFriendsSection(),
-            VenueSection(),
-            WelcomeStatementSection(),
-            FaqSection(),
-            LandingFooter(),
-          ],
-        ),
+      child: Column(
+        children: [
+          LandingHeader(
+            onOurBeliefSelected: () => _scrollTo(_heroKey),
+            onMembershipSelected: () => _scrollTo(_membershipKey),
+            onFoundingFriendsSelected: () => _scrollTo(_foundingFriendsKey),
+            onVenuesSelected: () => _scrollTo(_venueKey),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              key: const Key('landingPageScrollView'),
+              controller: _scrollController,
+              child: Column(
+                key: const Key('landingPageSections'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  HeroSection(key: _heroKey),
+                  const ProblemStatementSection(),
+                  const ResearchStatsSection(),
+                  const ConnectionExperienceSection(),
+                  MembershipSection(key: _membershipKey),
+                  const FoundingOfferSection(),
+                  FoundingFriendsSection(key: _foundingFriendsKey),
+                  VenueSection(key: _venueKey),
+                  const WelcomeStatementSection(),
+                  const FaqSection(),
+                  LandingFooter(
+                    onOurBeliefSelected: () => _scrollTo(_heroKey),
+                    onMembershipSelected: () => _scrollTo(_membershipKey),
+                    onFoundingFriendsSelected: () =>
+                        _scrollTo(_foundingFriendsKey),
+                    onVenuesSelected: () => _scrollTo(_venueKey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     ),
   );
