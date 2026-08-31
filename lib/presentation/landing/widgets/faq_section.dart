@@ -60,6 +60,22 @@ final class _FaqSectionState extends State<FaqSection> {
           final verticalPadding = AppSizes.sectionVerticalPaddingFor(
             availableWidth,
           );
+          final headingSize = AppSizes.sectionHeadingSizeFor(availableWidth);
+          final questionSize = switch (availableWidth) {
+            >= 1200 => 32.0,
+            >= 600 => 30.0,
+            _ => 27.0,
+          };
+          final questionLineHeight = switch (availableWidth) {
+            >= 1200 => 40.0,
+            >= 600 => 38.0,
+            _ => 34.0,
+          };
+          final itemVerticalPadding = switch (availableWidth) {
+            >= 1200 => 32.0,
+            >= 600 => 28.0,
+            _ => 24.0,
+          };
 
           return Padding(
             padding: EdgeInsets.symmetric(
@@ -90,14 +106,18 @@ final class _FaqSectionState extends State<FaqSection> {
                         header: true,
                         child: Text(
                           context.l10n.landingFaqHeading,
+                          key: const Key('faqHeadingText'),
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.landingSectionHeading,
+                          style: AppTextStyles.landingSectionHeading.copyWith(
+                            fontSize: headingSize,
+                            letterSpacing: headingSize * -0.01,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 48),
+                SizedBox(height: availableWidth >= 1200 ? 48 : 32),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 902),
                   child: Column(
@@ -110,6 +130,9 @@ final class _FaqSectionState extends State<FaqSection> {
                           content: items[index],
                           isExpanded: _expandedIndexes.contains(index),
                           focusNode: _questionFocusNodes[index],
+                          questionSize: questionSize,
+                          questionLineHeight: questionLineHeight,
+                          verticalPadding: itemVerticalPadding,
                           onToggle: () => _toggle(index),
                         ),
                     ],
@@ -130,6 +153,9 @@ final class _FaqItem extends StatefulWidget {
     required this.content,
     required this.isExpanded,
     required this.focusNode,
+    required this.questionSize,
+    required this.questionLineHeight,
+    required this.verticalPadding,
     required this.onToggle,
   });
 
@@ -137,6 +163,9 @@ final class _FaqItem extends StatefulWidget {
   final _FaqContent content;
   final bool isExpanded;
   final FocusNode focusNode;
+  final double questionSize;
+  final double questionLineHeight;
+  final double verticalPadding;
   final VoidCallback onToggle;
 
   @override
@@ -222,15 +251,26 @@ final class _FaqItemState extends State<_FaqItem> {
                       },
                       child: Padding(
                         padding: EdgeInsets.only(
-                          top: 32,
-                          bottom: widget.isExpanded ? 0 : 32,
+                          top: widget.verticalPadding,
+                          bottom: widget.isExpanded
+                              ? 0
+                              : widget.verticalPadding,
                         ),
                         child: Row(
                           children: [
                             Expanded(
                               child: Text(
                                 widget.content.question,
-                                style: AppTextStyles.landingFaqQuestion,
+                                key: Key('faqQuestionText${widget.index}'),
+                                style: AppTextStyles.landingFaqQuestion
+                                    .copyWith(
+                                      fontSize: widget.questionSize,
+                                      height:
+                                          widget.questionLineHeight /
+                                          widget.questionSize,
+                                      letterSpacing:
+                                          widget.questionSize * -0.01,
+                                    ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -252,9 +292,9 @@ final class _FaqItemState extends State<_FaqItem> {
                     Padding(
                       key: Key('faqAnswer${widget.index}'),
                       padding: EdgeInsets.only(
-                        top: 20,
+                        top: widget.verticalPadding >= 32 ? 20 : 16,
                         right: answerRightPadding,
-                        bottom: 32,
+                        bottom: widget.verticalPadding,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,

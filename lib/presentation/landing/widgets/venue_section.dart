@@ -38,8 +38,18 @@ final class VenueSection extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const _VenueIntroduction(),
-                  const SizedBox(height: 80),
+                  _VenueIntroduction(
+                    headingSize: AppSizes.sectionHeadingSizeFor(
+                      availableWidth,
+                    ),
+                  ),
+                  SizedBox(
+                    height: switch (availableWidth) {
+                      >= 1200 => 80,
+                      >= 600 => 64,
+                      _ => 40,
+                    },
+                  ),
                   LandingPromotionalCard(
                     semanticId: 'venueCard',
                     heading: context.l10n.landingVenueCardHeading,
@@ -73,7 +83,9 @@ final class VenueSection extends StatelessWidget {
 }
 
 final class _VenueIntroduction extends StatelessWidget {
-  const _VenueIntroduction();
+  const _VenueIntroduction({required this.headingSize});
+
+  final double headingSize;
 
   @override
   Widget build(BuildContext context) {
@@ -95,11 +107,17 @@ final class _VenueIntroduction extends StatelessWidget {
               key: const Key('venueIntroductionHeadingText'),
               TextSpan(
                 text: headingLeading,
-                style: AppTextStyles.landingSectionHeading,
+                style: AppTextStyles.landingSectionHeading.copyWith(
+                  fontSize: headingSize,
+                  letterSpacing: headingSize * -0.01,
+                ),
                 children: [
                   TextSpan(
                     text: headingEmphasis,
-                    style: AppTextStyles.landingSectionHeadingEmphasis,
+                    style: AppTextStyles.landingSectionHeadingEmphasis.copyWith(
+                      fontSize: headingSize,
+                      letterSpacing: headingSize * -0.01,
+                    ),
                   ),
                   TextSpan(text: headingTrailing),
                 ],

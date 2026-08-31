@@ -43,11 +43,11 @@ final class LandingFooter extends StatelessWidget {
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
         final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final verticalPadding =
-            (availableWidth * (88 / AppSizes.desktopPageWidth)).clamp(
-              64.0,
-              88.0,
-            );
+        final verticalPadding = switch (availableWidth) {
+          >= 1200 => 88.0,
+          >= 600 => 64.0,
+          _ => 48.0,
+        };
         final navigationItems = <_NavigationItem>[
           (
             label: context.l10n.landingHeaderOurBelief,
@@ -81,7 +81,7 @@ final class LandingFooter extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _FooterLogoAndNavigation(items: navigationItems),
-                  const SizedBox(height: 80),
+                  SizedBox(height: availableWidth < 600 ? 48 : 80),
                   const _FooterEmail(),
                 ],
               ),

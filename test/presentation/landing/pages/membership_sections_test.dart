@@ -130,16 +130,36 @@ void main() {
       (
         size: Size(320, 568),
         columns: 1,
+        headingSize: 34.0,
+        statementSize: 34.0,
+        usesDesktopComposition: false,
+      ),
+      (
+        size: Size(390, 844),
+        columns: 1,
+        headingSize: 34.0,
+        statementSize: 34.0,
         usesDesktopComposition: false,
       ),
       (
         size: Size(768, 1024),
         columns: 2,
+        headingSize: 40.0,
+        statementSize: 42.0,
+        usesDesktopComposition: false,
+      ),
+      (
+        size: Size(1024, 768),
+        columns: 2,
+        headingSize: 40.0,
+        statementSize: 42.0,
         usesDesktopComposition: false,
       ),
       (
         size: Size(1440, 900),
         columns: 2,
+        headingSize: 44.0,
+        statementSize: 50.0,
         usesDesktopComposition: true,
       ),
     ]) {
@@ -151,6 +171,29 @@ void main() {
         find.byKey(Key('membershipCardsColumns${example.columns}')),
         findsOneWidget,
       );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('membershipHeadingText')))
+            .style
+            ?.fontSize,
+        example.headingSize,
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('foundingOfferStatementText')))
+            .textSpan
+            ?.style
+            ?.fontSize,
+        example.statementSize,
+      );
+      final freeCardBounds = tester.widget<ConstrainedBox>(
+        find.byKey(const Key('membershipCardBounds-free')),
+      );
+      if (example.columns == 1) {
+        expect(freeCardBounds.constraints.minHeight, 0);
+      } else {
+        expect(freeCardBounds.constraints.minHeight, 464);
+      }
       expect(
         find.byKey(
           Key(

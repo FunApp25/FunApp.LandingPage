@@ -131,8 +131,10 @@ void main() {
     tester,
   ) async {
     for (final example in const [
-      (size: Size(320, 568), statementSize: 32.0, wrapsNavigation: true),
-      (size: Size(768, 1024), statementSize: 50.0, wrapsNavigation: true),
+      (size: Size(320, 568), statementSize: 34.0, wrapsNavigation: true),
+      (size: Size(390, 844), statementSize: 34.0, wrapsNavigation: true),
+      (size: Size(768, 1024), statementSize: 42.0, wrapsNavigation: true),
+      (size: Size(1024, 768), statementSize: 42.0, wrapsNavigation: false),
       (size: Size(1440, 900), statementSize: 50.0, wrapsNavigation: false),
     ]) {
       _setTestSurface(tester, example.size);

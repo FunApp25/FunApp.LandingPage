@@ -32,14 +32,10 @@ final class WelcomeStatementSection extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 764),
-              child: LayoutBuilder(
-                builder: (context, contentConstraints) {
-                  final statementSize = (contentConstraints.maxWidth * 0.08)
-                      .clamp(32.0, 50.0);
-                  return _WelcomeStatementContent(
-                    statementSize: statementSize,
-                  );
-                },
+              child: _WelcomeStatementContent(
+                statementSize: AppSizes.statementHeadingSizeFor(
+                  availableWidth,
+                ),
               ),
             ),
           ),
@@ -69,7 +65,7 @@ final class _WelcomeStatementContent extends StatelessWidget {
         .copyWith(
           fontSize: statementSize,
           letterSpacing: letterSpacing,
-          color: AppColors.warmOrangeLargeText,
+          color: AppColors.warmOrange,
         );
 
     return Column(

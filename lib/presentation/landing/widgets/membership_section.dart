@@ -47,7 +47,7 @@ final class MembershipSection extends StatelessWidget {
                       children: [
                         const SizedBox(
                           width: _introWidth,
-                          child: _MembershipIntroduction(),
+                          child: _MembershipIntroduction(headingSize: 44),
                         ),
                         const SizedBox(width: _compositionGap),
                         Expanded(child: _MembershipCardGrid(cards: cards)),
@@ -59,8 +59,12 @@ final class MembershipSection extends StatelessWidget {
                     key: const Key('membershipStackedIntroLayout'),
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const _MembershipIntroduction(),
-                      const SizedBox(height: 48),
+                      _MembershipIntroduction(
+                        headingSize: AppSizes.sectionHeadingSizeFor(
+                          availableWidth,
+                        ),
+                      ),
+                      SizedBox(height: availableWidth < 600 ? 32 : 48),
                       _MembershipCardGrid(cards: cards),
                     ],
                   );
@@ -109,7 +113,9 @@ typedef _MembershipCardContent = ({
 });
 
 final class _MembershipIntroduction extends StatelessWidget {
-  const _MembershipIntroduction();
+  const _MembershipIntroduction({required this.headingSize});
+
+  final double headingSize;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -122,7 +128,11 @@ final class _MembershipIntroduction extends StatelessWidget {
         excludeSemantics: true,
         child: Text(
           context.l10n.landingMembershipHeading,
-          style: AppTextStyles.landingSectionHeading,
+          key: const Key('membershipHeadingText'),
+          style: AppTextStyles.landingSectionHeading.copyWith(
+            fontSize: headingSize,
+            letterSpacing: headingSize * -0.01,
+          ),
         ),
       ),
       const SizedBox(height: 12),
@@ -169,6 +179,7 @@ final class _MembershipCardGrid extends StatelessWidget {
                 description: card.description,
                 offerHint: context.l10n.landingMembershipOfferHint,
                 offerLabel: context.l10n.landingMembershipFoundingFriendLink,
+                usesDesktopMinimumHeight: useTwoColumns,
               ),
             ),
         ],

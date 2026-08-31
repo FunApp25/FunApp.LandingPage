@@ -32,15 +32,10 @@ final class ProblemStatementSection extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 940),
-              child: LayoutBuilder(
-                builder: (context, contentConstraints) {
-                  final statementSize = (contentConstraints.maxWidth * 0.06)
-                      .clamp(34.0, 50.0);
-
-                  return _ProblemStatementContent(
-                    statementSize: statementSize,
-                  );
-                },
+              child: _ProblemStatementContent(
+                statementSize: AppSizes.statementHeadingSizeFor(
+                  availableWidth,
+                ),
               ),
             ),
           ),

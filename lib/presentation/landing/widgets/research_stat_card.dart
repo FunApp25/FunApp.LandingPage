@@ -9,6 +9,7 @@ final class ResearchStatCard extends StatelessWidget {
   const ResearchStatCard({
     required this.value,
     required this.description,
+    required this.usesDesktopMinimumHeight,
     super.key,
   });
 
@@ -18,15 +19,21 @@ final class ResearchStatCard extends StatelessWidget {
   /// Localized explanation that follows [value] in reading order.
   final String description;
 
+  /// Whether this card participates in an equal-height multi-column row.
+  final bool usesDesktopMinimumHeight;
+
   @override
   Widget build(BuildContext context) => Semantics(
     key: Key('researchStatCardSemantics-$value'),
     container: true,
     explicitChildNodes: true,
     child: ConstrainedBox(
-      // Figma's English desktop cards are 404px tall. Treat that as a
-      // minimum so narrower cards and longer translations can grow naturally.
-      constraints: const BoxConstraints(minHeight: 404),
+      key: Key('researchStatCardBounds-$value'),
+      // Figma's 404px minimum coordinates multi-column rows. A single-column
+      // card follows its real localized content instead.
+      constraints: BoxConstraints(
+        minHeight: usesDesktopMinimumHeight ? 404 : 0,
+      ),
       child: DecoratedBox(
         decoration: const BoxDecoration(
           color: AppColors.lightForeground,
@@ -40,7 +47,12 @@ final class ResearchStatCard extends StatelessWidget {
             vertical: 32,
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: usesDesktopMinimumHeight
+                ? MainAxisSize.max
+                : MainAxisSize.min,
+            mainAxisAlignment: usesDesktopMinimumHeight
+                ? MainAxisAlignment.spaceBetween
+                : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -48,6 +60,7 @@ final class ResearchStatCard extends StatelessWidget {
                 key: Key('researchStatValue-$value'),
                 style: AppTextStyles.landingStatValue,
               ),
+              if (!usesDesktopMinimumHeight) const SizedBox(height: 40),
               Text(
                 description,
                 key: Key('researchStatDescription-$value'),

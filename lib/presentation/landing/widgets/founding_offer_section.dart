@@ -33,14 +33,10 @@ final class FoundingOfferSection extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 884),
-              child: LayoutBuilder(
-                builder: (context, contentConstraints) {
-                  final statementSize = (contentConstraints.maxWidth * 0.06)
-                      .clamp(32.0, 50.0);
-                  return _FoundingOfferContent(
-                    statementSize: statementSize,
-                  );
-                },
+              child: _FoundingOfferContent(
+                statementSize: AppSizes.statementHeadingSizeFor(
+                  availableWidth,
+                ),
               ),
             ),
           ),

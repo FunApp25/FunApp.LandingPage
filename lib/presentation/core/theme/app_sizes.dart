@@ -22,8 +22,11 @@ abstract final class AppSizes {
   /// Vertical inset used by complete desktop landing-page sections.
   static const double desktopSectionVerticalPadding = 128;
 
-  /// Smallest vertical section inset used when width is constrained.
-  static const double minimumSectionVerticalPadding = 64;
+  /// Vertical inset used by intermediate landing-page sections.
+  static const double intermediateSectionVerticalPadding = 88;
+
+  /// Vertical inset used by narrow landing-page sections.
+  static const double narrowSectionVerticalPadding = 48;
 
   /// Maximum width available inside the desktop page gutters.
   static const double maxContentWidth = 1360;
@@ -53,11 +56,36 @@ abstract final class AppSizes {
         desktopPageGutter,
       );
 
-  /// Resolves fluid section spacing capped by the exact desktop value.
-  static double sectionVerticalPaddingFor(double availableWidth) =>
-      (availableWidth * (desktopSectionVerticalPadding / desktopPageWidth))
-          .clamp(
-            minimumSectionVerticalPadding,
-            desktopSectionVerticalPadding,
-          );
+  /// Resolves deliberate desktop, intermediate, and narrow section rhythm.
+  static double sectionVerticalPaddingFor(double availableWidth) {
+    if (availableWidth >= 1200) {
+      return desktopSectionVerticalPadding;
+    }
+    if (availableWidth >= 600) {
+      return intermediateSectionVerticalPadding;
+    }
+    return narrowSectionVerticalPadding;
+  }
+
+  /// Resolves the shared landing-page section-heading size.
+  static double sectionHeadingSizeFor(double availableWidth) {
+    if (availableWidth >= 1200) {
+      return 44;
+    }
+    if (availableWidth >= 600) {
+      return 40;
+    }
+    return 34;
+  }
+
+  /// Resolves the large statement size used by narrative sections.
+  static double statementHeadingSizeFor(double availableWidth) {
+    if (availableWidth >= 1200) {
+      return 50;
+    }
+    if (availableWidth >= 600) {
+      return 42;
+    }
+    return 34;
+  }
 }

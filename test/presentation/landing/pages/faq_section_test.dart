@@ -305,20 +305,35 @@ void main() {
   testWidgets('adapts safely at narrow, intermediate, and wide widths', (
     tester,
   ) async {
-    for (final size in const [
-      Size(320, 568),
-      Size(390, 844),
-      Size(768, 1024),
-      Size(1440, 900),
+    for (final example in const [
+      (size: Size(320, 568), headingSize: 34.0, questionSize: 27.0),
+      (size: Size(390, 844), headingSize: 34.0, questionSize: 27.0),
+      (size: Size(768, 1024), headingSize: 40.0, questionSize: 30.0),
+      (size: Size(1024, 768), headingSize: 40.0, questionSize: 30.0),
+      (size: Size(1440, 900), headingSize: 44.0, questionSize: 32.0),
     ]) {
-      _setTestSurface(tester, size);
+      _setTestSurface(tester, example.size);
       await _pumpFaq(tester);
       await _toggle(tester, 1);
       await _toggle(tester, 6);
 
       expect(
         tester.getSize(find.byType(FaqSection)).width,
-        lessThanOrEqualTo(size.width),
+        lessThanOrEqualTo(example.size.width),
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('faqHeadingText')))
+            .style
+            ?.fontSize,
+        example.headingSize,
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('faqQuestionText0')))
+            .style
+            ?.fontSize,
+        example.questionSize,
       );
       expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
       expect(find.byKey(const Key('faqAnswer1')), findsOneWidget);

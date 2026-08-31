@@ -17,6 +17,7 @@ final class MembershipCard extends StatelessWidget {
     required this.description,
     required this.offerHint,
     required this.offerLabel,
+    required this.usesDesktopMinimumHeight,
     super.key,
   });
 
@@ -44,15 +45,21 @@ final class MembershipCard extends StatelessWidget {
   /// Localized, intentionally unwired visual link label.
   final String offerLabel;
 
+  /// Whether this card participates in an equal-height multi-column row.
+  final bool usesDesktopMinimumHeight;
+
   @override
   Widget build(BuildContext context) => Semantics(
     key: Key('membershipCardSemantics-$semanticId'),
     container: true,
     explicitChildNodes: true,
     child: ConstrainedBox(
-      // The English desktop component is 464px tall. Localized and narrow
-      // cards may grow naturally instead of clipping to the Figma frame.
-      constraints: const BoxConstraints(minHeight: 464),
+      key: Key('membershipCardBounds-$semanticId'),
+      // The 464px Figma minimum coordinates multi-column cards. A stacked
+      // card follows its real localized content instead.
+      constraints: BoxConstraints(
+        minHeight: usesDesktopMinimumHeight ? 464 : 0,
+      ),
       child: DecoratedBox(
         decoration: const BoxDecoration(
           color: AppColors.warmCharcoalAccent,
@@ -63,7 +70,12 @@ final class MembershipCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: usesDesktopMinimumHeight
+                ? MainAxisSize.max
+                : MainAxisSize.min,
+            mainAxisAlignment: usesDesktopMinimumHeight
+                ? MainAxisAlignment.spaceBetween
+                : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Semantics(

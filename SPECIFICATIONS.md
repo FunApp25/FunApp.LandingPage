@@ -33,9 +33,9 @@ Current implementation is evidence of repository state, not automatically a perm
   nodes `2190:1620`, `2190:1627`, and `2190:1631`; the welcome statement and
   footer implement nodes `2190:1638` and `2190:1664`; the FAQ implements node
   `2190:1644`. The current Ready-for-Dev static Figma design is fully
-  represented in Flutter. Whole-page cleanup, alignment, responsive and
-  accessibility polish remain separate follow-up work, followed by restrained
-  motion before business, domain, application, or data implementation.
+  represented in Flutter. Responsive presentation is constraint-driven, with
+  further focused visual polish followed by restrained motion before business,
+  domain, application, or data implementation.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell retains the platform-neutral typography and Material 3
   foundation adapted from the main Fun App application. The current Figma
@@ -123,14 +123,21 @@ Do not introduce layers, folders, abstractions, or dependencies before active co
 - Keep app-owned widgets focused and reusable; avoid deeply nested monolithic `build` methods.
 - Define reusable design values centrally when a real design system is introduced.
 - Keyboard interaction, focus visibility, reduced motion, meaningful controls, and appropriate Flutter web semantics are part of implementation quality.
-- Accessible contrast may intentionally override literal Figma color values while preserving the established brand character.
+- Exact Figma colors remain authoritative for the current landing-page design.
+- Known contrast limitations in those approved colors are temporarily accepted
+  and remain an explicit design and accessibility review item before
+  production. Keyboard focus remains deliberately stronger than Figma because
+  the static source design does not define interaction states.
 
 The active presentation foundation centralizes established Fun App color,
-typography, sizing, and Material 3 theme values. The complete section topology
-and broad desktop color rhythm follow Figma `Landing Page - V1`; its temporary
-placeholder heights will be replaced by natural content sizing as sections are
-implemented. Exact breakpoints, detailed components, and final narrow-layout
-behavior remain open.
+typography, sizing, and Material 3 theme values. The complete section topology,
+desktop typography, and broad desktop color rhythm follow Figma `Landing Page -
+V1`. Responsive adaptations are constraint-driven because Figma supplies no
+tablet or phone frames. Research statistics use four, two, or one column as
+available width decreases; desktop card minimum heights do not automatically
+apply to single-column phone cards. Major section, statement, and FAQ type roles
+scale down deliberately on narrower viewports while preserving the desktop
+Figma values.
 
 Implemented landing sections preserve their Figma desktop compositions. Their
 narrower wrapping, stacking, and card reflow are constraint-driven

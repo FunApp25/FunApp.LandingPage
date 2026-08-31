@@ -35,16 +35,27 @@ final class ConnectionExperienceSection extends StatelessWidget {
                 maxWidth: AppSizes.maxContentWidth,
               ),
               child: LayoutBuilder(
-                builder: (context, contentConstraints) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _ConnectionIntroduction(
-                      availableWidth: contentConstraints.maxWidth,
-                    ),
-                    const SizedBox(height: 80),
-                    const _ConnectionImage(),
-                  ],
-                ),
+                builder: (context, contentConstraints) {
+                  final introductionGap = switch (availableWidth) {
+                    >= 1200 => 80.0,
+                    >= 600 => 64.0,
+                    _ => 40.0,
+                  };
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _ConnectionIntroduction(
+                        availableWidth: contentConstraints.maxWidth,
+                        headingSize: AppSizes.sectionHeadingSizeFor(
+                          availableWidth,
+                        ),
+                      ),
+                      SizedBox(height: introductionGap),
+                      const _ConnectionImage(),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -55,26 +66,30 @@ final class ConnectionExperienceSection extends StatelessWidget {
 }
 
 final class _ConnectionIntroduction extends StatelessWidget {
-  const _ConnectionIntroduction({required this.availableWidth});
+  const _ConnectionIntroduction({
+    required this.availableWidth,
+    required this.headingSize,
+  });
 
   // Exact desktop columns need 443px + 672px plus the 245px Figma gap.
   static const _minimumWideCompositionWidth = 1195.0;
 
   final double availableWidth;
+  final double headingSize;
 
   @override
   Widget build(BuildContext context) {
     if (availableWidth >= _minimumWideCompositionWidth) {
-      return const Row(
-        key: Key('connectionWideLayout'),
+      return Row(
+        key: const Key('connectionWideLayout'),
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           SizedBox(
             width: 443,
-            child: _ConnectionTitle(headingSize: 44),
+            child: _ConnectionTitle(headingSize: headingSize),
           ),
-          Padding(
+          const Padding(
             padding: EdgeInsets.only(top: 40),
             child: SizedBox(width: 672, child: _ConnectionBody()),
           ),
@@ -82,7 +97,6 @@ final class _ConnectionIntroduction extends StatelessWidget {
       );
     }
 
-    final headingSize = (availableWidth * 0.075).clamp(34.0, 44.0);
     return Column(
       key: const Key('connectionStackedLayout'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +121,7 @@ final class _ConnectionTitle extends StatelessWidget {
       SectionEyebrow(
         label: context.l10n.landingConnectionEyebrow,
         glyphAsset: AppAssets.roundedSparkleDiamond,
-        foregroundColor: AppColors.warmOrangeText,
+        foregroundColor: AppColors.warmOrange,
         glyphSize: const Size.square(12),
         glyphKey: const Key('connectionEyebrowGlyph'),
       ),

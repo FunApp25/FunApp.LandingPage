@@ -26,9 +26,18 @@ final class HeroSection extends StatelessWidget {
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
         final pageGutter = AppSizes.pageGutterFor(availableWidth);
+        final topSpacing = switch (availableWidth) {
+          >= 1200 => 24.0,
+          >= 600 => 20.0,
+          _ => 16.0,
+        };
 
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: pageGutter),
+          padding: EdgeInsets.only(
+            left: pageGutter,
+            top: topSpacing,
+            right: pageGutter,
+          ),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -40,6 +49,7 @@ final class HeroSection extends StatelessWidget {
                       heroConstraints.maxWidth >= _twoColumnCompositionWidth;
 
                   return ClipRRect(
+                    key: const Key('heroCard'),
                     borderRadius: const BorderRadius.all(
                       Radius.circular(AppSizes.cardRadius),
                     ),
@@ -69,19 +79,23 @@ final class _DesktopHero extends StatelessWidget {
   Widget build(BuildContext context) => ConstrainedBox(
     key: const Key('heroDesktopLayout'),
     constraints: const BoxConstraints(minHeight: 644),
-    child: const Stack(
+    child: Stack(
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(80, 106, 0, 106),
+          padding: const EdgeInsets.fromLTRB(80, 106, 0, 106),
           child: Align(
             alignment: Alignment.centerLeft,
             child: SizedBox(
               width: 600,
-              child: _HeroContent(headlineSize: 60),
+              child: _HeroContent(
+                headlineSize: 60,
+                supportingStyle: AppTextStyles.landingHeroSupporting,
+                ctaSpacing: 40,
+              ),
             ),
           ),
         ),
-        Positioned(
+        const Positioned(
           top: -113,
           right: -99,
           width: 706,
@@ -100,24 +114,45 @@ final class _StackedHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sectionPadding = availableWidth < 480 ? 24.0 : 48.0;
-    final contentWidth = availableWidth - (sectionPadding * 2);
-    final headlineSize = (contentWidth * 0.12).clamp(36.0, 52.0);
+    final isNarrow = availableWidth < 600;
+    final sectionPadding = isNarrow ? 24.0 : 48.0;
+    final headlineSize = switch (availableWidth) {
+      >= 600 => 46.0,
+      >= 340 => 38.0,
+      _ => 34.0,
+    };
+    final artworkMaxWidth = isNarrow ? 280.0 : 480.0;
+    final supportingStyle = isNarrow
+        ? AppTextStyles.landingHeroSupporting.copyWith(
+            fontSize: 18,
+            height: 26 / 18,
+          )
+        : AppTextStyles.landingHeroSupporting;
 
     return Padding(
       key: const Key('heroStackedLayout'),
       padding: EdgeInsets.symmetric(
         horizontal: sectionPadding,
-        vertical: 48,
+        vertical: isNarrow ? 32 : 40,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _HeroContent(headlineSize: headlineSize),
-          const SizedBox(height: 48),
-          const AspectRatio(
-            aspectRatio: 706 / 717,
-            child: _HeroImage(fit: BoxFit.contain),
+          _HeroContent(
+            headlineSize: headlineSize,
+            supportingStyle: supportingStyle,
+            ctaSpacing: isNarrow ? 28 : 32,
+          ),
+          SizedBox(height: isNarrow ? 28 : 32),
+          Align(
+            child: ConstrainedBox(
+              key: const Key('heroArtworkBounds'),
+              constraints: BoxConstraints(maxWidth: artworkMaxWidth),
+              child: const AspectRatio(
+                aspectRatio: 706 / 717,
+                child: _HeroImage(fit: BoxFit.contain),
+              ),
+            ),
           ),
         ],
       ),
@@ -126,9 +161,15 @@ final class _StackedHero extends StatelessWidget {
 }
 
 final class _HeroContent extends StatelessWidget {
-  const _HeroContent({required this.headlineSize});
+  const _HeroContent({
+    required this.headlineSize,
+    required this.supportingStyle,
+    required this.ctaSpacing,
+  });
 
   final double headlineSize;
+  final TextStyle supportingStyle;
+  final double ctaSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -179,9 +220,9 @@ final class _HeroContent extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           context.l10n.landingHeroSupporting,
-          style: AppTextStyles.landingHeroSupporting,
+          style: supportingStyle,
         ),
-        const SizedBox(height: 40),
+        SizedBox(height: ctaSpacing),
         LandingCtaButton(
           key: const Key('landingHeroWaitlistCta'),
           label: context.l10n.landingHeroJoinWaitlist,

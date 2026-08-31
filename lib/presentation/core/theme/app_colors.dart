@@ -5,12 +5,6 @@ abstract final class AppColors {
   /// Primary warm brand color for prominent actions and active controls.
   static const Color warmOrange = Color(0xFFEF6632);
 
-  /// Warm orange foreground that clears large-text contrast on beige.
-  static const Color warmOrangeLargeText = Color(0xFFE85E2A);
-
-  /// Warm orange foreground that clears normal-text contrast on light surfaces.
-  static const Color warmOrangeText = Color(0xFFB94A1F);
-
   /// Brighter warm orange accent for emphasized brand moments.
   static const Color warmOrangeAccent = Color(0xFFFF7032);
 

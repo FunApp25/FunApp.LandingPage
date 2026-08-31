@@ -411,6 +411,49 @@ void main() {
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
       expect(find.text('Contact Us'), findsOneWidget);
 
+      final heroTop = tester.getTopLeft(find.byType(HeroSection)).dy;
+      final heroCardTop = tester
+          .getTopLeft(
+            find.byKey(const Key('heroCard')),
+          )
+          .dy;
+      final expectedHeroGap = switch (size.width) {
+        >= 1200 => 24.0,
+        >= 600 => 20.0,
+        _ => 16.0,
+      };
+      expect(heroCardTop - heroTop, expectedHeroGap);
+
+      final headline = tester.widget<Text>(
+        find.byKey(const Key('heroHeadlineText')),
+      );
+      final expectedHeadlineSize = switch (size.width) {
+        >= 1080 => 60.0,
+        >= 600 => 46.0,
+        >= 340 => 38.0,
+        _ => 34.0,
+      };
+      expect(headline.textSpan?.style?.fontSize, expectedHeadlineSize);
+
+      if (size.width < 1080) {
+        final artworkWidth = tester
+            .getSize(
+              find.byKey(const Key('heroArtworkBounds')),
+            )
+            .width;
+        expect(artworkWidth, lessThanOrEqualTo(size.width < 600 ? 280 : 480));
+      } else {
+        expect(
+          tester
+              .widget<ConstrainedBox>(
+                find.byKey(const Key('heroDesktopLayout')),
+              )
+              .constraints
+              .minHeight,
+          644,
+        );
+      }
+
       for (final prefix in [
         'landingHeaderNavigationItem',
         'footerNavigationItem',
@@ -423,13 +466,20 @@ void main() {
         }
       }
 
-      await _moveToPageEnd(tester);
-      await tester.tap(
-        find.byKey(const Key('landingHeaderNavigationItem1')),
-      );
-      await tester.pumpAndSettle();
-      _expectTargetBelowHeader(tester, MembershipSection);
-      expect(tester.takeException(), isNull);
+      for (final target in const [
+        (index: 0, type: HeroSection),
+        (index: 1, type: MembershipSection),
+        (index: 2, type: FoundingFriendsSection),
+        (index: 3, type: VenueSection),
+      ]) {
+        await _moveToPageEnd(tester);
+        await tester.tap(
+          find.byKey(Key('landingHeaderNavigationItem${target.index}')),
+        );
+        await tester.pumpAndSettle();
+        _expectTargetBelowHeader(tester, target.type);
+        expect(tester.takeException(), isNull);
+      }
 
       if (size.width >= 1080) {
         expect(
@@ -502,6 +552,33 @@ void main() {
       }
     },
   );
+
+  testWidgets('all supported locales lay out at every responsive viewport', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    tester.view.devicePixelRatio = 1;
+
+    for (final locale in AppLocalizations.supportedLocales) {
+      for (final size in const [
+        Size(320, 568),
+        Size(390, 844),
+        Size(768, 1024),
+        Size(1024, 768),
+        Size(1440, 900),
+      ]) {
+        tester.view.physicalSize = size;
+        await _pumpApp(tester, locale: locale);
+
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${locale.languageCode} must not overflow at $size.',
+        );
+      }
+    }
+  });
 
   testWidgets('exposes one hero heading and image semantic description', (
     tester,

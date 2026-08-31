@@ -149,9 +149,41 @@ void main() {
     tester,
   ) async {
     for (final example in const [
-      (size: Size(320, 568), columns: 1, usesWideConnection: false),
-      (size: Size(768, 1024), columns: 2, usesWideConnection: false),
-      (size: Size(1440, 900), columns: 4, usesWideConnection: true),
+      (
+        size: Size(320, 568),
+        columns: 1,
+        headingSize: 34.0,
+        statementSize: 34.0,
+        usesWideConnection: false,
+      ),
+      (
+        size: Size(390, 844),
+        columns: 1,
+        headingSize: 34.0,
+        statementSize: 34.0,
+        usesWideConnection: false,
+      ),
+      (
+        size: Size(768, 1024),
+        columns: 2,
+        headingSize: 40.0,
+        statementSize: 42.0,
+        usesWideConnection: false,
+      ),
+      (
+        size: Size(1024, 768),
+        columns: 2,
+        headingSize: 40.0,
+        statementSize: 42.0,
+        usesWideConnection: false,
+      ),
+      (
+        size: Size(1440, 900),
+        columns: 4,
+        headingSize: 44.0,
+        statementSize: 50.0,
+        usesWideConnection: true,
+      ),
     ]) {
       _setTestSurface(tester, example.size);
       await _pumpApp(tester);
@@ -160,6 +192,31 @@ void main() {
       final grid = find.byKey(Key('researchStatsColumns${example.columns}'));
       expect(grid, findsOneWidget);
       expect(tester.widget<Wrap>(grid).children, hasLength(4));
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const Key('researchStatsHeadingText')),
+            )
+            .style
+            ?.fontSize,
+        example.headingSize,
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('problemStatementText')))
+            .textSpan
+            ?.style
+            ?.fontSize,
+        example.statementSize,
+      );
+      final firstCardBounds = tester.widget<ConstrainedBox>(
+        find.byKey(const Key('researchStatCardBounds-49%')),
+      );
+      if (example.columns == 1) {
+        expect(firstCardBounds.constraints.minHeight, 0);
+      } else {
+        expect(firstCardBounds.constraints.minHeight, 404);
+      }
       expect(
         find.byKey(
           Key(

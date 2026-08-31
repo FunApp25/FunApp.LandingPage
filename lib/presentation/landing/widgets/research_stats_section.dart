@@ -35,8 +35,18 @@ final class ResearchStatsSection extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const _ResearchHeading(),
-                  const SizedBox(height: 80),
+                  _ResearchHeading(
+                    headingSize: AppSizes.sectionHeadingSizeFor(
+                      availableWidth,
+                    ),
+                  ),
+                  SizedBox(
+                    height: switch (availableWidth) {
+                      >= 1200 => 80,
+                      >= 600 => 64,
+                      _ => 40,
+                    },
+                  ),
                   _ResearchCardGrid(
                     cards: [
                       (
@@ -68,7 +78,9 @@ final class ResearchStatsSection extends StatelessWidget {
 }
 
 final class _ResearchHeading extends StatelessWidget {
-  const _ResearchHeading();
+  const _ResearchHeading({required this.headingSize});
+
+  final double headingSize;
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
@@ -82,8 +94,12 @@ final class _ResearchHeading extends StatelessWidget {
           excludeSemantics: true,
           child: Text(
             context.l10n.landingStatsHeading,
+            key: const Key('researchStatsHeadingText'),
             textAlign: TextAlign.center,
-            style: AppTextStyles.landingSectionHeading,
+            style: AppTextStyles.landingSectionHeading.copyWith(
+              fontSize: headingSize,
+              letterSpacing: headingSize * -0.01,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -128,24 +144,18 @@ final class _ResearchHeading extends StatelessWidget {
 final class _ResearchCardGrid extends StatelessWidget {
   const _ResearchCardGrid({required this.cards});
 
-  static const _minimumCardWidth = 260.0;
   static const _cardGap = 16.0;
-  static const _maximumColumns = 4;
 
   final List<({String value, String description})> cards;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      var columnCount =
-          ((constraints.maxWidth + _cardGap) / (_minimumCardWidth + _cardGap))
-              .floor();
-      if (columnCount < 1) {
-        columnCount = 1;
-      }
-      if (columnCount > _maximumColumns) {
-        columnCount = _maximumColumns;
-      }
+      final columnCount = switch (constraints.maxWidth) {
+        >= 1100 => 4,
+        >= 600 => 2,
+        _ => 1,
+      };
       final cardWidth =
           (constraints.maxWidth - (_cardGap * (columnCount - 1))) / columnCount;
 
@@ -160,6 +170,7 @@ final class _ResearchCardGrid extends StatelessWidget {
               child: ResearchStatCard(
                 value: card.value,
                 description: card.description,
+                usesDesktopMinimumHeight: columnCount > 1,
               ),
             ),
         ],
