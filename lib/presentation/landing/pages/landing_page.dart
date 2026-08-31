@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/founding_member_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_offer_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_footer.dart';
@@ -108,6 +109,7 @@ final class _LandingPageState extends State<LandingPage> {
                   const ConnectionExperienceSection(),
                   MembershipSection(key: _membershipKey),
                   const FoundingOfferSection(),
+                  const FoundingMemberSection(),
                   FoundingFriendsSection(key: _foundingFriendsKey),
                   VenueSection(key: _venueKey),
                   const WelcomeStatementSection(),

@@ -4,6 +4,7 @@ abstract final class AppAssets {
   static const _brandingShapePath = 'assets/branding/shapes';
   static const _landingConnectionPath = 'assets/landing/connection';
   static const _landingFaqPath = 'assets/landing/faq';
+  static const _landingFoundingMemberPath = 'assets/landing/founding_member';
   static const _landingFoundingFriendsPath = 'assets/landing/founding_friends';
   static const _landingFooterPath = 'assets/landing/footer';
   static const _landingHeaderPath = 'assets/landing/header';
@@ -50,17 +51,45 @@ abstract final class AppAssets {
   /// Exact expanded-state icon used by FAQ question controls.
   static const String faqMinus = '$_landingFaqPath/faq_minus.svg';
 
-  /// Check artwork used inside both membership cards.
-  static const String membershipCheck =
-      '$_landingMembershipPath/membership_check.svg';
+  /// Orange sparkle used by the Free Membership eyebrow.
+  static const String membershipFreeEyebrow =
+      '$_landingMembershipPath/free_eyebrow.svg';
 
-  /// Arrow artwork used by the visual membership-card link treatment.
-  static const String membershipArrowUpRight =
-      '$_landingMembershipPath/membership_arrow_up_right.svg';
+  /// Blue sparkle used by the Here & Now Membership eyebrow.
+  static const String membershipHereNowEyebrow =
+      '$_landingMembershipPath/here_now_eyebrow.svg';
+
+  /// Yellow sparkle used by the Lifetime Membership eyebrow.
+  static const String membershipLifetimeEyebrow =
+      '$_landingMembershipPath/lifetime_eyebrow.svg';
+
+  /// White check used by Free and Lifetime Membership benefits.
+  static const String membershipCheckWhite =
+      '$_landingMembershipPath/check_white.svg';
+
+  /// Blue check used by Here & Now Membership benefits.
+  static const String membershipCheckBlue =
+      '$_landingMembershipPath/check_blue.svg';
+
+  /// Charcoal arrow used by the Lifetime Membership visual CTA.
+  static const String membershipArrowCharcoal =
+      '$_landingMembershipPath/arrow_charcoal.svg';
 
   /// Purple decorative glyph used by the limited-time offer eyebrow.
   static const String foundingOfferGlyph =
       '$_landingMembershipPath/founding_offer_glyph.svg';
+
+  /// Users icon used by the Recognised Forever benefit card.
+  static const String foundingMemberUsers =
+      '$_landingFoundingMemberPath/users_three.svg';
+
+  /// Rocket icon used by the Early Access Always benefit card.
+  static const String foundingMemberRocket =
+      '$_landingFoundingMemberPath/rocket_launch.svg';
+
+  /// Chat icon used by the A Direct Voice benefit card.
+  static const String foundingMemberChat =
+      '$_landingFoundingMemberPath/chat_teardrop_text.svg';
 
   /// Masked photograph used by the Founding Friends promotional card.
   static const String foundingFriendsGroup =

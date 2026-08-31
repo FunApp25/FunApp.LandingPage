@@ -13,6 +13,7 @@ import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dar
 import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/founding_member_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_offer_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_footer.dart';
@@ -27,7 +28,7 @@ import 'package:fun_app_landing_page/presentation/landing/widgets/welcome_statem
 import '../landing_test_helpers.dart';
 
 void main() {
-  testWidgets('renders every landing section in Figma order', (tester) async {
+  testWidgets('renders all 13 landing surfaces in Figma order', (tester) async {
     await pumpLandingApp(tester);
 
     expect(find.byType(LandingPage), findsOneWidget);
@@ -39,6 +40,7 @@ void main() {
       ConnectionExperienceSection,
       MembershipSection,
       FoundingOfferSection,
+      FoundingMemberSection,
       FoundingFriendsSection,
       VenueSection,
       WelcomeStatementSection,
@@ -47,6 +49,7 @@ void main() {
     ];
 
     expect(find.byType(LandingHeader), findsOneWidget);
+    expect(expectedSectionTypes, hasLength(12));
     for (final type in expectedSectionTypes) {
       expect(find.byType(type), findsOneWidget);
     }
@@ -73,13 +76,11 @@ void main() {
     ]) {
       expect(find.text(label), findsNWidgets(2));
     }
-    for (final label in [
-      'Contact Us',
-      'A FRIENDLIER WAY TO CONNECT',
-      'Join the Waitlist',
-    ]) {
+    for (final label in ['Contact Us', 'A FRIENDLIER WAY TO CONNECT']) {
       expect(find.text(label), findsOneWidget);
     }
+    expect(find.text('Join the Waitlist'), findsNothing);
+    expect(find.byKey(const Key('landingHeroWaitlistCta')), findsNothing);
 
     final headline = tester.widget<Text>(
       find.byKey(const Key('heroHeadlineText')),
@@ -91,8 +92,11 @@ void main() {
     );
     expect(
       find.text(
-        'Welcome to a friendlier future. Welcome to Fun App. Fun App believes '
-        'friendship, group and dating platforms can be SO much better.',
+        'Fun App is going to work differently… very differently! A warm, '
+        'welcoming and respectful environment where users can meet others '
+        'online or IRL, free of charge, in thousands of venues of all shapes, '
+        'sizes and types around the country. But, let us explain why change '
+        'is needed.',
       ),
       findsOneWidget,
     );
@@ -106,7 +110,6 @@ void main() {
       headline:
           'Fun App nació de la convicción de que crear conexiones debería ser '
           'MUCHO mejor',
-      waitlist: 'Únete a la lista de espera',
     ),
     (
       locale: Locale('cy'),
@@ -115,7 +118,6 @@ void main() {
       headline:
           'Dechreuodd Fun App o’r gred y dylai creu cysylltiadau fod '
           'GYMAINT yn well',
-      waitlist: 'Ymunwch â’r Rhestr Aros',
     ),
     (
       locale: Locale('be'),
@@ -124,7 +126,6 @@ void main() {
       headline:
           'Fun App пачаўся з веры ў тое, што наладжваць сувязі павінна быць '
           'НАШМАТ лепш',
-      waitlist: 'Далучыцца да спіса чакання',
     ),
   ]) {
     testWidgets('renders representative ${example.locale.languageCode} copy', (
@@ -138,7 +139,7 @@ void main() {
 
       expect(find.text(example.contact), findsOneWidget);
       expect(find.text(example.eyebrow), findsOneWidget);
-      expect(find.text(example.waitlist), findsOneWidget);
+      expect(find.byKey(const Key('landingHeroWaitlistCta')), findsNothing);
       expect(find.bySemanticsLabel(example.headline), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -165,12 +166,6 @@ void main() {
       const Key('heroEyebrowGlyph'),
       AppAssets.heroEyebrowGlyph,
     );
-    expectSvgAsset(
-      tester,
-      const Key('landingCtaArrow'),
-      AppAssets.arrowUpRight,
-    );
-
     final heroImage = tester.widget<Image>(
       find.byKey(const Key('heroPeopleImage')),
     );
@@ -574,6 +569,7 @@ void main() {
         find.byType(ConnectionExperienceSection),
         find.byType(MembershipSection),
         find.byType(FoundingOfferSection),
+        find.byType(FoundingMemberSection),
         find.byType(FoundingFriendsSection),
         find.byType(VenueSection),
         find.byType(WelcomeStatementSection),
@@ -658,9 +654,6 @@ void main() {
         final contentRect = tester.getRect(
           find.byKey(const Key('heroContentBounds')),
         );
-        final ctaRect = tester.getRect(
-          find.byKey(const Key('landingHeroWaitlistCta')),
-        );
         final heroClip = tester.widget<ClipRRect>(
           find.byKey(const Key('heroCard')),
         );
@@ -672,7 +665,7 @@ void main() {
           greaterThanOrEqualTo(artworkRect.width * 0.135),
         );
         expect(artworkRect.center.dx, greaterThan(cardRect.center.dx));
-        expect(ctaRect.bottom, lessThanOrEqualTo(cardRect.bottom));
+        expect(find.byKey(const Key('landingHeroWaitlistCta')), findsNothing);
         expect(heroClip.clipBehavior, isNot(Clip.none));
         if (example.size.width == 1440) {
           expect(cardRect.width, 1360);
@@ -752,11 +745,7 @@ void main() {
     final eyebrowGlyph = tester.widget<SvgPicture>(
       find.byKey(const Key('heroEyebrowGlyph')),
     );
-    final ctaArrow = tester.widget<SvgPicture>(
-      find.byKey(const Key('landingCtaArrow')),
-    );
     expect(eyebrowGlyph.excludeFromSemantics, isTrue);
-    expect(ctaArrow.excludeFromSemantics, isTrue);
     expect(find.byType(ButtonStyleButton), findsNothing);
     semantics.dispose();
   });

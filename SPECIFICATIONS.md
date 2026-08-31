@@ -26,9 +26,10 @@ Current implementation is evidence of repository state, not automatically a perm
 - Flutter Web is the active production implementation. The migration from Astro is complete.
 - The current Ready-for-Dev design in Figma file
   `J326dKMVr5dHcC92xLkfbm`, frame `2190:1567` (`Landing Page - V1`), is fully
-  represented in Flutter. Its static and responsive presentation is stable;
-  restrained motion is the next presentation phase before business, domain,
-  application, or data implementation.
+  represented in Flutter, including the current three-tier Membership design
+  and Founding Member explanation section. Its static and responsive
+  presentation is stable; restrained motion is the next presentation phase
+  before business, domain, application, or data implementation.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell retains the platform-neutral typography and Material 3
   foundation adapted from the main Fun App application. The current Figma
@@ -141,6 +142,18 @@ artwork preserves its intrinsic aspect ratio through sizing, alignment, and
 clipping rather than geometric distortion. Founding Friends artwork remains
 anchored to the trailing edge, while venue artwork remains anchored to the
 leading edge.
+
+The current landing-page order is Header, Hero, Problem Statement, Research
+Statistics, Different Way to Connect, Membership, Limited-time Founding Friend
+offer, Founding Member explanation, Founding Friends, Venue, Welcome Statement,
+FAQ, and Footer. The Header remains fixed outside the primary scrolling
+content. Membership presents static Free, Here & Now, and Lifetime pricing
+cards. Those cards and the Founding Member descriptions are approved marketing
+presentation only; subscription, payment, cancellation, entitlement, badge,
+and other business behavior is not implemented. Pricing cards use three, two,
+or one column based on usable card width, and Founding Member benefit cards
+similarly reflow from the desktop intro-plus-three-card composition without
+forcing desktop heights onto narrow single-column layouts.
 
 Header and footer section navigation scrolls within the single landing page
 while the header remains fixed above the scrolling content. The fixed header

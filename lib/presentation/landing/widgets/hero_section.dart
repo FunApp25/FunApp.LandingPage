@@ -4,7 +4,6 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
 /// Landing-page hero from Figma wrapper node `2190:1569`.
@@ -90,7 +89,6 @@ final class _DesktopHero extends StatelessWidget {
               child: _HeroContent(
                 headlineSize: 60,
                 supportingStyle: LandingTextStyles.heroSupporting,
-                ctaSpacing: 40,
               ),
             ),
           ),
@@ -164,7 +162,6 @@ final class _ResponsiveHero extends StatelessWidget {
               child: _HeroContent(
                 headlineSize: headlineSize,
                 supportingStyle: supportingStyle,
-                ctaSpacing: isNarrow ? 28 : 32,
               ),
             ),
           ),
@@ -186,12 +183,10 @@ final class _HeroContent extends StatelessWidget {
   const _HeroContent({
     required this.headlineSize,
     required this.supportingStyle,
-    required this.ctaSpacing,
   });
 
   final double headlineSize;
   final TextStyle supportingStyle;
-  final double ctaSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -244,12 +239,6 @@ final class _HeroContent extends StatelessWidget {
         Text(
           context.l10n.landingHeroSupporting,
           style: supportingStyle,
-        ),
-        SizedBox(height: ctaSpacing),
-        LandingCtaButton(
-          key: const Key('landingHeroWaitlistCta'),
-          label: context.l10n.landingHeroJoinWaitlist,
-          size: LandingCtaSize.prominent,
         ),
       ],
     );

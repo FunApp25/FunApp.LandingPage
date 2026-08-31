@@ -13,13 +13,16 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 ## Current repository state
 
 - The active web-only Flutter package is `fun_app_landing_page`.
-- Every section in Figma `Landing Page - V1` now has a static Flutter
-  implementation. The header remains fixed above the scrolling page, repeated
-  header/footer navigation moves to the corresponding page sections, and the
-  independently expandable FAQ supports its complete item surface. Contact and
-  product CTAs remain intentionally unwired. The static and responsive
-  presentation is stable; restrained motion is the next presentation phase
-  before any business, domain, application, or data implementation.
+- All 13 surfaces in Figma `Landing Page - V1` now have a static Flutter
+  implementation, including the Free, Here & Now, and Lifetime Membership
+  cards and the Founding Member explanation. The header remains fixed above the
+  scrolling page, repeated header/footer navigation moves to the corresponding
+  page sections, and the independently expandable FAQ supports its complete
+  item surface. Contact and product CTAs remain intentionally unwired; pricing
+  is static marketing UI rather than subscription functionality. The static
+  and responsive presentation is stable; restrained motion is the next
+  presentation phase before any business, domain, application, or data
+  implementation.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

@@ -37,7 +37,7 @@ final class VenueSection extends StatelessWidget {
               child: Column(
                 children: [
                   _VenueIntroduction(
-                    headingSize: AppSizes.sectionHeadingSizeFor(
+                    headingSize: AppSizes.statementHeadingSizeFor(
                       availableWidth,
                     ),
                   ),
@@ -81,7 +81,8 @@ final class _VenueIntroduction extends StatelessWidget {
     final semanticLabel = '$headingLeading$headingEmphasis$headingTrailing';
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 628),
+      key: const Key('venueIntroductionBounds'),
+      constraints: const BoxConstraints(maxWidth: 522),
       child: Column(
         children: [
           Semantics(
@@ -93,17 +94,19 @@ final class _VenueIntroduction extends StatelessWidget {
               key: const Key('venueIntroductionHeadingText'),
               TextSpan(
                 text: headingLeading,
-                style: LandingTextStyles.sectionHeading.copyWith(
+                style: LandingTextStyles.foundingOfferStatement.copyWith(
                   fontSize: headingSize,
                   letterSpacing: headingSize * -0.01,
                 ),
                 children: [
                   TextSpan(
                     text: headingEmphasis,
-                    style: LandingTextStyles.sectionHeadingEmphasis.copyWith(
-                      fontSize: headingSize,
-                      letterSpacing: headingSize * -0.01,
-                    ),
+                    style: LandingTextStyles.foundingOfferStatementEmphasis
+                        .copyWith(
+                          fontSize: headingSize,
+                          letterSpacing: headingSize * -0.01,
+                          color: AppColors.warmOrange,
+                        ),
                   ),
                   TextSpan(text: headingTrailing),
                 ],
@@ -116,14 +119,14 @@ final class _VenueIntroduction extends StatelessWidget {
             context.l10n.landingVenueIntroductionFirst,
             key: const Key('venueIntroductionBody0'),
             textAlign: TextAlign.center,
-            style: LandingTextStyles.statsAttribution,
+            style: LandingTextStyles.compactSectionBody,
           ),
           const SizedBox(height: 12),
           Text(
             context.l10n.landingVenueIntroductionSecond,
             key: const Key('venueIntroductionBody1'),
             textAlign: TextAlign.center,
-            style: LandingTextStyles.statsAttribution,
+            style: LandingTextStyles.compactSectionBody,
           ),
         ],
       ),

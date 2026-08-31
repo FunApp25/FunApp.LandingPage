@@ -40,7 +40,7 @@
   "@landingHeroHeadlineEmphasis": {
     "description": "Italic emphasized ending of the hero headline."
   },
-  "landingHeroSupporting": "Welcome to a friendlier future. Welcome to Fun App. Fun App believes friendship, group and dating platforms can be SO much better.",
+  "landingHeroSupporting": "Fun App is going to work differently… very differently! A warm, welcoming and respectful environment where users can meet others online or IRL, free of charge, in thousands of venues of all shapes, sizes and types around the country. But, let us explain why change is needed.",
   "@landingHeroSupporting": {
     "description": "Supporting paragraph beneath the hero headline."
   },
@@ -146,15 +146,19 @@
   },
   "landingMembershipBody": "Connections for everyone. Choose the membership that works for you and enjoy a friendlier future with Fun App.",
   "@landingMembershipBody": {
-    "description": "Supporting paragraph beside the membership cards."
+    "description": "Centered supporting paragraph above the membership cards."
   },
-  "landingMembershipFreeTier": "Free Membership",
+  "landingMembershipFreeTier": "FREE MEMBERSHIP",
   "@landingMembershipFreeTier": {
     "description": "Title of the free membership tier."
   },
-  "landingMembershipHereNowTier": "Here & Now Membership",
+  "landingMembershipHereNowTier": "HERE & NOW MEMBERSHIP",
   "@landingMembershipHereNowTier": {
     "description": "Title of the paid Here & Now membership tier."
+  },
+  "landingMembershipLifetimeTier": "LIFETIME MEMBERSHIP",
+  "@landingMembershipLifetimeTier": {
+    "description": "Eyebrow of the Lifetime membership tier."
   },
   "landingMembershipFreePrice": "£0",
   "@landingMembershipFreePrice": {
@@ -164,9 +168,17 @@
   "@landingMembershipHereNowPrice": {
     "description": "Visual price of the Here & Now membership tier."
   },
+  "landingMembershipLifetimePrice": "£249",
+  "@landingMembershipLifetimePrice": {
+    "description": "Visual price of the Lifetime membership tier."
+  },
   "landingMembershipBillingPeriod": "/ month",
   "@landingMembershipBillingPeriod": {
-    "description": "Visual billing period displayed beside each membership price."
+    "description": "Visual monthly billing period displayed beside a membership price."
+  },
+  "landingMembershipOneTimePeriod": "/ one time",
+  "@landingMembershipOneTimePeriod": {
+    "description": "Visual one-time billing period displayed beside the Lifetime price."
   },
   "landingMembershipFreePriceSemantics": "£0 per month",
   "@landingMembershipFreePriceSemantics": {
@@ -176,21 +188,101 @@
   "@landingMembershipHereNowPriceSemantics": {
     "description": "Accessible spoken price for the Here & Now membership tier."
   },
-  "landingMembershipFreeDescription": "Free membership will deliver a fully working app including some super attractive benefits.",
+  "landingMembershipLifetimePriceSemantics": "£249 one-time payment",
+  "@landingMembershipLifetimePriceSemantics": {
+    "description": "Accessible spoken price for the Lifetime membership tier."
+  },
+  "landingMembershipFreeDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape",
   "@landingMembershipFreeDescription": {
     "description": "Description of the free membership tier."
   },
-  "landingMembershipHereNowDescription": "‘Here & Now’ membership will include EVERYTHING Fun App is busy developing.",
+  "landingMembershipHereNowDescription": "Full access from day one. You get every feature now and lock in permanent Founding status.",
   "@landingMembershipHereNowDescription": {
     "description": "Description of the Here & Now membership tier."
   },
-  "landingMembershipOfferHint": "However, see offer below...",
-  "@landingMembershipOfferHint": {
-    "description": "Membership-card note referring visually to the offer below."
+  "landingMembershipLifetimeDescription": "Pay once, keep full access forever, and never deal with a monthly renewal again",
+  "@landingMembershipLifetimeDescription": {
+    "description": "Description of the Lifetime membership tier."
   },
-  "landingMembershipFoundingFriendLink": "BECOME A FOUNDING FRIEND",
-  "@landingMembershipFoundingFriendLink": {
-    "description": "Visual-only membership-card offer label; Founding Friend is a product term."
+  "landingMembershipFreeBenefitBeta": "First look at beta releases",
+  "@landingMembershipFreeBenefitBeta": {
+    "description": "First benefit of Free Membership."
+  },
+  "landingMembershipFreeBenefitCommunity": "Direct access to the team in community channels",
+  "@landingMembershipFreeBenefitCommunity": {
+    "description": "Second benefit of Free Membership."
+  },
+  "landingMembershipFreeBenefitFeedback": "Vote on features and share unfiltered feedback",
+  "@landingMembershipFreeBenefitFeedback": {
+    "description": "Third benefit of Free Membership."
+  },
+  "landingMembershipFreeBenefitProgress": "Transparent progress updates",
+  "@landingMembershipFreeBenefitProgress": {
+    "description": "Fourth benefit of Free Membership."
+  },
+  "landingMembershipHereNowBenefitFree": "Everything in Free Membership",
+  "@landingMembershipHereNowBenefitFree": {
+    "description": "Emphasized first benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitAccess": "Complete, unrestricted access to the full app",
+  "@landingMembershipHereNowBenefitAccess": {
+    "description": "Second benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitBadge": "Permanent Founding Member badge on your profile",
+  "@landingMembershipHereNowBenefitBadge": {
+    "description": "Third benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitSupport": "Priority support when you run into an issue",
+  "@landingMembershipHereNowBenefitSupport": {
+    "description": "Fourth benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitReleases": "Direct input on upcoming releases",
+  "@landingMembershipHereNowBenefitReleases": {
+    "description": "Fifth benefit of Here & Now Membership."
+  },
+  "landingMembershipLifetimeBenefitPerks": "All Here & Now perks for life",
+  "@landingMembershipLifetimeBenefitPerks": {
+    "description": "Emphasized first benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitFees": "Zero monthly or annual subscription fees",
+  "@landingMembershipLifetimeBenefitFees": {
+    "description": "Second benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitPrices": "Protected from all future price changes",
+  "@landingMembershipLifetimeBenefitPrices": {
+    "description": "Third benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitTesting": "Exclusive access to early private testing",
+  "@landingMembershipLifetimeBenefitTesting": {
+    "description": "Fourth benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitAvailability": "Only available during the pre-launch phase",
+  "@landingMembershipLifetimeBenefitAvailability": {
+    "description": "Fifth benefit of Lifetime Membership."
+  },
+  "landingMembershipFreeCta": "Join the Community",
+  "@landingMembershipFreeCta": {
+    "description": "Visual-only CTA in the Free Membership card."
+  },
+  "landingMembershipHereNowCta": "Start Here & Now",
+  "@landingMembershipHereNowCta": {
+    "description": "Visual-only CTA in the Here & Now Membership card."
+  },
+  "landingMembershipLifetimeCta": "Get Lifetime Membership",
+  "@landingMembershipLifetimeCta": {
+    "description": "Visual-only CTA in the Lifetime Membership card."
+  },
+  "landingMembershipCancelFootnote": "*Cancel anytime. Your Founding badge stays forever.",
+  "@landingMembershipCancelFootnote": {
+    "description": "Footnote beneath the Free and Here & Now membership CTAs."
+  },
+  "landingMembershipLifetimeFootnote": "*Available only before the public launch",
+  "@landingMembershipLifetimeFootnote": {
+    "description": "Footnote beneath the Lifetime membership CTA."
+  },
+  "landingMembershipLifetimeBadge": "LIMITED FOUNDING OFFER",
+  "@landingMembershipLifetimeBadge": {
+    "description": "Floating badge above the Lifetime Membership card."
   },
   "landingFoundingOfferEyebrow": "LIMITED TIME OFFER",
   "@landingFoundingOfferEyebrow": {
@@ -204,27 +296,51 @@
   "@landingFoundingOfferFoundingFriend": {
     "description": "Italic product term in the Founding Friend offer statement; do not translate."
   },
-  "landingFoundingOfferMiddle": "... for free. Enjoy latest news ",
-  "@landingFoundingOfferMiddle": {
-    "description": "Regular middle portion of the Founding Friend offer statement."
-  },
-  "landingFoundingOfferPlus": "plus",
-  "@landingFoundingOfferPlus": {
-    "description": "Italic connective within the Founding Friend offer statement."
-  },
-  "landingFoundingOfferTrailing": " ‘Here & Now’ membership on us.",
+  "landingFoundingOfferTrailing": "... for free. Enjoy ‘Here & Now’ membership on us.",
   "@landingFoundingOfferTrailing": {
     "description": "Regular ending of the Founding Friend offer statement; Here & Now is a product term."
   },
-  "landingFoundingFriendsHeading": "Founding Friends are Very Special",
+  "landingFoundingMemberHeading": "What does Founding Member mean",
+  "@landingFoundingMemberHeading": {
+    "description": "Heading for the Founding Member explanation section."
+  },
+  "landingFoundingMemberBody": "It simply means you supported Fun App before everyone else. In return, we keep it simple.",
+  "@landingFoundingMemberBody": {
+    "description": "Supporting copy for the Founding Member explanation section."
+  },
+  "landingFoundingMemberRecognisedTitle": "Recognised Forever",
+  "@landingFoundingMemberRecognisedTitle": {
+    "description": "Title of the first Founding Member benefit card."
+  },
+  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed the project from the start",
+  "@landingFoundingMemberRecognisedBody": {
+    "description": "Body of the first Founding Member benefit card."
+  },
+  "landingFoundingMemberAccessTitle": "Early Access Always",
+  "@landingFoundingMemberAccessTitle": {
+    "description": "Title of the second Founding Member benefit card."
+  },
+  "landingFoundingMemberAccessBody": "Try new tools and experiments before they roll out publicly",
+  "@landingFoundingMemberAccessBody": {
+    "description": "Body of the second Founding Member benefit card."
+  },
+  "landingFoundingMemberVoiceTitle": "A Direct Voice",
+  "@landingFoundingMemberVoiceTitle": {
+    "description": "Title of the third Founding Member benefit card."
+  },
+  "landingFoundingMemberVoiceBody": "Your feedback goes straight to the team building the roadmap",
+  "@landingFoundingMemberVoiceBody": {
+    "description": "Body of the third Founding Member benefit card."
+  },
+  "landingFoundingFriendsHeading": "Founding Friends are Besties",
   "@landingFoundingFriendsHeading": {
     "description": "Heading in the Founding Friends promotional card."
   },
-  "landingFoundingFriendsBodyFirst": "Thank you for joining Fun App so early as a Founding Friend. You will maintain Founding Friend status forever and help Fun App change the way the world makes friends.",
+  "landingFoundingFriendsBodyFirst": "Thank you for being an early bird and joining Fun App as a Founding Friend. You can keep this status forever, helping change the way the world makes friends.",
   "@landingFoundingFriendsBodyFirst": {
     "description": "First paragraph in the Founding Friends promotional card."
   },
-  "landingFoundingFriendsBodySecond": "Welcome aboard, this is going to be an exciting journey. Let’s change the world together.",
+  "landingFoundingFriendsBodySecond": "Welcome aboard, this is going to be an exciting journey.",
   "@landingFoundingFriendsBodySecond": {
     "description": "Second paragraph in the Founding Friends promotional card."
   },
@@ -244,9 +360,9 @@
   "@landingVenueHeadingEmphasis": {
     "description": "Italic orange emphasis in the venue introduction heading."
   },
-  "landingVenueHeadingTrailing": "...",
+  "landingVenueHeadingTrailing": "",
   "@landingVenueHeadingTrailing": {
-    "description": "Trailing ellipsis in the venue introduction heading."
+    "description": "Optional trailing portion of the venue introduction heading; empty in the current design."
   },
   "landingVenueIntroductionFirst": "Venues and events of every shape, size, type and location will be central to Fun App’s mission to make the world a friendlier place.",
   "@landingVenueIntroductionFirst": {

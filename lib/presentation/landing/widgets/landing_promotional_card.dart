@@ -100,11 +100,11 @@ enum _PromotionalCardDesign {
     ctaAppearance: LandingCtaAppearance.brandBlue,
     imageAsset: AppAssets.foundingFriendsGroup,
     artworkSide: _PromotionalArtworkSide.trailing,
-    intrinsicArtworkSize: Size(644, 410),
-    wideHeight: 586,
+    intrinsicArtworkSize: Size(673, 410),
+    wideHeight: 534,
     wideContentWidth: 494,
     wideContentInset: 128,
-    wideArtworkTop: 88,
+    wideArtworkTop: 62,
   ),
 
   venue(
@@ -114,7 +114,7 @@ enum _PromotionalCardDesign {
     ctaAppearance: LandingCtaAppearance.brandYellow,
     imageAsset: AppAssets.venueGroup,
     artworkSide: _PromotionalArtworkSide.leading,
-    intrinsicArtworkSize: Size(666, 410),
+    intrinsicArtworkSize: Size(673, 410),
     wideHeight: 444,
     wideContentWidth: 426,
     wideContentInset: 140,

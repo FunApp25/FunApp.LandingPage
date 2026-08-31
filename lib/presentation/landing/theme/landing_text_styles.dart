@@ -45,10 +45,10 @@ abstract final class LandingTextStyles {
 
   /// Supporting Hero copy.
   static final TextStyle heroSupporting = AppTextStyles.bodyFontStyle(
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w500,
-    height: 28 / 20,
-    letterSpacing: 0.4,
+    height: 26 / 18,
+    letterSpacing: 0.36,
     color: AppColors.bodyGray,
   );
 
@@ -172,22 +172,22 @@ abstract final class LandingTextStyles {
     color: AppColors.bodyGray,
   );
 
-  /// Membership-card tier title.
-  static final TextStyle membershipCardTitle = AppTextStyles.headlineFontStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w400,
-    height: 40 / 32,
-    letterSpacing: -0.32,
-    color: AppColors.lightForeground,
+  /// Membership-card eyebrow label.
+  static final TextStyle membershipCardEyebrow = AppTextStyles.bodyFontStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    height: 20 / 12,
+    letterSpacing: 0.96,
+    color: AppColors.textPrimary,
   );
 
   /// Membership-card price.
   static final TextStyle membershipPrice = AppTextStyles.bodyFontStyle(
-    fontSize: 40,
+    fontSize: 50,
     fontWeight: FontWeight.w600,
-    height: 50 / 40,
-    letterSpacing: -0.4,
-    color: AppColors.lightForeground,
+    height: 1,
+    letterSpacing: -0.5,
+    color: AppColors.textPrimary,
     fontFeatures: const [
       FontFeature.liningFigures(),
       FontFeature.tabularFigures(),
@@ -197,34 +197,58 @@ abstract final class LandingTextStyles {
   /// Membership-card billing period.
   static final TextStyle membershipPriceUnit = AppTextStyles.bodyFontStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
     height: 22 / 14,
     letterSpacing: 0.28,
-    color: AppColors.lightForeground,
+    color: AppColors.textPrimary,
   );
 
   /// Membership-card body copy.
   static final TextStyle membershipCardBody = AppTextStyles.bodyFontStyle(
     fontSize: 16,
     fontWeight: FontWeight.w500,
-    height: 26 / 16,
+    height: 24 / 16,
     letterSpacing: 0.32,
-    color: AppColors.lightForeground,
+    color: AppColors.textPrimary,
   );
 
-  /// Visual, intentionally unwired membership-card link treatment.
-  static final TextStyle membershipCardLink =
+  /// Emphasized first benefit on paid membership cards.
+  static final TextStyle membershipCardBenefitEmphasis =
       AppTextStyles.bodyFontStyle(
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: FontWeight.w700,
-        height: 22 / 14,
-        letterSpacing: 1.12,
-        color: AppColors.yellowAccent,
-      ).copyWith(
-        decoration: TextDecoration.underline,
-        decorationColor: AppColors.blueMain.withValues(alpha: 0.3),
-        decorationThickness: 1.12,
+        height: 24 / 16,
+        letterSpacing: 0.32,
+        color: AppColors.textPrimary,
       );
+
+  /// Fine print beneath membership-card calls to action.
+  static final TextStyle membershipFootnote = AppTextStyles.bodyFontStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    height: 20 / 12,
+    letterSpacing: 0.24,
+    color: AppColors.textPrimary.withValues(alpha: 0.6),
+  );
+
+  /// Founding Member benefit-card title.
+  static final TextStyle foundingMemberCardTitle =
+      AppTextStyles.headlineFontStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w400,
+        height: 40 / 32,
+        letterSpacing: -0.32,
+        color: AppColors.textPrimary,
+      );
+
+  /// Compact explanatory copy used by the current Figma cards and Venue intro.
+  static final TextStyle compactSectionBody = AppTextStyles.bodyFontStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 24 / 16,
+    letterSpacing: 0.32,
+    color: AppColors.bodyGray,
+  );
 
   /// Regular large statement treatment.
   static final TextStyle foundingOfferStatement =

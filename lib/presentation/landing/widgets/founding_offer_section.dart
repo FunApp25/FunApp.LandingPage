@@ -6,29 +6,29 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
-/// Limited-time Founding Friend offer from Figma node `2190:1613`.
+/// Limited-time Founding Friend offer from Figma node `2243:2549`.
 final class FoundingOfferSection extends StatelessWidget {
   /// Creates the founding-offer section.
   const FoundingOfferSection({super.key});
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: AppColors.beigeAccent,
+    key: const Key('foundingOfferBackground'),
+    color: AppColors.lightForeground,
     child: LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
         final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final bottomPadding = AppSizes.sectionVerticalPaddingFor(
+        final verticalPadding = AppSizes.sectionVerticalPaddingFor(
           availableWidth,
         );
 
         return Padding(
-          padding: EdgeInsets.only(
-            left: pageGutter,
-            right: pageGutter,
-            bottom: bottomPadding,
+          padding: EdgeInsets.symmetric(
+            horizontal: pageGutter,
+            vertical: verticalPadding,
           ),
           child: Center(
             child: ConstrainedBox(
@@ -55,10 +55,8 @@ final class _FoundingOfferContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final leading = context.l10n.landingFoundingOfferLeading;
     final foundingFriend = context.l10n.landingFoundingOfferFoundingFriend;
-    final middle = context.l10n.landingFoundingOfferMiddle;
-    final plus = context.l10n.landingFoundingOfferPlus;
     final trailing = context.l10n.landingFoundingOfferTrailing;
-    final semanticLabel = '$leading$foundingFriend$middle$plus$trailing';
+    final semanticLabel = '$leading$foundingFriend$trailing';
     final letterSpacing = statementSize * -0.01;
     final regularStyle = LandingTextStyles.foundingOfferStatement.copyWith(
       fontSize: statementSize,
@@ -96,8 +94,6 @@ final class _FoundingOfferContent extends StatelessWidget {
               style: regularStyle,
               children: [
                 TextSpan(text: foundingFriend, style: emphasisStyle),
-                TextSpan(text: middle),
-                TextSpan(text: plus, style: emphasisStyle),
                 TextSpan(text: trailing),
               ],
             ),

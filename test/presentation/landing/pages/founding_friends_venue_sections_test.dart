@@ -10,12 +10,11 @@ import 'package:fun_app_landing_page/presentation/landing/widgets/venue_section.
 import '../landing_test_helpers.dart';
 
 const _foundingFriendsBodyFirst =
-    'Thank you for joining Fun App so early as a Founding Friend. You will '
-    'maintain Founding Friend status forever and help Fun App change the way '
-    'the world makes friends.';
+    'Thank you for being an early bird and joining Fun App as a Founding '
+    'Friend. You can keep this status forever, helping change the way the '
+    'world makes friends.';
 const _foundingFriendsBodySecond =
-    'Welcome aboard, this is going to be an exciting journey. Let’s change '
-    'the world together.';
+    'Welcome aboard, this is going to be an exciting journey.';
 const _venueIntroductionFirst =
     'Venues and events of every shape, size, type and location will be central '
     'to Fun App’s mission to make the world a friendlier place.';
@@ -28,7 +27,7 @@ void main() {
   ) async {
     await pumpLandingApp(tester);
 
-    expect(find.text('Founding Friends are Very Special'), findsOneWidget);
+    expect(find.text('Founding Friends are Besties'), findsOneWidget);
     expect(find.text(_foundingFriendsBodyFirst), findsOneWidget);
     expect(find.text(_foundingFriendsBodySecond), findsOneWidget);
     expect(find.text('Become a Founding Friend'), findsOneWidget);
@@ -38,11 +37,11 @@ void main() {
     );
     expect(
       venueIntroductionHeading.textSpan?.toPlainText(),
-      'I Run a Venue...',
+      'I Run a Venue',
     );
     expect(find.text(_venueIntroductionFirst), findsOneWidget);
     expect(find.text(_venueIntroductionSecond), findsOneWidget);
-    expect(find.text('I Run a Venue...'), findsNWidgets(2));
+    expect(find.text('I Run a Venue...'), findsOneWidget);
     expect(find.text('How can I help change the world?'), findsOneWidget);
     expect(find.text('Let’s Start a Conversation'), findsOneWidget);
   });
@@ -50,23 +49,26 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      foundingHeading: 'Los Founding Friends son muy especiales',
+      foundingHeading: 'Los Founding Friends son los mejores amigos',
       foundingCta: 'Hazte Founding Friend',
-      venueHeading: 'Gestiono un espacio...',
+      venueIntro: 'Gestiono un espacio',
+      venueCard: 'Gestiono un espacio...',
       venueCta: 'Empecemos una conversación',
     ),
     (
       locale: Locale('cy'),
-      foundingHeading: 'Mae Founding Friends yn Arbennig Iawn',
+      foundingHeading: 'Founding Friends yw’r Ffrindiau Gorau',
       foundingCta: 'Dewch yn Founding Friend',
-      venueHeading: 'Rwy’n Rhedeg Lleoliad...',
+      venueIntro: 'Rwy’n Rhedeg Lleoliad',
+      venueCard: 'Rwy’n Rhedeg Lleoliad...',
       venueCta: 'Dewch i Ni Ddechrau Sgwrs',
     ),
     (
       locale: Locale('be'),
-      foundingHeading: 'Founding Friends — вельмі асаблівыя',
+      foundingHeading: 'Founding Friends — найлепшыя сябры',
       foundingCta: 'Станьце Founding Friend',
-      venueHeading: 'Я кірую пляцоўкай...',
+      venueIntro: 'Я кірую пляцоўкай',
+      venueCard: 'Я кірую пляцоўкай...',
       venueCta: 'Пачнём размову',
     ),
   ]) {
@@ -79,9 +81,10 @@ void main() {
       expect(find.text(example.foundingHeading), findsOneWidget);
       expect(find.text(example.foundingCta), findsOneWidget);
       expect(
-        find.bySemanticsLabel(example.venueHeading),
-        findsNWidgets(2),
+        find.bySemanticsLabel(example.venueIntro),
+        findsOneWidget,
       );
+      expect(find.bySemanticsLabel(example.venueCard), findsOneWidget);
       expect(find.text(example.venueCta), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -104,13 +107,13 @@ void main() {
       tester.getSize(
         find.byKey(const Key('foundingFriendsIntrinsicArtworkBounds')),
       ),
-      const Size(644, 410),
+      const Size(673, 410),
     );
     expect(
       tester.getSize(
         find.byKey(const Key('venueCardIntrinsicArtworkBounds')),
       ),
-      const Size(666, 410),
+      const Size(673, 410),
     );
     for (final key in const [
       Key('foundingFriendsImage'),
@@ -200,7 +203,7 @@ void main() {
           expect(artworkRect.size, const Size(673, 410));
           expect(
             wideLayout.constraints.minHeight,
-            prefix == 'foundingFriends' ? 586 : 444,
+            prefix == 'foundingFriends' ? 534 : 444,
           );
           if (prefix == 'foundingFriends') {
             expect(contentRect.left - cardRect.left, 128);
@@ -226,9 +229,7 @@ void main() {
             );
           }
         } else {
-          final expectedRatio = prefix == 'foundingFriends'
-              ? 644 / 410
-              : 666 / 410;
+          const expectedRatio = 673 / 410;
           expect(artworkRect.size.aspectRatio, closeTo(expectedRatio, 0.001));
           if (prefix == 'foundingFriends') {
             expect(artworkRect.right, closeTo(cardRect.right, 0.01));
@@ -245,6 +246,14 @@ void main() {
         tester.getSize(find.byType(VenueSection)).width,
         lessThanOrEqualTo(example.size.width),
       );
+      if (example.size.width == 1440) {
+        expect(
+          tester
+              .getSize(find.byKey(const Key('venueIntroductionBounds')))
+              .width,
+          522,
+        );
+      }
       expect(tester.takeException(), isNull);
     }
   });
@@ -278,12 +287,12 @@ void main() {
     expectHeaderSemantics(
       tester,
       const Key('foundingFriendsHeadingSemantics'),
-      'Founding Friends are Very Special',
+      'Founding Friends are Besties',
     );
     expectHeaderSemantics(
       tester,
       const Key('venueIntroductionHeadingSemantics'),
-      'I Run a Venue...',
+      'I Run a Venue',
     );
     expectHeaderSemantics(
       tester,
@@ -315,7 +324,7 @@ void main() {
     expect(
       foundingCardText,
       orderedEquals([
-        'Founding Friends are Very Special',
+        'Founding Friends are Besties',
         _foundingFriendsBodyFirst,
         _foundingFriendsBodySecond,
         'Become a Founding Friend',
@@ -347,7 +356,7 @@ void main() {
         findsNothing,
       );
     }
-    expect(find.byType(LandingCtaButton), findsNWidgets(4));
+    expect(find.byType(LandingCtaButton), findsNWidgets(3));
     semantics.dispose();
   });
 }
@@ -365,7 +374,7 @@ Future<void> _pumpPromotionalCard(
             width: width,
             child: const LandingPromotionalCard(
               variant: LandingPromotionalCardVariant.foundingFriends,
-              heading: 'Founding Friends are Very Special',
+              heading: 'Founding Friends are Besties',
               bodyParagraphs: [
                 _foundingFriendsBodyFirst,
                 _foundingFriendsBodySecond,
