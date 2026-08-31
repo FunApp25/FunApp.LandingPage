@@ -19,6 +19,14 @@ These rules apply repository-wide. More specific nested `AGENTS.md` files may ad
 - Treat `archive/astro_site/` as read-only historical reference by default. Do not implement production work there or restore Astro dependencies/build steps unless explicitly requested.
 - Review the complete diff, preserve unrelated work, and leave a clear handoff with verification results and remaining risks.
 
+## Dart control flow and formatting
+
+- Prefer explicit `if`/`else` branches over guard-clause early returns so alternative paths remain visually grouped.
+- In `void`, `Future<void>`, and callback functions, express the positive condition under which useful work occurs instead of negating the condition and returning early.
+- Retain an early return only when correctness or materially clearer control flow justifies it; avoid negative-condition-return-then-main-body patterns.
+- Use trailing commas for structured multiline Dart calls, callbacks, collections, parameter lists, and widget trees.
+- Preserve readable tall formatting for nested callbacks and widgets, and let `dart format` produce the canonical result.
+
 ## Flutter Web and tooling
 
 - This project targets Flutter Web only. Do not add Android, iOS, macOS, Linux, or Windows platforms or guidance.

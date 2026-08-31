@@ -131,32 +131,32 @@ final class LandingCtaButton extends StatelessWidget {
       );
 
       final callback = onPressed;
-      if (callback == null) {
+      if (callback != null) {
+        return Semantics(
+          label: label,
+          button: true,
+          onTap: callback,
+          excludeSemantics: true,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: callback,
+              excludeFromSemantics: true,
+              mouseCursor: SystemMouseCursors.click,
+              focusColor: AppColors.energeticPlum.withValues(alpha: 0.1),
+              hoverColor: AppColors.energeticPlum.withValues(alpha: 0.06),
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(AppSizes.pillRadius),
+              ),
+              child: visual,
+            ),
+          ),
+        );
+      } else {
         return visual;
       }
-
-      return Semantics(
-        label: label,
-        button: true,
-        onTap: callback,
-        excludeSemantics: true,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: callback,
-            excludeFromSemantics: true,
-            mouseCursor: SystemMouseCursors.click,
-            focusColor: AppColors.energeticPlum.withValues(alpha: 0.1),
-            hoverColor: AppColors.energeticPlum.withValues(alpha: 0.06),
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            borderRadius: const BorderRadius.all(
-              Radius.circular(AppSizes.pillRadius),
-            ),
-            child: visual,
-          ),
-        ),
-      );
     },
   );
 }

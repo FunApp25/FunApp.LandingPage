@@ -121,16 +121,17 @@ abstract final class AppTextStyles {
         fontFeatures: fontFeatures,
         color: color,
       );
+    } else {
+      return GoogleFonts.manrope(
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        fontStyle: fontStyle,
+        height: height,
+        letterSpacing: letterSpacing,
+        fontFeatures: fontFeatures,
+        color: color,
+      );
     }
-    return GoogleFonts.manrope(
-      fontSize: fontSize,
-      fontWeight: fontWeight,
-      fontStyle: fontStyle,
-      height: height,
-      letterSpacing: letterSpacing,
-      fontFeatures: fontFeatures,
-      color: color,
-    );
   }
 
   /// Builds an Instrument Serif style with the same test-safe behavior.
@@ -153,15 +154,16 @@ abstract final class AppTextStyles {
         letterSpacing: letterSpacing,
         color: color,
       );
+    } else {
+      return GoogleFonts.instrumentSerif(
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        fontStyle: fontStyle,
+        height: height,
+        letterSpacing: letterSpacing,
+        color: color,
+      );
     }
-    return GoogleFonts.instrumentSerif(
-      fontSize: fontSize,
-      fontWeight: fontWeight,
-      fontStyle: fontStyle,
-      height: height,
-      letterSpacing: letterSpacing,
-      color: color,
-    );
   }
 
   // Runtime Google Fonts fetching is intentionally unchanged in this cleanup.

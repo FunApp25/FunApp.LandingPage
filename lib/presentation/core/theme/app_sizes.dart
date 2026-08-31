@@ -54,32 +54,32 @@ abstract final class AppSizes {
   static double sectionVerticalPaddingFor(double availableWidth) {
     if (availableWidth >= 1200) {
       return desktopSectionVerticalPadding;
-    }
-    if (availableWidth >= 600) {
+    } else if (availableWidth >= 600) {
       return intermediateSectionVerticalPadding;
+    } else {
+      return narrowSectionVerticalPadding;
     }
-    return narrowSectionVerticalPadding;
   }
 
   /// Resolves the shared landing-page section-heading size.
   static double sectionHeadingSizeFor(double availableWidth) {
     if (availableWidth >= 1200) {
       return 44;
-    }
-    if (availableWidth >= 600) {
+    } else if (availableWidth >= 600) {
       return 40;
+    } else {
+      return 34;
     }
-    return 34;
   }
 
   /// Resolves the large statement size used by narrative sections.
   static double statementHeadingSizeFor(double availableWidth) {
     if (availableWidth >= 1200) {
       return 50;
-    }
-    if (availableWidth >= 600) {
+    } else if (availableWidth >= 600) {
       return 42;
+    } else {
+      return 34;
     }
-    return 34;
   }
 }

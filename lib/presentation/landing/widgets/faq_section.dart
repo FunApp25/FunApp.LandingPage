@@ -51,11 +51,15 @@ final class _FaqSectionState extends State<FaqSection> {
   }
 
   void _toggle(int index) {
-    setState(() {
-      if (!_expandedIndexes.remove(index)) {
-        _expandedIndexes.add(index);
-      }
-    });
+    setState(
+      () {
+        if (_expandedIndexes.contains(index)) {
+          _expandedIndexes.remove(index);
+        } else {
+          _expandedIndexes.add(index);
+        }
+      },
+    );
   }
 
   @override
@@ -352,29 +356,29 @@ final class _FaqAnswerParagraph extends StatelessWidget {
 
     if (emphasizedRanges.isEmpty) {
       return Text(paragraph.text, style: normalStyle);
-    }
-
-    final spans = <InlineSpan>[];
-    var cursor = 0;
-    for (final range in emphasizedRanges) {
-      if (range.start > cursor) {
+    } else {
+      final spans = <InlineSpan>[];
+      var cursor = 0;
+      for (final range in emphasizedRanges) {
+        if (range.start > cursor) {
+          spans.add(
+            TextSpan(text: paragraph.text.substring(cursor, range.start)),
+          );
+        }
         spans.add(
-          TextSpan(text: paragraph.text.substring(cursor, range.start)),
+          TextSpan(
+            text: paragraph.text.substring(range.start, range.end),
+            style: emphasisStyle,
+          ),
         );
+        cursor = range.end;
       }
-      spans.add(
-        TextSpan(
-          text: paragraph.text.substring(range.start, range.end),
-          style: emphasisStyle,
-        ),
-      );
-      cursor = range.end;
-    }
-    if (cursor < paragraph.text.length) {
-      spans.add(TextSpan(text: paragraph.text.substring(cursor)));
-    }
+      if (cursor < paragraph.text.length) {
+        spans.add(TextSpan(text: paragraph.text.substring(cursor)));
+      }
 
-    return Text.rich(TextSpan(style: normalStyle, children: spans));
+      return Text.rich(TextSpan(style: normalStyle, children: spans));
+    }
   }
 }
 

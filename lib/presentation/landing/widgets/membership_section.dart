@@ -53,21 +53,21 @@ final class MembershipSection extends StatelessWidget {
                         Expanded(child: _MembershipCardGrid(cards: cards)),
                       ],
                     );
-                  }
-
-                  return Column(
-                    key: const Key('membershipStackedIntroLayout'),
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _MembershipIntroduction(
-                        headingSize: AppSizes.sectionHeadingSizeFor(
-                          availableWidth,
+                  } else {
+                    return Column(
+                      key: const Key('membershipStackedIntroLayout'),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _MembershipIntroduction(
+                          headingSize: AppSizes.sectionHeadingSizeFor(
+                            availableWidth,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: availableWidth < 600 ? 32 : 48),
-                      _MembershipCardGrid(cards: cards),
-                    ],
-                  );
+                        SizedBox(height: availableWidth < 600 ? 32 : 48),
+                        _MembershipCardGrid(cards: cards),
+                      ],
+                    );
+                  }
                 },
               ),
             ),

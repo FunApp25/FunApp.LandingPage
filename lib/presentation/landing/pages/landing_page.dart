@@ -46,40 +46,41 @@ final class _LandingPageState extends State<LandingPage> {
 
   void _scrollTo(GlobalKey sectionKey, {bool retryAfterLayout = true}) {
     final renderObject = sectionKey.currentContext?.findRenderObject();
-    if (!_scrollController.hasClients ||
-        renderObject == null ||
-        !renderObject.attached) {
-      if (retryAfterLayout) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+    final canScroll =
+        _scrollController.hasClients &&
+        renderObject != null &&
+        renderObject.attached;
+
+    if (canScroll) {
+      final viewport = RenderAbstractViewport.of(renderObject);
+      final position = _scrollController.position;
+      final targetOffset = viewport
+          .getOffsetToReveal(renderObject, 0)
+          .offset
+          .clamp(position.minScrollExtent, position.maxScrollExtent);
+      final disableAnimations =
+          MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+      if (disableAnimations) {
+        position.jumpTo(targetOffset);
+      } else {
+        unawaited(
+          position.animateTo(
+            targetOffset,
+            duration: _navigationDuration,
+            curve: _navigationCurve,
+          ),
+        );
+      }
+    } else if (retryAfterLayout) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) {
           if (mounted) {
             _scrollTo(sectionKey, retryAfterLayout: false);
           }
-        });
-      }
-      return;
+        },
+      );
     }
-
-    final viewport = RenderAbstractViewport.of(renderObject);
-    final position = _scrollController.position;
-    final targetOffset = viewport
-        .getOffsetToReveal(renderObject, 0)
-        .offset
-        .clamp(position.minScrollExtent, position.maxScrollExtent);
-    final disableAnimations =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-
-    if (disableAnimations) {
-      position.jumpTo(targetOffset);
-      return;
-    }
-
-    unawaited(
-      position.animateTo(
-        targetOffset,
-        duration: _navigationDuration,
-        curve: _navigationCurve,
-      ),
-    );
   }
 
   @override

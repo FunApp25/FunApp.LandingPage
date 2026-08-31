@@ -70,19 +70,19 @@ final class LandingPromotionalCard extends StatelessWidget {
           builder: (context, constraints) {
             if (constraints.maxWidth >= _wideCompositionWidth) {
               return _WidePromotionalCard(card: this, design: design);
-            }
-            if (constraints.maxWidth >= _intermediateCompositionWidth) {
+            } else if (constraints.maxWidth >= _intermediateCompositionWidth) {
               return _IntermediatePromotionalCard(
                 card: this,
                 design: design,
                 availableWidth: constraints.maxWidth,
               );
+            } else {
+              return _NarrowPromotionalCard(
+                card: this,
+                design: design,
+                availableWidth: constraints.maxWidth,
+              );
             }
-            return _NarrowPromotionalCard(
-              card: this,
-              design: design,
-              availableWidth: constraints.maxWidth,
-            );
           },
         ),
       ),

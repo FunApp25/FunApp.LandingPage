@@ -95,17 +95,17 @@ final class _ConnectionIntroduction extends StatelessWidget {
           ),
         ],
       );
+    } else {
+      return Column(
+        key: const Key('connectionStackedLayout'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ConnectionTitle(headingSize: headingSize),
+          const SizedBox(height: 32),
+          const _ConnectionBody(),
+        ],
+      );
     }
-
-    return Column(
-      key: const Key('connectionStackedLayout'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _ConnectionTitle(headingSize: headingSize),
-        const SizedBox(height: 32),
-        const _ConnectionBody(),
-      ],
-    );
   }
 }
 
