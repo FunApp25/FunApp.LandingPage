@@ -12,10 +12,10 @@ final class HeroSection extends StatelessWidget {
   /// Creates the landing-page hero.
   const HeroSection({super.key});
 
-  // The desktop composition needs room for the 600px copy block and the
-  // visible portion of the 706px artwork. Below this content constraint, the
-  // sections stack in source order because Figma has no narrow variant.
-  static const _twoColumnCompositionWidth = 1100.0;
+  // The exact Figma composition needs enough width for its intentionally
+  // overlapping copy and clipped artwork regions. Below this constraint the
+  // artwork stays top-right while copy clears it vertically.
+  static const _wideCompositionWidth = 1280.0;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -46,7 +46,7 @@ final class HeroSection extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, heroConstraints) {
                   final usesDesktopComposition =
-                      heroConstraints.maxWidth >= _twoColumnCompositionWidth;
+                      heroConstraints.maxWidth >= _wideCompositionWidth;
 
                   return ClipRRect(
                     key: const Key('heroCard'),
@@ -57,7 +57,7 @@ final class HeroSection extends StatelessWidget {
                       color: AppColors.beigeAccent,
                       child: usesDesktopComposition
                           ? const _DesktopHero()
-                          : _StackedHero(
+                          : _ResponsiveHero(
                               availableWidth: heroConstraints.maxWidth,
                             ),
                     ),
@@ -100,28 +100,42 @@ final class _DesktopHero extends StatelessWidget {
           right: -99,
           width: 706,
           height: 717,
-          child: _HeroImage(fit: BoxFit.fill),
+          child: _HeroImage(),
         ),
       ],
     ),
   );
 }
 
-final class _StackedHero extends StatelessWidget {
-  const _StackedHero({required this.availableWidth});
+final class _ResponsiveHero extends StatelessWidget {
+  const _ResponsiveHero({required this.availableWidth});
 
   final double availableWidth;
 
   @override
   Widget build(BuildContext context) {
     final isNarrow = availableWidth < 600;
-    final sectionPadding = isNarrow ? 24.0 : 48.0;
+    final horizontalPadding = isNarrow ? 24.0 : 48.0;
     final headlineSize = switch (availableWidth) {
       >= 600 => 46.0,
       >= 340 => 38.0,
       _ => 34.0,
     };
-    final artworkMaxWidth = isNarrow ? 280.0 : 480.0;
+    final artworkWidth = switch (availableWidth) {
+      >= 1000 => 560.0,
+      >= 800 => 520.0,
+      >= 600 => 440.0,
+      _ => (availableWidth * 1.08).clamp(0.0, 340.0),
+    };
+    final artworkHeight = artworkWidth * (717 / 706);
+    final artworkTop = switch (availableWidth) {
+      >= 1000 => -88.0,
+      >= 800 => -72.0,
+      >= 600 => -60.0,
+      _ => -36.0,
+    };
+    final artworkRight = artworkWidth * -0.08;
+    final contentTop = artworkHeight + artworkTop - (isNarrow ? 16 : 32);
     final supportingStyle = isNarrow
         ? AppTextStyles.landingHeroSupporting.copyWith(
             fontSize: 18,
@@ -129,33 +143,38 @@ final class _StackedHero extends StatelessWidget {
           )
         : AppTextStyles.landingHeroSupporting;
 
-    return Padding(
-      key: const Key('heroStackedLayout'),
-      padding: EdgeInsets.symmetric(
-        horizontal: sectionPadding,
-        vertical: isNarrow ? 32 : 40,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _HeroContent(
-            headlineSize: headlineSize,
-            supportingStyle: supportingStyle,
-            ctaSpacing: isNarrow ? 28 : 32,
+    return Stack(
+      key: const Key('heroResponsiveLayout'),
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            contentTop,
+            horizontalPadding,
+            isNarrow ? 32 : 40,
           ),
-          SizedBox(height: isNarrow ? 28 : 32),
-          Align(
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: ConstrainedBox(
-              key: const Key('heroArtworkBounds'),
-              constraints: BoxConstraints(maxWidth: artworkMaxWidth),
-              child: const AspectRatio(
-                aspectRatio: 706 / 717,
-                child: _HeroImage(fit: BoxFit.contain),
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: _HeroContent(
+                headlineSize: headlineSize,
+                supportingStyle: supportingStyle,
+                ctaSpacing: isNarrow ? 28 : 32,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          key: const Key('heroArtworkFrame'),
+          top: artworkTop,
+          right: artworkRight,
+          width: artworkWidth,
+          height: artworkHeight,
+          child: const _HeroImage(),
+        ),
+      ],
     );
   }
 }
@@ -187,6 +206,7 @@ final class _HeroContent extends StatelessWidget {
     );
 
     return Column(
+      key: const Key('heroContentBounds'),
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -234,9 +254,7 @@ final class _HeroContent extends StatelessWidget {
 }
 
 final class _HeroImage extends StatelessWidget {
-  const _HeroImage({required this.fit});
-
-  final BoxFit fit;
+  const _HeroImage();
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -249,7 +267,7 @@ final class _HeroImage extends StatelessWidget {
       key: const Key('heroPeopleImage'),
       width: double.infinity,
       height: double.infinity,
-      fit: fit,
+      fit: BoxFit.contain,
     ),
   );
 }

@@ -3,8 +3,6 @@ import 'package:fun_app_landing_page/presentation/core/extensions/build_context_
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_promotional_card.dart';
 
 /// Venue introduction and promotional card from Figma node `2190:1627`.
@@ -51,26 +49,14 @@ final class VenueSection extends StatelessWidget {
                     },
                   ),
                   LandingPromotionalCard(
-                    semanticId: 'venueCard',
+                    variant: LandingPromotionalCardVariant.venue,
                     heading: context.l10n.landingVenueCardHeading,
                     bodyParagraphs: [
                       context.l10n.landingVenueCardSupporting,
                     ],
                     ctaLabel: context.l10n.landingVenueCta,
-                    ctaAppearance: LandingCtaAppearance.brandYellow,
-                    backgroundColor: AppColors.warmCharcoalAccent,
-                    foregroundColor: AppColors.lightForeground,
-                    imageAsset: AppAssets.venueGroup,
                     imageSemanticLabel:
                         context.l10n.landingVenueImageDescription,
-                    imageSide: PromotionalImageSide.leading,
-                    desktopHeight: 444,
-                    desktopContentWidth: 426,
-                    desktopLeadingInset: 0,
-                    desktopGap: 128,
-                    desktopImageSlotWidth: 666,
-                    desktopTrailingInset: 140,
-                    desktopImageAlignment: Alignment.centerRight,
                   ),
                 ],
               ),

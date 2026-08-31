@@ -141,14 +141,24 @@ Figma values.
 
 Implemented landing sections preserve their Figma desktop compositions. Their
 narrower wrapping, stacking, and card reflow are constraint-driven
-implementation inferences because Figma provides no responsive variants. Header
-and footer section navigation scrolls within the single landing page while the
-header remains fixed above the scrolling content. The fixed header uses wide,
-intermediate, and narrow constraint-driven compositions so that its navigation
-remains compact without introducing a disclosure menu. Internal navigation
-controls provide at least a 44px effective target and an explicit keyboard-focus
-outline; hover and focus treatments cover the complete padded control surface.
-The established mapping is
+implementation inferences because Figma provides no responsive variants. Hero
+artwork remains a single, aspect-preserving image anchored and clipped at the
+upper-right of the card in every responsive composition. When the wide copy and
+artwork regions no longer fit together, the copy clears the artwork vertically
+instead of moving the artwork below the copy; source and semantic order remain
+logical without duplicating the image. Founding Friends and venue promotional
+cards use content-driven wide, intermediate, and narrow compositions. Their
+narrow layouts remain copy-first, and committed raster artwork preserves its
+intrinsic aspect ratio through sizing, alignment, and clipping rather than
+geometric distortion.
+
+Header and footer section navigation scrolls within the single landing page
+while the header remains fixed above the scrolling content. The fixed header
+uses wide, intermediate, and narrow constraint-driven compositions so that its
+navigation remains compact without introducing a disclosure menu. Internal
+navigation controls provide at least a 44px effective target and an explicit
+keyboard-focus outline; hover and focus treatments cover the complete padded
+control surface. The established mapping is
 Our Belief to Hero, Membership to Membership, Founding Friends to Founding
 Friends, and For Venues to Venue. Anchor positions derive from the rendered
 sections, and navigation movement becomes immediate when reduced motion is

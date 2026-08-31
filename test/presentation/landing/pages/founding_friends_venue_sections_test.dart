@@ -99,6 +99,30 @@ void main() {
       const Key('venueCardImage'),
       AppAssets.venueGroup,
     );
+    expect(
+      tester.getSize(
+        find.byKey(const Key('foundingFriendsIntrinsicArtworkBounds')),
+      ),
+      const Size(644, 410),
+    );
+    expect(
+      tester.getSize(
+        find.byKey(const Key('venueCardIntrinsicArtworkBounds')),
+      ),
+      const Size(666, 410),
+    );
+    for (final key in const [
+      Key('foundingFriendsImage'),
+      Key('venueCardImage'),
+    ]) {
+      expect(tester.widget<Image>(find.byKey(key)).fit, BoxFit.contain);
+    }
+    for (final key in const [
+      Key('foundingFriendsArtworkFit'),
+      Key('venueCardArtworkFit'),
+    ]) {
+      expect(tester.widget<FittedBox>(find.byKey(key)).fit, BoxFit.contain);
+    }
     _expectSvgAsset(
       tester,
       const Key('foundingFriendsCtaArrow'),
@@ -120,28 +144,92 @@ void main() {
     }
   });
 
-  testWidgets('uses wide cards and content-preserving stacked cards', (
+  testWidgets('uses intentional wide, intermediate, and narrow cards', (
     tester,
   ) async {
     for (final example in const [
-      (size: Size(320, 568), usesWideComposition: false),
-      (size: Size(768, 1024), usesWideComposition: false),
-      (size: Size(1440, 900), usesWideComposition: true),
+      (size: Size(320, 568), layout: 'Narrow'),
+      (size: Size(390, 844), layout: 'Narrow'),
+      (size: Size(768, 1024), layout: 'Narrow'),
+      (size: Size(900, 900), layout: 'Intermediate'),
+      (size: Size(1024, 768), layout: 'Intermediate'),
+      (size: Size(1200, 900), layout: 'Intermediate'),
+      (size: Size(1440, 900), layout: 'Wide'),
     ]) {
       _setTestSurface(tester, example.size);
       await _pumpApp(tester);
 
       expect(find.byType(LandingPromotionalCard), findsNWidgets(2));
       for (final prefix in ['foundingFriends', 'venueCard']) {
-        final layout = example.usesWideComposition ? 'Wide' : 'Stacked';
         expect(
-          find.byKey(Key('$prefix${layout}Layout')),
+          find.byKey(Key('$prefix${example.layout}Layout')),
           findsOneWidget,
         );
         final image = find.byKey(Key('${prefix}Image'));
         expect(image, findsOneWidget);
         expect(tester.getSize(image).width, greaterThan(0));
         expect(tester.getSize(image).height, greaterThan(0));
+
+        final cardRect = tester.getRect(
+          find.byKey(Key('${prefix}CardClip')),
+        );
+        final contentRect = tester.getRect(
+          find.byKey(Key('${prefix}ContentBounds')),
+        );
+        final artworkRect = tester.getRect(
+          find.byKey(Key('${prefix}ArtworkViewport')),
+        );
+        final ctaRect = tester.getRect(find.byKey(Key('${prefix}Cta')));
+        expect(ctaRect.left, greaterThanOrEqualTo(cardRect.left));
+        expect(ctaRect.right, lessThanOrEqualTo(cardRect.right));
+
+        if (example.layout == 'Narrow') {
+          expect(contentRect.bottom, lessThan(artworkRect.top));
+        } else if (prefix == 'foundingFriends') {
+          expect(contentRect.left, lessThan(artworkRect.left));
+        } else {
+          expect(artworkRect.left, lessThan(contentRect.left));
+        }
+
+        if (example.layout == 'Wide') {
+          final wideLayout = tester.widget<ConstrainedBox>(
+            find.byKey(Key('${prefix}WideLayout')),
+          );
+          expect(cardRect.width, 1360);
+          expect(artworkRect.size, const Size(673, 410));
+          expect(
+            wideLayout.constraints.minHeight,
+            prefix == 'foundingFriends' ? 586 : 444,
+          );
+          if (prefix == 'foundingFriends') {
+            expect(contentRect.left - cardRect.left, 128);
+            expect(artworkRect.left - cardRect.left, 716);
+            expect(
+              tester
+                  .widget<FittedBox>(
+                    find.byKey(const Key('foundingFriendsArtworkFit')),
+                  )
+                  .alignment,
+              Alignment.centerLeft,
+            );
+          } else {
+            expect(cardRect.right - contentRect.right, 140);
+            expect(artworkRect.left - cardRect.left, -7);
+            expect(
+              tester
+                  .widget<FittedBox>(
+                    find.byKey(const Key('venueCardArtworkFit')),
+                  )
+                  .alignment,
+              Alignment.centerRight,
+            );
+          }
+        } else {
+          final expectedRatio = prefix == 'foundingFriends'
+              ? 644 / 410
+              : 666 / 410;
+          expect(artworkRect.size.aspectRatio, closeTo(expectedRatio, 0.001));
+        }
       }
       expect(
         tester.getSize(find.byType(FoundingFriendsSection)).width,
@@ -150,6 +238,26 @@ void main() {
       expect(
         tester.getSize(find.byType(VenueSection)).width,
         lessThanOrEqualTo(example.size.width),
+      );
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('promotional layout thresholds are stable on both sides', (
+    tester,
+  ) async {
+    _setTestSurface(tester, const Size(1400, 1000));
+
+    for (final example in const [
+      (width: 1280.0, layout: 'Wide'),
+      (width: 1279.0, layout: 'Intermediate'),
+      (width: 780.0, layout: 'Intermediate'),
+      (width: 779.0, layout: 'Narrow'),
+    ]) {
+      await _pumpPromotionalCard(tester, width: example.width);
+      expect(
+        find.byKey(Key('foundingFriends${example.layout}Layout')),
+        findsOneWidget,
       );
       expect(tester.takeException(), isNull);
     }
@@ -254,6 +362,36 @@ void _setTestSurface(WidgetTester tester, Size size) {
   addTearDown(tester.view.resetPhysicalSize);
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
+}
+
+Future<void> _pumpPromotionalCard(
+  WidgetTester tester, {
+  required double width,
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: width,
+            child: const LandingPromotionalCard(
+              variant: LandingPromotionalCardVariant.foundingFriends,
+              heading: 'Founding Friends are Very Special',
+              bodyParagraphs: [
+                _foundingFriendsBodyFirst,
+                _foundingFriendsBodySecond,
+              ],
+              ctaLabel: 'Become a Founding Friend',
+              imageSemanticLabel:
+                  'Two people posing closely together outdoors.',
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump();
 }
 
 void _expectImageAsset(
