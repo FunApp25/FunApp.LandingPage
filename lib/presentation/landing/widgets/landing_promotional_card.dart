@@ -161,6 +161,11 @@ enum _PromotionalCardDesign {
     _PromotionalArtworkSide.trailing => availableWidth - 644,
     _PromotionalArtworkSide.leading => -7,
   };
+
+  Alignment get responsiveArtworkAlignment => switch (artworkSide) {
+    _PromotionalArtworkSide.trailing => Alignment.centerRight,
+    _PromotionalArtworkSide.leading => Alignment.centerLeft,
+  };
 }
 
 final class _WidePromotionalCard extends StatelessWidget {
@@ -245,9 +250,15 @@ final class _IntermediatePromotionalCard extends StatelessWidget {
 
     return Padding(
       key: Key('${design.semanticId}IntermediateLayout'),
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: verticalPadding,
+      padding: EdgeInsets.only(
+        left: design.artworkSide == _PromotionalArtworkSide.trailing
+            ? horizontalPadding
+            : 0,
+        top: verticalPadding,
+        right: design.artworkSide == _PromotionalArtworkSide.leading
+            ? horizontalPadding
+            : 0,
+        bottom: verticalPadding,
       ),
       child: Row(
         textDirection: design.artworkSide == _PromotionalArtworkSide.leading
@@ -268,7 +279,7 @@ final class _IntermediatePromotionalCard extends StatelessWidget {
             design: design,
             viewportSize: Size(artworkWidth, artworkHeight),
             fit: BoxFit.contain,
-            alignment: Alignment.center,
+            alignment: design.responsiveArtworkAlignment,
           ),
         ],
       ),
@@ -309,12 +320,15 @@ final class _NarrowPromotionalCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          _PromotionalCardArtwork(
-            card: card,
-            design: design,
-            viewportSize: Size(artworkWidth, artworkHeight),
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
+          Align(
+            alignment: design.responsiveArtworkAlignment,
+            child: _PromotionalCardArtwork(
+              card: card,
+              design: design,
+              viewportSize: Size(artworkWidth, artworkHeight),
+              fit: BoxFit.contain,
+              alignment: design.responsiveArtworkAlignment,
+            ),
           ),
         ],
       ),

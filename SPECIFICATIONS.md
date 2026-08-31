@@ -130,15 +130,17 @@ Figma values.
 Implemented landing sections preserve their Figma desktop compositions. Their
 narrower wrapping, stacking, and card reflow are constraint-driven
 implementation inferences because Figma provides no responsive variants. Hero
-artwork remains a single, aspect-preserving image anchored and clipped at the
-upper-right of the card in every responsive composition. When the wide copy and
-artwork regions no longer fit together, the copy clears the artwork vertically
-instead of moving the artwork below the copy; source and semantic order remain
-logical without duplicating the image. Founding Friends and venue promotional
-cards use content-driven wide, intermediate, and narrow compositions. Their
-narrow layouts remain copy-first, and committed raster artwork preserves its
-intrinsic aspect ratio through sizing, alignment, and clipping rather than
-geometric distortion.
+artwork remains a single, aspect-preserving image edge-anchored and clipped at
+the upper-right of the card in every responsive composition. When the wide copy
+and artwork regions no longer fit together, the copy clears the artwork
+vertically instead of moving the artwork below the copy; source and semantic
+order remain logical without duplicating the image. Founding Friends and venue
+promotional cards use content-driven wide, intermediate, and narrow
+compositions. Their narrow layouts remain copy-first, and committed raster
+artwork preserves its intrinsic aspect ratio through sizing, alignment, and
+clipping rather than geometric distortion. Founding Friends artwork remains
+anchored to the trailing edge, while venue artwork remains anchored to the
+leading edge.
 
 Header and footer section navigation scrolls within the single landing page
 while the header remains fixed above the scrolling content. The fixed header
@@ -146,7 +148,8 @@ uses wide, intermediate, and narrow constraint-driven compositions so that its
 navigation remains compact without introducing a disclosure menu. Internal
 navigation controls provide at least a 44px effective target and an explicit
 keyboard-focus outline; hover and focus treatments cover the complete padded
-control surface. The established mapping is
+control surface. The narrow header orders the logo, two-row navigation, and a
+centered Contact Us treatment vertically. The established mapping is
 Our Belief to Hero, Membership to Membership, Founding Friends to Founding
 Friends, and For Venues to Venue. Anchor positions derive from the rendered
 sections, and navigation movement becomes immediate when reduced motion is
@@ -161,7 +164,8 @@ visible surface of an FAQ item toggles it for pointer input, while the question
 remains the focused expanded/collapsed control for keyboard and assistive
 technology and expanded answer text remains independently readable semantic
 content. Hover and keyboard-focus treatments cover that complete clickable
-surface without merging the answer into the question control's semantic label.
+surface, with an internal horizontal content inset, without merging the answer
+into the question control's semantic label.
 Safe Guard, Footprint, reporting, subscription, and moderation statements in
 FAQ copy describe future product behavior only and do not establish those
 capabilities as implemented.

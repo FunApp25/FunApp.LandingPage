@@ -237,10 +237,10 @@ void main() {
 
     await tester.tap(find.byKey(const Key('faqQuestionControl0')));
     await tester.pump();
-    final questionRect = tester.getRect(
-      find.byKey(const Key('faqQuestionControl0')),
+    final surfaceRect = tester.getRect(
+      find.byKey(const Key('faqItemSurface0')),
     );
-    await tester.tapAt(Offset(questionRect.left + 4, questionRect.top + 4));
+    await tester.tapAt(Offset(surfaceRect.left + 4, surfaceRect.top + 4));
     await tester.pump();
     expect(find.byKey(const Key('faqAnswer0')), findsNothing);
     expect(
@@ -363,6 +363,30 @@ void main() {
       expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
       expect(find.byKey(const Key('faqAnswer1')), findsOneWidget);
       expect(find.byKey(const Key('faqAnswer6')), findsOneWidget);
+
+      final surfaceRect = tester.getRect(
+        find.byKey(const Key('faqItemSurface0')),
+      );
+      final questionRect = tester.getRect(
+        find.byKey(const Key('faqQuestionText0')),
+      );
+      final iconRect = tester.getRect(find.byKey(const Key('faqIcon0')));
+      final answerRect = tester.getRect(
+        find.text(
+          'Yes. The core Fun App experience is free because finding someone '
+          'to grab coffee with should not require a financial strategy.',
+        ),
+      );
+      final minimumInset = example.size.width < 600 ? 16.0 : 20.0;
+      expect(
+        questionRect.left - surfaceRect.left,
+        greaterThanOrEqualTo(minimumInset),
+      );
+      expect(
+        surfaceRect.right - iconRect.right,
+        greaterThanOrEqualTo(minimumInset),
+      );
+      expect(answerRect.left, closeTo(questionRect.left, 1));
       expect(tester.takeException(), isNull);
     }
   });

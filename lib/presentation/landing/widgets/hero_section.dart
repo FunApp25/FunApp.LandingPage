@@ -134,7 +134,10 @@ final class _ResponsiveHero extends StatelessWidget {
       >= 600 => -60.0,
       _ => -36.0,
     };
-    final artworkRight = artworkWidth * -0.08;
+    // The source PNG includes transparent canvas after the visible artwork.
+    // Matching the desktop overflow keeps the people attached to the clipped
+    // trailing edge instead of making the composition appear inset.
+    final artworkRight = artworkWidth * -0.14;
     final contentTop = artworkHeight + artworkTop - (isNarrow ? 16 : 32);
     final supportingStyle = isNarrow
         ? LandingTextStyles.heroSupporting.copyWith(

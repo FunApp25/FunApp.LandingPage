@@ -230,6 +230,11 @@ void main() {
               ? 644 / 410
               : 666 / 410;
           expect(artworkRect.size.aspectRatio, closeTo(expectedRatio, 0.001));
+          if (prefix == 'foundingFriends') {
+            expect(artworkRect.right, closeTo(cardRect.right, 0.01));
+          } else {
+            expect(artworkRect.left, closeTo(cardRect.left, 0.01));
+          }
         }
       }
       expect(

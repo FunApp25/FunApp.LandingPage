@@ -386,7 +386,9 @@ void main() {
       const Size(320, 568),
       const Size(390, 844),
       const Size(768, 1024),
+      const Size(900, 800),
       const Size(1024, 768),
+      const Size(1200, 900),
       const Size(1440, 900),
     ]) {
       tester.view.physicalSize = size;
@@ -431,6 +433,10 @@ void main() {
       );
       expect(heroArtworkRect.top, lessThan(heroCardRect.top));
       expect(heroArtworkRect.right, greaterThan(heroCardRect.right));
+      expect(
+        heroArtworkRect.right - heroCardRect.right,
+        greaterThanOrEqualTo(heroArtworkRect.width * 0.135),
+      );
       expect(
         tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
         BoxFit.contain,
@@ -521,7 +527,41 @@ void main() {
 
       final headerHeight = tester.getSize(find.byType(LandingHeader)).height;
       if (size.width <= 390) {
-        expect(headerHeight, lessThanOrEqualTo(152));
+        expect(headerHeight, lessThanOrEqualTo(168));
+
+        final headerFinder = find.byType(LandingHeader);
+        final logoRect = tester.getRect(
+          find.descendant(
+            of: headerFinder,
+            matching: find.byKey(const Key('funAppLogo')),
+          ),
+        );
+        final firstNavigationRect = tester.getRect(
+          find.byKey(const Key('landingHeaderNavigationItem0')),
+        );
+        final secondNavigationRect = tester.getRect(
+          find.byKey(const Key('landingHeaderNavigationItem1')),
+        );
+        final thirdNavigationRect = tester.getRect(
+          find.byKey(const Key('landingHeaderNavigationItem2')),
+        );
+        final fourthNavigationRect = tester.getRect(
+          find.byKey(const Key('landingHeaderNavigationItem3')),
+        );
+        final contactRect = tester.getRect(
+          find.byKey(const Key('landingHeaderContactCta')),
+        );
+        final headerRect = tester.getRect(headerFinder);
+
+        expect(logoRect.bottom, lessThanOrEqualTo(firstNavigationRect.top));
+        expect(firstNavigationRect.top, secondNavigationRect.top);
+        expect(thirdNavigationRect.top, fourthNavigationRect.top);
+        expect(
+          thirdNavigationRect.top,
+          greaterThanOrEqualTo(firstNavigationRect.bottom),
+        );
+        expect(thirdNavigationRect.bottom, lessThanOrEqualTo(contactRect.top));
+        expect(contactRect.center.dx, closeTo(headerRect.center.dx, 1));
       } else if (size.width < 1080) {
         expect(headerHeight, lessThanOrEqualTo(104));
       }
@@ -627,6 +667,10 @@ void main() {
 
         expect(artworkRect.top, lessThan(cardRect.top));
         expect(artworkRect.right, greaterThan(cardRect.right));
+        expect(
+          artworkRect.right - cardRect.right,
+          greaterThanOrEqualTo(artworkRect.width * 0.135),
+        );
         expect(artworkRect.center.dx, greaterThan(cardRect.center.dx));
         expect(ctaRect.bottom, lessThanOrEqualTo(cardRect.bottom));
         expect(heroClip.clipBehavior, isNot(Clip.none));
@@ -661,7 +705,9 @@ void main() {
         Size(320, 568),
         Size(390, 844),
         Size(768, 1024),
+        Size(900, 800),
         Size(1024, 768),
+        Size(1200, 900),
         Size(1440, 900),
       ]) {
         tester.view.physicalSize = size;

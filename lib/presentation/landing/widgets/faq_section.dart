@@ -93,6 +93,11 @@ final class _FaqSectionState extends State<FaqSection> {
             >= 600 => 28.0,
             _ => 24.0,
           };
+          final itemHorizontalPadding = switch (availableWidth) {
+            >= 1200 => 24.0,
+            >= 600 => 22.0,
+            _ => 18.0,
+          };
 
           return Padding(
             padding: EdgeInsets.symmetric(
@@ -150,6 +155,7 @@ final class _FaqSectionState extends State<FaqSection> {
                           questionSize: questionSize,
                           questionLineHeight: questionLineHeight,
                           verticalPadding: itemVerticalPadding,
+                          horizontalPadding: itemHorizontalPadding,
                           onToggle: () => _toggle(index),
                         ),
                     ],
@@ -173,6 +179,7 @@ final class _FaqItem extends StatefulWidget {
     required this.questionSize,
     required this.questionLineHeight,
     required this.verticalPadding,
+    required this.horizontalPadding,
     required this.onToggle,
   });
 
@@ -183,6 +190,7 @@ final class _FaqItem extends StatefulWidget {
   final double questionSize;
   final double questionLineHeight;
   final double verticalPadding;
+  final double horizontalPadding;
   final VoidCallback onToggle;
 
   @override
@@ -267,11 +275,11 @@ final class _FaqItemState extends State<_FaqItem> {
                         setState(() => _isFocused = value);
                       },
                       child: Padding(
-                        padding: EdgeInsets.only(
-                          top: widget.verticalPadding,
-                          bottom: widget.isExpanded
-                              ? 0
-                              : widget.verticalPadding,
+                        padding: EdgeInsets.fromLTRB(
+                          widget.horizontalPadding,
+                          widget.verticalPadding,
+                          widget.horizontalPadding,
+                          widget.isExpanded ? 0 : widget.verticalPadding,
                         ),
                         child: Row(
                           children: [
@@ -307,8 +315,9 @@ final class _FaqItemState extends State<_FaqItem> {
                     Padding(
                       key: Key('faqAnswer${widget.index}'),
                       padding: EdgeInsets.only(
+                        left: widget.horizontalPadding,
                         top: widget.verticalPadding >= 32 ? 20 : 16,
-                        right: answerRightPadding,
+                        right: widget.horizontalPadding + answerRightPadding,
                         bottom: widget.verticalPadding,
                       ),
                       child: Column(
