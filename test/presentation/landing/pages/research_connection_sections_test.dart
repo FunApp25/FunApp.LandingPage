@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/problem_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/research_stat_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/research_stats_section.dart';
+
+import '../landing_test_helpers.dart';
 
 const _thirdStatDescription =
     'of 16-24 year olds say loneliness negatively affects their mental health';
@@ -24,7 +25,7 @@ void main() {
   testWidgets('renders authoritative English research and connection copy', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     expect(find.text('THE PROBLEM'), findsOneWidget);
     final problemStatement = tester.widget<Text>(
@@ -99,8 +100,8 @@ void main() {
     testWidgets('renders representative ${example.locale.languageCode} copy', (
       tester,
     ) async {
-      _setTestSurface(tester, const Size(320, 568));
-      await _pumpApp(tester, locale: example.locale);
+      setTestSurface(tester, const Size(320, 568));
+      await pumpLandingApp(tester, locale: example.locale);
 
       expect(find.text(example.problem), findsOneWidget);
       expect(find.text(example.stats), findsOneWidget);
@@ -113,14 +114,14 @@ void main() {
   testWidgets('uses committed local Figma and verified brand assets', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('problemEyebrowGlyph'),
       AppAssets.fiveDiagonalOvals,
     );
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('connectionEyebrowGlyph'),
       AppAssets.roundedSparkleDiamond,
@@ -185,8 +186,8 @@ void main() {
         usesWideConnection: true,
       ),
     ]) {
-      _setTestSurface(tester, example.size);
-      await _pumpApp(tester);
+      setTestSurface(tester, example.size);
+      await pumpLandingApp(tester);
 
       expect(find.byType(ResearchStatCard), findsNWidgets(4));
       final grid = find.byKey(Key('researchStatsColumns${example.columns}'));
@@ -246,21 +247,21 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('problemStatementSemantics'),
       'Widespread research highlights shocking statistics about a loneliness '
       'epidemic across the UK and the world, especially amongst young '
       'adults.',
     );
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('researchStatsHeadingSemantics'),
       'Did you know that in the UK?',
     );
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('connectionHeadingSemantics'),
       'Do you recognise any of these experiences?',
@@ -311,45 +312,4 @@ void main() {
     }
     semantics.dispose();
   });
-}
-
-Future<void> _pumpApp(
-  WidgetTester tester, {
-  Locale locale = const Locale('en'),
-}) async {
-  tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
-  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-
-  await tester.pumpWidget(const FunAppLandingPageApp());
-  await tester.pump();
-}
-
-void _setTestSurface(WidgetTester tester, Size size) {
-  addTearDown(tester.view.resetDevicePixelRatio);
-  addTearDown(tester.view.resetPhysicalSize);
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = size;
-}
-
-void _expectSvgAsset(
-  WidgetTester tester,
-  Key key,
-  String expectedAsset,
-) {
-  final picture = tester.widget<SvgPicture>(find.byKey(key));
-  expect(picture.bytesLoader, isA<SvgAssetLoader>());
-  expect(
-    (picture.bytesLoader as SvgAssetLoader).assetName,
-    expectedAsset,
-  );
-}
-
-void _expectHeaderSemantics(
-  WidgetTester tester,
-  Key key,
-  String expectedLabel,
-) {
-  final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
-  expect(data.label, expectedLabel);
-  expect(data.flagsCollection.isHeader, isTrue);
 }

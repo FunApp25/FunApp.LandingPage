@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// One presentation-only statistic card from Figma node `2190:1587`.
 final class ResearchStatCard extends StatelessWidget {
@@ -58,13 +58,13 @@ final class ResearchStatCard extends StatelessWidget {
               Text(
                 value,
                 key: Key('researchStatValue-$value'),
-                style: AppTextStyles.landingStatValue,
+                style: LandingTextStyles.statValue,
               ),
               if (!usesDesktopMinimumHeight) const SizedBox(height: 40),
               Text(
                 description,
                 key: Key('researchStatDescription-$value'),
-                style: AppTextStyles.landingStatBody,
+                style: LandingTextStyles.statBody,
               ),
             ],
           ),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
 /// Alternative connection experience from Figma node `2190:1596`.
@@ -133,7 +133,7 @@ final class _ConnectionTitle extends StatelessWidget {
         excludeSemantics: true,
         child: Text(
           context.l10n.landingConnectionHeading,
-          style: AppTextStyles.landingSectionHeading.copyWith(
+          style: LandingTextStyles.sectionHeading.copyWith(
             fontSize: headingSize,
             letterSpacing: headingSize * -0.01,
           ),
@@ -150,7 +150,7 @@ final class _ConnectionBody extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     context.l10n.landingConnectionBody,
     key: const Key('connectionBodyText'),
-    style: AppTextStyles.landingSectionBody,
+    style: LandingTextStyles.sectionBody,
   );
 }
 

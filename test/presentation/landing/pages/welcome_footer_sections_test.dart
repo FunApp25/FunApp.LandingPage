@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/welcome_statement_section.dart';
 
+import '../landing_test_helpers.dart';
+
 void main() {
   testWidgets('renders authoritative English welcome and footer copy', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     expect(
       find.bySemanticsLabel('Welcome to Fun App'),
@@ -68,8 +69,8 @@ void main() {
     testWidgets('renders responsive ${example.locale.languageCode} content', (
       tester,
     ) async {
-      _setTestSurface(tester, const Size(320, 568));
-      await _pumpApp(tester, locale: example.locale);
+      setTestSurface(tester, const Size(320, 568));
+      await pumpLandingApp(tester, locale: example.locale);
 
       expect(find.bySemanticsLabel(example.eyebrow), findsOneWidget);
       expect(find.bySemanticsLabel(example.statement), findsOneWidget);
@@ -82,19 +83,19 @@ void main() {
   testWidgets('uses exact committed Figma assets and the shared V2 logo', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('welcomeEyebrowGlyph'),
       AppAssets.welcomeGlyph,
     );
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('footerEnvelope'),
       AppAssets.footerEnvelope,
     );
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('footerLogoAsset'),
       AppAssets.funAppLogoV2,
@@ -137,8 +138,8 @@ void main() {
       (size: Size(1024, 768), statementSize: 42.0, wrapsNavigation: false),
       (size: Size(1440, 900), statementSize: 50.0, wrapsNavigation: false),
     ]) {
-      _setTestSurface(tester, example.size);
-      await _pumpApp(tester);
+      setTestSurface(tester, example.size);
+      await pumpLandingApp(tester);
 
       final statement = tester.widget<Text>(
         find.byKey(const Key('welcomeStatementText')),
@@ -169,7 +170,7 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     final statement = tester
         .getSemantics(find.byKey(const Key('welcomeStatementSemantics')))
@@ -221,35 +222,4 @@ void main() {
     );
     semantics.dispose();
   });
-}
-
-Future<void> _pumpApp(
-  WidgetTester tester, {
-  Locale locale = const Locale('en'),
-}) async {
-  tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
-  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-
-  await tester.pumpWidget(const FunAppLandingPageApp());
-  await tester.pump();
-}
-
-void _setTestSurface(WidgetTester tester, Size size) {
-  addTearDown(tester.view.resetDevicePixelRatio);
-  addTearDown(tester.view.resetPhysicalSize);
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = size;
-}
-
-void _expectSvgAsset(
-  WidgetTester tester,
-  Key key,
-  String expectedAsset,
-) {
-  final picture = tester.widget<SvgPicture>(find.byKey(key));
-  expect(picture.bytesLoader, isA<SvgAssetLoader>());
-  expect(
-    (picture.bytesLoader as SvgAssetLoader).assetName,
-    expectedAsset,
-  );
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// One presentation-only membership tier from Figma node `2190:1610`.
 final class MembershipCard extends StatelessWidget {
@@ -87,7 +87,7 @@ final class MembershipCard extends StatelessWidget {
                   tierName,
                   key: Key('membershipTierName-$semanticId'),
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.landingMembershipCardTitle,
+                  style: LandingTextStyles.membershipCardTitle,
                 ),
               ),
               const SizedBox(height: 24),
@@ -145,7 +145,7 @@ final class _MembershipCardContent extends StatelessWidget {
               Text(
                 price,
                 key: Key('membershipPrice-$semanticId'),
-                style: AppTextStyles.landingMembershipPrice,
+                style: LandingTextStyles.membershipPrice,
               ),
               const SizedBox(width: 6),
               Padding(
@@ -153,7 +153,7 @@ final class _MembershipCardContent extends StatelessWidget {
                 child: Text(
                   billingPeriod,
                   key: Key('membershipBillingPeriod-$semanticId'),
-                  style: AppTextStyles.landingMembershipPriceUnit,
+                  style: LandingTextStyles.membershipPriceUnit,
                 ),
               ),
             ],
@@ -184,14 +184,14 @@ final class _MembershipCardContent extends StatelessWidget {
         description,
         key: Key('membershipDescription-$semanticId'),
         textAlign: TextAlign.center,
-        style: AppTextStyles.landingMembershipCardBody,
+        style: LandingTextStyles.membershipCardBody,
       ),
       const SizedBox(height: 34),
       Text(
         offerHint,
         key: Key('membershipOfferHint-$semanticId'),
         textAlign: TextAlign.center,
-        style: AppTextStyles.landingMembershipCardBody,
+        style: LandingTextStyles.membershipCardBody,
       ),
     ],
   );
@@ -218,7 +218,7 @@ final class _MembershipOfferLink extends StatelessWidget {
         label,
         key: Key('membershipOfferLabel-$semanticId'),
         textAlign: TextAlign.center,
-        style: AppTextStyles.landingMembershipCardLink,
+        style: LandingTextStyles.membershipCardLink,
       ),
       SvgPicture.asset(
         AppAssets.membershipArrowUpRight,

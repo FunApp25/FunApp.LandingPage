@@ -8,7 +8,10 @@ import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/content/faq_content.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
+
+import '../landing_test_helpers.dart';
 
 void main() {
   const englishQuestions = [
@@ -37,18 +40,37 @@ void main() {
     for (final question in englishQuestions) {
       expect(find.text(question), findsOneWidget);
     }
-    expect(_questionControls(), findsNWidgets(13));
+    expect(_questionControls(), findsNWidgets(englishQuestions.length));
     expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
-    for (var index = 1; index < 13; index++) {
+    for (var index = 1; index < englishQuestions.length; index++) {
       expect(find.byKey(Key('faqAnswer$index')), findsNothing);
     }
     expect(
-      _svgAsset(tester, const Key('faqIcon0')),
+      svgAssetName(tester, const Key('faqIcon0')),
       AppAssets.faqMinus,
     );
-    for (var index = 1; index < 13; index++) {
-      expect(_svgAsset(tester, Key('faqIcon$index')), AppAssets.faqPlus);
+    for (var index = 1; index < englishQuestions.length; index++) {
+      expect(svgAssetName(tester, Key('faqIcon$index')), AppAssets.faqPlus);
     }
+  });
+
+  testWidgets('builds the ordered FAQ collection and emphasis metadata', (
+    tester,
+  ) async {
+    await _pumpFaq(tester);
+
+    final l10n = AppLocalizations.of(tester.element(find.byType(FaqSection)));
+    final items = buildFaqItems(l10n);
+
+    expect(items.map((item) => item.question), orderedEquals(englishQuestions));
+    expect(
+      items[6].paragraphs[1].emphasizedTerms,
+      [l10n.landingFaqSharedIntentTerm],
+    );
+    expect(
+      items[8].paragraphs[1].emphasizedTerms,
+      ['Safe Guard', 'Footprint'],
+    );
   });
 
   testWidgets('uses the complete approved representative English answers', (
@@ -221,7 +243,10 @@ void main() {
     await tester.tapAt(Offset(questionRect.left + 4, questionRect.top + 4));
     await tester.pump();
     expect(find.byKey(const Key('faqAnswer0')), findsNothing);
-    expect(_svgAsset(tester, const Key('faqIcon0')), AppAssets.faqPlus);
+    expect(
+      svgAssetName(tester, const Key('faqIcon0')),
+      AppAssets.faqPlus,
+    );
   });
 
   for (final example in const [
@@ -253,12 +278,12 @@ void main() {
     testWidgets('renders complete ${example.locale.languageCode} FAQ copy', (
       tester,
     ) async {
-      _setTestSurface(tester, const Size(320, 568));
+      setTestSurface(tester, const Size(320, 568));
       await _pumpFaq(tester, locale: example.locale);
 
       expect(find.text(example.question), findsOneWidget);
       expect(find.text(example.answer), findsOneWidget);
-      expect(_questionControls(), findsNWidgets(13));
+      expect(_questionControls(), findsNWidgets(englishQuestions.length));
       expect(tester.takeException(), isNull);
     });
   }
@@ -269,15 +294,15 @@ void main() {
     await _pumpFaq(tester);
 
     expect(
-      _svgAsset(tester, const Key('faqEyebrowGlyph')),
+      svgAssetName(tester, const Key('faqEyebrowGlyph')),
       AppAssets.faqGlyph,
     );
     expect(
-      _svgAsset(tester, const Key('faqIcon0')),
+      svgAssetName(tester, const Key('faqIcon0')),
       AppAssets.faqMinus,
     );
     expect(
-      _svgAsset(tester, const Key('faqIcon1')),
+      svgAssetName(tester, const Key('faqIcon1')),
       AppAssets.faqPlus,
     );
     for (final asset in [
@@ -312,7 +337,7 @@ void main() {
       (size: Size(1024, 768), headingSize: 40.0, questionSize: 30.0),
       (size: Size(1440, 900), headingSize: 44.0, questionSize: 32.0),
     ]) {
-      _setTestSurface(tester, example.size);
+      setTestSurface(tester, example.size);
       await _pumpFaq(tester);
       await _toggle(tester, 1);
       await _toggle(tester, 6);
@@ -429,17 +454,4 @@ Future<void> _pumpFaq(
     ),
   );
   await tester.pump();
-}
-
-void _setTestSurface(WidgetTester tester, Size size) {
-  addTearDown(tester.view.resetDevicePixelRatio);
-  addTearDown(tester.view.resetPhysicalSize);
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = size;
-}
-
-String _svgAsset(WidgetTester tester, Key key) {
-  final picture = tester.widget<SvgPicture>(find.byKey(key));
-  expect(picture.bytesLoader, isA<SvgAssetLoader>());
-  return (picture.bytesLoader as SvgAssetLoader).assetName;
 }

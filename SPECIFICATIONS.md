@@ -24,18 +24,11 @@ Current implementation is evidence of repository state, not automatically a perm
 - Flutter targets web only. Mobile and desktop platform scaffolds are out of scope.
 - Flutter and Dart commands use Puro environment `fun-app-landing`, which tracks Flutter stable.
 - Flutter Web is the active production implementation. The migration from Astro is complete.
-- The current Flutter application establishes the complete structural skeleton
-  for Figma `Landing Page - V1`. The header and hero implement Figma nodes
-  `2190:1568` and `2190:1569`; the problem statement, research statistics, and
-  connection-experience sections implement nodes `2190:1581`, `2190:1587`, and
-  `2190:1596`; the membership and limited-time-offer sections implement nodes
-  `2190:1606` and `2190:1613`; the Founding Friends and venue sections implement
-  nodes `2190:1620`, `2190:1627`, and `2190:1631`; the welcome statement and
-  footer implement nodes `2190:1638` and `2190:1664`; the FAQ implements node
-  `2190:1644`. The current Ready-for-Dev static Figma design is fully
-  represented in Flutter. Responsive presentation is constraint-driven, with
-  further focused visual polish followed by restrained motion before business,
-  domain, application, or data implementation.
+- The current Ready-for-Dev design in Figma file
+  `J326dKMVr5dHcC92xLkfbm`, frame `2190:1567` (`Landing Page - V1`), is fully
+  represented in Flutter. Its static and responsive presentation is stable;
+  restrained motion is the next presentation phase before business, domain,
+  application, or data implementation.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell retains the platform-neutral typography and Material 3
   foundation adapted from the main Fun App application. The current Figma
@@ -49,11 +42,6 @@ Current implementation is evidence of repository state, not automatically a perm
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
-
-### Retired historical behavior
-
-- The archived Astro implementation previously served a Coming Soon page at `/`.
-- Its fuller `/quiet-entry/7m4q9x2k/` page is retired and is not part of Flutter routing or the active crawler policy.
 
 ### Open
 
@@ -168,16 +156,15 @@ destinations remain open and are intentionally unwired.
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.
-FAQ expansion grows naturally within the existing `SingleChildScrollView`
-landing-page composition; it does not use or require a sliver-based page
-architecture. The complete visible surface of an FAQ item toggles it for
-pointer input, while the question remains the focused expanded/collapsed
-control for keyboard and assistive technology and expanded answer text remains
-independently readable semantic content. Hover and keyboard-focus treatments
-cover that complete clickable surface without merging the answer into the
-question control's semantic label. Safe Guard, Footprint, reporting,
-subscription, and moderation statements in FAQ copy describe future product
-behavior only and do not establish those capabilities as implemented.
+FAQ expansion grows naturally within the existing scrolling page. The complete
+visible surface of an FAQ item toggles it for pointer input, while the question
+remains the focused expanded/collapsed control for keyboard and assistive
+technology and expanded answer text remains independently readable semantic
+content. Hover and keyboard-focus treatments cover that complete clickable
+surface without merging the answer into the question control's semantic label.
+Safe Guard, Footprint, reporting, subscription, and moderation statements in
+FAQ copy describe future product behavior only and do not establish those
+capabilities as implemented.
 
 ### Localization baseline
 
@@ -238,7 +225,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The temporary Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -269,7 +256,7 @@ puro flutter test
 puro flutter build web
 ```
 
-The active widget test suite covers the current shell. Verification should grow with implemented behavior, not through placeholder tests or speculative tooling.
+The active widget test suite covers the landing surface and its durable responsive and interaction contracts. Verification should grow with implemented behavior rather than speculative tooling.
 
 The project tracks Flutter stable through Puro rather than establishing a permanent exact Flutter version pin.
 

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
 /// Closing welcome statement from Figma node `2190:1638`.
@@ -57,11 +57,11 @@ final class _WelcomeStatementContent extends StatelessWidget {
     final emphasis = context.l10n.landingWelcomeStatementEmphasis;
     final semanticLabel = '$leading $emphasis';
     final letterSpacing = statementSize * -0.01;
-    final regularStyle = AppTextStyles.landingFoundingOfferStatement.copyWith(
+    final regularStyle = LandingTextStyles.foundingOfferStatement.copyWith(
       fontSize: statementSize,
       letterSpacing: letterSpacing,
     );
-    final emphasisStyle = AppTextStyles.landingFoundingOfferStatementEmphasis
+    final emphasisStyle = LandingTextStyles.foundingOfferStatementEmphasis
         .copyWith(
           fontSize: statementSize,
           letterSpacing: letterSpacing,

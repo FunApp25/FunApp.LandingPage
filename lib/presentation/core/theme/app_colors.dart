@@ -5,32 +5,17 @@ abstract final class AppColors {
   /// Primary warm brand color for prominent actions and active controls.
   static const Color warmOrange = Color(0xFFEF6632);
 
-  /// Brighter warm orange accent for emphasized brand moments.
-  static const Color warmOrangeAccent = Color(0xFFFF7032);
-
   /// Main warm neutral for readable text on light surfaces.
   static const Color warmCharcoal = Color(0xFF1D1220);
 
   /// Deeper warm neutral for dark accents and inverse surfaces.
   static const Color warmCharcoalAccent = Color(0xFF2C222F);
 
-  /// Secondary sunny color for supportive highlights.
-  static const Color sunnyYellow = Color(0xFFFFBD00);
-
-  /// Softer sunny accent for selected or contained secondary surfaces.
-  static const Color sunnyYellowAccent = Color(0xFFFFD45C);
-
   /// Secondary energetic color for tertiary accents.
   static const Color energeticPlum = Color(0xFF63328D);
 
-  /// Brighter plum accent for emphasized tertiary states.
-  static const Color energeticPlumAccent = Color(0xFF7F42B3);
-
   /// Supporting red used for errors and destructive status.
   static const Color cherryRed = Color(0xFFCE0237);
-
-  /// Historical app-era warm neutral retained for established brand uses.
-  static const Color softSand = Color(0xFFECE1CE);
 
   /// Warm beige surface used throughout the current landing-page design.
   static const Color beigeAccent = Color(0xFFFAF0DD);

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// Active visual sizes in the Figma landing-page CTA family.
 enum LandingCtaSize {
@@ -81,8 +81,8 @@ final class LandingCtaButton extends StatelessWidget {
         label,
         textAlign: TextAlign.center,
         style: switch (size) {
-          LandingCtaSize.compact => AppTextStyles.landingHeaderCta,
-          LandingCtaSize.prominent => AppTextStyles.landingHeroCta,
+          LandingCtaSize.compact => LandingTextStyles.headerCta,
+          LandingCtaSize.prominent => LandingTextStyles.heroCta,
         }.copyWith(color: foregroundColor),
       );
 

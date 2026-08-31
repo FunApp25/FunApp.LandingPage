@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
@@ -89,7 +89,7 @@ final class _DesktopHero extends StatelessWidget {
               width: 600,
               child: _HeroContent(
                 headlineSize: 60,
-                supportingStyle: AppTextStyles.landingHeroSupporting,
+                supportingStyle: LandingTextStyles.heroSupporting,
                 ctaSpacing: 40,
               ),
             ),
@@ -137,11 +137,11 @@ final class _ResponsiveHero extends StatelessWidget {
     final artworkRight = artworkWidth * -0.08;
     final contentTop = artworkHeight + artworkTop - (isNarrow ? 16 : 32);
     final supportingStyle = isNarrow
-        ? AppTextStyles.landingHeroSupporting.copyWith(
+        ? LandingTextStyles.heroSupporting.copyWith(
             fontSize: 18,
             height: 26 / 18,
           )
-        : AppTextStyles.landingHeroSupporting;
+        : LandingTextStyles.heroSupporting;
 
     return Stack(
       key: const Key('heroResponsiveLayout'),
@@ -196,11 +196,11 @@ final class _HeroContent extends StatelessWidget {
     final headlineEmphasis = context.l10n.landingHeroHeadlineEmphasis;
     final headlineLabel = '$headlineLeading $headlineEmphasis';
     final headlineLetterSpacing = headlineSize * -0.03;
-    final headlineStyle = AppTextStyles.landingHeroHeadline.copyWith(
+    final headlineStyle = LandingTextStyles.heroHeadline.copyWith(
       fontSize: headlineSize,
       letterSpacing: headlineLetterSpacing,
     );
-    final emphasisStyle = AppTextStyles.landingHeroHeadlineEmphasis.copyWith(
+    final emphasisStyle = LandingTextStyles.heroHeadlineEmphasis.copyWith(
       fontSize: headlineSize,
       letterSpacing: headlineLetterSpacing,
     );

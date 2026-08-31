@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_promotional_card.dart';
 
 /// Venue introduction and promotional card from Figma node `2190:1627`.
@@ -93,14 +93,14 @@ final class _VenueIntroduction extends StatelessWidget {
               key: const Key('venueIntroductionHeadingText'),
               TextSpan(
                 text: headingLeading,
-                style: AppTextStyles.landingSectionHeading.copyWith(
+                style: LandingTextStyles.sectionHeading.copyWith(
                   fontSize: headingSize,
                   letterSpacing: headingSize * -0.01,
                 ),
                 children: [
                   TextSpan(
                     text: headingEmphasis,
-                    style: AppTextStyles.landingSectionHeadingEmphasis.copyWith(
+                    style: LandingTextStyles.sectionHeadingEmphasis.copyWith(
                       fontSize: headingSize,
                       letterSpacing: headingSize * -0.01,
                     ),
@@ -116,14 +116,14 @@ final class _VenueIntroduction extends StatelessWidget {
             context.l10n.landingVenueIntroductionFirst,
             key: const Key('venueIntroductionBody0'),
             textAlign: TextAlign.center,
-            style: AppTextStyles.landingStatsAttribution,
+            style: LandingTextStyles.statsAttribution,
           ),
           const SizedBox(height: 12),
           Text(
             context.l10n.landingVenueIntroductionSecond,
             key: const Key('venueIntroductionBody1'),
             textAlign: TextAlign.center,
-            style: AppTextStyles.landingStatsAttribution,
+            style: LandingTextStyles.statsAttribution,
           ),
         ],
       ),

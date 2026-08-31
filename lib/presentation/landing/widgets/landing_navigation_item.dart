@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// Accessible in-page navigation control shared by the landing header/footer.
 final class LandingNavigationItem extends StatefulWidget {
@@ -75,7 +75,7 @@ final class _LandingNavigationItemState extends State<LandingNavigationItem> {
                   widget.label,
                   maxLines: 2,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.landingHeaderNavigation,
+                  style: LandingTextStyles.headerNavigation,
                 ),
               ),
             ),

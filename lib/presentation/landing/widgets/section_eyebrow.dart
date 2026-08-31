@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// Shared Figma eyebrow treatment for implemented landing-page sections.
 final class SectionEyebrow extends StatelessWidget {
@@ -54,7 +54,7 @@ final class SectionEyebrow extends StatelessWidget {
         child: Text(
           label,
           textAlign: textAlign,
-          style: AppTextStyles.landingSectionEyebrow.copyWith(
+          style: LandingTextStyles.sectionEyebrow.copyWith(
             color: foregroundColor,
           ),
         ),

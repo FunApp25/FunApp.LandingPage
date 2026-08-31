@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
 
 /// The two distinct promotional-card treatments in the landing design.
@@ -350,7 +350,7 @@ final class _PromotionalCardContent extends StatelessWidget {
           card.heading,
           key: Key('${design.semanticId}HeadingText'),
           textAlign: TextAlign.center,
-          style: AppTextStyles.landingSectionHeading.copyWith(
+          style: LandingTextStyles.sectionHeading.copyWith(
             fontSize: headingSize,
             letterSpacing: headingSize * -0.01,
             color: design.foregroundColor,
@@ -364,7 +364,7 @@ final class _PromotionalCardContent extends StatelessWidget {
           card.bodyParagraphs[index],
           key: Key('${design.semanticId}Body$index'),
           textAlign: TextAlign.center,
-          style: AppTextStyles.landingStatBody.copyWith(
+          style: LandingTextStyles.statBody.copyWith(
             color: design.foregroundColor,
           ),
         ),

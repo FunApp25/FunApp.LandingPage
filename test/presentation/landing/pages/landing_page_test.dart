@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
-import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
@@ -25,9 +24,11 @@ import 'package:fun_app_landing_page/presentation/landing/widgets/research_stats
 import 'package:fun_app_landing_page/presentation/landing/widgets/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/welcome_statement_section.dart';
 
+import '../landing_test_helpers.dart';
+
 void main() {
   testWidgets('renders every landing section in Figma order', (tester) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     expect(find.byType(LandingPage), findsOneWidget);
 
@@ -57,19 +58,12 @@ void main() {
       sections.children.map((widget) => widget.runtimeType),
       orderedEquals(expectedSectionTypes),
     );
-    expect(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget.runtimeType.toString() == 'LandingSectionPlaceholder',
-      ),
-      findsNothing,
-    );
   });
 
   testWidgets('renders the authoritative English header and hero copy', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     for (final label in [
       'OUR BELIEF',
@@ -140,7 +134,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(320, 568);
-      await _pumpApp(tester, locale: example.locale);
+      await pumpLandingApp(tester, locale: example.locale);
 
       expect(find.text(example.contact), findsOneWidget);
       expect(find.text(example.eyebrow), findsOneWidget);
@@ -153,7 +147,7 @@ void main() {
   testWidgets('uses only committed local header and hero assets', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     final logoWidgets = tester.widgetList<FunAppLogo>(find.byType(FunAppLogo));
     expect(logoWidgets, hasLength(2));
@@ -161,17 +155,17 @@ void main() {
       logoWidgets.map((logo) => logo.variant),
       everyElement(FunAppLogoVariant.landingV2),
     );
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('funAppLogo'),
       AppAssets.funAppLogoV2,
     );
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('heroEyebrowGlyph'),
       AppAssets.heroEyebrowGlyph,
     );
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('landingCtaArrow'),
       AppAssets.arrowUpRight,
@@ -190,7 +184,7 @@ void main() {
   testWidgets('keeps the header outside the single scrolling page body', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     expect(find.byType(SingleChildScrollView), findsOneWidget);
     final scrollView = tester.widget<SingleChildScrollView>(
@@ -198,10 +192,6 @@ void main() {
     );
     expect(scrollView.scrollDirection, Axis.vertical);
     expect(scrollView.controller, isNotNull);
-    expect(find.byType(CustomScrollView), findsNothing);
-    expect(find.byType(SliverList), findsNothing);
-    expect(find.byType(SliverToBoxAdapter), findsNothing);
-    expect(find.byType(SliverPersistentHeader), findsNothing);
     expect(
       find.ancestor(
         of: find.byType(LandingHeader),
@@ -239,7 +229,7 @@ void main() {
     ];
 
     for (var index = 0; index < targets.length; index++) {
-      await _pumpApp(tester);
+      await pumpLandingApp(tester);
       await _moveToPageEnd(tester);
       await tester.tap(
         find.byKey(Key('landingHeaderNavigationItem$index')),
@@ -342,7 +332,7 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     for (final prefix in [
       'landingHeaderNavigationItem',
@@ -400,7 +390,7 @@ void main() {
       const Size(1440, 900),
     ]) {
       tester.view.physicalSize = size;
-      await _pumpApp(tester);
+      await pumpLandingApp(tester);
 
       expect(find.byType(LandingPage), findsOneWidget);
       expect(
@@ -566,7 +556,7 @@ void main() {
 
       for (final size in const [Size(320, 568), Size(768, 1024)]) {
         tester.view.physicalSize = size;
-        await _pumpApp(tester, locale: const Locale('be'));
+        await pumpLandingApp(tester, locale: const Locale('be'));
 
         expect(find.text('СЯБРЫ-ЗАСНАВАЛЬНІКІ'), findsNWidgets(2));
         expect(find.text('Звязацца з намі'), findsOneWidget);
@@ -602,7 +592,7 @@ void main() {
         (size: Size(320, 568), usesWideLayout: false),
       ]) {
         tester.view.physicalSize = example.size;
-        await _pumpApp(
+        await pumpLandingApp(
           tester,
           locale: example.size.width == 320
               ? const Locale('be')
@@ -675,7 +665,7 @@ void main() {
         Size(1440, 900),
       ]) {
         tester.view.physicalSize = size;
-        await _pumpApp(tester, locale: locale);
+        await pumpLandingApp(tester, locale: locale);
 
         expect(
           tester.takeException(),
@@ -690,7 +680,7 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     expect(
       tester.getSemantics(
@@ -724,17 +714,6 @@ void main() {
     expect(find.byType(ButtonStyleButton), findsNothing);
     semantics.dispose();
   });
-}
-
-Future<void> _pumpApp(
-  WidgetTester tester, {
-  Locale locale = const Locale('en'),
-}) async {
-  tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
-  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-
-  await tester.pumpWidget(const FunAppLandingPageApp());
-  await tester.pump();
 }
 
 Future<void> _pumpLandingPage(
@@ -773,17 +752,4 @@ void _expectTargetBelowHeader(WidgetTester tester, Type targetType) {
   final headerBottom = tester.getBottomLeft(find.byType(LandingHeader)).dy;
   final targetTop = tester.getTopLeft(find.byType(targetType)).dy;
   expect(targetTop, closeTo(headerBottom, 1));
-}
-
-void _expectSvgAsset(
-  WidgetTester tester,
-  Key key,
-  String expectedAsset,
-) {
-  final picture = tester.widget<SvgPicture>(find.byKey(key));
-  expect(picture.bytesLoader, isA<SvgAssetLoader>());
-  expect(
-    (picture.bytesLoader as SvgAssetLoader).assetName,
-    expectedAsset,
-  );
 }

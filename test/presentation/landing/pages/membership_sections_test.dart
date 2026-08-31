@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_offer_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/membership_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/membership_section.dart';
+
+import '../landing_test_helpers.dart';
 
 const _membershipBody =
     'Connections for everyone. Choose the membership that works for you and '
@@ -24,7 +25,7 @@ void main() {
   testWidgets('renders authoritative English membership and offer copy', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     expect(find.text('Membership'), findsOneWidget);
     expect(find.text(_membershipBody), findsOneWidget);
@@ -80,8 +81,8 @@ void main() {
     testWidgets('renders responsive ${example.locale.languageCode} content', (
       tester,
     ) async {
-      _setTestSurface(tester, const Size(320, 568));
-      await _pumpApp(tester, locale: example.locale);
+      setTestSurface(tester, const Size(320, 568));
+      await pumpLandingApp(tester, locale: example.locale);
 
       expect(find.text(example.heading), findsOneWidget);
       expect(find.text(example.freeTier), findsOneWidget);
@@ -93,21 +94,21 @@ void main() {
   }
 
   testWidgets('uses exact committed membership Figma vectors', (tester) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     for (final id in ['free', 'hereNow']) {
-      _expectSvgAsset(
+      expectSvgAsset(
         tester,
         Key('membershipCheck-$id'),
         AppAssets.membershipCheck,
       );
-      _expectSvgAsset(
+      expectSvgAsset(
         tester,
         Key('membershipOfferArrow-$id'),
         AppAssets.membershipArrowUpRight,
       );
     }
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('foundingOfferGlyph'),
       AppAssets.foundingOfferGlyph,
@@ -163,8 +164,8 @@ void main() {
         usesDesktopComposition: true,
       ),
     ]) {
-      _setTestSurface(tester, example.size);
-      await _pumpApp(tester);
+      setTestSurface(tester, example.size);
+      await pumpLandingApp(tester);
 
       expect(find.byType(MembershipCard), findsNWidgets(2));
       expect(
@@ -220,19 +221,19 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('membershipHeadingSemantics'),
       'Membership',
     );
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('membershipTierSemantics-free'),
       'Free Membership',
     );
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('membershipTierSemantics-hereNow'),
       'Here & Now Membership',
@@ -253,7 +254,7 @@ void main() {
           .label,
       '£11 per month',
     );
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('foundingOfferHeadingSemantics'),
       _foundingOffer,
@@ -309,45 +310,4 @@ void main() {
     );
     semantics.dispose();
   });
-}
-
-Future<void> _pumpApp(
-  WidgetTester tester, {
-  Locale locale = const Locale('en'),
-}) async {
-  tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
-  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-
-  await tester.pumpWidget(const FunAppLandingPageApp());
-  await tester.pump();
-}
-
-void _setTestSurface(WidgetTester tester, Size size) {
-  addTearDown(tester.view.resetDevicePixelRatio);
-  addTearDown(tester.view.resetPhysicalSize);
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = size;
-}
-
-void _expectSvgAsset(
-  WidgetTester tester,
-  Key key,
-  String expectedAsset,
-) {
-  final picture = tester.widget<SvgPicture>(find.byKey(key));
-  expect(picture.bytesLoader, isA<SvgAssetLoader>());
-  expect(
-    (picture.bytesLoader as SvgAssetLoader).assetName,
-    expectedAsset,
-  );
-}
-
-void _expectHeaderSemantics(
-  WidgetTester tester,
-  Key key,
-  String expectedLabel,
-) {
-  final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
-  expect(data.label, expectedLabel);
-  expect(data.flagsCollection.isHeader, isTrue);
 }

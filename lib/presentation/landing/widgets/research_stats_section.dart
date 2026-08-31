@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/research_stat_card.dart';
 
 /// UK research statistics from Figma node `2190:1587`.
@@ -96,7 +96,7 @@ final class _ResearchHeading extends StatelessWidget {
             context.l10n.landingStatsHeading,
             key: const Key('researchStatsHeadingText'),
             textAlign: TextAlign.center,
-            style: AppTextStyles.landingSectionHeading.copyWith(
+            style: LandingTextStyles.sectionHeading.copyWith(
               fontSize: headingSize,
               letterSpacing: headingSize * -0.01,
             ),
@@ -106,28 +106,28 @@ final class _ResearchHeading extends StatelessWidget {
         Text.rich(
           key: const Key('researchStatsAttribution'),
           TextSpan(
-            style: AppTextStyles.landingStatsAttribution,
+            style: LandingTextStyles.statsAttribution,
             children: [
               TextSpan(text: '${context.l10n.landingStatsAttributionIntro} '),
               TextSpan(
                 text: context.l10n.landingStatsBelongingForum,
-                style: AppTextStyles.landingStatsAttributionSource,
+                style: LandingTextStyles.statsAttributionSource,
               ),
               TextSpan(
                 text: ' · ',
-                style: AppTextStyles.landingStatsAttributionSeparator,
+                style: LandingTextStyles.statsAttributionSeparator,
               ),
               TextSpan(
                 text: context.l10n.landingStatsMarmaladeTrust,
-                style: AppTextStyles.landingStatsAttributionSource,
+                style: LandingTextStyles.statsAttributionSource,
               ),
               TextSpan(
                 text: ' · ',
-                style: AppTextStyles.landingStatsAttributionSeparator,
+                style: LandingTextStyles.statsAttributionSeparator,
               ),
               TextSpan(
                 text: context.l10n.landingStatsBacpYouGov,
-                style: AppTextStyles.landingStatsAttributionSource,
+                style: LandingTextStyles.statsAttributionSource,
               ),
               TextSpan(
                 text: ' ${context.l10n.landingStatsAttributionThanks}',

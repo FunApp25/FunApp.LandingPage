@@ -2,14 +2,8 @@
 // Fun App presentation layer.
 // ignore_for_file: avoid_classes_with_only_static_members
 
-/// Shared sizing and spacing tokens used by the active landing-page shell.
+/// Shared sizing and spacing tokens used by the active landing page.
 abstract final class AppSizes {
-  /// Medium spacing value for page padding and larger gaps.
-  static const double spacingMedium = 24;
-
-  /// Restrained width for the Fun App wordmark.
-  static const double brandWordmarkWidth = 180;
-
   /// Width of the desktop Figma landing-page frame.
   static const double desktopPageWidth = 1440;
 

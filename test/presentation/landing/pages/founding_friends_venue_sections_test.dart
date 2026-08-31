@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_promotional_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/venue_section.dart';
+
+import '../landing_test_helpers.dart';
 
 const _foundingFriendsBodyFirst =
     'Thank you for joining Fun App so early as a Founding Friend. You will '
@@ -25,7 +26,7 @@ void main() {
   testWidgets('renders authoritative English founding and venue copy', (
     tester,
   ) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     expect(find.text('Founding Friends are Very Special'), findsOneWidget);
     expect(find.text(_foundingFriendsBodyFirst), findsOneWidget);
@@ -72,8 +73,8 @@ void main() {
     testWidgets('renders responsive ${example.locale.languageCode} content', (
       tester,
     ) async {
-      _setTestSurface(tester, const Size(320, 568));
-      await _pumpApp(tester, locale: example.locale);
+      setTestSurface(tester, const Size(320, 568));
+      await pumpLandingApp(tester, locale: example.locale);
 
       expect(find.text(example.foundingHeading), findsOneWidget);
       expect(find.text(example.foundingCta), findsOneWidget);
@@ -87,7 +88,7 @@ void main() {
   }
 
   testWidgets('uses exact committed Figma image compositions', (tester) async {
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
     _expectImageAsset(
       tester,
@@ -123,12 +124,12 @@ void main() {
     ]) {
       expect(tester.widget<FittedBox>(find.byKey(key)).fit, BoxFit.contain);
     }
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('foundingFriendsCtaArrow'),
       AppAssets.arrowUpRight,
     );
-    _expectSvgAsset(
+    expectSvgAsset(
       tester,
       const Key('venueCardCtaArrow'),
       AppAssets.arrowUpRight,
@@ -156,8 +157,8 @@ void main() {
       (size: Size(1200, 900), layout: 'Intermediate'),
       (size: Size(1440, 900), layout: 'Wide'),
     ]) {
-      _setTestSurface(tester, example.size);
-      await _pumpApp(tester);
+      setTestSurface(tester, example.size);
+      await pumpLandingApp(tester);
 
       expect(find.byType(LandingPromotionalCard), findsNWidgets(2));
       for (final prefix in ['foundingFriends', 'venueCard']) {
@@ -246,7 +247,7 @@ void main() {
   testWidgets('promotional layout thresholds are stable on both sides', (
     tester,
   ) async {
-    _setTestSurface(tester, const Size(1400, 1000));
+    setTestSurface(tester, const Size(1400, 1000));
 
     for (final example in const [
       (width: 1280.0, layout: 'Wide'),
@@ -267,19 +268,19 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    await _pumpApp(tester);
+    await pumpLandingApp(tester);
 
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('foundingFriendsHeadingSemantics'),
       'Founding Friends are Very Special',
     );
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('venueIntroductionHeadingSemantics'),
       'I Run a Venue...',
     );
-    _expectHeaderSemantics(
+    expectHeaderSemantics(
       tester,
       const Key('venueCardHeadingSemantics'),
       'I Run a Venue...',
@@ -346,24 +347,6 @@ void main() {
   });
 }
 
-Future<void> _pumpApp(
-  WidgetTester tester, {
-  Locale locale = const Locale('en'),
-}) async {
-  tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
-  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-
-  await tester.pumpWidget(const FunAppLandingPageApp());
-  await tester.pump();
-}
-
-void _setTestSurface(WidgetTester tester, Size size) {
-  addTearDown(tester.view.resetDevicePixelRatio);
-  addTearDown(tester.view.resetPhysicalSize);
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = size;
-}
-
 Future<void> _pumpPromotionalCard(
   WidgetTester tester, {
   required double width,
@@ -402,29 +385,6 @@ void _expectImageAsset(
   final image = tester.widget<Image>(find.byKey(key));
   expect(image.image, isA<AssetImage>());
   expect((image.image as AssetImage).assetName, expectedAsset);
-}
-
-void _expectSvgAsset(
-  WidgetTester tester,
-  Key key,
-  String expectedAsset,
-) {
-  final picture = tester.widget<SvgPicture>(find.byKey(key));
-  expect(picture.bytesLoader, isA<SvgAssetLoader>());
-  expect(
-    (picture.bytesLoader as SvgAssetLoader).assetName,
-    expectedAsset,
-  );
-}
-
-void _expectHeaderSemantics(
-  WidgetTester tester,
-  Key key,
-  String expectedLabel,
-) {
-  final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
-  expect(data.label, expectedLabel);
-  expect(data.flagsCollection.isHeader, isTrue);
 }
 
 void _expectImageSemantics(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/membership_card.dart';
 
 /// Membership introduction and tiers from Figma node `2190:1606`.
@@ -129,7 +129,7 @@ final class _MembershipIntroduction extends StatelessWidget {
         child: Text(
           context.l10n.landingMembershipHeading,
           key: const Key('membershipHeadingText'),
-          style: AppTextStyles.landingSectionHeading.copyWith(
+          style: LandingTextStyles.sectionHeading.copyWith(
             fontSize: headingSize,
             letterSpacing: headingSize * -0.01,
           ),
@@ -139,7 +139,7 @@ final class _MembershipIntroduction extends StatelessWidget {
       Text(
         context.l10n.landingMembershipBody,
         key: const Key('membershipBodyText'),
-        style: AppTextStyles.landingStatsAttribution,
+        style: LandingTextStyles.statsAttribution,
       ),
     ],
   );

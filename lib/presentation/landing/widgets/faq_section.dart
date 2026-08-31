@@ -4,8 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/content/faq_content.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
 /// Expandable FAQ from Figma node `2190:1644`.
@@ -21,13 +22,25 @@ final class FaqSection extends StatefulWidget {
 }
 
 final class _FaqSectionState extends State<FaqSection> {
-  static const _itemCount = 13;
-
   final Set<int> _expandedIndexes = <int>{0};
-  late final List<FocusNode> _questionFocusNodes = List<FocusNode>.generate(
-    _itemCount,
-    (index) => FocusNode(debugLabel: 'FAQ question ${index + 1}'),
-  );
+  final List<FocusNode> _questionFocusNodes = [];
+  late List<FaqItemContent> _items;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _items = buildFaqItems(context.l10n);
+    while (_questionFocusNodes.length < _items.length) {
+      _questionFocusNodes.add(
+        FocusNode(
+          debugLabel: 'FAQ question ${_questionFocusNodes.length + 1}',
+        ),
+      );
+    }
+    while (_questionFocusNodes.length > _items.length) {
+      _questionFocusNodes.removeLast().dispose();
+    }
+  }
 
   @override
   void dispose() {
@@ -46,9 +59,9 @@ final class _FaqSectionState extends State<FaqSection> {
   }
 
   @override
+  // This block body keeps the responsive layout calculation readable.
+  // ignore: prefer_expression_function_bodies
   Widget build(BuildContext context) {
-    final items = _faqItems(context);
-
     return ColoredBox(
       color: AppColors.lightForeground,
       child: LayoutBuilder(
@@ -108,7 +121,7 @@ final class _FaqSectionState extends State<FaqSection> {
                           context.l10n.landingFaqHeading,
                           key: const Key('faqHeadingText'),
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.landingSectionHeading.copyWith(
+                          style: LandingTextStyles.sectionHeading.copyWith(
                             fontSize: headingSize,
                             letterSpacing: headingSize * -0.01,
                           ),
@@ -124,10 +137,10 @@ final class _FaqSectionState extends State<FaqSection> {
                     key: const Key('faqItems'),
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (var index = 0; index < items.length; index++)
+                      for (var index = 0; index < _items.length; index++)
                         _FaqItem(
                           index: index,
-                          content: items[index],
+                          content: _items[index],
                           isExpanded: _expandedIndexes.contains(index),
                           focusNode: _questionFocusNodes[index],
                           questionSize: questionSize,
@@ -160,7 +173,7 @@ final class _FaqItem extends StatefulWidget {
   });
 
   final int index;
-  final _FaqContent content;
+  final FaqItemContent content;
   final bool isExpanded;
   final FocusNode focusNode;
   final double questionSize;
@@ -262,15 +275,13 @@ final class _FaqItemState extends State<_FaqItem> {
                               child: Text(
                                 widget.content.question,
                                 key: Key('faqQuestionText${widget.index}'),
-                                style: AppTextStyles.landingFaqQuestion
-                                    .copyWith(
-                                      fontSize: widget.questionSize,
-                                      height:
-                                          widget.questionLineHeight /
-                                          widget.questionSize,
-                                      letterSpacing:
-                                          widget.questionSize * -0.01,
-                                    ),
+                                style: LandingTextStyles.faqQuestion.copyWith(
+                                  fontSize: widget.questionSize,
+                                  height:
+                                      widget.questionLineHeight /
+                                      widget.questionSize,
+                                  letterSpacing: widget.questionSize * -0.01,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -328,12 +339,12 @@ final class _FaqItemState extends State<_FaqItem> {
 final class _FaqAnswerParagraph extends StatelessWidget {
   const _FaqAnswerParagraph({required this.paragraph});
 
-  final _FaqParagraph paragraph;
+  final FaqParagraphContent paragraph;
 
   @override
   Widget build(BuildContext context) {
-    final normalStyle = AppTextStyles.landingFaqAnswer;
-    final emphasisStyle = AppTextStyles.landingFaqAnswerEmphasis;
+    final normalStyle = LandingTextStyles.faqAnswer;
+    final emphasisStyle = LandingTextStyles.faqAnswerEmphasis;
     final emphasizedRanges = _emphasizedRanges(
       paragraph.text,
       paragraph.emphasizedTerms,
@@ -377,130 +388,4 @@ List<TextRange> _emphasizedRanges(String text, List<String> terms) {
   }
   ranges.sort((first, second) => first.start.compareTo(second.start));
   return ranges;
-}
-
-final class _FaqContent {
-  const _FaqContent({required this.question, required this.paragraphs});
-
-  final String question;
-  final List<_FaqParagraph> paragraphs;
-}
-
-final class _FaqParagraph {
-  const _FaqParagraph(this.text, {this.emphasizedTerms = const []});
-
-  final String text;
-  final List<String> emphasizedTerms;
-}
-
-List<_FaqContent> _faqItems(BuildContext context) {
-  final l10n = context.l10n;
-  return [
-    _FaqContent(
-      question: l10n.landingFaqFreeQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqFreeAnswer1),
-        _FaqParagraph(l10n.landingFaqFreeAnswer2),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqLifetimeQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqLifetimeAnswer1),
-        _FaqParagraph(l10n.landingFaqLifetimeAnswer2),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqCancelQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqCancelAnswer1),
-        _FaqParagraph(l10n.landingFaqCancelAnswer2),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqPhotoQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqPhotoAnswer1),
-        _FaqParagraph(l10n.landingFaqPhotoAnswer2),
-        _FaqParagraph(l10n.landingFaqPhotoAnswer3),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqBioQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqBioAnswer1),
-        _FaqParagraph(l10n.landingFaqBioAnswer2),
-        _FaqParagraph(l10n.landingFaqBioAnswer3),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqEventsQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqEventsAnswer1),
-        _FaqParagraph(l10n.landingFaqEventsAnswer2),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqMatchingQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqMatchingAnswer1),
-        _FaqParagraph(
-          l10n.landingFaqMatchingAnswer2,
-          emphasizedTerms: [l10n.landingFaqSharedIntentTerm],
-        ),
-        _FaqParagraph(l10n.landingFaqMatchingAnswer3),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqLoveQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqLoveAnswer1),
-        _FaqParagraph(l10n.landingFaqLoveAnswer2),
-        _FaqParagraph(l10n.landingFaqLoveAnswer3),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqSafetyQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqSafetyAnswer1),
-        _FaqParagraph(
-          l10n.landingFaqSafetyAnswer2,
-          emphasizedTerms: const ['Safe Guard', 'Footprint'],
-        ),
-        _FaqParagraph(l10n.landingFaqSafetyAnswer3),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqSafeGuardQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqSafeGuardAnswer1),
-        _FaqParagraph(l10n.landingFaqSafeGuardAnswer2),
-        _FaqParagraph(l10n.landingFaqSafeGuardAnswer3),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqFootprintQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqFootprintAnswer1),
-        _FaqParagraph(l10n.landingFaqFootprintAnswer2),
-        _FaqParagraph(l10n.landingFaqFootprintAnswer3),
-        _FaqParagraph(l10n.landingFaqFootprintAnswer4),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqGroupsQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqGroupsAnswer1),
-        _FaqParagraph(l10n.landingFaqGroupsAnswer2),
-      ],
-    ),
-    _FaqContent(
-      question: l10n.landingFaqHarassmentQuestion,
-      paragraphs: [
-        _FaqParagraph(l10n.landingFaqHarassmentAnswer1),
-        _FaqParagraph(l10n.landingFaqHarassmentAnswer2),
-        _FaqParagraph(l10n.landingFaqHarassmentAnswer3),
-      ],
-    ),
-  ];
 }

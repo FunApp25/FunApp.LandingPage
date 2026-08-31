@@ -3,9 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_navigation_item.dart';
 
 /// Landing-page footer from Figma node `2190:1664`.
@@ -169,7 +169,7 @@ final class _FooterEmail extends StatelessWidget {
           child: Text(
             LandingFooter.contactEmail,
             key: const Key('footerEmailText'),
-            style: AppTextStyles.landingFooterEmail,
+            style: LandingTextStyles.footerEmail,
           ),
         ),
       ],

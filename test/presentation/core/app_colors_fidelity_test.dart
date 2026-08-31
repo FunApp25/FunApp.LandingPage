@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
 
 void main() {
   test('landing text styles retain the approved Figma colors', () {
     expect(AppColors.warmOrange, const Color(0xFFEF6632));
     expect(
-      AppTextStyles.landingProblemStatement.color,
+      LandingTextStyles.problemStatement.color,
       AppColors.blueMain.withValues(alpha: 0.4),
     );
     expect(
-      AppTextStyles.landingHeroHeadlineEmphasis.color,
+      LandingTextStyles.heroHeadlineEmphasis.color,
       AppColors.warmOrange,
     );
     expect(
-      AppTextStyles.landingStatsAttributionSource.color,
+      LandingTextStyles.statsAttributionSource.color,
       AppColors.warmOrange,
     );
     expect(
-      AppTextStyles.landingStatsAttributionSource.decorationColor,
+      LandingTextStyles.statsAttributionSource.decorationColor,
       AppColors.warmOrange,
     );
   });

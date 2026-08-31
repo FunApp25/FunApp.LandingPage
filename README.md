@@ -17,10 +17,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   implementation. The header remains fixed above the scrolling page, repeated
   header/footer navigation moves to the corresponding page sections, and the
   independently expandable FAQ supports its complete item surface. Contact and
-  product CTAs remain intentionally unwired. Full-page cleanup, visual
-  alignment, responsive and accessibility polish come next; restrained motion
-  follows that work, before any business, domain, application, or data
-  implementation.
+  product CTAs remain intentionally unwired. The static and responsive
+  presentation is stable; restrained motion is the next presentation phase
+  before any business, domain, application, or data implementation.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -94,8 +93,8 @@ puro flutter test
 puro flutter build web
 ```
 
-The widget tests cover the active application shell, branding, localization,
-theme, and representative narrow and wide layouts.
+The widget tests cover the active landing surface, branding, localization,
+theme, interactions, and responsive viewport contracts.
 
 ## Repository structure
 
