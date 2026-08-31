@@ -127,16 +127,26 @@ final class _ResponsiveHero extends StatelessWidget {
     };
     final artworkHeight = artworkWidth * (717 / 706);
     final artworkTop = switch (availableWidth) {
-      >= 1000 => -88.0,
-      >= 800 => -72.0,
-      >= 600 => -60.0,
-      _ => -36.0,
+      >= 1000 => -136.0,
+      >= 800 => -112.0,
+      >= 600 => -102.0,
+      _ => -68.0,
     };
     // The source PNG includes transparent canvas after the visible artwork.
-    // Matching the desktop overflow keeps the people attached to the clipped
-    // trailing edge instead of making the composition appear inset.
-    final artworkRight = artworkWidth * -0.14;
-    final contentTop = artworkHeight + artworkTop - (isNarrow ? 16 : 32);
+    // A small overscan beyond that transparent region lets the Hero card own
+    // the visible trailing clip instead of leaving the composition inset.
+    final artworkRight = artworkWidth * -0.17;
+    // Keep the established copy position and Hero height independent of the
+    // visual artwork offset. Moving the image upward then creates real beige
+    // clearance instead of pulling the copy upward with it.
+    final contentTop =
+        artworkHeight -
+        switch (availableWidth) {
+          >= 1000 => 120.0,
+          >= 800 => 104.0,
+          >= 600 => 92.0,
+          _ => 52.0,
+        };
     final supportingStyle = isNarrow
         ? LandingTextStyles.heroSupporting.copyWith(
             fontSize: 18,

@@ -615,6 +615,8 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPhysicalSize);
       tester.view.devicePixelRatio = 1;
+      const visibleArtworkWidthFraction = 1216 / 1412;
+      const visibleArtworkHeightFraction = 1412 / 1434;
 
       for (final example in const [
         (size: Size(1440, 900), usesWideLayout: true),
@@ -667,20 +669,41 @@ void main() {
         expect(artworkRect.center.dx, greaterThan(cardRect.center.dx));
         expect(find.byKey(const Key('landingHeroWaitlistCta')), findsNothing);
         expect(heroClip.clipBehavior, isNot(Clip.none));
-        if (example.size.width == 1440) {
-          expect(cardRect.width, 1360);
-          expect(artworkRect.size, const Size(706, 717));
-          expect(contentRect.left - cardRect.left, 80);
-        }
-        if (!example.usesWideLayout) {
-          expect(contentRect.top, greaterThan(artworkRect.top));
+        if (example.usesWideLayout) {
+          if (example.size.width == 1440) {
+            expect(cardRect.width, 1360);
+            expect(artworkRect.size, const Size(706, 717));
+            expect(contentRect.left - cardRect.left, 80);
+          }
+        } else {
+          final visibleArtworkRight =
+              artworkRect.left +
+              (artworkRect.width * visibleArtworkWidthFraction);
+          final visibleArtworkBottom =
+              artworkRect.top +
+              (artworkRect.height * visibleArtworkHeightFraction);
+          final expectedArtworkWidth = switch (example.size.width) {
+            1024 => 520.0,
+            768 => 440.0,
+            390 => 340.0,
+            320 => 311.04,
+            _ => null,
+          };
+
+          expect(visibleArtworkRight, greaterThan(cardRect.right + 8));
           expect(
-            contentRect.top,
-            greaterThanOrEqualTo(
-              artworkRect.bottom - (example.size.width < 600 ? 17 : 33),
-            ),
+            contentRect.top - visibleArtworkBottom,
+            greaterThanOrEqualTo(15),
           );
+          if (expectedArtworkWidth case final width?) {
+            expect(artworkRect.width, closeTo(width, 0.01));
+          }
         }
+        expect(artworkRect.size.aspectRatio, closeTo(706 / 717, 0.001));
+        expect(
+          tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
+          BoxFit.contain,
+        );
         expect(tester.takeException(), isNull);
       }
     },
@@ -692,6 +715,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     tester.view.devicePixelRatio = 1;
+    const visibleArtworkHeightFraction = 1412 / 1434;
 
     for (final locale in AppLocalizations.supportedLocales) {
       for (final size in const [
@@ -706,6 +730,24 @@ void main() {
         tester.view.physicalSize = size;
         await pumpLandingApp(tester, locale: locale);
 
+        if (size.width < 1440) {
+          final artworkRect = tester.getRect(
+            find.byKey(const Key('heroPeopleImage')),
+          );
+          final contentRect = tester.getRect(
+            find.byKey(const Key('heroContentBounds')),
+          );
+          final visibleArtworkBottom =
+              artworkRect.top +
+              (artworkRect.height * visibleArtworkHeightFraction);
+          expect(
+            contentRect.top - visibleArtworkBottom,
+            greaterThanOrEqualTo(15),
+            reason:
+                '${locale.languageCode} Hero copy must clear the visible '
+                'artwork at $size.',
+          );
+        }
         expect(
           tester.takeException(),
           isNull,
