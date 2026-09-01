@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/landing_scroll_reveal.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/research_stat_card.dart';
 
 /// UK research statistics from Figma node `2190:1587`.
@@ -145,6 +147,9 @@ final class _ResearchCardGrid extends StatelessWidget {
   const _ResearchCardGrid({required this.cards});
 
   static const _cardGap = 16.0;
+  static const _cardDurationMilliseconds = 340;
+  static const _wideStaggerMilliseconds = 45;
+  static const _narrowStaggerMilliseconds = 20;
 
   final List<({String value, String description})> cards;
 
@@ -158,23 +163,103 @@ final class _ResearchCardGrid extends StatelessWidget {
       };
       final cardWidth =
           (constraints.maxWidth - (_cardGap * (columnCount - 1))) / columnCount;
+      final isNarrow = columnCount == 1;
+      final staggerMilliseconds = isNarrow
+          ? _narrowStaggerMilliseconds
+          : _wideStaggerMilliseconds;
+      final sequenceDurationMilliseconds =
+          _cardDurationMilliseconds +
+          (staggerMilliseconds * (cards.length - 1));
 
-      return Wrap(
-        key: Key('researchStatsColumns$columnCount'),
-        spacing: _cardGap,
-        runSpacing: _cardGap,
-        children: [
-          for (final card in cards)
-            SizedBox(
-              width: cardWidth,
-              child: ResearchStatCard(
-                value: card.value,
-                description: card.description,
-                usesDesktopMinimumHeight: columnCount > 1,
-              ),
+      return LandingScrollReveal(
+        key: const Key('researchStatsReveal'),
+        duration: Duration(milliseconds: sequenceDurationMilliseconds),
+        transitionBuilder: (context, progress, child) =>
+            _ResearchRevealProgress(
+              progress: progress,
+              child: child,
             ),
-        ],
+        child: Wrap(
+          key: Key('researchStatsColumns$columnCount'),
+          spacing: _cardGap,
+          runSpacing: _cardGap,
+          children: [
+            for (var index = 0; index < cards.length; index++)
+              _ResearchStatReveal(
+                index: index,
+                cardDurationMilliseconds: _cardDurationMilliseconds,
+                staggerMilliseconds: staggerMilliseconds,
+                sequenceDurationMilliseconds: sequenceDurationMilliseconds,
+                initialDistance: isNarrow ? 8 : 12,
+                child: SizedBox(
+                  width: cardWidth,
+                  child: ResearchStatCard(
+                    value: cards[index].value,
+                    description: cards[index].description,
+                    usesDesktopMinimumHeight: columnCount > 1,
+                  ),
+                ),
+              ),
+          ],
+        ),
       );
     },
   );
+}
+
+final class _ResearchRevealProgress extends InheritedWidget {
+  const _ResearchRevealProgress({
+    required this.progress,
+    required super.child,
+  });
+
+  final double progress;
+
+  static double of(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<_ResearchRevealProgress>()!
+      .progress;
+
+  @override
+  bool updateShouldNotify(_ResearchRevealProgress oldWidget) =>
+      progress != oldWidget.progress;
+}
+
+final class _ResearchStatReveal extends StatelessWidget {
+  const _ResearchStatReveal({
+    required this.index,
+    required this.cardDurationMilliseconds,
+    required this.staggerMilliseconds,
+    required this.sequenceDurationMilliseconds,
+    required this.initialDistance,
+    required this.child,
+  });
+
+  final int index;
+  final int cardDurationMilliseconds;
+  final int staggerMilliseconds;
+  final int sequenceDurationMilliseconds;
+  final double initialDistance;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final groupProgress = _ResearchRevealProgress.of(context);
+    final elapsedMilliseconds = groupProgress * sequenceDurationMilliseconds;
+    final delayMilliseconds = staggerMilliseconds * index;
+    final cardProgress = LandingMotion.standardCurve.transform(
+      ((elapsedMilliseconds - delayMilliseconds) / cardDurationMilliseconds)
+          .clamp(0, 1),
+    );
+
+    return Transform.translate(
+      key: Key('researchStatRevealTransform$index'),
+      offset: Offset(0, initialDistance * (1 - cardProgress)),
+      child: Opacity(
+        key: Key('researchStatRevealOpacity$index'),
+        opacity: 0.1 + (0.9 * cardProgress),
+        alwaysIncludeSemantics: true,
+        child: child,
+      ),
+    );
+  }
 }

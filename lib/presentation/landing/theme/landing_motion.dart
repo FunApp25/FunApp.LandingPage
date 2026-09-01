@@ -11,6 +11,9 @@ abstract final class LandingMotion {
   /// Standard local state-transition duration.
   static const Duration standardDuration = Duration(milliseconds: 200);
 
+  /// Shared duration for one-time promotional-card scroll accents.
+  static const Duration revealDuration = Duration(milliseconds: 360);
+
   /// Standard curve for local interaction feedback.
   static const Curve standardCurve = Curves.easeOutCubic;
 

@@ -187,11 +187,15 @@ surface, with an internal horizontal content inset, without merging the answer
 into the question control's semantic label. Answer height and opacity transition
 locally, the state icon fades between plus and minus, and the hover background
 interpolates briefly. Keyboard focus remains immediate. Reduced motion removes
-those transitions while preserving the final state and all feedback. Hero copy
-and artwork receive one restrained fade-only initial-load entrance with no
-translation. Copy begins immediately and the artwork follows slightly later;
-reduced motion renders the final Hero directly. All other landing sections
-remain static.
+those transitions while preserving the final state and all feedback. The Hero
+renders statically. The Research Statistics cards receive one restrained
+rise-and-fade reveal with a short group stagger, the complete Founding Friends
+promotional card receives one subtle trailing-side-to-final reveal, and the
+complete Venue promotional card receives one subtle leading-side-to-final
+reveal while its introduction remains static. These are the only scroll-entry
+animations. Each runs once per mounted landing page, and reduced motion renders
+all three surfaces immediately in their final state. All other landing
+sections remain static.
 Safe Guard, Footprint, reporting, subscription, and moderation statements in
 FAQ copy describe future product behavior only and do not establish those
 capabilities as implemented.

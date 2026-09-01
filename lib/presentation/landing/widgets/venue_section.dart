@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_promotional_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/landing_scroll_reveal.dart';
 
 /// Venue introduction and promotional card from Figma node `2190:1627`.
 final class VenueSection extends StatelessWidget {
@@ -22,6 +24,11 @@ final class VenueSection extends StatelessWidget {
         final bottomPadding = AppSizes.sectionVerticalPaddingFor(
           availableWidth,
         );
+        final contentWidth = (availableWidth - (pageGutter * 2)).clamp(
+          0.0,
+          AppSizes.maxContentWidth,
+        );
+        final initialDistance = contentWidth < 780 ? 12.0 : 20.0;
 
         return Padding(
           padding: EdgeInsets.only(
@@ -48,15 +55,37 @@ final class VenueSection extends StatelessWidget {
                       _ => 40,
                     },
                   ),
-                  LandingPromotionalCard(
-                    variant: LandingPromotionalCardVariant.venue,
-                    heading: context.l10n.landingVenueCardHeading,
-                    bodyParagraphs: [
-                      context.l10n.landingVenueCardSupporting,
-                    ],
-                    ctaLabel: context.l10n.landingVenueCta,
-                    imageSemanticLabel:
-                        context.l10n.landingVenueImageDescription,
+                  LandingScrollReveal(
+                    key: const Key('venueCardReveal'),
+                    duration: LandingMotion.revealDuration,
+                    transitionBuilder: (context, progress, child) {
+                      final easedProgress = LandingMotion.standardCurve
+                          .transform(progress);
+
+                      return Transform.translate(
+                        key: const Key('venueCardRevealTransform'),
+                        offset: Offset(
+                          -initialDistance * (1 - easedProgress),
+                          0,
+                        ),
+                        child: Opacity(
+                          key: const Key('venueCardRevealOpacity'),
+                          opacity: 0.2 + (0.8 * easedProgress),
+                          alwaysIncludeSemantics: true,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: LandingPromotionalCard(
+                      variant: LandingPromotionalCardVariant.venue,
+                      heading: context.l10n.landingVenueCardHeading,
+                      bodyParagraphs: [
+                        context.l10n.landingVenueCardSupporting,
+                      ],
+                      ctaLabel: context.l10n.landingVenueCta,
+                      imageSemanticLabel:
+                          context.l10n.landingVenueImageDescription,
+                    ),
                   ),
                 ],
               ),

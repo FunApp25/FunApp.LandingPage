@@ -3,46 +3,18 @@ import 'package:fun_app_landing_page/presentation/core/extensions/build_context_
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
 /// Landing-page hero from Figma wrapper node `2190:1569`.
-final class HeroSection extends StatefulWidget {
+final class HeroSection extends StatelessWidget {
   /// Creates the landing-page hero.
   const HeroSection({super.key});
 
-  @override
-  State<HeroSection> createState() => _HeroSectionState();
-}
-
-final class _HeroSectionState extends State<HeroSection> {
   // The exact Figma composition needs enough width for its intentionally
   // overlapping copy and clipped artwork regions. Below this constraint the
   // artwork stays top-right while copy clears it vertically.
   static const _wideCompositionWidth = 1280.0;
-  static const _entranceDuration = Duration(milliseconds: 600);
-  static const double _copyIntervalEnd = 520 / 600;
-  static const double _artworkIntervalStart = 60 / 600;
-
-  var _entranceCompleted = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final disableAnimations =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (disableAnimations) {
-      _entranceCompleted = true;
-    }
-  }
-
-  void _completeEntrance() {
-    if (mounted && !_entranceCompleted) {
-      setState(() => _entranceCompleted = true);
-    }
-  }
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -82,24 +54,10 @@ final class _HeroSectionState extends State<HeroSection> {
                     ),
                     child: ColoredBox(
                       color: AppColors.beigeAccent,
-                      child: _entranceCompleted
-                          ? _HeroComposition(
+                      child: usesDesktopComposition
+                          ? const _DesktopHero()
+                          : _ResponsiveHero(
                               availableWidth: heroConstraints.maxWidth,
-                              usesDesktopComposition: usesDesktopComposition,
-                              progress: 1,
-                            )
-                          : TweenAnimationBuilder<double>(
-                              key: const Key('heroEntranceSequence'),
-                              tween: Tween<double>(begin: 0, end: 1),
-                              duration: _entranceDuration,
-                              onEnd: _completeEntrance,
-                              builder: (context, progress, child) =>
-                                  _HeroComposition(
-                                    availableWidth: heroConstraints.maxWidth,
-                                    usesDesktopComposition:
-                                        usesDesktopComposition,
-                                    progress: progress,
-                                  ),
                             ),
                     ),
                   );
@@ -113,34 +71,8 @@ final class _HeroSectionState extends State<HeroSection> {
   );
 }
 
-final class _HeroComposition extends StatelessWidget {
-  const _HeroComposition({
-    required this.availableWidth,
-    required this.usesDesktopComposition,
-    required this.progress,
-  });
-
-  final double availableWidth;
-  final bool usesDesktopComposition;
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    if (usesDesktopComposition) {
-      return _DesktopHero(progress: progress);
-    } else {
-      return _ResponsiveHero(
-        availableWidth: availableWidth,
-        progress: progress,
-      );
-    }
-  }
-}
-
 final class _DesktopHero extends StatelessWidget {
-  const _DesktopHero({required this.progress});
-
-  final double progress;
+  const _DesktopHero();
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
@@ -154,25 +86,19 @@ final class _DesktopHero extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: SizedBox(
               width: 600,
-              child: _HeroCopyFade(
-                progress: progress,
-                child: _HeroContent(
-                  headlineSize: 60,
-                  supportingStyle: LandingTextStyles.heroSupporting,
-                ),
+              child: _HeroContent(
+                headlineSize: 60,
+                supportingStyle: LandingTextStyles.heroSupporting,
               ),
             ),
           ),
         ),
-        Positioned(
+        const Positioned(
           top: -113,
           right: -99,
           width: 706,
           height: 717,
-          child: _HeroArtworkFade(
-            progress: progress,
-            child: const _HeroImage(),
-          ),
+          child: _HeroImage(),
         ),
       ],
     ),
@@ -180,13 +106,9 @@ final class _DesktopHero extends StatelessWidget {
 }
 
 final class _ResponsiveHero extends StatelessWidget {
-  const _ResponsiveHero({
-    required this.availableWidth,
-    required this.progress,
-  });
+  const _ResponsiveHero({required this.availableWidth});
 
   final double availableWidth;
-  final double progress;
 
   @override
   Widget build(BuildContext context) {
@@ -247,12 +169,9 @@ final class _ResponsiveHero extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
-              child: _HeroCopyFade(
-                progress: progress,
-                child: _HeroContent(
-                  headlineSize: headlineSize,
-                  supportingStyle: supportingStyle,
-                ),
+              child: _HeroContent(
+                headlineSize: headlineSize,
+                supportingStyle: supportingStyle,
               ),
             ),
           ),
@@ -263,58 +182,9 @@ final class _ResponsiveHero extends StatelessWidget {
           right: artworkRight,
           width: artworkWidth,
           height: artworkHeight,
-          child: _HeroArtworkFade(
-            progress: progress,
-            child: const _HeroImage(),
-          ),
+          child: const _HeroImage(),
         ),
       ],
-    );
-  }
-}
-
-final class _HeroCopyFade extends StatelessWidget {
-  const _HeroCopyFade({
-    required this.progress,
-    required this.child,
-  });
-
-  final double progress;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final copyProgress = LandingMotion.standardCurve.transform(
-      (progress / _HeroSectionState._copyIntervalEnd).clamp(0, 1),
-    );
-    return Opacity(
-      key: const Key('heroCopyOpacity'),
-      opacity: 0.15 + (0.85 * copyProgress),
-      child: child,
-    );
-  }
-}
-
-final class _HeroArtworkFade extends StatelessWidget {
-  const _HeroArtworkFade({
-    required this.progress,
-    required this.child,
-  });
-
-  final double progress;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final artworkProgress = LandingMotion.standardCurve.transform(
-      ((progress - _HeroSectionState._artworkIntervalStart) /
-              (1 - _HeroSectionState._artworkIntervalStart))
-          .clamp(0, 1),
-    );
-    return Opacity(
-      key: const Key('heroArtworkOpacity'),
-      opacity: 0.15 + (0.85 * artworkProgress),
-      child: child,
     );
   }
 }
