@@ -28,7 +28,7 @@ Current implementation is evidence of repository state, not automatically a perm
   `J326dKMVr5dHcC92xLkfbm`, frame `2190:1567` (`Landing Page - V1`), is fully
   represented in Flutter, including the current three-tier Membership design
   and Founding Member explanation section. Its static and responsive
-  presentation is stable; restrained motion is the next presentation phase
+  presentation is stable, and its current restrained motion pass is complete
   before business, domain, application, or data implementation.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
 - The Flutter shell retains the platform-neutral typography and Material 3
@@ -185,8 +185,11 @@ surface, with an internal horizontal content inset, without merging the answer
 into the question control's semantic label. Answer height and opacity transition
 locally, the state icon fades between plus and minus, and the hover background
 interpolates briefly. Keyboard focus remains immediate. Reduced motion removes
-those transitions while preserving the final state and all feedback. Other
-landing sections remain static during this interaction-motion phase.
+those transitions while preserving the final state and all feedback. Hero copy
+and artwork receive one restrained initial-load entrance using only very small
+paint-space movement and high initial opacity. Copy begins immediately and the
+artwork follows slightly later; reduced motion renders the final Hero directly.
+All other landing sections remain static.
 Safe Guard, Footprint, reporting, subscription, and moderation statements in
 FAQ copy describe future product behavior only and do not establish those
 capabilities as implemented.
