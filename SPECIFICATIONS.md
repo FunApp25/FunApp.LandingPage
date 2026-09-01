@@ -166,7 +166,9 @@ centered Contact Us treatment vertically. The established mapping is
 Our Belief to Hero, Membership to Membership, Founding Friends to Founding
 Friends, and For Venues to Venue. Anchor positions derive from the rendered
 sections. Navigation duration scales with the current viewport-normalized
-distance and remains bounded so short and long jumps retain a controlled pace.
+distance and uses `easeInOutCubic`; a higher bounded duration gives long jumps
+enough time to accelerate, travel, and decelerate while nearby targets remain
+responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
 become immediate when reduced motion is requested. Contact Us, waitlist,
@@ -186,10 +188,10 @@ into the question control's semantic label. Answer height and opacity transition
 locally, the state icon fades between plus and minus, and the hover background
 interpolates briefly. Keyboard focus remains immediate. Reduced motion removes
 those transitions while preserving the final state and all feedback. Hero copy
-and artwork receive one restrained initial-load entrance using only very small
-paint-space movement and high initial opacity. Copy begins immediately and the
-artwork follows slightly later; reduced motion renders the final Hero directly.
-All other landing sections remain static.
+and artwork receive one restrained fade-only initial-load entrance with no
+translation. Copy begins immediately and the artwork follows slightly later;
+reduced motion renders the final Hero directly. All other landing sections
+remain static.
 Safe Guard, Footprint, reporting, subscription, and moderation statements in
 FAQ copy describe future product behavior only and do not establish those
 capabilities as implemented.

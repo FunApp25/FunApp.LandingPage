@@ -17,9 +17,9 @@ abstract final class LandingMotion {
   /// Curve for bounded in-page navigation movement.
   static const Curve navigationCurve = Curves.easeInOutCubic;
 
-  static const _minimumNavigationDuration = 160;
-  static const _maximumNavigationDuration = 520;
-  static const _navigationDurationPerViewport = 45.0;
+  static const _minimumNavigationDuration = 220;
+  static const _maximumNavigationDuration = 800;
+  static const _navigationDurationPerViewport = 60.0;
 
   /// Resolves [normalDuration] to zero when motion is disabled.
   static Duration duration({

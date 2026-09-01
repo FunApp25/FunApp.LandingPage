@@ -283,7 +283,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(venueNavigation);
-    await tester.pump(const Duration(milliseconds: 421));
+    await tester.pump(const Duration(milliseconds: 701));
 
     _expectTargetBelowHeader(tester, VenueSection);
   });

@@ -7,36 +7,30 @@ import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.d
 import '../landing_test_helpers.dart';
 
 void main() {
-  testWidgets('Hero copy and artwork remain readable throughout entrance', (
+  testWidgets('Hero copy and artwork remain present throughout fade', (
     tester,
   ) async {
     await _pumpHero(tester, size: const Size(1440, 900));
 
     expect(find.byKey(const Key('heroContentBounds')), findsOneWidget);
     expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
-    expect(_opacity(tester, 'heroCopyOpacity'), 0.84);
-    expect(_opacity(tester, 'heroArtworkOpacity'), 0.80);
-    expect(_translation(tester, 'heroCopyTransform'), const Offset(0, 6));
-    expect(_translation(tester, 'heroArtworkTransform'), const Offset(8, 0));
+    expect(_opacity(tester, 'heroCopyOpacity'), 0.15);
+    expect(_opacity(tester, 'heroArtworkOpacity'), 0.15);
+    expect(find.byKey(const Key('heroCopyTransform')), findsNothing);
+    expect(find.byKey(const Key('heroArtworkTransform')), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 1));
 
-    expect(_opacity(tester, 'heroCopyOpacity'), greaterThan(0.84));
-    expect(_opacity(tester, 'heroArtworkOpacity'), 0.80);
-    expect(_translation(tester, 'heroArtworkTransform'), const Offset(8, 0));
+    expect(_opacity(tester, 'heroCopyOpacity'), greaterThan(0.15));
+    expect(_opacity(tester, 'heroArtworkOpacity'), 0.15);
 
-    await tester.pump(const Duration(milliseconds: 39));
+    await tester.pump(const Duration(milliseconds: 59));
 
-    expect(_opacity(tester, 'heroArtworkOpacity'), 0.80);
-    expect(_translation(tester, 'heroArtworkTransform'), const Offset(8, 0));
+    expect(_opacity(tester, 'heroArtworkOpacity'), 0.15);
 
-    await tester.pump(const Duration(milliseconds: 280));
+    await tester.pump(const Duration(milliseconds: 460));
 
     expect(_opacity(tester, 'heroCopyOpacity'), closeTo(1, 0.0001));
-    expect(
-      _translation(tester, 'heroCopyTransform').distance,
-      closeTo(0, 0.0001),
-    );
     expect(_opacity(tester, 'heroArtworkOpacity'), lessThan(1));
 
     await tester.pump(const Duration(milliseconds: 80));
@@ -47,30 +41,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Hero motion uses restrained responsive distances', (
+  testWidgets('Hero entrance remains fade-only at responsive widths', (
     tester,
   ) async {
-    for (final example in const [
-      (size: Size(1440, 900), copyDistance: 6.0, artworkDistance: 8.0),
-      (size: Size(1024, 768), copyDistance: 6.0, artworkDistance: 8.0),
-      (size: Size(768, 1024), copyDistance: 6.0, artworkDistance: 8.0),
-      (size: Size(390, 844), copyDistance: 4.0, artworkDistance: 5.0),
-      (size: Size(320, 568), copyDistance: 4.0, artworkDistance: 5.0),
+    for (final size in const [
+      Size(1440, 900),
+      Size(1024, 768),
+      Size(768, 1024),
+      Size(390, 844),
+      Size(320, 568),
     ]) {
-      await _pumpHero(tester, size: example.size);
+      await _pumpHero(tester, size: size);
 
-      expect(
-        _translation(tester, 'heroCopyTransform'),
-        Offset(0, example.copyDistance),
-      );
-      expect(
-        _translation(tester, 'heroArtworkTransform'),
-        Offset(example.artworkDistance, 0),
-      );
+      expect(_opacity(tester, 'heroCopyOpacity'), 0.15);
+      expect(_opacity(tester, 'heroArtworkOpacity'), 0.15);
+      expect(find.byKey(const Key('heroCopyTransform')), findsNothing);
+      expect(find.byKey(const Key('heroArtworkTransform')), findsNothing);
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
       expect(tester.takeException(), isNull);
 
-      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 600));
 
       _expectFinalPaintState(tester);
       expect(tester.takeException(), isNull);
@@ -88,7 +78,7 @@ void main() {
       (size: Size(320, 568), artworkWidth: 311.04),
     ]) {
       await _pumpHero(tester, size: example.size);
-      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 600));
 
       final cardRect = tester.getRect(find.byKey(const Key('heroCard')));
       final artworkRect = tester.getRect(
@@ -124,6 +114,8 @@ void main() {
 
     _expectFinalPaintState(tester);
     expect(find.byKey(const Key('heroEntranceSequence')), findsNothing);
+    expect(find.byKey(const Key('heroCopyTransform')), findsNothing);
+    expect(find.byKey(const Key('heroArtworkTransform')), findsNothing);
     expect(
       tester
           .getSemantics(find.byKey(const Key('heroHeadlineSemantics')))
@@ -177,7 +169,7 @@ void main() {
       closeTo(opacityBeforeRebuild, 0.0001),
     );
 
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.pump(const Duration(milliseconds: 1));
 
     _expectFinalPaintState(tester);
@@ -211,20 +203,9 @@ Future<void> _pumpHero(
 double _opacity(WidgetTester tester, String key) =>
     tester.widget<Opacity>(find.byKey(Key(key))).opacity;
 
-Offset _translation(WidgetTester tester, String key) {
-  final transform = tester.widget<Transform>(find.byKey(Key(key))).transform;
-  return Offset(transform.storage[12], transform.storage[13]);
-}
-
 void _expectFinalPaintState(WidgetTester tester) {
   expect(_opacity(tester, 'heroCopyOpacity'), closeTo(1, 0.0001));
   expect(_opacity(tester, 'heroArtworkOpacity'), closeTo(1, 0.0001));
-  expect(
-    _translation(tester, 'heroCopyTransform').distance,
-    closeTo(0, 0.0001),
-  );
-  expect(
-    _translation(tester, 'heroArtworkTransform').distance,
-    closeTo(0, 0.0001),
-  );
+  expect(find.byKey(const Key('heroCopyTransform')), findsNothing);
+  expect(find.byKey(const Key('heroArtworkTransform')), findsNothing);
 }

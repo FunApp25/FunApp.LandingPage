@@ -21,9 +21,9 @@ final class _HeroSectionState extends State<HeroSection> {
   // overlapping copy and clipped artwork regions. Below this constraint the
   // artwork stays top-right while copy clears it vertically.
   static const _wideCompositionWidth = 1280.0;
-  static const _entranceDuration = Duration(milliseconds: 400);
-  static const double _copyIntervalEnd = 320 / 400;
-  static const double _artworkIntervalStart = 40 / 400;
+  static const _entranceDuration = Duration(milliseconds: 600);
+  static const double _copyIntervalEnd = 520 / 600;
+  static const double _artworkIntervalStart = 60 / 600;
 
   var _entranceCompleted = false;
 
@@ -154,9 +154,8 @@ final class _DesktopHero extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: SizedBox(
               width: 600,
-              child: _HeroCopyEntrance(
+              child: _HeroCopyFade(
                 progress: progress,
-                isNarrow: false,
                 child: _HeroContent(
                   headlineSize: 60,
                   supportingStyle: LandingTextStyles.heroSupporting,
@@ -170,9 +169,8 @@ final class _DesktopHero extends StatelessWidget {
           right: -99,
           width: 706,
           height: 717,
-          child: _HeroArtworkEntrance(
+          child: _HeroArtworkFade(
             progress: progress,
-            isNarrow: false,
             child: const _HeroImage(),
           ),
         ),
@@ -249,9 +247,8 @@ final class _ResponsiveHero extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
-              child: _HeroCopyEntrance(
+              child: _HeroCopyFade(
                 progress: progress,
-                isNarrow: isNarrow,
                 child: _HeroContent(
                   headlineSize: headlineSize,
                   supportingStyle: supportingStyle,
@@ -266,9 +263,8 @@ final class _ResponsiveHero extends StatelessWidget {
           right: artworkRight,
           width: artworkWidth,
           height: artworkHeight,
-          child: _HeroArtworkEntrance(
+          child: _HeroArtworkFade(
             progress: progress,
-            isNarrow: isNarrow,
             child: const _HeroImage(),
           ),
         ),
@@ -277,15 +273,13 @@ final class _ResponsiveHero extends StatelessWidget {
   }
 }
 
-final class _HeroCopyEntrance extends StatelessWidget {
-  const _HeroCopyEntrance({
+final class _HeroCopyFade extends StatelessWidget {
+  const _HeroCopyFade({
     required this.progress,
-    required this.isNarrow,
     required this.child,
   });
 
   final double progress;
-  final bool isNarrow;
   final Widget child;
 
   @override
@@ -293,29 +287,21 @@ final class _HeroCopyEntrance extends StatelessWidget {
     final copyProgress = LandingMotion.standardCurve.transform(
       (progress / _HeroSectionState._copyIntervalEnd).clamp(0, 1),
     );
-    final initialDistance = isNarrow ? 4.0 : 6.0;
-
-    return Transform.translate(
-      key: const Key('heroCopyTransform'),
-      offset: Offset(0, initialDistance * (1 - copyProgress)),
-      child: Opacity(
-        key: const Key('heroCopyOpacity'),
-        opacity: 0.84 + (0.16 * copyProgress),
-        child: child,
-      ),
+    return Opacity(
+      key: const Key('heroCopyOpacity'),
+      opacity: 0.15 + (0.85 * copyProgress),
+      child: child,
     );
   }
 }
 
-final class _HeroArtworkEntrance extends StatelessWidget {
-  const _HeroArtworkEntrance({
+final class _HeroArtworkFade extends StatelessWidget {
+  const _HeroArtworkFade({
     required this.progress,
-    required this.isNarrow,
     required this.child,
   });
 
   final double progress;
-  final bool isNarrow;
   final Widget child;
 
   @override
@@ -325,16 +311,10 @@ final class _HeroArtworkEntrance extends StatelessWidget {
               (1 - _HeroSectionState._artworkIntervalStart))
           .clamp(0, 1),
     );
-    final initialDistance = isNarrow ? 5.0 : 8.0;
-
-    return Transform.translate(
-      key: const Key('heroArtworkTransform'),
-      offset: Offset(initialDistance * (1 - artworkProgress), 0),
-      child: Opacity(
-        key: const Key('heroArtworkOpacity'),
-        opacity: 0.80 + (0.20 * artworkProgress),
-        child: child,
-      ),
+    return Opacity(
+      key: const Key('heroArtworkOpacity'),
+      opacity: 0.15 + (0.85 * artworkProgress),
+      child: child,
     );
   }
 }
