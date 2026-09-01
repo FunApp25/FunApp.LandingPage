@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/problem_statement_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/research_stat_card.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/research_stats_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stat_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
 
 import '../landing_test_helpers.dart';
 

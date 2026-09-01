@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_scroll_reveal.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/membership_card.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/research_stat_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stat_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_scroll_reveal.dart';
 
 import '../landing_test_helpers.dart';
 

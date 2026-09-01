@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/founding_member_benefit_card.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/founding_member_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_benefit_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_section.dart';
 
 import '../landing_test_helpers.dart';
 

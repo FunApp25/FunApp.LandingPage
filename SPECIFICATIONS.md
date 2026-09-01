@@ -128,6 +128,16 @@ apply to single-column phone cards. Major section, statement, and FAQ type roles
 scale down deliberately on narrower viewports while preserving the desktop
 Figma values.
 
+Landing presentation ownership is section-oriented under
+`lib/presentation/landing/sections/`: every landing section or surface owns an
+explicit directory, and its section-specific widgets live alongside it. Each
+landing Widget class has its own Dart file, apart from the private State class
+associated with a StatefulWidget, and landing widget components are public so
+they are not hidden inside another widget file. Widgets used by multiple
+sections live under `lib/presentation/landing/shared/widgets/`; pages, localized
+presentation content, and landing theme values remain under `pages/`,
+`content/`, and `theme/` respectively.
+
 Implemented landing sections preserve their Figma desktop compositions. Their
 narrower wrapping, stacking, and card reflow are constraint-driven
 implementation inferences because Figma provides no responsive variants. Hero

@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_footer.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/welcome_statement_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 
 import '../landing_test_helpers.dart';
 

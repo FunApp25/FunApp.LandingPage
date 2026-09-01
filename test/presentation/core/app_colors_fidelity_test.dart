@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
 
 void main() {
   test('landing text styles retain the approved Figma colors', () {

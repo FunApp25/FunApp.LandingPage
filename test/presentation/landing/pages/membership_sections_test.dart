@@ -3,9 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/founding_offer_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/membership_card.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/membership_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_offer/founding_offer_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 
 import '../landing_test_helpers.dart';
 

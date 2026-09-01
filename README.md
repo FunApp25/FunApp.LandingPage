@@ -106,6 +106,11 @@ theme, interactions, and responsive viewport contracts.
 ```text
 lib/                         Active Flutter application source
 lib/l10n/                    Localization ARB source files
+lib/presentation/landing/pages/ Landing-page composition and navigation owner
+lib/presentation/landing/sections/ Section-owned landing presentation widgets
+lib/presentation/landing/shared/widgets/ Cross-section landing widgets
+lib/presentation/landing/content/ Landing presentation content definitions
+lib/presentation/landing/theme/ Shared landing typography and motion values
 assets/branding/             Shared Fun App logos and decorative brand shapes
 assets/landing/              Figma assets consumed by active landing sections
 test/                        Flutter widget tests for active behavior
@@ -116,6 +121,12 @@ archive/astro_site/          Deprecated pre-Flutter historical reference
 SPECIFICATIONS.md            Authoritative project decisions
 AGENTS.md                    Coding-agent working rules
 ```
+
+Each landing section owns a directory under `sections/`, with one Widget class
+per Dart file and no private Widget component classes. Section-specific widgets
+stay with their section; widgets genuinely used by multiple sections stay under
+`shared/widgets/`. A StatefulWidget's associated private State class remains in
+the same file as its public widget.
 
 ## Architecture direction
 

@@ -2,20 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/faq/faq_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_friends/founding_friends_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_offer/founding_offer_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/founding_member_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/founding_offer_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_footer.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_header.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/membership_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/problem_statement_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/research_stats_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/venue_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/welcome_statement_section.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
 final class LandingPage extends StatefulWidget {

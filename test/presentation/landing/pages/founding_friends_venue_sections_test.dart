@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_cta_button.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/landing_promotional_card.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/venue_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_friends/founding_friends_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_cta_button.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_promotional_card.dart';
 
 import '../landing_test_helpers.dart';
 

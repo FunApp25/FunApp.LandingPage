@@ -9,8 +9,8 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/content/faq_content.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/faq/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
-import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
 
 import '../landing_test_helpers.dart';
 
