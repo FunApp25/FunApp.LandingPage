@@ -61,6 +61,39 @@ void main() {
     expect(_revealOpacity(tester), 1);
   });
 
+  testWidgets('custom lower threshold waits until content reaches deeper', (
+    tester,
+  ) async {
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    setTestSurface(tester, const Size(800, 600));
+    await _pumpReveal(
+      tester,
+      controller: controller,
+      spacerHeight: 800,
+      triggerViewportFraction: 0.7,
+    );
+    await tester.pump();
+
+    controller.jumpTo(350);
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+
+    expect(
+      _revealOpacity(tester),
+      0.1,
+      reason: 'The former 82.5% boundary must not trigger a 70% reveal.',
+    );
+
+    controller.jumpTo(380);
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+
+    expect(_revealOpacity(tester), greaterThan(0.1));
+  });
+
   testWidgets('an unrevealed surface rechecks after viewport resize', (
     tester,
   ) async {
@@ -108,6 +141,7 @@ Future<void> _pumpReveal(
   required ScrollController controller,
   required double spacerHeight,
   bool disableAnimations = false,
+  double triggerViewportFraction = 0.825,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -125,6 +159,7 @@ Future<void> _pumpReveal(
               SizedBox(height: spacerHeight),
               LandingScrollReveal(
                 duration: const Duration(milliseconds: 200),
+                triggerViewportFraction: triggerViewportFraction,
                 transitionBuilder: (context, progress, child) => Opacity(
                   key: const Key('revealOpacity'),
                   opacity: 0.1 + (0.9 * progress),

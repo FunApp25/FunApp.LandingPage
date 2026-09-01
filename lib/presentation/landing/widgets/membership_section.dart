@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/landing_scroll_reveal.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/membership_card.dart';
 
 /// Membership introduction and pricing cards from Figma node `2243:2233`.
@@ -218,6 +220,10 @@ final class _MembershipIntroduction extends StatelessWidget {
 final class _MembershipCardGrid extends StatelessWidget {
   const _MembershipCardGrid({required this.cards});
 
+  static const _cardDurationMilliseconds = 420;
+  static const _wideStaggerMilliseconds = 45;
+  static const _narrowStaggerMilliseconds = 20;
+
   final List<_MembershipCardContent> cards;
 
   @override
@@ -237,42 +243,93 @@ final class _MembershipCardGrid extends StatelessWidget {
       } else {
         columns = 1;
       }
+      final isNarrow = columns == 1;
+      final staggerMilliseconds = isNarrow
+          ? _narrowStaggerMilliseconds
+          : _wideStaggerMilliseconds;
+      final sequenceDurationMilliseconds =
+          _cardDurationMilliseconds +
+          (staggerMilliseconds * (cards.length - 1));
 
-      return Column(
-        key: Key('membershipCardsColumns$columns'),
-        children: switch (columns) {
-          3 => [
-            _MembershipCardRow(cards: cards),
-          ],
-          2 => [
-            _MembershipCardRow(cards: cards.take(2).toList()),
-            const SizedBox(height: MembershipSection._cardGap),
-            FractionallySizedBox(
-              widthFactor: 0.5,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: MembershipSection._cardGap / 4,
-                ),
-                child: _MembershipCardItem(
-                  card: cards[2],
-                  usesCoordinatedHeight: false,
-                ),
-              ),
+      return LandingScrollReveal(
+        key: const Key('membershipCardsReveal'),
+        duration: Duration(milliseconds: sequenceDurationMilliseconds),
+        transitionBuilder: (context, progress, child) =>
+            _MembershipRevealProgress(
+              progress: progress,
+              cardDurationMilliseconds: _cardDurationMilliseconds,
+              staggerMilliseconds: staggerMilliseconds,
+              sequenceDurationMilliseconds: sequenceDurationMilliseconds,
+              initialDistance: isNarrow ? 10 : 16,
+              child: child,
             ),
-          ],
-          _ => [
-            for (var index = 0; index < cards.length; index++) ...[
-              if (index > 0) const SizedBox(height: MembershipSection._cardGap),
-              _MembershipCardItem(
-                card: cards[index],
-                usesCoordinatedHeight: false,
+        child: Column(
+          key: Key('membershipCardsColumns$columns'),
+          children: switch (columns) {
+            3 => [
+              _MembershipCardRow(cards: cards),
+            ],
+            2 => [
+              _MembershipCardRow(cards: cards.take(2).toList()),
+              const SizedBox(height: MembershipSection._cardGap),
+              FractionallySizedBox(
+                widthFactor: 0.5,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MembershipSection._cardGap / 4,
+                  ),
+                  child: _MembershipCardItem(
+                    index: 2,
+                    card: cards[2],
+                    usesCoordinatedHeight: false,
+                  ),
+                ),
               ),
             ],
-          ],
-        },
+            _ => [
+              for (var index = 0; index < cards.length; index++) ...[
+                if (index > 0)
+                  const SizedBox(height: MembershipSection._cardGap),
+                _MembershipCardItem(
+                  index: index,
+                  card: cards[index],
+                  usesCoordinatedHeight: false,
+                ),
+              ],
+            ],
+          },
+        ),
       );
     },
   );
+}
+
+final class _MembershipRevealProgress extends InheritedWidget {
+  const _MembershipRevealProgress({
+    required this.progress,
+    required this.cardDurationMilliseconds,
+    required this.staggerMilliseconds,
+    required this.sequenceDurationMilliseconds,
+    required this.initialDistance,
+    required super.child,
+  });
+
+  final double progress;
+  final int cardDurationMilliseconds;
+  final int staggerMilliseconds;
+  final int sequenceDurationMilliseconds;
+  final double initialDistance;
+
+  static _MembershipRevealProgress of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_MembershipRevealProgress>()!;
+
+  @override
+  bool updateShouldNotify(_MembershipRevealProgress oldWidget) =>
+      progress != oldWidget.progress ||
+      cardDurationMilliseconds != oldWidget.cardDurationMilliseconds ||
+      staggerMilliseconds != oldWidget.staggerMilliseconds ||
+      sequenceDurationMilliseconds != oldWidget.sequenceDurationMilliseconds ||
+      initialDistance != oldWidget.initialDistance;
 }
 
 final class _MembershipCardRow extends StatelessWidget {
@@ -289,6 +346,7 @@ final class _MembershipCardRow extends StatelessWidget {
           if (index > 0) const SizedBox(width: MembershipSection._cardGap),
           Expanded(
             child: _MembershipCardItem(
+              index: index,
               card: cards[index],
               usesCoordinatedHeight: true,
             ),
@@ -301,26 +359,49 @@ final class _MembershipCardRow extends StatelessWidget {
 
 final class _MembershipCardItem extends StatelessWidget {
   const _MembershipCardItem({
+    required this.index,
     required this.card,
     required this.usesCoordinatedHeight,
   });
 
+  final int index;
   final _MembershipCardContent card;
   final bool usesCoordinatedHeight;
 
   @override
-  Widget build(BuildContext context) => MembershipCard(
-    semanticId: card.semanticId,
-    variant: card.variant,
-    tierName: card.tierName,
-    price: card.price,
-    billingPeriod: card.billingPeriod,
-    priceSemanticLabel: card.priceSemanticLabel,
-    description: card.description,
-    benefits: card.benefits,
-    ctaLabel: card.ctaLabel,
-    footnote: card.footnote,
-    badgeLabel: card.badgeLabel,
-    usesCoordinatedHeight: usesCoordinatedHeight,
-  );
+  Widget build(BuildContext context) {
+    final reveal = _MembershipRevealProgress.of(context);
+    final elapsedMilliseconds =
+        reveal.progress * reveal.sequenceDurationMilliseconds;
+    final delayMilliseconds = reveal.staggerMilliseconds * index;
+    final cardProgress = LandingMotion.standardCurve.transform(
+      ((elapsedMilliseconds - delayMilliseconds) /
+              reveal.cardDurationMilliseconds)
+          .clamp(0, 1),
+    );
+
+    return Transform.translate(
+      key: Key('membershipCardRevealTransform-${card.semanticId}'),
+      offset: Offset(reveal.initialDistance * (1 - cardProgress), 0),
+      child: Opacity(
+        key: Key('membershipCardRevealOpacity-${card.semanticId}'),
+        opacity: 0.12 + (0.88 * cardProgress),
+        alwaysIncludeSemantics: true,
+        child: MembershipCard(
+          semanticId: card.semanticId,
+          variant: card.variant,
+          tierName: card.tierName,
+          price: card.price,
+          billingPeriod: card.billingPeriod,
+          priceSemanticLabel: card.priceSemanticLabel,
+          description: card.description,
+          benefits: card.benefits,
+          ctaLabel: card.ctaLabel,
+          footnote: card.footnote,
+          badgeLabel: card.badgeLabel,
+          usesCoordinatedHeight: usesCoordinatedHeight,
+        ),
+      ),
+    );
+  }
 }

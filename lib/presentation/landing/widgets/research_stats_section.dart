@@ -147,9 +147,10 @@ final class _ResearchCardGrid extends StatelessWidget {
   const _ResearchCardGrid({required this.cards});
 
   static const _cardGap = 16.0;
-  static const _cardDurationMilliseconds = 340;
-  static const _wideStaggerMilliseconds = 45;
+  static const _cardDurationMilliseconds = 520;
+  static const _wideStaggerMilliseconds = 50;
   static const _narrowStaggerMilliseconds = 20;
+  static const _triggerViewportFraction = 0.7;
 
   final List<({String value, String description})> cards;
 
@@ -174,6 +175,7 @@ final class _ResearchCardGrid extends StatelessWidget {
       return LandingScrollReveal(
         key: const Key('researchStatsReveal'),
         duration: Duration(milliseconds: sequenceDurationMilliseconds),
+        triggerViewportFraction: _triggerViewportFraction,
         transitionBuilder: (context, progress, child) =>
             _ResearchRevealProgress(
               progress: progress,
@@ -190,7 +192,8 @@ final class _ResearchCardGrid extends StatelessWidget {
                 cardDurationMilliseconds: _cardDurationMilliseconds,
                 staggerMilliseconds: staggerMilliseconds,
                 sequenceDurationMilliseconds: sequenceDurationMilliseconds,
-                initialDistance: isNarrow ? 8 : 12,
+                initialDistance: isNarrow ? 10 : 16,
+                initialOpacity: isNarrow ? 0.1 : 0.08,
                 child: SizedBox(
                   width: cardWidth,
                   child: ResearchStatCard(
@@ -231,6 +234,7 @@ final class _ResearchStatReveal extends StatelessWidget {
     required this.staggerMilliseconds,
     required this.sequenceDurationMilliseconds,
     required this.initialDistance,
+    required this.initialOpacity,
     required this.child,
   });
 
@@ -239,6 +243,7 @@ final class _ResearchStatReveal extends StatelessWidget {
   final int staggerMilliseconds;
   final int sequenceDurationMilliseconds;
   final double initialDistance;
+  final double initialOpacity;
   final Widget child;
 
   @override
@@ -256,7 +261,7 @@ final class _ResearchStatReveal extends StatelessWidget {
       offset: Offset(0, initialDistance * (1 - cardProgress)),
       child: Opacity(
         key: Key('researchStatRevealOpacity$index'),
-        opacity: 0.1 + (0.9 * cardProgress),
+        opacity: initialOpacity + ((1 - initialOpacity) * cardProgress),
         alwaysIncludeSemantics: true,
         child: child,
       ),

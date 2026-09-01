@@ -189,13 +189,16 @@ locally, the state icon fades between plus and minus, and the hover background
 interpolates briefly. Keyboard focus remains immediate. Reduced motion removes
 those transitions while preserving the final state and all feedback. The Hero
 renders statically. The Research Statistics cards receive one restrained
-rise-and-fade reveal with a short group stagger, the complete Founding Friends
-promotional card receives one subtle trailing-side-to-final reveal, and the
-complete Venue promotional card receives one subtle leading-side-to-final
-reveal while its introduction remains static. These are the only scroll-entry
-animations. Each runs once per mounted landing page, and reduced motion renders
-all three surfaces immediately in their final state. All other landing
-sections remain static.
+rise-and-fade reveal with a short group stagger; it triggers deeper in the
+viewport and uses a slightly stronger, slower settlement than the other
+accents. The three Membership pricing cards receive one subtle
+trailing-side-to-final fade reveal while the Membership introduction remains
+static. The complete Founding Friends promotional card receives one subtle
+trailing-side-to-final reveal, and the complete Venue promotional card receives
+one subtle leading-side-to-final reveal while its introduction remains static.
+These four surfaces are the complete scroll-entry animation set. Each runs once
+per mounted landing page, and reduced motion renders all four surfaces
+immediately in their final state. All other landing sections remain static.
 Safe Guard, Footprint, reporting, subscription, and moderation statements in
 FAQ copy describe future product behavior only and do not establish those
 capabilities as implemented.

@@ -21,9 +21,10 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   item surface. Contact and product CTAs remain intentionally unwired; pricing
   is static marketing UI rather than subscription functionality. The stable
   responsive presentation includes restrained anchor/FAQ interaction motion
-  and one-time scroll accents only for Research Statistics, Founding Friends,
-  and Venue; the Hero and all other landing sections remain static. Business,
-  domain, application, and data behavior is not implemented.
+  and one-time scroll accents only for Research Statistics, Membership pricing
+  cards, Founding Friends, and Venue; the Hero and all other landing sections
+  remain static. Business, domain, application, and data behavior is not
+  implemented.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

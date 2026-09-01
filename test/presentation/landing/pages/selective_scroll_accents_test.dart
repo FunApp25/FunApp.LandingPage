@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/landing_scroll_reveal.dart';
+import 'package:fun_app_landing_page/presentation/landing/widgets/membership_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/research_stat_card.dart';
 
 import '../landing_test_helpers.dart';
@@ -50,13 +51,14 @@ void main() {
     },
   );
 
-  testWidgets('only the three approved landing surfaces observe scroll entry', (
+  testWidgets('only the four approved landing surfaces observe scroll entry', (
     tester,
   ) async {
     await _pumpLandingPage(tester);
 
-    expect(find.byType(LandingScrollReveal), findsNWidgets(3));
+    expect(find.byType(LandingScrollReveal), findsNWidgets(4));
     expect(find.byKey(const Key('researchStatsReveal')), findsOneWidget);
+    expect(find.byKey(const Key('membershipCardsReveal')), findsOneWidget);
     expect(find.byKey(const Key('foundingFriendsReveal')), findsOneWidget);
     expect(find.byKey(const Key('venueCardReveal')), findsOneWidget);
   });
@@ -70,10 +72,13 @@ void main() {
 
     final reveal = find.byKey(const Key('researchStatsReveal'));
     final initialSize = tester.getSize(reveal);
+    final revealWidget = tester.widget<LandingScrollReveal>(reveal);
+    expect(revealWidget.triggerViewportFraction, 0.7);
+    expect(revealWidget.duration, const Duration(milliseconds: 670));
     expect(find.byType(ResearchStatCard), findsNWidgets(4));
     for (var index = 0; index < 4; index++) {
-      expect(_opacity(tester, 'researchStatRevealOpacity$index'), 0.1);
-      expect(_translation(tester, 'researchStatRevealTransform$index').dy, 12);
+      expect(_opacity(tester, 'researchStatRevealOpacity$index'), 0.08);
+      expect(_translation(tester, 'researchStatRevealTransform$index').dy, 16);
       expect(
         tester
             .widget<Opacity>(
@@ -86,7 +91,7 @@ void main() {
     expect(find.bySemanticsLabel('49%'), findsOneWidget);
 
     await _bringIntoView(tester, reveal);
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 110));
 
     final staggeredOpacities = [
       for (var index = 0; index < 4; index++)
@@ -115,8 +120,17 @@ void main() {
     await _pumpLandingPage(tester);
 
     expect(find.byKey(const Key('researchStatsColumns1')), findsOneWidget);
+    expect(
+      tester
+          .widget<LandingScrollReveal>(
+            find.byKey(const Key('researchStatsReveal')),
+          )
+          .duration,
+      const Duration(milliseconds: 580),
+    );
     for (var index = 0; index < 4; index++) {
-      expect(_translation(tester, 'researchStatRevealTransform$index').dy, 8);
+      expect(_opacity(tester, 'researchStatRevealOpacity$index'), 0.1);
+      expect(_translation(tester, 'researchStatRevealTransform$index').dy, 10);
     }
 
     await _bringIntoView(
@@ -130,6 +144,123 @@ void main() {
     );
     await tester.pumpAndSettle();
     _expectResearchFinalState(tester);
+  });
+
+  testWidgets('Membership cards fade from the right once as one group', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(1440, 900));
+    final semantics = tester.ensureSemantics();
+    await _pumpLandingPage(tester);
+
+    final reveal = find.byKey(const Key('membershipCardsReveal'));
+    final initialSize = tester.getSize(reveal);
+    expect(
+      tester.widget<LandingScrollReveal>(reveal).triggerViewportFraction,
+      0.825,
+    );
+    expect(
+      tester.widget<LandingScrollReveal>(reveal).duration,
+      const Duration(milliseconds: 510),
+    );
+    expect(
+      find.ancestor(
+        of: find.byKey(const Key('membershipHeadingText')),
+        matching: reveal,
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: reveal, matching: find.byType(MembershipCard)),
+      findsNWidgets(3),
+    );
+    expect(
+      tester
+          .widgetList<MembershipCard>(find.byType(MembershipCard))
+          .map((card) => card.semanticId),
+      orderedEquals(['free', 'hereNow', 'lifetime']),
+    );
+    for (final id in ['free', 'hereNow', 'lifetime']) {
+      expect(_opacity(tester, 'membershipCardRevealOpacity-$id'), 0.12);
+      expect(
+        _translation(tester, 'membershipCardRevealTransform-$id'),
+        const Offset(16, 0),
+      );
+      expect(
+        tester
+            .widget<Opacity>(
+              find.byKey(Key('membershipCardRevealOpacity-$id')),
+            )
+            .alwaysIncludeSemantics,
+        isTrue,
+      );
+    }
+    expect(find.bySemanticsLabel('FREE MEMBERSHIP'), findsOneWidget);
+
+    await _bringIntoView(tester, reveal);
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      _opacity(tester, 'membershipCardRevealOpacity-free'),
+      greaterThan(_opacity(tester, 'membershipCardRevealOpacity-hereNow')),
+    );
+    expect(
+      _opacity(tester, 'membershipCardRevealOpacity-hereNow'),
+      greaterThan(_opacity(tester, 'membershipCardRevealOpacity-lifetime')),
+    );
+
+    await tester.pumpAndSettle();
+    expect(tester.getSize(reveal), initialSize);
+    _expectMembershipFinalState(tester);
+
+    _scrollController(tester).jumpTo(0);
+    await tester.pump();
+    await _bringIntoView(tester, reveal);
+    _expectMembershipFinalState(tester);
+    semantics.dispose();
+  });
+
+  testWidgets('Membership movement follows responsive card layouts', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(768, 1024));
+
+    for (final example in const [
+      (
+        size: Size(768, 1024),
+        columns: 2,
+        distance: 16.0,
+        duration: Duration(milliseconds: 510),
+      ),
+      (
+        size: Size(390, 844),
+        columns: 1,
+        distance: 10.0,
+        duration: Duration(milliseconds: 460),
+      ),
+    ]) {
+      tester.view.physicalSize = example.size;
+      await _pumpLandingPage(tester);
+
+      expect(
+        find.byKey(Key('membershipCardsColumns${example.columns}')),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<LandingScrollReveal>(
+              find.byKey(const Key('membershipCardsReveal')),
+            )
+            .duration,
+        example.duration,
+      );
+      for (final id in ['free', 'hereNow', 'lifetime']) {
+        expect(
+          _translation(tester, 'membershipCardRevealTransform-$id'),
+          Offset(example.distance, 0),
+        );
+      }
+    }
   });
 
   testWidgets('promotional cards enter once from their approved directions', (
@@ -208,6 +339,7 @@ void main() {
     await _pumpLandingPage(tester, disableAnimations: true);
 
     _expectResearchFinalState(tester);
+    _expectMembershipFinalState(tester);
     expect(_opacity(tester, 'foundingFriendsRevealOpacity'), 1);
     expect(
       _translation(tester, 'foundingFriendsRevealTransform'),
@@ -276,6 +408,16 @@ void _expectResearchFinalState(WidgetTester tester) {
     expect(_opacity(tester, 'researchStatRevealOpacity$index'), 1);
     expect(
       _translation(tester, 'researchStatRevealTransform$index'),
+      Offset.zero,
+    );
+  }
+}
+
+void _expectMembershipFinalState(WidgetTester tester) {
+  for (final id in ['free', 'hereNow', 'lifetime']) {
+    expect(_opacity(tester, 'membershipCardRevealOpacity-$id'), 1);
+    expect(
+      _translation(tester, 'membershipCardRevealTransform-$id'),
       Offset.zero,
     );
   }
