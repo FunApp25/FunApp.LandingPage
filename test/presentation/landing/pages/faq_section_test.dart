@@ -9,9 +9,14 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/content/faq_content.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
 
 import '../landing_test_helpers.dart';
+
+const _freeAnswerFirst =
+    'Yes. The core Fun App experience is free because finding someone to grab '
+    'coffee with should not require a financial strategy.';
 
 void main() {
   const englishQuestions = [
@@ -33,6 +38,7 @@ void main() {
   testWidgets('renders all approved questions with only the first expanded', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     await _pumpFaq(tester);
 
     expect(find.text('FAQ'), findsOneWidget);
@@ -41,17 +47,19 @@ void main() {
       expect(find.text(question), findsOneWidget);
     }
     expect(_questionControls(), findsNWidgets(englishQuestions.length));
-    expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
-    for (var index = 1; index < englishQuestions.length; index++) {
-      expect(find.byKey(Key('faqAnswer$index')), findsNothing);
-    }
+    expect(_answerState(tester, 0), CrossFadeState.showSecond);
     expect(
-      svgAssetName(tester, const Key('faqIcon0')),
-      AppAssets.faqMinus,
+      find.bySemanticsLabel(RegExp(RegExp.escape(_freeAnswerFirst))),
+      findsOneWidget,
     );
     for (var index = 1; index < englishQuestions.length; index++) {
-      expect(svgAssetName(tester, Key('faqIcon$index')), AppAssets.faqPlus);
+      expect(_answerState(tester, index), CrossFadeState.showFirst);
     }
+    expect(_faqIconAsset(tester, 0), AppAssets.faqMinus);
+    for (var index = 1; index < englishQuestions.length; index++) {
+      expect(_faqIconAsset(tester, index), AppAssets.faqPlus);
+    }
+    semantics.dispose();
   });
 
   testWidgets('builds the ordered FAQ collection and emphasis metadata', (
@@ -136,23 +144,24 @@ void main() {
     await _pumpFaq(tester);
 
     await _toggle(tester, 1);
-    expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
-    expect(find.byKey(const Key('faqAnswer1')), findsOneWidget);
+    expect(_answerState(tester, 0), CrossFadeState.showSecond);
+    expect(_answerState(tester, 1), CrossFadeState.showSecond);
 
     final control = tester.widget<FocusableActionDetector>(
       find.byKey(const Key('faqQuestionControl1')),
     );
     control.focusNode!.requestFocus();
     await tester.pump();
+    await tester.pump();
     expect(control.focusNode!.hasFocus, isTrue);
     final visualFinder = find.byKey(const Key('faqItemVisualSurface1'));
     final focusSurface = tester.widget<DecoratedBox>(visualFinder);
     final focusDecoration = focusSurface.decoration as BoxDecoration;
-    final focusBackground = tester.widget<DecoratedBox>(
+    final focusBackground = tester.widget<AnimatedContainer>(
       find.byKey(const Key('faqItemStateBackground1')),
     );
     expect(
-      (focusBackground.decoration as BoxDecoration).color,
+      (focusBackground.decoration! as BoxDecoration).color,
       AppColors.energeticPlum.withValues(alpha: 0.08),
     );
     final focusBorder = focusDecoration.border! as Border;
@@ -173,18 +182,18 @@ void main() {
 
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
-    expect(find.byKey(const Key('faqAnswer1')), findsNothing);
+    expect(_answerState(tester, 1), CrossFadeState.showFirst);
     expect(control.focusNode!.hasFocus, isTrue);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pump();
-    expect(find.byKey(const Key('faqAnswer1')), findsOneWidget);
-    expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
+    expect(_answerState(tester, 1), CrossFadeState.showSecond);
+    expect(_answerState(tester, 0), CrossFadeState.showSecond);
     expect(control.focusNode!.hasFocus, isTrue);
 
     await tester.tap(find.byKey(const Key('faqQuestionControl1')));
     await tester.pump();
-    expect(find.byKey(const Key('faqAnswer1')), findsNothing);
+    expect(_answerState(tester, 1), CrossFadeState.showFirst);
   });
 
   testWidgets('hover treatment covers the complete FAQ item surface', (
@@ -200,14 +209,14 @@ void main() {
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.addPointer(location: Offset.zero);
     await mouse.moveTo(tester.getCenter(surfaceFinder));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final decoration =
         tester
-                .widget<DecoratedBox>(
+                .widget<AnimatedContainer>(
                   find.byKey(const Key('faqItemStateBackground0')),
                 )
-                .decoration
+                .decoration!
             as BoxDecoration;
     expect(
       decoration.color,
@@ -223,6 +232,24 @@ void main() {
       isTrue,
     );
 
+    final firstControl = tester.widget<FocusableActionDetector>(
+      find.byKey(const Key('faqQuestionControl0')),
+    );
+    firstControl.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.pump();
+    final focusedDecoration =
+        tester
+                .widget<AnimatedContainer>(
+                  find.byKey(const Key('faqItemStateBackground0')),
+                )
+                .decoration!
+            as BoxDecoration;
+    expect(
+      focusedDecoration.color,
+      AppColors.energeticPlum.withValues(alpha: 0.08),
+    );
+
     await mouse.removePointer();
   });
 
@@ -233,20 +260,17 @@ void main() {
 
     await tester.tap(find.byKey(const Key('faqAnswer0')));
     await tester.pump();
-    expect(find.byKey(const Key('faqAnswer0')), findsNothing);
+    expect(_answerState(tester, 0), CrossFadeState.showFirst);
 
     await tester.tap(find.byKey(const Key('faqQuestionControl0')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     final surfaceRect = tester.getRect(
       find.byKey(const Key('faqItemSurface0')),
     );
     await tester.tapAt(Offset(surfaceRect.left + 4, surfaceRect.top + 4));
-    await tester.pump();
-    expect(find.byKey(const Key('faqAnswer0')), findsNothing);
-    expect(
-      svgAssetName(tester, const Key('faqIcon0')),
-      AppAssets.faqPlus,
-    );
+    await tester.pumpAndSettle();
+    expect(_answerState(tester, 0), CrossFadeState.showFirst);
+    expect(_faqIconAsset(tester, 0), AppAssets.faqPlus);
   });
 
   for (final example in const [
@@ -297,14 +321,8 @@ void main() {
       svgAssetName(tester, const Key('faqEyebrowGlyph')),
       AppAssets.faqGlyph,
     );
-    expect(
-      svgAssetName(tester, const Key('faqIcon0')),
-      AppAssets.faqMinus,
-    );
-    expect(
-      svgAssetName(tester, const Key('faqIcon1')),
-      AppAssets.faqPlus,
-    );
+    expect(_faqIconAsset(tester, 0), AppAssets.faqMinus);
+    expect(_faqIconAsset(tester, 1), AppAssets.faqPlus);
     for (final asset in [
       AppAssets.faqGlyph,
       AppAssets.faqPlus,
@@ -321,7 +339,7 @@ void main() {
     );
     expect(
       tester
-          .widget<SvgPicture>(find.byKey(const Key('faqIcon0')))
+          .widget<SvgPicture>(find.byKey(const Key('faqMinus0')))
           .excludeFromSemantics,
       isTrue,
     );
@@ -360,9 +378,9 @@ void main() {
             ?.fontSize,
         example.questionSize,
       );
-      expect(find.byKey(const Key('faqAnswer0')), findsOneWidget);
-      expect(find.byKey(const Key('faqAnswer1')), findsOneWidget);
-      expect(find.byKey(const Key('faqAnswer6')), findsOneWidget);
+      expect(_answerState(tester, 0), CrossFadeState.showSecond);
+      expect(_answerState(tester, 1), CrossFadeState.showSecond);
+      expect(_answerState(tester, 6), CrossFadeState.showSecond);
 
       final surfaceRect = tester.getRect(
         find.byKey(const Key('faqItemSurface0')),
@@ -389,6 +407,170 @@ void main() {
       expect(answerRect.left, closeTo(questionRect.left, 1));
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('updates answer semantics immediately with expansion state', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await _pumpFaq(tester);
+
+    final l10n = AppLocalizations.of(tester.element(find.byType(FaqSection)));
+    final answerText = buildFaqItems(l10n)[1].paragraphs.first.text;
+    final controlFinder = find.byKey(const Key('faqQuestionControl1'));
+    await tester.ensureVisible(controlFinder);
+    await tester.pump();
+
+    await tester.tap(controlFinder);
+    await tester.pump();
+
+    expect(_answerState(tester, 1), CrossFadeState.showSecond);
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('faqQuestionSemantics1')))
+          .getSemanticsData()
+          .flagsCollection
+          .isExpanded,
+      Tristate.isTrue,
+    );
+    final answerSemantics = tester
+        .getSemantics(find.byKey(const Key('faqAnswerSemantics1')))
+        .getSemanticsData();
+    expect(answerSemantics.label, contains(answerText));
+    expect(
+      answerSemantics.flagsCollection.isButton,
+      isFalse,
+    );
+
+    await tester.tap(controlFinder);
+    await tester.pump();
+
+    expect(_answerState(tester, 1), CrossFadeState.showFirst);
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('faqQuestionSemantics1')))
+          .getSemanticsData()
+          .flagsCollection
+          .isExpanded,
+      Tristate.isFalse,
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape(answerText))),
+      findsNothing,
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('rapid toggles settle in the final requested state', (
+    tester,
+  ) async {
+    await _pumpFaq(tester);
+
+    final controlFinder = find.byKey(const Key('faqQuestionControl1'));
+    await tester.ensureVisible(controlFinder);
+    await tester.pump();
+    await tester.tap(controlFinder);
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.tap(controlFinder);
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.tap(controlFinder);
+    await tester.pumpAndSettle();
+
+    expect(_answerState(tester, 1), CrossFadeState.showSecond);
+    expect(_faqIconAsset(tester, 1), AppAssets.faqMinus);
+  });
+
+  testWidgets('multiple FAQ transitions remain independent', (tester) async {
+    await _pumpFaq(tester);
+
+    final secondControl = find.byKey(const Key('faqQuestionControl1'));
+    final thirdControl = find.byKey(const Key('faqQuestionControl2'));
+    await tester.ensureVisible(secondControl);
+    await tester.pump();
+    await tester.tap(secondControl);
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.ensureVisible(thirdControl);
+    await tester.pump();
+    await tester.tap(thirdControl);
+    await tester.pumpAndSettle();
+
+    expect(_answerState(tester, 0), CrossFadeState.showSecond);
+    expect(_answerState(tester, 1), CrossFadeState.showSecond);
+    expect(_answerState(tester, 2), CrossFadeState.showSecond);
+  });
+
+  testWidgets('reduced motion reaches FAQ final states immediately', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await _pumpFaq(tester, disableAnimations: true);
+
+    final iconSwitcher = tester.widget<AnimatedSwitcher>(
+      find.byKey(const Key('faqIconSwitcher1')),
+    );
+    final hoverSurface = tester.widget<AnimatedContainer>(
+      find.byKey(const Key('faqItemStateBackground1')),
+    );
+    expect(find.byKey(const Key('faqAnswerTransition1')), findsNothing);
+    expect(iconSwitcher.duration, Duration.zero);
+    expect(hoverSurface.duration, Duration.zero);
+
+    final controlFinder = find.byKey(const Key('faqQuestionControl1'));
+    await tester.ensureVisible(controlFinder);
+    await tester.pump();
+    await tester.tap(controlFinder);
+    await tester.pump();
+
+    final l10n = AppLocalizations.of(tester.element(find.byType(FaqSection)));
+    final answerText = buildFaqItems(l10n)[1].paragraphs.first.text;
+    expect(_answerState(tester, 1), CrossFadeState.showSecond);
+    expect(_faqIconAsset(tester, 1), AppAssets.faqMinus);
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('faqAnswerSemantics1')))
+          .getSemanticsData()
+          .label,
+      contains(answerText),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('FAQ icon transition is a brief fade only', (tester) async {
+    await _pumpFaq(tester);
+
+    final switcher = tester.widget<AnimatedSwitcher>(
+      find.byKey(const Key('faqIconSwitcher1')),
+    );
+    final transition = switcher.transitionBuilder(
+      const SizedBox.shrink(),
+      const AlwaysStoppedAnimation<double>(1),
+    );
+    expect(switcher.duration, LandingMotion.fastDuration);
+    expect(transition, isA<FadeTransition>());
+    final iconBoundary = find.byKey(const Key('faqIcon1'));
+    expect(
+      find.descendant(
+        of: iconBoundary,
+        matching: find.byType(RotationTransition),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: iconBoundary,
+        matching: find.byType(ScaleTransition),
+      ),
+      findsNothing,
+    );
+
+    await _toggle(tester, 1);
+    expect(_faqIconAsset(tester, 1), AppAssets.faqMinus);
+    expect(
+      tester
+          .widget<SvgPicture>(find.byKey(const Key('faqMinus1')))
+          .excludeFromSemantics,
+      isTrue,
+    );
   });
 
   testWidgets('exposes heading and independent expanded control semantics', (
@@ -453,17 +635,48 @@ Finder _questionControls() => find.byWidgetPredicate(
       (widget.key! as ValueKey<String>).value.startsWith('faqQuestionControl'),
 );
 
+CrossFadeState _answerState(WidgetTester tester, int index) {
+  final transitionFinder = find.byKey(Key('faqAnswerTransition$index'));
+  if (transitionFinder.evaluate().isNotEmpty) {
+    return tester.widget<AnimatedCrossFade>(transitionFinder).crossFadeState;
+  } else if (find.byKey(Key('faqAnswer$index')).evaluate().isNotEmpty) {
+    return CrossFadeState.showSecond;
+  } else {
+    return CrossFadeState.showFirst;
+  }
+}
+
+String _faqIconAsset(WidgetTester tester, int index) {
+  final iconFinder = find.descendant(
+    of: find.byKey(Key('faqIcon$index')),
+    matching: find.byType(SvgPicture),
+  );
+  final visibleIcons = tester
+      .widgetList<SvgPicture>(iconFinder)
+      .where(
+        (icon) =>
+            icon.key == Key('faqMinus$index') ||
+            icon.key == Key('faqPlus$index'),
+      )
+      .toList();
+  expect(visibleIcons, hasLength(1));
+  final loader = visibleIcons.single.bytesLoader;
+  expect(loader, isA<SvgAssetLoader>());
+  return (loader as SvgAssetLoader).assetName;
+}
+
 Future<void> _toggle(WidgetTester tester, int index) async {
   final finder = find.byKey(Key('faqQuestionControl$index'));
   await tester.ensureVisible(finder);
   await tester.pump();
   await tester.tap(finder);
-  await tester.pump();
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpFaq(
   WidgetTester tester, {
   Locale locale = const Locale('en'),
+  bool disableAnimations = false,
 }) async {
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pumpWidget(
@@ -472,8 +685,11 @@ Future<void> _pumpFaq(
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
-        body: SingleChildScrollView(child: FaqSection()),
+      home: MediaQuery(
+        data: MediaQueryData(disableAnimations: disableAnimations),
+        child: const Scaffold(
+          body: SingleChildScrollView(child: FaqSection()),
+        ),
       ),
     ),
   );

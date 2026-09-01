@@ -10,6 +10,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
@@ -253,6 +254,57 @@ void main() {
     _expectTargetBelowHeader(tester, HeroSection);
   });
 
+  testWidgets('aligned navigation does not start a scroll activity', (
+    tester,
+  ) async {
+    await pumpLandingApp(tester);
+
+    final scrollController = _scrollController(tester);
+    expect(scrollController.offset, scrollController.position.minScrollExtent);
+
+    await tester.tap(
+      find.byKey(const Key('landingHeaderNavigationItem0')),
+    );
+    await tester.pump();
+
+    expect(scrollController.offset, scrollController.position.minScrollExtent);
+    expect(scrollController.position.isScrollingNotifier.value, isFalse);
+  });
+
+  testWidgets('same active navigation target does not restart movement', (
+    tester,
+  ) async {
+    await pumpLandingApp(tester);
+
+    final venueNavigation = find.byKey(
+      const Key('landingHeaderNavigationItem3'),
+    );
+    await tester.tap(venueNavigation);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(venueNavigation);
+    await tester.pump(const Duration(milliseconds: 421));
+
+    _expectTargetBelowHeader(tester, VenueSection);
+  });
+
+  testWidgets('new navigation target interrupts active movement', (
+    tester,
+  ) async {
+    await pumpLandingApp(tester);
+
+    await tester.tap(
+      find.byKey(const Key('landingHeaderNavigationItem3')),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(
+      find.byKey(const Key('landingHeaderNavigationItem1')),
+    );
+    await tester.pumpAndSettle();
+
+    _expectTargetBelowHeader(tester, MembershipSection);
+  });
+
   testWidgets('navigation items support Enter and Space activation', (
     tester,
   ) async {
@@ -298,29 +350,83 @@ void main() {
       of: itemFinder,
       matching: find.byKey(const Key('landingNavigationVisualSurface')),
     );
+    final backgroundFinder = find.descendant(
+      of: itemFinder,
+      matching: find.byKey(
+        const Key('landingNavigationStateBackground'),
+      ),
+    );
     expect(tester.getSize(itemFinder).height, greaterThanOrEqualTo(44));
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.addPointer(location: Offset.zero);
     await mouse.moveTo(tester.getCenter(itemFinder));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(
-      tester.widget<Material>(visualFinder).color,
+      tester.widget<AnimatedContainer>(backgroundFinder).duration,
+      LandingMotion.fastDuration,
+    );
+    expect(
+      (tester.widget<AnimatedContainer>(backgroundFinder).decoration!
+              as BoxDecoration)
+          .color,
       AppColors.energeticPlum.withValues(alpha: 0.06),
     );
-    await mouse.removePointer();
 
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
-    final focusedMaterial = tester.widget<Material>(visualFinder);
-    final focusedShape = focusedMaterial.shape! as RoundedRectangleBorder;
+    final focusedSurface = tester.widget<DecoratedBox>(visualFinder);
+    final focusedDecoration = focusedSurface.decoration as BoxDecoration;
+    final focusedBorder = focusedDecoration.border! as Border;
     expect(
-      focusedMaterial.color,
+      tester.widget<AnimatedContainer>(backgroundFinder).duration,
+      Duration.zero,
+    );
+    expect(
+      (tester.widget<AnimatedContainer>(backgroundFinder).decoration!
+              as BoxDecoration)
+          .color,
       AppColors.energeticPlum.withValues(alpha: 0.08),
     );
-    expect(focusedShape.side.color, AppColors.energeticPlum);
-    expect(focusedShape.side.width, 2);
+    expect(focusedBorder.top.color, AppColors.energeticPlum);
+    expect(focusedBorder.top.width, 2);
     expect(tester.getSize(itemFinder).height, greaterThanOrEqualTo(44));
+    await mouse.removePointer();
+  });
+
+  testWidgets('reduced motion keeps navigation hover feedback immediate', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: LandingNavigationItem(
+              label: 'OUR BELIEF',
+              onSelected: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final itemFinder = find.byType(LandingNavigationItem);
+    final backgroundFinder = find.byKey(
+      const Key('landingNavigationStateBackground'),
+    );
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(itemFinder));
+    await tester.pump();
+
+    final background = tester.widget<AnimatedContainer>(backgroundFinder);
+    expect(background.duration, Duration.zero);
+    expect(
+      (background.decoration! as BoxDecoration).color,
+      AppColors.energeticPlum.withValues(alpha: 0.06),
+    );
+    await mouse.removePointer();
   });
 
   testWidgets('navigation is accessible while Contact Us stays unwired', (

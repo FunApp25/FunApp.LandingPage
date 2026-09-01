@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// Accessible in-page navigation control shared by the landing header/footer.
@@ -31,51 +32,71 @@ final class _LandingNavigationItemState extends State<LandingNavigationItem> {
 
   @override
   Widget build(BuildContext context) {
-    final hasVisualState = _isFocused || _isHovered;
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final backgroundColor = _isFocused
+        ? AppColors.energeticPlum.withValues(alpha: 0.08)
+        : _isHovered
+        ? AppColors.energeticPlum.withValues(alpha: 0.06)
+        : Colors.transparent;
+    final hoverDuration = LandingMotion.duration(
+      disableAnimations: disableAnimations || _isFocused,
+      normalDuration: LandingMotion.fastDuration,
+    );
 
     return Semantics(
       label: widget.label,
       button: true,
       onTap: widget.onSelected,
       excludeSemantics: true,
-      child: Material(
+      child: DecoratedBox(
         key: const Key('landingNavigationVisualSurface'),
-        color: hasVisualState
-            ? AppColors.energeticPlum.withValues(
-                alpha: _isFocused ? 0.08 : 0.06,
-              )
-            : Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: _radius,
-          side: BorderSide(
+        decoration: BoxDecoration(
+          border: Border.all(
             color: _isFocused ? AppColors.energeticPlum : Colors.transparent,
             width: 2,
           ),
-        ),
-        child: InkWell(
-          onTap: widget.onSelected,
-          onHover: (value) => setState(() => _isHovered = value),
-          onFocusChange: (value) => setState(() => _isFocused = value),
-          excludeFromSemantics: true,
-          mouseCursor: SystemMouseCursors.click,
-          focusColor: Colors.transparent,
-          hoverColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
           borderRadius: _radius,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: _minimumTargetHeight),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _horizontalPadding,
-              ),
-              child: Center(
-                widthFactor: 1,
-                child: Text(
-                  widget.label,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  style: LandingTextStyles.headerNavigation,
+        ),
+        position: DecorationPosition.foreground,
+        child: AnimatedContainer(
+          key: const Key('landingNavigationStateBackground'),
+          duration: hoverDuration,
+          curve: LandingMotion.standardCurve,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: _radius,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onSelected,
+              onHover: (value) => setState(() => _isHovered = value),
+              onFocusChange: (value) => setState(() => _isFocused = value),
+              excludeFromSemantics: true,
+              mouseCursor: SystemMouseCursors.click,
+              focusColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              borderRadius: _radius,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: _minimumTargetHeight,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _horizontalPadding,
+                  ),
+                  child: Center(
+                    widthFactor: 1,
+                    child: Text(
+                      widget.label,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      style: LandingTextStyles.headerNavigation,
+                    ),
+                  ),
                 ),
               ),
             ),

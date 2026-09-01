@@ -165,9 +165,13 @@ control surface. The narrow header orders the logo, two-row navigation, and a
 centered Contact Us treatment vertically. The established mapping is
 Our Belief to Hero, Membership to Membership, Founding Friends to Founding
 Friends, and For Venues to Venue. Anchor positions derive from the rendered
-sections, and navigation movement becomes immediate when reduced motion is
-requested. Contact Us, waitlist, product, email, and other marketing CTA
-destinations remain open and are intentionally unwired.
+sections. Navigation duration scales with the current viewport-normalized
+distance and remains bounded so short and long jumps retain a controlled pace.
+Brief hover interpolation applies only to internal navigation backgrounds;
+keyboard focus remains immediate. Navigation movement and hover interpolation
+become immediate when reduced motion is requested. Contact Us, waitlist,
+product, email, and other marketing CTA destinations remain open and are
+intentionally unwired.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
@@ -178,7 +182,11 @@ remains the focused expanded/collapsed control for keyboard and assistive
 technology and expanded answer text remains independently readable semantic
 content. Hover and keyboard-focus treatments cover that complete clickable
 surface, with an internal horizontal content inset, without merging the answer
-into the question control's semantic label.
+into the question control's semantic label. Answer height and opacity transition
+locally, the state icon fades between plus and minus, and the hover background
+interpolates briefly. Keyboard focus remains immediate. Reduced motion removes
+those transitions while preserving the final state and all feedback. Other
+landing sections remain static during this interaction-motion phase.
 Safe Guard, Footprint, reporting, subscription, and moderation statements in
 FAQ copy describe future product behavior only and do not establish those
 capabilities as implemented.

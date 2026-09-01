@@ -6,6 +6,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/content/faq_content.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/section_eyebrow.dart';
 
@@ -205,6 +206,72 @@ final class _FaqItemState extends State<_FaqItem> {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final answerRightPadding = constraints.maxWidth >= 520 ? 44.0 : 0.0;
+      final disableAnimations =
+          MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+      final fastDuration = LandingMotion.duration(
+        disableAnimations: disableAnimations,
+        normalDuration: LandingMotion.fastDuration,
+      );
+      final hoverDuration = LandingMotion.duration(
+        disableAnimations: disableAnimations || _isFocused,
+        normalDuration: LandingMotion.fastDuration,
+      );
+      final standardDuration = LandingMotion.duration(
+        disableAnimations: disableAnimations,
+        normalDuration: LandingMotion.standardDuration,
+      );
+      final backgroundColor = _isFocused
+          ? AppColors.energeticPlum.withValues(alpha: 0.08)
+          : _isHovered
+          ? AppColors.energeticPlum.withValues(alpha: 0.06)
+          : Colors.transparent;
+      final collapsedAnswer = SizedBox(
+        key: Key('faqAnswerStateCollapsed${widget.index}'),
+        height: widget.verticalPadding,
+      );
+      final expandedAnswer = Padding(
+        key: Key('faqAnswer${widget.index}'),
+        padding: EdgeInsets.only(
+          left: widget.horizontalPadding,
+          top: widget.verticalPadding >= 32 ? 20 : 16,
+          right: widget.horizontalPadding + answerRightPadding,
+          bottom: widget.verticalPadding,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (
+              var paragraphIndex = 0;
+              paragraphIndex < widget.content.paragraphs.length;
+              paragraphIndex++
+            ) ...[
+              _FaqAnswerParagraph(
+                paragraph: widget.content.paragraphs[paragraphIndex],
+              ),
+              if (paragraphIndex < widget.content.paragraphs.length - 1)
+                const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      );
+      final answerSemanticLabel = widget.content.paragraphs
+          .map((paragraph) => paragraph.text)
+          .join('\n\n');
+      final Widget answerRegion;
+      if (disableAnimations) {
+        answerRegion = widget.isExpanded ? expandedAnswer : collapsedAnswer;
+      } else {
+        answerRegion = AnimatedCrossFade(
+          key: Key('faqAnswerTransition${widget.index}'),
+          firstChild: collapsedAnswer,
+          secondChild: expandedAnswer,
+          crossFadeState: widget.isExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: standardDuration,
+          sizeCurve: LandingMotion.standardCurve,
+        );
+      }
 
       return MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -227,14 +294,12 @@ final class _FaqItemState extends State<_FaqItem> {
               borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
             position: DecorationPosition.foreground,
-            child: DecoratedBox(
+            child: AnimatedContainer(
               key: Key('faqItemStateBackground${widget.index}'),
+              duration: hoverDuration,
+              curve: LandingMotion.standardCurve,
               decoration: BoxDecoration(
-                color: _isFocused || _isHovered
-                    ? AppColors.energeticPlum.withValues(
-                        alpha: _isFocused ? 0.08 : 0.06,
-                      )
-                    : Colors.transparent,
+                color: backgroundColor,
                 border: Border(
                   bottom: BorderSide(
                     color: AppColors.warmCharcoal.withValues(alpha: 0.2),
@@ -279,7 +344,7 @@ final class _FaqItemState extends State<_FaqItem> {
                           widget.horizontalPadding,
                           widget.verticalPadding,
                           widget.horizontalPadding,
-                          widget.isExpanded ? 0 : widget.verticalPadding,
+                          0,
                         ),
                         child: Row(
                           children: [
@@ -297,48 +362,46 @@ final class _FaqItemState extends State<_FaqItem> {
                               ),
                             ),
                             const SizedBox(width: 16),
-                            SvgPicture.asset(
-                              widget.isExpanded
-                                  ? AppAssets.faqMinus
-                                  : AppAssets.faqPlus,
+                            SizedBox.square(
                               key: Key('faqIcon${widget.index}'),
-                              width: 28,
-                              height: 28,
-                              excludeFromSemantics: true,
+                              dimension: 28,
+                              child: AnimatedSwitcher(
+                                key: Key('faqIconSwitcher${widget.index}'),
+                                duration: fastDuration,
+                                switchInCurve: LandingMotion.standardCurve,
+                                switchOutCurve: LandingMotion.standardCurve,
+                                transitionBuilder: (child, animation) =>
+                                    FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    ),
+                                child: SvgPicture.asset(
+                                  widget.isExpanded
+                                      ? AppAssets.faqMinus
+                                      : AppAssets.faqPlus,
+                                  key: Key(
+                                    widget.isExpanded
+                                        ? 'faqMinus${widget.index}'
+                                        : 'faqPlus${widget.index}',
+                                  ),
+                                  width: 28,
+                                  height: 28,
+                                  excludeFromSemantics: true,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  if (widget.isExpanded)
-                    Padding(
-                      key: Key('faqAnswer${widget.index}'),
-                      padding: EdgeInsets.only(
-                        left: widget.horizontalPadding,
-                        top: widget.verticalPadding >= 32 ? 20 : 16,
-                        right: widget.horizontalPadding + answerRightPadding,
-                        bottom: widget.verticalPadding,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (
-                            var paragraphIndex = 0;
-                            paragraphIndex < widget.content.paragraphs.length;
-                            paragraphIndex++
-                          ) ...[
-                            _FaqAnswerParagraph(
-                              paragraph:
-                                  widget.content.paragraphs[paragraphIndex],
-                            ),
-                            if (paragraphIndex <
-                                widget.content.paragraphs.length - 1)
-                              const SizedBox(height: 12),
-                          ],
-                        ],
-                      ),
-                    ),
+                  Semantics(
+                    key: Key('faqAnswerSemantics${widget.index}'),
+                    container: widget.isExpanded,
+                    label: widget.isExpanded ? answerSemanticLabel : null,
+                    excludeSemantics: true,
+                    child: answerRegion,
+                  ),
                 ],
               ),
             ),

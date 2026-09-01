@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/widgets/founding_friends_section.dart';
@@ -26,9 +27,6 @@ final class LandingPage extends StatefulWidget {
 }
 
 final class _LandingPageState extends State<LandingPage> {
-  static const _navigationDuration = Duration(milliseconds: 300);
-  static const Curve _navigationCurve = Curves.easeOutCubic;
-
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _heroKey = GlobalKey(debugLabel: 'landingHeroSection');
   final GlobalKey _membershipKey = GlobalKey(
@@ -38,6 +36,8 @@ final class _LandingPageState extends State<LandingPage> {
     debugLabel: 'landingFoundingFriendsSection',
   );
   final GlobalKey _venueKey = GlobalKey(debugLabel: 'landingVenueSection');
+  GlobalKey? _activeNavigationTarget;
+  var _navigationRequest = 0;
 
   @override
   void dispose() {
@@ -61,15 +61,35 @@ final class _LandingPageState extends State<LandingPage> {
           .clamp(position.minScrollExtent, position.maxScrollExtent);
       final disableAnimations =
           MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+      final distance = (targetOffset - position.pixels).abs();
+      final duration = LandingMotion.navigationDurationFor(
+        distance: distance,
+        viewportDimension: position.viewportDimension,
+      );
 
       if (disableAnimations) {
-        position.jumpTo(targetOffset);
+        _navigationRequest++;
+        _activeNavigationTarget = null;
+        if (distance > 1 || position.isScrollingNotifier.value) {
+          position.jumpTo(targetOffset);
+        }
+      } else if (_activeNavigationTarget == sectionKey) {
+        // The active movement already owns this destination.
+      } else if (duration == Duration.zero) {
+        if (_activeNavigationTarget != null) {
+          _navigationRequest++;
+          _activeNavigationTarget = null;
+          position.jumpTo(targetOffset);
+        }
       } else {
+        final request = ++_navigationRequest;
+        _activeNavigationTarget = sectionKey;
         unawaited(
-          position.animateTo(
-            targetOffset,
-            duration: _navigationDuration,
-            curve: _navigationCurve,
+          _animateTo(
+            position: position,
+            targetOffset: targetOffset,
+            duration: duration,
+            request: request,
           ),
         );
       }
@@ -81,6 +101,23 @@ final class _LandingPageState extends State<LandingPage> {
           }
         },
       );
+    }
+  }
+
+  Future<void> _animateTo({
+    required ScrollPosition position,
+    required double targetOffset,
+    required Duration duration,
+    required int request,
+  }) async {
+    await position.animateTo(
+      targetOffset,
+      duration: duration,
+      curve: LandingMotion.navigationCurve,
+    );
+
+    if (request == _navigationRequest) {
+      _activeNavigationTarget = null;
     }
   }
 
