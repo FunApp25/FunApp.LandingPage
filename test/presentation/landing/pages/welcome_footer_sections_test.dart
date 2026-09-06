@@ -74,7 +74,7 @@ void main() {
 
       expect(find.bySemanticsLabel(example.eyebrow), findsOneWidget);
       expect(find.bySemanticsLabel(example.statement), findsOneWidget);
-      expect(find.text(example.firstNavigation), findsNWidgets(2));
+      expect(find.text(example.firstNavigation), findsOneWidget);
       expect(find.text(LandingFooter.contactEmail), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

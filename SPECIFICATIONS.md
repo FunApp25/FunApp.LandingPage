@@ -166,13 +166,15 @@ similarly reflow from the desktop intro-plus-three-card composition without
 forcing desktop heights onto narrow single-column layouts.
 
 Header and footer section navigation scrolls within the single landing page
-while the header remains fixed above the scrolling content. The fixed header
-uses wide, intermediate, and narrow constraint-driven compositions so that its
-navigation remains compact without introducing a disclosure menu. Internal
-navigation controls provide at least a 44px effective target and an explicit
-keyboard-focus outline; hover and focus treatments cover the complete padded
-control surface. The narrow header orders the logo, two-row navigation, and a
-centered Contact Us treatment vertically. The established mapping is
+while the header remains fixed above the scrolling content. Below a 600px
+outer viewport width, the fixed header uses a compact logo, Contact Us, and
+burger composition. The burger opens a full-screen, presentation-local menu
+with the same four established anchor destinations; selecting one closes the
+menu before reusing the existing anchor navigation. At 600px and above, the
+established wide, intermediate, and narrow constraint-driven header variants
+remain in use. Internal navigation controls provide at least a 44px effective
+target and an explicit keyboard-focus outline; hover and focus treatments
+cover the complete padded control surface. The established mapping is
 Our Belief to Hero, Membership to Membership, Founding Friends to Founding
 Friends, and For Venues to Venue. Anchor positions derive from the rendered
 sections. Navigation duration scales with the current viewport-normalized
@@ -181,9 +183,9 @@ enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
-become immediate when reduced motion is requested. Contact Us, waitlist,
-product, email, and other marketing CTA destinations remain open and are
-intentionally unwired.
+become immediate when reduced motion is requested. Contact Us, including its
+mobile-header and full-screen-menu treatments, waitlist, product, email, and
+other marketing CTA destinations remain open and are intentionally unwired.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the

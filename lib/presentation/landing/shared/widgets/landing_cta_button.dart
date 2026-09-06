@@ -34,6 +34,7 @@ final class LandingCtaButton extends StatelessWidget {
     required this.size,
     this.appearance = LandingCtaAppearance.brandOrange,
     this.arrowKey,
+    this.compactHorizontalPadding = 20,
     this.onPressed,
     super.key,
   });
@@ -49,6 +50,12 @@ final class LandingCtaButton extends StatelessWidget {
 
   /// Optional key for distinguishing prominent CTA arrow instances in tests.
   final Key? arrowKey;
+
+  /// Horizontal inset for the compact treatment.
+  ///
+  /// The default preserves every established header composition. Mobile
+  /// callers may reduce it when localized text has less available width.
+  final double compactHorizontalPadding;
 
   /// Approved activation callback, or null while behavior remains deferred.
   final VoidCallback? onPressed;
@@ -72,7 +79,7 @@ final class LandingCtaButton extends StatelessWidget {
           constraints.hasBoundedWidth &&
           constraints.maxWidth < 480;
       final horizontalPadding = switch (size) {
-        LandingCtaSize.compact => 20.0,
+        LandingCtaSize.compact => compactHorizontalPadding,
         LandingCtaSize.prominent when useConstrainedProminentLayout => 20.0,
         LandingCtaSize.prominent => 40.0,
       };

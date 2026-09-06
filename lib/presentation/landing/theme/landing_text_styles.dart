@@ -16,6 +16,15 @@ abstract final class LandingTextStyles {
     color: AppColors.textPrimary,
   );
 
+  /// Navigation label style from the full-screen mobile landing menu.
+  static final TextStyle mobileMenuNavigation = AppTextStyles.bodyFontStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w500,
+    height: 26 / 18,
+    letterSpacing: 2.16,
+    color: AppColors.textPrimary,
+  );
+
   /// Compact call-to-action label from the landing header.
   static final TextStyle headerCta = AppTextStyles.bodyFontStyle(
     fontSize: 14,

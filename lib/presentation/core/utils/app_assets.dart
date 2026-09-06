@@ -20,6 +20,13 @@ abstract final class AppAssets {
   /// Dual-color wordmark used by the Figma landing-page header.
   static const String funAppLogoV2 = '$_landingHeaderPath/fun_app_logo_v2.svg';
 
+  /// Exact list glyph used by the compact mobile landing header.
+  static const String mobileMenu = '$_landingHeaderPath/mobile_menu.svg';
+
+  /// Exact close glyph used by the full-screen mobile landing menu.
+  static const String mobileMenuClose =
+      '$_landingHeaderPath/mobile_menu_close.svg';
+
   /// Decorative blue glyph beside the landing-page hero eyebrow.
   static const String heroEyebrowGlyph =
       '$_landingHeroPath/friendlier_way_glyph.svg';

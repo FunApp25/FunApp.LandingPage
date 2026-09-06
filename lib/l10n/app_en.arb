@@ -28,6 +28,14 @@
   "@landingHeaderContactUs": {
     "description": "Visual contact call to action whose destination is not yet defined."
   },
+  "landingOpenNavigationMenu": "Open navigation menu",
+  "@landingOpenNavigationMenu": {
+    "description": "Accessible label for opening the mobile landing navigation menu."
+  },
+  "landingCloseNavigationMenu": "Close navigation menu",
+  "@landingCloseNavigationMenu": {
+    "description": "Accessible label for closing the mobile landing navigation menu."
+  },
   "landingHeroEyebrow": "A FRIENDLIER WAY TO CONNECT",
   "@landingHeroEyebrow": {
     "description": "Uppercase eyebrow above the landing-page hero headline."

@@ -573,10 +573,12 @@ void main() {
         );
       }
 
-      for (final prefix in [
-        'landingHeaderNavigationItem',
+      final navigationPrefixes = [
+        if (size.width >= LandingHeader.mobileUxBreakpoint)
+          'landingHeaderNavigationItem',
         'footerNavigationItem',
-      ]) {
+      ];
+      for (final prefix in navigationPrefixes) {
         for (var index = 0; index < 4; index++) {
           expect(
             tester.getSize(find.byKey(Key('$prefix$index'))).height,
@@ -592,15 +594,34 @@ void main() {
         (index: 3, type: VenueSection),
       ]) {
         await _moveToPageEnd(tester);
-        await tester.tap(
-          find.byKey(Key('landingHeaderNavigationItem${target.index}')),
-        );
+        if (size.width < LandingHeader.mobileUxBreakpoint) {
+          await tester.tap(find.byKey(const Key('landingMobileMenuButton')));
+          await tester.pump();
+          await tester.tap(
+            find.byKey(
+              Key('landingMobileMenuNavigationItem${target.index}'),
+            ),
+          );
+        } else {
+          await tester.tap(
+            find.byKey(Key('landingHeaderNavigationItem${target.index}')),
+          );
+        }
         await tester.pumpAndSettle();
         _expectTargetBelowHeader(tester, target.type);
         expect(tester.takeException(), isNull);
       }
 
-      if (size.width >= 1080) {
+      if (size.width < LandingHeader.mobileUxBreakpoint) {
+        expect(
+          find.byKey(const Key('landingHeaderMobileLayout')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('landingHeaderNarrowLayout')),
+          findsNothing,
+        );
+      } else if (size.width >= 1080) {
         expect(
           find.byKey(const Key('landingHeaderHorizontalLayout')),
           findsOneWidget,
@@ -627,9 +648,8 @@ void main() {
       }
 
       final headerHeight = tester.getSize(find.byType(LandingHeader)).height;
-      if (size.width <= 390) {
-        expect(headerHeight, lessThanOrEqualTo(168));
-
+      if (size.width < LandingHeader.mobileUxBreakpoint) {
+        expect(headerHeight, 70);
         final headerFinder = find.byType(LandingHeader);
         final logoRect = tester.getRect(
           find.descendant(
@@ -637,32 +657,33 @@ void main() {
             matching: find.byKey(const Key('funAppLogo')),
           ),
         );
-        final firstNavigationRect = tester.getRect(
-          find.byKey(const Key('landingHeaderNavigationItem0')),
-        );
-        final secondNavigationRect = tester.getRect(
-          find.byKey(const Key('landingHeaderNavigationItem1')),
-        );
-        final thirdNavigationRect = tester.getRect(
-          find.byKey(const Key('landingHeaderNavigationItem2')),
-        );
-        final fourthNavigationRect = tester.getRect(
-          find.byKey(const Key('landingHeaderNavigationItem3')),
-        );
         final contactRect = tester.getRect(
           find.byKey(const Key('landingHeaderContactCta')),
         );
         final headerRect = tester.getRect(headerFinder);
-
-        expect(logoRect.bottom, lessThanOrEqualTo(firstNavigationRect.top));
-        expect(firstNavigationRect.top, secondNavigationRect.top);
-        expect(thirdNavigationRect.top, fourthNavigationRect.top);
-        expect(
-          thirdNavigationRect.top,
-          greaterThanOrEqualTo(firstNavigationRect.bottom),
+        final menuRect = tester.getRect(
+          find.byKey(const Key('landingMobileMenuButton')),
         );
-        expect(thirdNavigationRect.bottom, lessThanOrEqualTo(contactRect.top));
-        expect(contactRect.center.dx, closeTo(headerRect.center.dx, 1));
+        final menuVisualRect = tester.getRect(
+          find.byKey(const Key('mobileMenuControlVisual')),
+        );
+
+        expect(logoRect.left - headerRect.left, 16);
+        expect(logoRect.width, closeTo(89, 0.5));
+        expect(logoRect.height, 29);
+        expect(menuRect.size, const Size.square(44));
+        expect(menuVisualRect.size, const Size.square(38));
+        expect(headerRect.right - menuVisualRect.right, 16);
+        expect(menuVisualRect.left - contactRect.right, 8);
+        expect(
+          logoRect.center.dy,
+          closeTo(headerRect.center.dy, 0.01),
+        );
+        expect(contactRect.center.dy, closeTo(headerRect.center.dy, 0.01));
+        expect(
+          find.byKey(const Key('landingHeaderNavigationItem0')),
+          findsNothing,
+        );
       } else if (size.width < 1080) {
         expect(headerHeight, lessThanOrEqualTo(104));
       }
@@ -700,12 +721,17 @@ void main() {
         tester.view.physicalSize = size;
         await pumpLandingApp(tester, locale: const Locale('be'));
 
-        expect(find.text('СЯБРЫ-ЗАСНАВАЛЬНІКІ'), findsNWidgets(2));
+        expect(
+          find.text('СЯБРЫ-ЗАСНАВАЛЬНІКІ'),
+          size.width < LandingHeader.mobileUxBreakpoint
+              ? findsOneWidget
+              : findsNWidgets(2),
+        );
         expect(find.text('Звязацца з намі'), findsOneWidget);
         expect(tester.takeException(), isNull);
         expect(
-          size.width == 320
-              ? find.byKey(const Key('landingHeaderNarrowLayout'))
+          size.width < LandingHeader.mobileUxBreakpoint
+              ? find.byKey(const Key('landingHeaderMobileLayout'))
               : find.byKey(const Key('landingHeaderIntermediateLayout')),
           findsOneWidget,
         );
@@ -911,7 +937,9 @@ Future<void> _pumpLandingPage(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: MediaQuery(
-        data: MediaQueryData(disableAnimations: disableAnimations),
+        data: MediaQueryData.fromView(
+          tester.view,
+        ).copyWith(disableAnimations: disableAnimations),
         child: const LandingPage(),
       ),
     ),
