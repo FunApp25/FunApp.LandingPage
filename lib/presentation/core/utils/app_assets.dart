@@ -2,6 +2,7 @@
 abstract final class AppAssets {
   static const _brandingLogoPath = 'assets/branding/logos';
   static const _brandingShapePath = 'assets/branding/shapes';
+  static const _landingCarouselPath = 'assets/landing/carousel';
   static const _landingConnectionPath = 'assets/landing/connection';
   static const _landingFaqPath = 'assets/landing/faq';
   static const _landingFoundingMemberPath = 'assets/landing/founding_member';
@@ -26,6 +27,10 @@ abstract final class AppAssets {
   /// Exact close glyph used by the full-screen mobile landing menu.
   static const String mobileMenuClose =
       '$_landingHeaderPath/mobile_menu_close.svg';
+
+  /// Exact directional arrow shared by Figma landing carousels.
+  static const String carouselArrowRight =
+      '$_landingCarouselPath/arrow_right.svg';
 
   /// Decorative blue glyph beside the landing-page hero eyebrow.
   static const String heroEyebrowGlyph =

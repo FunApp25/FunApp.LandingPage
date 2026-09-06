@@ -187,6 +187,16 @@ become immediate when reduced motion is requested. Contact Us, including its
 mobile-header and full-screen-menu treatments, waitlist, product, email, and
 other marketing CTA destinations remain open and are intentionally unwired.
 
+Below a 600px outer viewport width, Research statistics use a horizontal,
+page-snapping carousel with one primary card, a trailing adjacent-card peek,
+previous/next controls, and four decorative page indicators. The carousel is
+clamped and non-looping pending explicit contrary design direction. At 600px
+and above, the established responsive Research grids remain in use.
+The mobile Research scroll accent reveals the initial carousel viewport and
+navigation once as a single group rather than staggering offscreen cards;
+reduced motion renders that group immediately and makes programmatic page
+changes immediate while preserving direct swipe interaction.
+
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.
@@ -200,10 +210,10 @@ into the question control's semantic label. Answer height and opacity transition
 locally, the state icon fades between plus and minus, and the hover background
 interpolates briefly. Keyboard focus remains immediate. Reduced motion removes
 those transitions while preserving the final state and all feedback. The Hero
-renders statically. The Research Statistics cards receive one restrained
-rise-and-fade reveal with a short group stagger; it triggers deeper in the
-viewport and uses a slightly stronger, slower settlement than the other
-accents. The three Membership pricing cards receive one subtle
+renders statically. At 600px and above, the Research Statistics cards receive
+one restrained rise-and-fade reveal with a short group stagger; it triggers
+deeper in the viewport and uses a slightly stronger, slower settlement than
+the other accents. The three Membership pricing cards receive one subtle
 trailing-side-to-final fade reveal while the Membership introduction remains
 static. The complete Founding Friends promotional card receives one subtle
 trailing-side-to-final reveal, and the complete Venue promotional card receives

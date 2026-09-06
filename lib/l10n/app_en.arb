@@ -132,6 +132,26 @@
   "@landingStatsFourthDescription": {
     "description": "Explanation for the 44 percent statistic."
   },
+  "landingResearchCarouselPrevious": "Previous Research statistic",
+  "@landingResearchCarouselPrevious": {
+    "description": "Accessible label for the previous Research statistic control."
+  },
+  "landingResearchCarouselNext": "Next Research statistic",
+  "@landingResearchCarouselNext": {
+    "description": "Accessible label for the next Research statistic control."
+  },
+  "landingResearchCarouselPosition": "Research statistic {currentPage} of {pageCount}",
+  "@landingResearchCarouselPosition": {
+    "description": "Accessible current position in the Research statistic carousel.",
+    "placeholders": {
+      "currentPage": {
+        "type": "int"
+      },
+      "pageCount": {
+        "type": "int"
+      }
+    }
+  },
   "landingConnectionEyebrow": "A DIFFERENT WAY TO CONNECT",
   "@landingConnectionEyebrow": {
     "description": "Uppercase eyebrow above the connection section heading."

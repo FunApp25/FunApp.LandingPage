@@ -113,25 +113,43 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('Research uses smaller movement and stagger on narrow layouts', (
+  testWidgets('Research mobile carousel reveals once as one group', (
     tester,
   ) async {
     setTestSurface(tester, const Size(390, 844));
     await _pumpLandingPage(tester);
 
-    expect(find.byKey(const Key('researchStatsColumns1')), findsOneWidget);
+    expect(find.byKey(const Key('researchStatsColumns1')), findsNothing);
     expect(
       tester
           .widget<LandingScrollReveal>(
             find.byKey(const Key('researchStatsReveal')),
           )
           .duration,
-      const Duration(milliseconds: 580),
+      const Duration(milliseconds: 520),
     );
-    for (var index = 0; index < 4; index++) {
-      expect(_opacity(tester, 'researchStatRevealOpacity$index'), 0.1);
-      expect(_translation(tester, 'researchStatRevealTransform$index').dy, 10);
-    }
+    expect(_opacity(tester, 'researchMobileCarouselRevealOpacity'), 0.1);
+    expect(
+      _translation(tester, 'researchMobileCarouselRevealTransform').dy,
+      10,
+    );
+    expect(
+      tester
+          .widget<Opacity>(
+            find.byKey(const Key('researchMobileCarouselRevealOpacity')),
+          )
+          .alwaysIncludeSemantics,
+      isTrue,
+    );
+    expect(
+      find.ancestor(
+        of: find.byKey(const Key('landingCarouselNavigation')),
+        matching: find.byKey(
+          const Key('researchMobileCarouselRevealOpacity'),
+        ),
+      ),
+      findsOneWidget,
+    );
 
     await _bringIntoView(
       tester,
@@ -139,11 +157,20 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 50));
     expect(
-      _opacity(tester, 'researchStatRevealOpacity0'),
-      greaterThan(_opacity(tester, 'researchStatRevealOpacity3')),
+      _opacity(tester, 'researchMobileCarouselRevealOpacity'),
+      greaterThan(0.1),
     );
     await tester.pumpAndSettle();
-    _expectResearchFinalState(tester);
+    _expectMobileResearchFinalState(tester);
+
+    await tester.tap(find.byKey(const Key('landingCarouselNext')));
+    await tester.pumpAndSettle();
+    _expectMobileResearchFinalState(tester);
+
+    _scrollController(tester).jumpTo(0);
+    await tester.pump();
+    await _bringIntoView(tester, find.byKey(const Key('researchStatsReveal')));
+    _expectMobileResearchFinalState(tester);
   });
 
   testWidgets('Membership cards fade from the right once as one group', (
@@ -411,6 +438,14 @@ void _expectResearchFinalState(WidgetTester tester) {
       Offset.zero,
     );
   }
+}
+
+void _expectMobileResearchFinalState(WidgetTester tester) {
+  expect(_opacity(tester, 'researchMobileCarouselRevealOpacity'), 1);
+  expect(
+    _translation(tester, 'researchMobileCarouselRevealTransform'),
+    Offset.zero,
+  );
 }
 
 void _expectMembershipFinalState(WidgetTester tester) {

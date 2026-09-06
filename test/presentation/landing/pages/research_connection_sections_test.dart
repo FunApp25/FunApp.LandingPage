@@ -6,6 +6,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/connection/co
 import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stat_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_mobile_carousel.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -152,20 +153,27 @@ void main() {
     for (final example in const [
       (
         size: Size(320, 568),
-        columns: 1,
-        headingSize: 34.0,
+        columns: 0,
+        headingSize: 32.0,
         statementSize: 34.0,
         usesWideConnection: false,
       ),
       (
         size: Size(390, 844),
-        columns: 1,
-        headingSize: 34.0,
+        columns: 0,
+        headingSize: 32.0,
         statementSize: 34.0,
         usesWideConnection: false,
       ),
       (
         size: Size(768, 1024),
+        columns: 2,
+        headingSize: 40.0,
+        statementSize: 42.0,
+        usesWideConnection: false,
+      ),
+      (
+        size: Size(900, 900),
         columns: 2,
         headingSize: 40.0,
         statementSize: 42.0,
@@ -179,6 +187,13 @@ void main() {
         usesWideConnection: false,
       ),
       (
+        size: Size(1200, 900),
+        columns: 4,
+        headingSize: 44.0,
+        statementSize: 50.0,
+        usesWideConnection: false,
+      ),
+      (
         size: Size(1440, 900),
         columns: 4,
         headingSize: 44.0,
@@ -189,10 +204,20 @@ void main() {
       setTestSurface(tester, example.size);
       await pumpLandingApp(tester);
 
-      expect(find.byType(ResearchStatCard), findsNWidgets(4));
-      final grid = find.byKey(Key('researchStatsColumns${example.columns}'));
-      expect(grid, findsOneWidget);
-      expect(tester.widget<Wrap>(grid).children, hasLength(4));
+      if (example.columns == 0) {
+        expect(find.byType(LandingMobileCarousel), findsOneWidget);
+        expect(
+          find.byKey(const Key('researchStatsMobileLayout')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('researchStatsColumns1')), findsNothing);
+      } else {
+        expect(find.byType(ResearchStatCard), findsNWidgets(4));
+        final grid = find.byKey(Key('researchStatsColumns${example.columns}'));
+        expect(grid, findsOneWidget);
+        expect(tester.widget<Wrap>(grid).children, hasLength(4));
+        expect(find.byType(LandingMobileCarousel), findsNothing);
+      }
       expect(
         tester
             .widget<Text>(
@@ -213,11 +238,7 @@ void main() {
       final firstCardBounds = tester.widget<ConstrainedBox>(
         find.byKey(const Key('researchStatCardBounds-49%')),
       );
-      if (example.columns == 1) {
-        expect(firstCardBounds.constraints.minHeight, 0);
-      } else {
-        expect(firstCardBounds.constraints.minHeight, 404);
-      }
+      expect(firstCardBounds.constraints.minHeight, 404);
       expect(
         find.byKey(
           Key(

@@ -19,7 +19,7 @@ final class ResearchStatCard extends StatelessWidget {
   /// Localized explanation that follows [value] in reading order.
   final String description;
 
-  /// Whether this card participates in an equal-height multi-column row.
+  /// Whether this card participates in a bounded, coordinated-height layout.
   final bool usesDesktopMinimumHeight;
 
   @override
@@ -29,8 +29,8 @@ final class ResearchStatCard extends StatelessWidget {
     explicitChildNodes: true,
     child: ConstrainedBox(
       key: Key('researchStatCardBounds-$value'),
-      // Figma's 404px minimum coordinates multi-column rows. A single-column
-      // card follows its real localized content instead.
+      // Figma's 404px minimum coordinates multi-column rows and the mobile
+      // carousel. An unbounded stacked card follows localized content instead.
       constraints: BoxConstraints(
         minHeight: usesDesktopMinimumHeight ? 404 : 0,
       ),

@@ -25,6 +25,7 @@ flutter:
   assets:
     - assets/branding/logos/
     - assets/branding/shapes/
+    - assets/landing/carousel/
     - assets/landing/connection/
     - assets/landing/faq/
     - assets/landing/founding_member/
