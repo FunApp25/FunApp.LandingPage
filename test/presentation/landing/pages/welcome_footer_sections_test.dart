@@ -6,6 +6,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 
 import '../landing_test_helpers.dart';
@@ -213,10 +214,118 @@ void main() {
     }
   });
 
+  testWidgets('uses the Figma mobile footer only below 600px', (tester) async {
+    for (final example in const [
+      (size: Size(320, 568), usesMobileFooter: true),
+      (size: Size(390, 844), usesMobileFooter: true),
+      (size: Size(599, 844), usesMobileFooter: true),
+      (size: Size(600, 844), usesMobileFooter: false),
+      (size: Size(768, 1024), usesMobileFooter: false),
+      (size: Size(1440, 900), usesMobileFooter: false),
+    ]) {
+      setTestSurface(tester, example.size);
+      await pumpLandingApp(tester);
+
+      expect(
+        find.byType(MobileFooter),
+        example.usesMobileFooter ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.byKey(const Key('footerMobileDivider')),
+        example.usesMobileFooter ? findsOneWidget : findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('aligns the unblocked mobile footer composition to Figma', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await pumpLandingApp(tester);
+
+    final footerRect = tester.getRect(find.byType(LandingFooter));
+    final contentRect = tester.getRect(
+      find.byKey(const Key('footerMobileContent')),
+    );
+    final logoRect = tester.getRect(find.byKey(const Key('footerLogoAsset')));
+    final navigationRect = tester.getRect(
+      find.byKey(const Key('footerNavigationWrap')),
+    );
+    final dividerRect = tester.getRect(
+      find.byKey(const Key('footerMobileDivider')),
+    );
+    final emailRect = tester.getRect(
+      find.byKey(const Key('footerEmailSemantics')),
+    );
+
+    expect(contentRect.left - footerRect.left, 16);
+    expect(contentRect.right - footerRect.right, -16);
+    expect(contentRect.top - footerRect.top, 80);
+    expect(logoRect.width, closeTo(123, 0.2));
+    expect(logoRect.height, 40);
+    expect(logoRect.center.dx, closeTo(footerRect.center.dx, 0.01));
+    expect(navigationRect.top - logoRect.bottom, 32);
+    expect(dividerRect.width, 358);
+    expect(dividerRect.top - navigationRect.bottom, 60);
+    expect(emailRect.top - dividerRect.bottom, 60);
+    expect(emailRect.center.dx, closeTo(footerRect.center.dx, 0.01));
+    expect(find.text(LandingFooter.contactEmail), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keeps legal controls absent while their contracts are open', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await pumpLandingApp(tester);
+
+    final footer = find.byType(LandingFooter);
+    for (final label in [
+      'Privacy Policy',
+      'Terms of Use',
+      'Refund & Cancellation Policy',
+      'Cookie Policy',
+      'Cookie Banner',
+    ]) {
+      expect(
+        find.descendant(of: footer, matching: find.text(label)),
+        findsNothing,
+      );
+    }
+  });
+
+  testWidgets('keeps the mobile footer safe across supported locales', (
+    tester,
+  ) async {
+    for (final locale in const [
+      Locale('en'),
+      Locale('es'),
+      Locale('cy'),
+      Locale('be'),
+    ]) {
+      for (final size in const [Size(320, 568), Size(390, 844)]) {
+        setTestSurface(tester, size);
+        await pumpLandingApp(tester, locale: locale);
+
+        expect(find.byType(MobileFooter), findsOneWidget);
+        expect(find.text(LandingFooter.contactEmail), findsOneWidget);
+        for (var index = 0; index < 4; index++) {
+          expect(
+            find.byKey(Key('footerNavigationItem$index')),
+            findsOneWidget,
+          );
+        }
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
   testWidgets('exposes navigation controls and keeps email static', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
+    setTestSurface(tester, const Size(390, 844));
     await pumpLandingApp(tester);
 
     final statement = tester

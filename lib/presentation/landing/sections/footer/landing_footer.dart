@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
 
 /// Landing-page footer from Figma node `2190:1664`.
 final class LandingFooter extends StatelessWidget {
@@ -33,60 +34,74 @@ final class LandingFooter extends StatelessWidget {
   static const contactEmail = 'info@funapp.world';
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: AppColors.beigeAccent,
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final availableWidth = constraints.hasBoundedWidth
-            ? constraints.maxWidth
-            : AppSizes.desktopPageWidth;
-        final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final verticalPadding = switch (availableWidth) {
-          >= 1200 => 88.0,
-          >= 600 => 64.0,
-          _ => 48.0,
-        };
-        final navigationItems = <FooterNavigationItemData>[
-          (
-            label: context.l10n.landingHeaderOurBelief,
-            onSelected: onOurBeliefSelected,
-          ),
-          (
-            label: context.l10n.landingHeaderMembership,
-            onSelected: onMembershipSelected,
-          ),
-          (
-            label: context.l10n.landingHeaderFoundingFriends,
-            onSelected: onFoundingFriendsSelected,
-          ),
-          (
-            label: context.l10n.landingHeaderForVenues,
-            onSelected: onVenuesSelected,
-          ),
-        ];
+  Widget build(BuildContext context) {
+    final navigationItems = <FooterNavigationItemData>[
+      (
+        label: context.l10n.landingHeaderOurBelief,
+        onSelected: onOurBeliefSelected,
+      ),
+      (
+        label: context.l10n.landingHeaderMembership,
+        onSelected: onMembershipSelected,
+      ),
+      (
+        label: context.l10n.landingHeaderFoundingFriends,
+        onSelected: onFoundingFriendsSelected,
+      ),
+      (
+        label: context.l10n.landingHeaderForVenues,
+        onSelected: onVenuesSelected,
+      ),
+    ];
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
-        return Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: pageGutter,
-            vertical: verticalPadding,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: AppSizes.maxContentWidth,
+    if (isMobile) {
+      return ColoredBox(
+        color: AppColors.beigeAccent,
+        child: MobileFooter(
+          items: navigationItems,
+          email: contactEmail,
+        ),
+      );
+    } else {
+      return ColoredBox(
+        color: AppColors.beigeAccent,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.hasBoundedWidth
+                ? constraints.maxWidth
+                : AppSizes.desktopPageWidth;
+            final pageGutter = AppSizes.pageGutterFor(availableWidth);
+            final verticalPadding = switch (availableWidth) {
+              >= 1200 => 88.0,
+              >= 600 => 64.0,
+              _ => 48.0,
+            };
+
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: pageGutter,
+                vertical: verticalPadding,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FooterLogoAndNavigation(items: navigationItems),
-                  SizedBox(height: availableWidth < 600 ? 48 : 80),
-                  const FooterEmail(email: contactEmail),
-                ],
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppSizes.maxContentWidth,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FooterLogoAndNavigation(items: navigationItems),
+                      SizedBox(height: availableWidth < 600 ? 48 : 80),
+                      const FooterEmail(email: contactEmail),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-      },
-    ),
-  );
+            );
+          },
+        ),
+      );
+    }
+  }
 }

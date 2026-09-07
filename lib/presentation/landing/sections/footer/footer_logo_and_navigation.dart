@@ -8,10 +8,21 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 /// Footer wordmark and in-page navigation composition.
 final class FooterLogoAndNavigation extends StatelessWidget {
   /// Creates the footer logo and navigation composition.
-  const FooterLogoAndNavigation({required this.items, super.key});
+  const FooterLogoAndNavigation({
+    required this.items,
+    this.navigationSpacing = 16,
+    this.navigationRunSpacing = 8,
+    super.key,
+  });
 
   /// Footer navigation items in display order.
   final List<FooterNavigationItemData> items;
+
+  /// Horizontal space between footer navigation controls.
+  final double navigationSpacing;
+
+  /// Vertical space between wrapped footer navigation controls.
+  final double navigationRunSpacing;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -29,8 +40,8 @@ final class FooterLogoAndNavigation extends StatelessWidget {
       Wrap(
         key: const Key('footerNavigationWrap'),
         alignment: WrapAlignment.center,
-        spacing: 16,
-        runSpacing: 8,
+        spacing: navigationSpacing,
+        runSpacing: navigationRunSpacing,
         children: [
           for (var index = 0; index < items.length; index++)
             LandingNavigationItem(

@@ -232,6 +232,14 @@ horizontal bounds, 80px vertical section padding, and a near-square
 responsive layouts pending content approval. At 600px and above, the
 established Hero and Connection compositions remain unchanged.
 
+Below a 600px outer viewport width, Footer uses a centered 16px/80px mobile
+composition: the established anchor navigation wraps naturally beneath the
+logo, a divider separates it from the static email presentation, and all
+existing anchor behavior remains unchanged. The Figma legal-policy controls
+remain blocked until authoritative destinations and localized copy exist; inert
+legal-looking controls must not be rendered. At 600px and above, the
+established Footer composition remains unchanged.
+
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.

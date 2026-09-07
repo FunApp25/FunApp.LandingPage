@@ -240,6 +240,27 @@ void main() {
     }
   });
 
+  testWidgets('maps mobile footer navigation to the established anchors', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    const targets = <Type>[
+      HeroSection,
+      MembershipSection,
+      FoundingFriendsSection,
+      VenueSection,
+    ];
+
+    for (var index = 0; index < targets.length; index++) {
+      await pumpLandingApp(tester);
+      await _moveToPageEnd(tester);
+      await tester.tap(find.byKey(Key('footerNavigationItem$index')));
+      await tester.pumpAndSettle();
+
+      _expectTargetBelowHeader(tester, targets[index]);
+    }
+  });
+
   testWidgets('navigation respects reduced motion', (
     tester,
   ) async {
