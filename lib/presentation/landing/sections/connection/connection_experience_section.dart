@@ -3,6 +3,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_image.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_introduction.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/connection/mobile_connection_introduction.dart';
 
 /// Alternative connection experience from Figma node `2190:1596`.
 final class ConnectionExperienceSection extends StatelessWidget {
@@ -14,13 +15,16 @@ final class ConnectionExperienceSection extends StatelessWidget {
     color: AppColors.lightForeground,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        final usesMobileComposition = MediaQuery.sizeOf(context).width < 600;
         final availableWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
-        final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final verticalPadding = AppSizes.sectionVerticalPaddingFor(
-          availableWidth,
-        );
+        final pageGutter = usesMobileComposition
+            ? AppSizes.mobileLandingPageGutter
+            : AppSizes.pageGutterFor(availableWidth);
+        final verticalPadding = usesMobileComposition
+            ? AppSizes.mobileLandingSectionVerticalPadding
+            : AppSizes.sectionVerticalPaddingFor(availableWidth);
 
         return Padding(
           padding: EdgeInsets.symmetric(
@@ -43,14 +47,19 @@ final class ConnectionExperienceSection extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ConnectionIntroduction(
-                        availableWidth: contentConstraints.maxWidth,
-                        headingSize: AppSizes.sectionHeadingSizeFor(
-                          availableWidth,
+                      if (usesMobileComposition)
+                        const MobileConnectionIntroduction()
+                      else
+                        ConnectionIntroduction(
+                          availableWidth: contentConstraints.maxWidth,
+                          headingSize: AppSizes.sectionHeadingSizeFor(
+                            availableWidth,
+                          ),
                         ),
-                      ),
                       SizedBox(height: introductionGap),
-                      const ConnectionImage(),
+                      ConnectionImage(
+                        usesMobileCrop: usesMobileComposition,
+                      ),
                     ],
                   );
                 },

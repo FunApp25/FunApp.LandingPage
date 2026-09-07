@@ -5,12 +5,16 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/section_eyebrow.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
-/// Text content shared by the wide and responsive hero compositions.
+/// Text content shared by all landing Hero compositions.
 final class HeroContent extends StatelessWidget {
   /// Creates the landing hero content.
   const HeroContent({
     required this.headlineSize,
     required this.supportingStyle,
+    this.headlineLineHeight,
+    this.headlineToSupportingSpacing = 16,
+    this.textAlign = TextAlign.start,
+    this.crossAxisAlignment = CrossAxisAlignment.start,
     super.key,
   });
 
@@ -20,6 +24,18 @@ final class HeroContent extends StatelessWidget {
   /// Responsive supporting-copy style.
   final TextStyle supportingStyle;
 
+  /// Optional responsive headline line height.
+  final double? headlineLineHeight;
+
+  /// Spacing between the headline and supporting copy.
+  final double headlineToSupportingSpacing;
+
+  /// Alignment of the headline and supporting copy.
+  final TextAlign textAlign;
+
+  /// Cross-axis alignment of the complete content group.
+  final CrossAxisAlignment crossAxisAlignment;
+
   @override
   Widget build(BuildContext context) {
     final headlineLeading = context.l10n.landingHeroHeadlineLeading;
@@ -28,16 +44,22 @@ final class HeroContent extends StatelessWidget {
     final headlineLetterSpacing = headlineSize * -0.03;
     final headlineStyle = LandingTextStyles.heroHeadline.copyWith(
       fontSize: headlineSize,
+      height: headlineLineHeight == null
+          ? null
+          : headlineLineHeight! / headlineSize,
       letterSpacing: headlineLetterSpacing,
     );
     final emphasisStyle = LandingTextStyles.heroHeadlineEmphasis.copyWith(
       fontSize: headlineSize,
+      height: headlineLineHeight == null
+          ? null
+          : headlineLineHeight! / headlineSize,
       letterSpacing: headlineLetterSpacing,
     );
 
     return Column(
       key: const Key('heroContentBounds'),
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: crossAxisAlignment,
       mainAxisSize: MainAxisSize.min,
       children: [
         SectionEyebrow(
@@ -45,6 +67,10 @@ final class HeroContent extends StatelessWidget {
           glyphAsset: AppAssets.heroEyebrowGlyph,
           foregroundColor: AppColors.blueMain,
           glyphSize: const Size(18, 12),
+          alignment: textAlign == TextAlign.center
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
+          textAlign: textAlign,
           glyphKey: const Key('heroEyebrowGlyph'),
         ),
         const SizedBox(height: 14),
@@ -65,11 +91,14 @@ final class HeroContent extends StatelessWidget {
                 ),
               ],
             ),
+            textAlign: textAlign,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: headlineToSupportingSpacing),
         Text(
           context.l10n.landingHeroSupporting,
+          key: const Key('heroSupportingText'),
+          textAlign: textAlign,
           style: supportingStyle,
         ),
       ],

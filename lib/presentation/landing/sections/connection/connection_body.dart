@@ -5,12 +5,16 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_sty
 /// Supporting copy for the connection section.
 final class ConnectionBody extends StatelessWidget {
   /// Creates the connection supporting copy.
-  const ConnectionBody({super.key});
+  const ConnectionBody({this.textAlign = TextAlign.start, super.key});
+
+  /// Responsive text alignment.
+  final TextAlign textAlign;
 
   @override
   Widget build(BuildContext context) => Text(
     context.l10n.landingConnectionBody,
     key: const Key('connectionBodyText'),
+    textAlign: textAlign,
     style: LandingTextStyles.sectionBody,
   );
 }

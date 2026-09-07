@@ -513,7 +513,7 @@ void main() {
       final expectedHeroGap = switch (size.width) {
         >= 1200 => 24.0,
         >= 600 => 20.0,
-        _ => 16.0,
+        _ => 0.0,
       };
       expect(heroCardTop - heroTop, expectedHeroGap);
 
@@ -523,8 +523,7 @@ void main() {
       final expectedHeadlineSize = switch (size.width) {
         >= 1360 => 60.0,
         >= 600 => 46.0,
-        >= 340 => 38.0,
-        _ => 34.0,
+        _ => 36.0,
       };
       expect(headline.textSpan?.style?.fontSize, expectedHeadlineSize);
 
@@ -533,11 +532,19 @@ void main() {
         find.byKey(const Key('heroPeopleImage')),
       );
       expect(heroArtworkRect.top, lessThan(heroCardRect.top));
-      expect(heroArtworkRect.right, greaterThan(heroCardRect.right));
-      expect(
-        heroArtworkRect.right - heroCardRect.right,
-        greaterThanOrEqualTo(heroArtworkRect.width * 0.135),
-      );
+      if (size.width < 600) {
+        expect(heroArtworkRect.width, greaterThan(heroCardRect.width));
+        expect(
+          heroArtworkRect.center.dx,
+          closeTo(heroCardRect.center.dx, 0.01),
+        );
+      } else {
+        expect(heroArtworkRect.right, greaterThan(heroCardRect.right));
+        expect(
+          heroArtworkRect.right - heroCardRect.right,
+          greaterThanOrEqualTo(heroArtworkRect.width * 0.135),
+        );
+      }
       expect(
         tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
         BoxFit.contain,
@@ -545,21 +552,24 @@ void main() {
 
       if (size.width < 1360) {
         expect(
-          find.byKey(const Key('heroResponsiveLayout')),
+          find.byKey(
+            Key(
+              size.width < 600 ? 'heroMobileLayout' : 'heroResponsiveLayout',
+            ),
+          ),
           findsOneWidget,
         );
         final contentRect = tester.getRect(
           find.byKey(const Key('heroContentBounds')),
         );
         expect(contentRect.top, greaterThan(heroArtworkRect.top));
-        expect(
-          contentRect.top,
-          greaterThanOrEqualTo(
-            heroArtworkRect.bottom - (size.width < 600 ? 17 : 33),
-          ),
-        );
-        if (size.width <= 390) {
-          expect(heroArtworkRect.width, lessThanOrEqualTo(340));
+        if (size.width < 600) {
+          expect(contentRect.top - heroArtworkRect.bottom, closeTo(48, 0.1));
+        } else {
+          expect(
+            contentRect.top,
+            greaterThanOrEqualTo(heroArtworkRect.bottom - 33),
+          );
         }
       } else {
         expect(
@@ -642,7 +652,11 @@ void main() {
         expect(find.byKey(const Key('heroDesktopLayout')), findsOneWidget);
       } else {
         expect(
-          find.byKey(const Key('heroResponsiveLayout')),
+          find.byKey(
+            Key(
+              size.width < 600 ? 'heroMobileLayout' : 'heroResponsiveLayout',
+            ),
+          ),
           findsOneWidget,
         );
       }
@@ -740,7 +754,7 @@ void main() {
   );
 
   testWidgets(
-    'Hero artwork stays upper-right as constrained copy moves below',
+    'Hero preserves established wide geometry and centers mobile artwork',
     (
       tester,
     ) async {
@@ -751,15 +765,15 @@ void main() {
       const visibleArtworkHeightFraction = 1412 / 1434;
 
       for (final example in const [
-        (size: Size(1440, 900), usesWideLayout: true),
-        (size: Size(1360, 900), usesWideLayout: true),
-        (size: Size(1359, 900), usesWideLayout: false),
-        (size: Size(1200, 900), usesWideLayout: false),
-        (size: Size(1024, 768), usesWideLayout: false),
-        (size: Size(900, 900), usesWideLayout: false),
-        (size: Size(768, 1024), usesWideLayout: false),
-        (size: Size(390, 844), usesWideLayout: false),
-        (size: Size(320, 568), usesWideLayout: false),
+        (size: Size(1440, 900), layout: 'Desktop'),
+        (size: Size(1360, 900), layout: 'Desktop'),
+        (size: Size(1359, 900), layout: 'Responsive'),
+        (size: Size(1200, 900), layout: 'Responsive'),
+        (size: Size(1024, 768), layout: 'Responsive'),
+        (size: Size(900, 900), layout: 'Responsive'),
+        (size: Size(768, 1024), layout: 'Responsive'),
+        (size: Size(390, 844), layout: 'Mobile'),
+        (size: Size(320, 568), layout: 'Mobile'),
       ]) {
         tester.view.physicalSize = example.size;
         await pumpLandingApp(
@@ -773,9 +787,7 @@ void main() {
         expect(
           find.byKey(
             Key(
-              example.usesWideLayout
-                  ? 'heroDesktopLayout'
-                  : 'heroResponsiveLayout',
+              'hero${example.layout}Layout',
             ),
           ),
           findsOneWidget,
@@ -793,21 +805,34 @@ void main() {
         );
 
         expect(artworkRect.top, lessThan(cardRect.top));
-        expect(artworkRect.right, greaterThan(cardRect.right));
-        expect(
-          artworkRect.right - cardRect.right,
-          greaterThanOrEqualTo(artworkRect.width * 0.135),
-        );
-        expect(artworkRect.center.dx, greaterThan(cardRect.center.dx));
         expect(find.byKey(const Key('landingHeroWaitlistCta')), findsNothing);
         expect(heroClip.clipBehavior, isNot(Clip.none));
-        if (example.usesWideLayout) {
+        if (example.layout == 'Mobile') {
+          final expectedArtworkWidth = switch (example.size.width) {
+            390 => 432.0,
+            320 => 362.0,
+            _ => throw UnsupportedError('Unexpected mobile test width.'),
+          };
+
+          expect(artworkRect.width, closeTo(expectedArtworkWidth, 0.01));
+          expect(artworkRect.width, greaterThan(cardRect.width));
+          expect(artworkRect.center.dx, closeTo(cardRect.center.dx, 0.01));
+          expect(contentRect.top - artworkRect.bottom, closeTo(48, 0.1));
+        } else {
+          expect(artworkRect.right, greaterThan(cardRect.right));
+          expect(
+            artworkRect.right - cardRect.right,
+            greaterThanOrEqualTo(artworkRect.width * 0.135),
+          );
+          expect(artworkRect.center.dx, greaterThan(cardRect.center.dx));
+        }
+        if (example.layout == 'Desktop') {
           if (example.size.width == 1440) {
             expect(cardRect.width, 1360);
             expect(artworkRect.size, const Size(706, 717));
             expect(contentRect.left - cardRect.left, 80);
           }
-        } else {
+        } else if (example.layout == 'Responsive') {
           final visibleArtworkRight =
               artworkRect.left +
               (artworkRect.width * visibleArtworkWidthFraction);
@@ -817,8 +842,6 @@ void main() {
           final expectedArtworkWidth = switch (example.size.width) {
             1024 => 520.0,
             768 => 440.0,
-            390 => 340.0,
-            320 => 311.04,
             _ => null,
           };
 
@@ -831,7 +854,13 @@ void main() {
             expect(artworkRect.width, closeTo(width, 0.01));
           }
         }
-        expect(artworkRect.size.aspectRatio, closeTo(706 / 717, 0.001));
+        expect(
+          artworkRect.size.aspectRatio,
+          closeTo(
+            example.layout == 'Mobile' ? 432 / 439 : 706 / 717,
+            0.001,
+          ),
+        );
         expect(
           tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
           BoxFit.contain,

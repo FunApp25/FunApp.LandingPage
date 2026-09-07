@@ -6,12 +6,17 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 /// Responsive image surface for the connection section.
 final class ConnectionImage extends StatelessWidget {
   /// Creates the connection image.
-  const ConnectionImage({super.key});
+  const ConnectionImage({this.usesMobileCrop = false, super.key});
+
+  /// Whether the image uses the near-square mobile Figma crop.
+  final bool usesMobileCrop;
 
   @override
   Widget build(BuildContext context) => AspectRatio(
-    aspectRatio: 1360 / 614,
+    key: const Key('connectionImageFrame'),
+    aspectRatio: usesMobileCrop ? 358 / 364 : 1360 / 614,
     child: ClipRRect(
+      key: const Key('connectionImageClip'),
       borderRadius: const BorderRadius.all(
         Radius.circular(AppSizes.cardRadius),
       ),
@@ -24,7 +29,7 @@ final class ConnectionImage extends StatelessWidget {
           AppAssets.connectionGroup,
           key: const Key('connectionExperienceImage'),
           fit: BoxFit.cover,
-          alignment: Alignment.bottomCenter,
+          alignment: usesMobileCrop ? Alignment.center : Alignment.bottomCenter,
         ),
       ),
     ),

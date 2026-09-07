@@ -254,7 +254,9 @@ void main() {
       expect(
         find.byKey(
           Key(
-            example.usesWideConnection
+            example.size.width < 600
+                ? 'connectionMobileLayout'
+                : example.usesWideConnection
                 ? 'connectionWideLayout'
                 : 'connectionStackedLayout',
           ),

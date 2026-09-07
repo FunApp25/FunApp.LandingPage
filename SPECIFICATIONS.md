@@ -223,6 +223,15 @@ independent expansion, semantics, focus, and motion behavior while using its
 mobile-specific spacing and type. Marketing copy remains shared across
 responsive layouts unless product or design explicitly changes it.
 
+Below a 600px outer viewport width, Hero uses a dedicated centered-overflow
+composition with one artwork instance clipped by the Hero card and centered
+copy beneath a reserved artwork region. Its height remains content-aware for
+localization, and Hero remains static. Connection uses centered copy, 16px
+horizontal bounds, 80px vertical section padding, and a near-square
+`BoxFit.cover` image crop. The repository Connection copy remains shared across
+responsive layouts pending content approval. At 600px and above, the
+established Hero and Connection compositions remain unchanged.
+
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.
