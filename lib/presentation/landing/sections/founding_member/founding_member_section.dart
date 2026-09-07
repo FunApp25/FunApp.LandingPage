@@ -7,6 +7,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_memb
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_card_grid.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_introduction.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_layout.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_mobile_carousel.dart';
 
 /// Founding Member explanation from Figma node `2243:2446`.
 final class FoundingMemberSection extends StatelessWidget {
@@ -16,80 +17,114 @@ final class FoundingMemberSection extends StatelessWidget {
   static const _wideCompositionWidth = 1360.0;
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    key: const Key('foundingMemberBackground'),
-    color: AppColors.beigeAccent,
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final availableWidth = constraints.hasBoundedWidth
-            ? constraints.maxWidth
-            : AppSizes.desktopPageWidth;
-        final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final verticalPadding = AppSizes.sectionVerticalPaddingFor(
-          availableWidth,
-        );
+  Widget build(BuildContext context) {
+    final cards = _benefitCards(context);
+    final usesMobileCarousel = MediaQuery.sizeOf(context).width < 600;
 
-        return Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: pageGutter,
-            vertical: verticalPadding,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: AppSizes.maxContentWidth,
+    if (usesMobileCarousel) {
+      return ColoredBox(
+        key: const Key('foundingMemberBackground'),
+        color: AppColors.beigeAccent,
+        child: Padding(
+          key: const Key('foundingMemberMobileLayout'),
+          padding: const EdgeInsets.symmetric(vertical: 80),
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: FoundingMemberIntroduction(
+                  headingSize: 32,
+                  usesMobileFigmaTypography: true,
+                ),
               ),
-              child: LayoutBuilder(
-                builder: (context, contentConstraints) {
-                  final cards = _benefitCards(context);
-                  if (contentConstraints.maxWidth >= _wideCompositionWidth) {
-                    return Row(
-                      key: const Key('foundingMemberWideLayout'),
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          width: foundingMemberIntroWidth,
-                          child: FoundingMemberIntroduction(headingSize: 44),
-                        ),
-                        const SizedBox(width: foundingMemberCardGap),
-                        Expanded(
-                          child: FoundingMemberCardGrid(
-                            cards: cards,
-                          ),
-                        ),
-                      ],
-                    );
-                  } else {
-                    return Column(
-                      key: const Key('foundingMemberStackedIntroLayout'),
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: SizedBox(
-                            width: foundingMemberIntroWidth,
-                            child: FoundingMemberIntroduction(
-                              headingSize: AppSizes.sectionHeadingSizeFor(
-                                availableWidth,
+              const SizedBox(
+                key: Key('foundingMemberMobileIntroGap'),
+                height: 40,
+              ),
+              FoundingMemberMobileCarousel(cards: cards),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return ColoredBox(
+        key: const Key('foundingMemberBackground'),
+        color: AppColors.beigeAccent,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.hasBoundedWidth
+                ? constraints.maxWidth
+                : AppSizes.desktopPageWidth;
+            final pageGutter = AppSizes.pageGutterFor(availableWidth);
+            final verticalPadding = AppSizes.sectionVerticalPaddingFor(
+              availableWidth,
+            );
+
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: pageGutter,
+                vertical: verticalPadding,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppSizes.maxContentWidth,
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, contentConstraints) {
+                      if (contentConstraints.maxWidth >=
+                          _wideCompositionWidth) {
+                        return Row(
+                          key: const Key('foundingMemberWideLayout'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(
+                              width: foundingMemberIntroWidth,
+                              child: FoundingMemberIntroduction(
+                                headingSize: 44,
                               ),
                             ),
-                          ),
-                        ),
-                        SizedBox(height: availableWidth < 600 ? 32 : 48),
-                        FoundingMemberCardGrid(
-                          cards: cards,
-                        ),
-                      ],
-                    );
-                  }
-                },
+                            const SizedBox(width: foundingMemberCardGap),
+                            Expanded(
+                              child: FoundingMemberCardGrid(
+                                cards: cards,
+                              ),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return Column(
+                          key: const Key('foundingMemberStackedIntroLayout'),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: SizedBox(
+                                width: foundingMemberIntroWidth,
+                                child: FoundingMemberIntroduction(
+                                  headingSize: AppSizes.sectionHeadingSizeFor(
+                                    availableWidth,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 48),
+                            FoundingMemberCardGrid(
+                              cards: cards,
+                            ),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-      },
-    ),
-  );
+            );
+          },
+        ),
+      );
+    }
+  }
 
   static List<FoundingMemberCardContent> _benefitCards(
     BuildContext context,

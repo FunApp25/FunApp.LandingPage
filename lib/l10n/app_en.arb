@@ -336,6 +336,22 @@
   "@landingFoundingMemberBody": {
     "description": "Supporting copy for the Founding Member explanation section."
   },
+  "landingFoundingMemberCarouselPrevious": "Previous Founding Member benefit",
+  "@landingFoundingMemberCarouselPrevious": {
+    "description": "Accessible label for the previous Founding Member carousel control."
+  },
+  "landingFoundingMemberCarouselNext": "Next Founding Member benefit",
+  "@landingFoundingMemberCarouselNext": {
+    "description": "Accessible label for the next Founding Member carousel control."
+  },
+  "landingFoundingMemberCarouselPosition": "Founding Member benefit {currentPage} of {pageCount}",
+  "@landingFoundingMemberCarouselPosition": {
+    "description": "Accessible current-page announcement for the Founding Member carousel.",
+    "placeholders": {
+      "currentPage": {"type": "int"},
+      "pageCount": {"type": "int"}
+    }
+  },
   "landingFoundingMemberRecognisedTitle": "Recognised Forever",
   "@landingFoundingMemberRecognisedTitle": {
     "description": "Title of the first Founding Member benefit card."

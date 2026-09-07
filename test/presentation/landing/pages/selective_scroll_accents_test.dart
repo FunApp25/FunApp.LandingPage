@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/research/research_mobile_carousel.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stat_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_scroll_reveal.dart';
 
@@ -163,7 +164,12 @@ void main() {
     await tester.pumpAndSettle();
     _expectMobileResearchFinalState(tester);
 
-    await tester.tap(find.byKey(const Key('landingCarouselNext')));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ResearchMobileCarousel),
+        matching: find.byKey(const Key('landingCarouselNext')),
+      ),
+    );
     await tester.pumpAndSettle();
     _expectMobileResearchFinalState(tester);
 

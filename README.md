@@ -22,7 +22,8 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   intentionally unwired; pricing
   is static marketing UI rather than subscription functionality. The stable
   responsive presentation includes the mobile navigation menu, a mobile
-  Research-statistics carousel, restrained anchor/FAQ interaction motion, and
+  Research-statistics and Founding Member carousels, restrained anchor/FAQ
+  interaction motion, and
   one-time scroll accents only for Research Statistics, Membership pricing
   cards, Founding Friends, and Venue; the Hero and all other landing sections
   remain static. Business, domain, application, and data behavior is not

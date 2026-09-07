@@ -205,7 +205,13 @@ void main() {
       await pumpLandingApp(tester);
 
       if (example.columns == 0) {
-        expect(find.byType(LandingMobileCarousel), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(ResearchStatsSection),
+            matching: find.byType(LandingMobileCarousel),
+          ),
+          findsOneWidget,
+        );
         expect(
           find.byKey(const Key('researchStatsMobileLayout')),
           findsOneWidget,
@@ -216,7 +222,13 @@ void main() {
         final grid = find.byKey(Key('researchStatsColumns${example.columns}'));
         expect(grid, findsOneWidget);
         expect(tester.widget<Wrap>(grid).children, hasLength(4));
-        expect(find.byType(LandingMobileCarousel), findsNothing);
+        expect(
+          find.descendant(
+            of: find.byType(ResearchStatsSection),
+            matching: find.byType(LandingMobileCarousel),
+          ),
+          findsNothing,
+        );
       }
       expect(
         tester

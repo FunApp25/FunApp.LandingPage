@@ -84,7 +84,10 @@ void main() {
 
       expect(find.text(example.heading), findsOneWidget);
       expect(find.text(example.firstTitle), findsOneWidget);
-      expect(find.byType(FoundingMemberBenefitCard), findsNWidgets(3));
+      expect(
+        find.byType(FoundingMemberBenefitCard),
+        example.size.width < 600 ? findsWidgets : findsNWidgets(3),
+      );
       expect(tester.takeException(), isNull);
     });
   }
@@ -119,8 +122,6 @@ void main() {
     tester,
   ) async {
     for (final example in const [
-      (size: Size(320, 568), columns: 1, wide: false),
-      (size: Size(390, 844), columns: 1, wide: false),
       (size: Size(768, 1024), columns: 2, wide: false),
       (size: Size(900, 800), columns: 2, wide: false),
       (size: Size(1024, 768), columns: 2, wide: false),

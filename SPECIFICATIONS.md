@@ -197,6 +197,15 @@ navigation once as a single group rather than staggering offscreen cards;
 reduced motion renders that group immediately and makes programmatic page
 changes immediate while preserving direct swipe interaction.
 
+Below a 600px outer viewport width, the three Founding Member benefits use the
+shared horizontal, page-snapping carousel with three decorative page indicators
+derived from the real content count. Figma node `2270:2640` currently shows four
+indicators despite containing only three cards; implementation follows the three
+cards pending design clarification. The carousel is clamped and non-looping. At
+600px and above, the established Founding Member cards and grids remain in use.
+Founding Member has no scroll-entry reveal, and reduced motion makes its
+programmatic carousel page changes immediate while preserving direct swipe.
+
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.
