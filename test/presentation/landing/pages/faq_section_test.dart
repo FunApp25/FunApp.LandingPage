@@ -349,8 +349,10 @@ void main() {
     tester,
   ) async {
     for (final example in const [
-      (size: Size(320, 568), headingSize: 34.0, questionSize: 27.0),
-      (size: Size(390, 844), headingSize: 34.0, questionSize: 27.0),
+      (size: Size(320, 568), headingSize: 32.0, questionSize: 26.0),
+      (size: Size(390, 844), headingSize: 32.0, questionSize: 26.0),
+      (size: Size(599, 844), headingSize: 32.0, questionSize: 26.0),
+      (size: Size(600, 844), headingSize: 40.0, questionSize: 30.0),
       (size: Size(768, 1024), headingSize: 40.0, questionSize: 30.0),
       (size: Size(1024, 768), headingSize: 40.0, questionSize: 30.0),
       (size: Size(1440, 900), headingSize: 44.0, questionSize: 32.0),
@@ -395,7 +397,7 @@ void main() {
           'to grab coffee with should not require a financial strategy.',
         ),
       );
-      final minimumInset = example.size.width < 600 ? 16.0 : 20.0;
+      final minimumInset = example.size.width < 600 ? 0.0 : 20.0;
       expect(
         questionRect.left - surfaceRect.left,
         greaterThanOrEqualTo(minimumInset),
@@ -407,6 +409,54 @@ void main() {
       expect(answerRect.left, closeTo(questionRect.left, 1));
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('aligns FAQ spacing and typography to the mobile Figma frame', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await _pumpFaq(tester);
+
+    final sectionRect = tester.getRect(find.byType(FaqSection));
+    final contentRect = tester.getRect(find.byKey(const Key('faqContent')));
+    final heading = tester.widget<Text>(
+      find.byKey(const Key('faqHeadingText')),
+    );
+    final question = tester.widget<Text>(
+      find.byKey(const Key('faqQuestionText0')),
+    );
+    final questionPadding = tester.widget<Padding>(
+      find.byKey(const Key('faqQuestionPadding0')),
+    );
+    final answerPadding = tester.widget<Padding>(
+      find.byKey(const Key('faqAnswer0')),
+    );
+    final itemRect = tester.getRect(find.byKey(const Key('faqItemSurface0')));
+    final questionRect = tester.getRect(
+      find.byKey(const Key('faqQuestionText0')),
+    );
+    final headingRect = tester.getRect(
+      find.byKey(const Key('faqHeadingText')),
+    );
+    final itemsRect = tester.getRect(find.byKey(const Key('faqItems')));
+
+    expect(contentRect.left - sectionRect.left, 16);
+    expect(contentRect.right - sectionRect.right, -16);
+    expect(contentRect.top - sectionRect.top, 80);
+    expect(heading.style?.fontSize, 32);
+    expect(heading.style?.height, closeTo(42 / 32, 0.0001));
+    expect(question.style?.fontSize, 26);
+    expect(question.style?.height, closeTo(36 / 26, 0.0001));
+    expect(questionPadding.padding, const EdgeInsets.only(top: 32));
+    expect(
+      answerPadding.padding,
+      const EdgeInsets.only(top: 20, bottom: 32),
+    );
+    expect(itemRect.left - sectionRect.left, 16);
+    expect(itemRect.width, 358);
+    expect(questionRect.left, itemRect.left);
+    expect(itemsRect.top - headingRect.bottom, 40);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('updates answer semantics immediately with expansion state', (
@@ -686,7 +736,9 @@ Future<void> _pumpFaq(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: MediaQuery(
-        data: MediaQueryData(disableAnimations: disableAnimations),
+        data: MediaQueryData.fromView(
+          tester.view,
+        ).copyWith(disableAnimations: disableAnimations),
         child: const Scaffold(
           body: SingleChildScrollView(child: FaqSection()),
         ),

@@ -237,6 +237,141 @@ void main() {
     }
   });
 
+  testWidgets(
+    'aligns Membership and Limited Offer to the mobile Figma rhythm',
+    (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(390, 844));
+      await pumpLandingApp(tester);
+
+      final membershipRect = tester.getRect(
+        find.byKey(const Key('membershipBackground')),
+      );
+      final introductionRect = tester.getRect(
+        find.byKey(const Key('membershipIntroduction')),
+      );
+      final heading = tester.widget<Text>(
+        find.byKey(const Key('membershipHeadingText')),
+      );
+      expect(introductionRect.left - membershipRect.left, 16);
+      expect(introductionRect.right - membershipRect.right, -16);
+      expect(introductionRect.top - membershipRect.top, 80);
+      expect(heading.style?.fontSize, 32);
+      expect(heading.style?.height, closeTo(42 / 32, 0.0001));
+
+      await tester.ensureVisible(
+        find.byKey(const Key('membershipCardSurface-free')),
+      );
+      await tester.pumpAndSettle();
+
+      final freeCardRect = tester.getRect(
+        find.byKey(const Key('membershipCardSurface-free')),
+      );
+      final hereNowCardRect = tester.getRect(
+        find.byKey(const Key('membershipCardSurface-hereNow')),
+      );
+      final lifetimeCardRect = tester.getRect(
+        find.byKey(const Key('membershipCardSurface-lifetime')),
+      );
+      expect(freeCardRect.left, 16);
+      expect(freeCardRect.width, 358);
+      expect(hereNowCardRect.top - freeCardRect.bottom, 24);
+      expect(lifetimeCardRect.top - hereNowCardRect.bottom, 24);
+      for (final id in ['free', 'hereNow', 'lifetime']) {
+        final padding = tester.widget<Padding>(
+          find.byKey(Key('membershipCardPadding-$id')),
+        );
+        expect(
+          padding.padding,
+          const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+        );
+      }
+      expect(
+        tester
+            .widget<ConstrainedBox>(
+              find.byKey(const Key('membershipCardBounds-free')),
+            )
+            .constraints
+            .minHeight,
+        0,
+      );
+      final badgeRect = tester.getRect(
+        find.byKey(const Key('membershipBadge-lifetime')),
+      );
+      expect(badgeRect.top - lifetimeCardRect.top, -14);
+
+      final offerRect = tester.getRect(
+        find.byKey(const Key('foundingOfferBackground')),
+      );
+      final offerContentRect = tester.getRect(
+        find.byKey(const Key('foundingOfferContent')),
+      );
+      final offerStatement = tester.widget<Text>(
+        find.byKey(const Key('foundingOfferStatementText')),
+      );
+      expect(offerContentRect.left - offerRect.left, 16);
+      expect(offerContentRect.right - offerRect.right, -16);
+      expect(offerContentRect.top - offerRect.top, 80);
+      expect(offerStatement.textSpan?.style?.fontSize, 36);
+      expect(
+        offerStatement.textSpan?.style?.height,
+        closeTo(46 / 36, 0.0001),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'keeps the established Membership and Limited Offer treatment at 600px',
+    (
+      tester,
+    ) async {
+      for (final example in const [
+        (size: Size(599, 844), headingSize: 32.0, cardPadding: 32.0),
+        (size: Size(600, 844), headingSize: 40.0, cardPadding: 38.0),
+      ]) {
+        setTestSurface(tester, example.size);
+        await pumpLandingSection(
+          tester,
+          section: const Column(
+            children: [
+              MembershipSection(),
+              FoundingOfferSection(),
+            ],
+          ),
+        );
+
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('membershipHeadingText')))
+              .style
+              ?.fontSize,
+          example.headingSize,
+        );
+        expect(
+          tester
+              .widget<Padding>(
+                find.byKey(const Key('membershipCardPadding-free')),
+              )
+              .padding,
+          EdgeInsets.symmetric(horizontal: example.cardPadding, vertical: 40),
+        );
+        expect(
+          tester
+              .widget<Text>(
+                find.byKey(const Key('foundingOfferStatementText')),
+              )
+              .textSpan
+              ?.style
+              ?.fontSize,
+          example.size.width < 600 ? 36.0 : 42.0,
+        );
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
   testWidgets('preserves visual-only pricing actions and card variants', (
     tester,
   ) async {

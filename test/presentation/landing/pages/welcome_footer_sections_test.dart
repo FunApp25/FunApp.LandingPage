@@ -132,8 +132,8 @@ void main() {
     tester,
   ) async {
     for (final example in const [
-      (size: Size(320, 568), statementSize: 34.0, wrapsNavigation: true),
-      (size: Size(390, 844), statementSize: 34.0, wrapsNavigation: true),
+      (size: Size(320, 568), statementSize: 36.0, wrapsNavigation: true),
+      (size: Size(390, 844), statementSize: 36.0, wrapsNavigation: true),
       (size: Size(768, 1024), statementSize: 42.0, wrapsNavigation: true),
       (size: Size(1024, 768), statementSize: 42.0, wrapsNavigation: false),
       (size: Size(1440, 900), statementSize: 50.0, wrapsNavigation: false),
@@ -162,6 +162,53 @@ void main() {
       } else {
         expect(itemOffsets.toSet(), hasLength(1));
       }
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('aligns Welcome to the mobile Figma rhythm', (tester) async {
+    setTestSurface(tester, const Size(390, 844));
+    await pumpLandingApp(tester);
+
+    final sectionRect = tester.getRect(
+      find.byType(WelcomeStatementSection),
+    );
+    final contentRect = tester.getRect(
+      find.byKey(const Key('welcomeStatementContent')),
+    );
+    final statement = tester.widget<Text>(
+      find.byKey(const Key('welcomeStatementText')),
+    );
+
+    expect(contentRect.left - sectionRect.left, 16);
+    expect(contentRect.right - sectionRect.right, -16);
+    expect(contentRect.top - sectionRect.top, 80);
+    expect(statement.textSpan?.style?.fontSize, 36);
+    expect(statement.textSpan?.style?.height, closeTo(46 / 36, 0.0001));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keeps the established Welcome treatment at 600px', (
+    tester,
+  ) async {
+    for (final example in const [
+      (size: Size(599, 844), statementSize: 36.0),
+      (size: Size(600, 844), statementSize: 42.0),
+    ]) {
+      setTestSurface(tester, example.size);
+      await pumpLandingSection(
+        tester,
+        section: const WelcomeStatementSection(),
+      );
+
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('welcomeStatementText')))
+            .textSpan
+            ?.style
+            ?.fontSize,
+        example.statementSize,
+      );
       expect(tester.takeException(), isNull);
     }
   });

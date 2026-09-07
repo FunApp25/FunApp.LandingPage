@@ -71,6 +71,7 @@ final class MembershipCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final design = _design;
+    final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
 
     return Semantics(
       key: Key('membershipCardSemantics-$semanticId'),
@@ -95,8 +96,9 @@ final class MembershipCard extends StatelessWidget {
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 38,
+                key: Key('membershipCardPadding-$semanticId'),
+                padding: EdgeInsets.symmetric(
+                  horizontal: usesMobileFidelity ? 32 : 38,
                   vertical: 40,
                 ),
                 child: Column(

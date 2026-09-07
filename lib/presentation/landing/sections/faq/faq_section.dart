@@ -69,34 +69,50 @@ final class _FaqSectionState extends State<FaqSection> {
       color: AppColors.lightForeground,
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
           final availableWidth = constraints.hasBoundedWidth
               ? constraints.maxWidth
               : AppSizes.desktopPageWidth;
-          final pageGutter = AppSizes.pageGutterFor(availableWidth);
-          final verticalPadding = AppSizes.sectionVerticalPaddingFor(
-            availableWidth,
-          );
-          final headingSize = AppSizes.sectionHeadingSizeFor(availableWidth);
-          final questionSize = switch (availableWidth) {
-            >= 1200 => 32.0,
-            >= 600 => 30.0,
-            _ => 27.0,
-          };
-          final questionLineHeight = switch (availableWidth) {
-            >= 1200 => 40.0,
-            >= 600 => 38.0,
-            _ => 34.0,
-          };
-          final itemVerticalPadding = switch (availableWidth) {
-            >= 1200 => 32.0,
-            >= 600 => 28.0,
-            _ => 24.0,
-          };
-          final itemHorizontalPadding = switch (availableWidth) {
-            >= 1200 => 24.0,
-            >= 600 => 22.0,
-            _ => 18.0,
-          };
+          final pageGutter = usesMobileFidelity
+              ? AppSizes.mobileLandingPageGutter
+              : AppSizes.pageGutterFor(availableWidth);
+          final verticalPadding = usesMobileFidelity
+              ? AppSizes.mobileLandingSectionVerticalPadding
+              : AppSizes.sectionVerticalPaddingFor(availableWidth);
+          final headingSize = usesMobileFidelity
+              ? 32.0
+              : AppSizes.sectionHeadingSizeFor(availableWidth);
+          final headingLineHeight = usesMobileFidelity
+              ? 42.0
+              : headingSize * (54 / 44);
+          final questionSize = usesMobileFidelity
+              ? 26.0
+              : switch (availableWidth) {
+                  >= 1200 => 32.0,
+                  >= 600 => 30.0,
+                  _ => 27.0,
+                };
+          final questionLineHeight = usesMobileFidelity
+              ? 36.0
+              : switch (availableWidth) {
+                  >= 1200 => 40.0,
+                  >= 600 => 38.0,
+                  _ => 34.0,
+                };
+          final itemVerticalPadding = usesMobileFidelity
+              ? 32.0
+              : switch (availableWidth) {
+                  >= 1200 => 32.0,
+                  >= 600 => 28.0,
+                  _ => 24.0,
+                };
+          final itemHorizontalPadding = usesMobileFidelity
+              ? 0.0
+              : switch (availableWidth) {
+                  >= 1200 => 24.0,
+                  >= 600 => 22.0,
+                  _ => 18.0,
+                };
 
           return Padding(
             padding: EdgeInsets.symmetric(
@@ -131,6 +147,7 @@ final class _FaqSectionState extends State<FaqSection> {
                           textAlign: TextAlign.center,
                           style: LandingTextStyles.sectionHeading.copyWith(
                             fontSize: headingSize,
+                            height: headingLineHeight / headingSize,
                             letterSpacing: headingSize * -0.01,
                           ),
                         ),
@@ -138,7 +155,13 @@ final class _FaqSectionState extends State<FaqSection> {
                     ],
                   ),
                 ),
-                SizedBox(height: availableWidth >= 1200 ? 48 : 32),
+                SizedBox(
+                  height: usesMobileFidelity
+                      ? 40
+                      : availableWidth >= 1200
+                      ? 48
+                      : 32,
+                ),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 902),
                   child: Column(

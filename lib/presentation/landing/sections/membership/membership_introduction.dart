@@ -5,15 +5,23 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_sty
 /// Heading and supporting copy for the membership section.
 final class MembershipIntroduction extends StatelessWidget {
   /// Creates the membership introduction.
-  const MembershipIntroduction({required this.headingSize, super.key});
+  const MembershipIntroduction({
+    required this.headingSize,
+    required this.headingLineHeight,
+    super.key,
+  });
 
   /// Responsive heading font size.
   final double headingSize;
+
+  /// Responsive heading line height.
+  final double headingLineHeight;
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 474),
     child: Column(
+      key: const Key('membershipIntroduction'),
       children: [
         Semantics(
           key: const Key('membershipHeadingSemantics'),
@@ -26,6 +34,7 @@ final class MembershipIntroduction extends StatelessWidget {
             textAlign: TextAlign.center,
             style: LandingTextStyles.sectionHeading.copyWith(
               fontSize: headingSize,
+              height: headingLineHeight / headingSize,
               letterSpacing: headingSize * -0.01,
             ),
           ),

@@ -206,6 +206,14 @@ cards pending design clarification. The carousel is clamped and non-looping. At
 Founding Member has no scroll-entry reveal, and reduced motion makes its
 programmatic carousel page changes immediate while preserving direct swipe.
 
+Below a 600px outer viewport width, Problem, Membership, Limited Offer, Welcome,
+and FAQ opt into the approved mobile 16px page bounds and section-specific
+Figma rhythm and type roles. Membership remains a one-column, naturally sized
+pricing-card stack with its approved reveal unchanged. FAQ retains its existing
+independent expansion, semantics, focus, and motion behavior while using its
+mobile-specific spacing and type. Marketing copy remains shared across
+responsive layouts unless product or design explicitly changes it.
+
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.

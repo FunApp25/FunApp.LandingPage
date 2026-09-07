@@ -197,6 +197,7 @@ final class _FaqItemState extends State<FaqItem> {
                         setState(() => _isFocused = value);
                       },
                       child: Padding(
+                        key: Key('faqQuestionPadding${widget.index}'),
                         padding: EdgeInsets.fromLTRB(
                           widget.horizontalPadding,
                           widget.verticalPadding,

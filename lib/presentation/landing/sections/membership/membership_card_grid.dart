@@ -21,6 +21,7 @@ final class MembershipCardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
+      final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
       const threeColumnWidth =
           (membershipMinimumCardWidth * 3) + (membershipCardGap * 2);
       const twoColumnWidth =
@@ -34,6 +35,9 @@ final class MembershipCardGrid extends StatelessWidget {
         columns = 1;
       }
       final isNarrow = columns == 1;
+      final cardGap = usesMobileFidelity
+          ? mobileMembershipCardGap
+          : membershipCardGap;
       final staggerMilliseconds = isNarrow
           ? _narrowStaggerMilliseconds
           : _wideStaggerMilliseconds;
@@ -78,7 +82,7 @@ final class MembershipCardGrid extends StatelessWidget {
             ],
             _ => [
               for (var index = 0; index < cards.length; index++) ...[
-                if (index > 0) const SizedBox(height: membershipCardGap),
+                if (index > 0) SizedBox(height: cardGap),
                 MembershipCardItem(
                   index: index,
                   card: cards[index],

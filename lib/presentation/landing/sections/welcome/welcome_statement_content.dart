@@ -8,10 +8,17 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_sty
 /// Centered copy composition for the welcome statement section.
 final class WelcomeStatementContent extends StatelessWidget {
   /// Creates the welcome statement content.
-  const WelcomeStatementContent({required this.statementSize, super.key});
+  const WelcomeStatementContent({
+    required this.statementSize,
+    required this.statementLineHeight,
+    super.key,
+  });
 
   /// Responsive statement font size.
   final double statementSize;
+
+  /// Responsive statement line height.
+  final double statementLineHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +29,13 @@ final class WelcomeStatementContent extends StatelessWidget {
     final letterSpacing = statementSize * -0.01;
     final regularStyle = LandingTextStyles.foundingOfferStatement.copyWith(
       fontSize: statementSize,
+      height: statementLineHeight / statementSize,
       letterSpacing: letterSpacing,
     );
     final emphasisStyle = LandingTextStyles.foundingOfferStatementEmphasis
         .copyWith(
           fontSize: statementSize,
+          height: statementLineHeight / statementSize,
           letterSpacing: letterSpacing,
           color: AppColors.warmOrange,
         );

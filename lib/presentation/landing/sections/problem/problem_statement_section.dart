@@ -13,13 +13,22 @@ final class ProblemStatementSection extends StatelessWidget {
     color: AppColors.lightForeground,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
         final availableWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
-        final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final verticalPadding = AppSizes.sectionVerticalPaddingFor(
-          availableWidth,
-        );
+        final pageGutter = usesMobileFidelity
+            ? AppSizes.mobileLandingPageGutter
+            : AppSizes.pageGutterFor(availableWidth);
+        final verticalPadding = usesMobileFidelity
+            ? AppSizes.mobileLandingSectionVerticalPadding
+            : AppSizes.sectionVerticalPaddingFor(availableWidth);
+        final statementSize = usesMobileFidelity
+            ? 36.0
+            : AppSizes.statementHeadingSizeFor(availableWidth);
+        final statementLineHeight = usesMobileFidelity
+            ? 46.0
+            : statementSize * (60 / 50);
 
         return Padding(
           padding: EdgeInsets.symmetric(
@@ -30,9 +39,8 @@ final class ProblemStatementSection extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 940),
               child: ProblemStatementContent(
-                statementSize: AppSizes.statementHeadingSizeFor(
-                  availableWidth,
-                ),
+                statementSize: statementSize,
+                statementLineHeight: statementLineHeight,
               ),
             ),
           ),

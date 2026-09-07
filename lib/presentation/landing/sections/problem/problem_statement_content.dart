@@ -8,10 +8,17 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_sty
 /// Centered copy composition for the problem statement section.
 final class ProblemStatementContent extends StatelessWidget {
   /// Creates the problem statement content.
-  const ProblemStatementContent({required this.statementSize, super.key});
+  const ProblemStatementContent({
+    required this.statementSize,
+    required this.statementLineHeight,
+    super.key,
+  });
 
   /// Responsive statement font size.
   final double statementSize;
+
+  /// Responsive statement line height.
+  final double statementLineHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +29,12 @@ final class ProblemStatementContent extends StatelessWidget {
     final letterSpacing = statementSize * -0.01;
     final regularStyle = LandingTextStyles.problemStatement.copyWith(
       fontSize: statementSize,
+      height: statementLineHeight / statementSize,
       letterSpacing: letterSpacing,
     );
     final emphasisStyle = LandingTextStyles.problemStatementEmphasis.copyWith(
       fontSize: statementSize,
+      height: statementLineHeight / statementSize,
       letterSpacing: letterSpacing,
     );
 

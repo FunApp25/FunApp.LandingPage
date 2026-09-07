@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 
 /// Pumps the complete landing application with [locale] as the platform locale.
 Future<void> pumpLandingApp(
@@ -12,6 +14,32 @@ Future<void> pumpLandingApp(
   addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
 
   await tester.pumpWidget(const FunAppLandingPageApp());
+  await tester.pump();
+}
+
+/// Pumps one landing section with the application theme and localization.
+Future<void> pumpLandingSection(
+  WidgetTester tester, {
+  required Widget section,
+  Locale locale = const Locale('en'),
+}) async {
+  tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
+  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: appTheme,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: MediaQuery(
+        data: MediaQueryData.fromView(tester.view),
+        child: Scaffold(
+          body: SingleChildScrollView(child: section),
+        ),
+      ),
+    ),
+  );
   await tester.pump();
 }
 

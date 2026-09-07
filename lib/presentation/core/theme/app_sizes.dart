@@ -13,6 +13,9 @@ abstract final class AppSizes {
   /// Smallest safe page gutter when the desktop composition cannot fit.
   static const double minimumPageGutter = 16;
 
+  /// Approved page gutter for targeted mobile landing-section fidelity.
+  static const double mobileLandingPageGutter = 16;
+
   /// Vertical inset used by complete desktop landing-page sections.
   static const double desktopSectionVerticalPadding = 128;
 
@@ -21,6 +24,9 @@ abstract final class AppSizes {
 
   /// Vertical inset used by narrow landing-page sections.
   static const double narrowSectionVerticalPadding = 48;
+
+  /// Approved vertical rhythm for targeted mobile landing sections.
+  static const double mobileLandingSectionVerticalPadding = 80;
 
   /// Maximum width available inside the desktop page gutters.
   static const double maxContentWidth = 1360;

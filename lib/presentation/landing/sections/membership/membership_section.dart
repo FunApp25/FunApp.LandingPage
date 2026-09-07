@@ -18,18 +18,29 @@ final class MembershipSection extends StatelessWidget {
     color: AppColors.beigeAccent,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
         final availableWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
-        final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final verticalPadding = AppSizes.sectionVerticalPaddingFor(
-          availableWidth,
-        );
-        final contentGap = switch (availableWidth) {
-          >= 1200 => 80.0,
-          >= 600 => 64.0,
-          _ => 48.0,
-        };
+        final pageGutter = usesMobileFidelity
+            ? AppSizes.mobileLandingPageGutter
+            : AppSizes.pageGutterFor(availableWidth);
+        final verticalPadding = usesMobileFidelity
+            ? AppSizes.mobileLandingSectionVerticalPadding
+            : AppSizes.sectionVerticalPaddingFor(availableWidth);
+        final contentGap = usesMobileFidelity
+            ? 40.0
+            : switch (availableWidth) {
+                >= 1200 => 80.0,
+                >= 600 => 64.0,
+                _ => 48.0,
+              };
+        final headingSize = usesMobileFidelity
+            ? 32.0
+            : AppSizes.sectionHeadingSizeFor(availableWidth);
+        final headingLineHeight = usesMobileFidelity
+            ? 42.0
+            : headingSize * (54 / 44);
 
         return Padding(
           padding: EdgeInsets.symmetric(
@@ -44,9 +55,8 @@ final class MembershipSection extends StatelessWidget {
               child: Column(
                 children: [
                   MembershipIntroduction(
-                    headingSize: AppSizes.sectionHeadingSizeFor(
-                      availableWidth,
-                    ),
+                    headingSize: headingSize,
+                    headingLineHeight: headingLineHeight,
                   ),
                   SizedBox(height: contentGap),
                   MembershipCardGrid(cards: _membershipCards(context)),

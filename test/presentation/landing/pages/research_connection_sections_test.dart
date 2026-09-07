@@ -155,14 +155,14 @@ void main() {
         size: Size(320, 568),
         columns: 0,
         headingSize: 32.0,
-        statementSize: 34.0,
+        statementSize: 36.0,
         usesWideConnection: false,
       ),
       (
         size: Size(390, 844),
         columns: 0,
         headingSize: 32.0,
-        statementSize: 34.0,
+        statementSize: 36.0,
         usesWideConnection: false,
       ),
       (
@@ -273,6 +273,53 @@ void main() {
           lessThanOrEqualTo(example.size.width),
         );
       }
+    }
+  });
+
+  testWidgets('aligns the Problem statement to the mobile Figma rhythm', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await pumpLandingApp(tester);
+
+    final sectionRect = tester.getRect(find.byType(ProblemStatementSection));
+    final contentRect = tester.getRect(
+      find.byKey(const Key('problemStatementContent')),
+    );
+    final statement = tester.widget<Text>(
+      find.byKey(const Key('problemStatementText')),
+    );
+
+    expect(contentRect.left - sectionRect.left, 16);
+    expect(contentRect.right - sectionRect.right, -16);
+    expect(contentRect.top - sectionRect.top, 80);
+    expect(statement.textSpan?.style?.fontSize, 36);
+    expect(statement.textSpan?.style?.height, closeTo(46 / 36, 0.0001));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keeps the established Problem statement treatment at 600px', (
+    tester,
+  ) async {
+    for (final example in const [
+      (size: Size(599, 844), statementSize: 36.0),
+      (size: Size(600, 844), statementSize: 42.0),
+    ]) {
+      setTestSurface(tester, example.size);
+      await pumpLandingSection(
+        tester,
+        section: const ProblemStatementSection(),
+      );
+
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('problemStatementText')))
+            .textSpan
+            ?.style
+            ?.fontSize,
+        example.statementSize,
+      );
+      expect(tester.takeException(), isNull);
     }
   });
 
