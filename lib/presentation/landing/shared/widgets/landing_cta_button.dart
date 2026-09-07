@@ -35,6 +35,7 @@ final class LandingCtaButton extends StatelessWidget {
     this.appearance = LandingCtaAppearance.brandOrange,
     this.arrowKey,
     this.compactHorizontalPadding = 20,
+    this.prominentContentExpands = false,
     this.onPressed,
     super.key,
   });
@@ -57,6 +58,9 @@ final class LandingCtaButton extends StatelessWidget {
   /// callers may reduce it when localized text has less available width.
   final double compactHorizontalPadding;
 
+  /// Whether a full-width prominent CTA must keep its label flexible.
+  final bool prominentContentExpands;
+
   /// Approved activation callback, or null while behavior remains deferred.
   final VoidCallback? onPressed;
 
@@ -76,8 +80,8 @@ final class LandingCtaButton extends StatelessWidget {
       };
       final useConstrainedProminentLayout =
           isProminent &&
-          constraints.hasBoundedWidth &&
-          constraints.maxWidth < 480;
+          (prominentContentExpands ||
+              (constraints.hasBoundedWidth && constraints.maxWidth < 480));
       final horizontalPadding = switch (size) {
         LandingCtaSize.compact => compactHorizontalPadding,
         LandingCtaSize.prominent when useConstrainedProminentLayout => 20.0,

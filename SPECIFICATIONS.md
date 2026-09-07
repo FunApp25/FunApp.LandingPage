@@ -153,6 +153,15 @@ clipping rather than geometric distortion. Founding Friends artwork remains
 anchored to the trailing edge, while venue artwork remains anchored to the
 leading edge.
 
+Below a 600px outer viewport width, Founding Friends and Venue use vertical,
+centered promotional cards with 16px internal horizontal bounds, an 80px
+content/artwork rhythm, and full-width visual-only CTAs. Their artwork
+intentionally overscans horizontally but is clipped by the card, and final
+heights remain content-driven for localization. The existing one-time card
+reveals remain. At 600px and above the established promotional-card
+compositions remain in use; CTA constraints must remain overflow-safe across
+the 599px/600px boundary.
+
 The current landing-page order is Header, Hero, Problem Statement, Research
 Statistics, Different Way to Connect, Membership, Limited-time Founding Friend
 offer, Founding Member explanation, Founding Friends, Venue, Welcome Statement,

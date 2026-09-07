@@ -6,10 +6,17 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_sty
 /// Centered introduction above the venue promotional card.
 final class VenueIntroduction extends StatelessWidget {
   /// Creates the venue introduction.
-  const VenueIntroduction({required this.headingSize, super.key});
+  const VenueIntroduction({
+    required this.headingSize,
+    required this.headingLineHeight,
+    super.key,
+  });
 
   /// Responsive introduction heading font size.
   final double headingSize;
+
+  /// Responsive introduction heading line height.
+  final double headingLineHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +41,7 @@ final class VenueIntroduction extends StatelessWidget {
                 text: headingLeading,
                 style: LandingTextStyles.foundingOfferStatement.copyWith(
                   fontSize: headingSize,
+                  height: headingLineHeight / headingSize,
                   letterSpacing: headingSize * -0.01,
                 ),
                 children: [
@@ -42,6 +50,7 @@ final class VenueIntroduction extends StatelessWidget {
                     style: LandingTextStyles.foundingOfferStatementEmphasis
                         .copyWith(
                           fontSize: headingSize,
+                          height: headingLineHeight / headingSize,
                           letterSpacing: headingSize * -0.01,
                           color: AppColors.warmOrange,
                         ),

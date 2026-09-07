@@ -16,13 +16,16 @@ final class FoundingFriendsSection extends StatelessWidget {
     color: AppColors.lightForeground,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
         final availableWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
-        final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final verticalPadding = AppSizes.sectionVerticalPaddingFor(
-          availableWidth,
-        );
+        final pageGutter = usesMobileFidelity
+            ? AppSizes.mobileLandingPageGutter
+            : AppSizes.pageGutterFor(availableWidth);
+        final verticalPadding = usesMobileFidelity
+            ? AppSizes.mobileLandingSectionVerticalPadding
+            : AppSizes.sectionVerticalPaddingFor(availableWidth);
         final contentWidth = (availableWidth - (pageGutter * 2)).clamp(
           0.0,
           AppSizes.maxContentWidth,

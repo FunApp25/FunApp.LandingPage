@@ -17,13 +17,22 @@ final class VenueSection extends StatelessWidget {
     color: AppColors.lightForeground,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
         final availableWidth = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : AppSizes.desktopPageWidth;
-        final pageGutter = AppSizes.pageGutterFor(availableWidth);
-        final bottomPadding = AppSizes.sectionVerticalPaddingFor(
-          availableWidth,
-        );
+        final pageGutter = usesMobileFidelity
+            ? AppSizes.mobileLandingPageGutter
+            : AppSizes.pageGutterFor(availableWidth);
+        final bottomPadding = usesMobileFidelity
+            ? AppSizes.mobileLandingSectionVerticalPadding
+            : AppSizes.sectionVerticalPaddingFor(availableWidth);
+        final introductionHeadingSize = usesMobileFidelity
+            ? 32.0
+            : AppSizes.statementHeadingSizeFor(availableWidth);
+        final introductionHeadingLineHeight = usesMobileFidelity
+            ? 42.0
+            : introductionHeadingSize * (60 / 50);
         final contentWidth = (availableWidth - (pageGutter * 2)).clamp(
           0.0,
           AppSizes.maxContentWidth,
@@ -44,9 +53,8 @@ final class VenueSection extends StatelessWidget {
               child: Column(
                 children: [
                   VenueIntroduction(
-                    headingSize: AppSizes.statementHeadingSizeFor(
-                      availableWidth,
-                    ),
+                    headingSize: introductionHeadingSize,
+                    headingLineHeight: introductionHeadingLineHeight,
                   ),
                   SizedBox(
                     height: switch (availableWidth) {

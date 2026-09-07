@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_friends/founding_friends_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
@@ -154,6 +155,8 @@ void main() {
     for (final example in const [
       (size: Size(320, 568), layout: 'Narrow'),
       (size: Size(390, 844), layout: 'Narrow'),
+      (size: Size(599, 844), layout: 'Narrow'),
+      (size: Size(600, 844), layout: 'Narrow'),
       (size: Size(768, 1024), layout: 'Narrow'),
       (size: Size(900, 900), layout: 'Intermediate'),
       (size: Size(1024, 768), layout: 'Intermediate'),
@@ -228,6 +231,11 @@ void main() {
               Alignment.centerRight,
             );
           }
+        } else if (example.size.width < 600) {
+          expect(artworkRect.size, const Size(382, 233));
+          final overscan = (382 - cardRect.width) / 2;
+          expect(artworkRect.left - cardRect.left, -overscan);
+          expect(artworkRect.right - cardRect.right, overscan);
         } else {
           const expectedRatio = 673 / 410;
           expect(artworkRect.size.aspectRatio, closeTo(expectedRatio, 0.001));
@@ -255,6 +263,124 @@ void main() {
         );
       }
       expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('matches the vertical mobile promotional-card composition', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await pumpLandingApp(tester);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('foundingFriendsReveal')),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('venueCardReveal')));
+    await tester.pumpAndSettle();
+
+    Rect? venueCardRect;
+    for (final prefix in ['foundingFriends', 'venueCard']) {
+      final cardRect = tester.getRect(find.byKey(Key('${prefix}CardClip')));
+      final contentRect = tester.getRect(
+        find.byKey(Key('${prefix}ContentBounds')),
+      );
+      final artworkRect = tester.getRect(
+        find.byKey(Key('${prefix}ArtworkViewport')),
+      );
+      final ctaRect = tester.getRect(find.byKey(Key('${prefix}Cta')));
+      final contentPadding = tester.widget<Padding>(
+        find.byKey(Key('${prefix}NarrowContentPadding')),
+      );
+      final heading = tester.widget<Text>(
+        find.byKey(Key('${prefix}HeadingText')),
+      );
+      final body = tester.widget<Text>(find.byKey(Key('${prefix}Body0')));
+
+      expect(cardRect.left, 16);
+      expect(cardRect.width, 358);
+      expect(
+        contentPadding.padding,
+        const EdgeInsets.symmetric(horizontal: 16),
+      );
+      expect(contentRect.top - cardRect.top, 80);
+      expect(contentRect.left - cardRect.left, 16);
+      expect(contentRect.width, 326);
+      expect(heading.style?.fontSize, 32);
+      expect(heading.style?.height, closeTo(40 / 32, 0.0001));
+      expect(body.style?.fontSize, 16);
+      expect(body.style?.height, closeTo(24 / 16, 0.0001));
+      expect(ctaRect.width, contentRect.width);
+      expect(ctaRect.height, greaterThanOrEqualTo(48), reason: prefix);
+      expect(artworkRect.size, const Size(382, 233));
+      expect(artworkRect.top - contentRect.bottom, 80);
+      expect(artworkRect.left - cardRect.left, -12);
+      expect(artworkRect.right - cardRect.right, 12);
+      if (prefix == 'venueCard') {
+        venueCardRect = cardRect;
+      }
+    }
+
+    final foundingFirstBody = tester.getRect(
+      find.byKey(const Key('foundingFriendsBody0')),
+    );
+    final foundingSecondBody = tester.getRect(
+      find.byKey(const Key('foundingFriendsBody1')),
+    );
+    expect(foundingSecondBody.top - foundingFirstBody.bottom, 12);
+
+    final venueIntro = tester.getRect(
+      find.byKey(const Key('venueIntroductionBounds')),
+    );
+    final venueCard = venueCardRect;
+    final venueIntroHeading = tester.widget<Text>(
+      find.byKey(const Key('venueIntroductionHeadingText')),
+    );
+    final venueIntroBody = tester.widget<Text>(
+      find.byKey(const Key('venueIntroductionBody0')),
+    );
+    expect(venueIntro.width, 358);
+    expect(venueIntroHeading.textSpan?.style?.fontSize, 32);
+    expect(
+      venueIntroHeading.textSpan?.style?.height,
+      closeTo(42 / 32, 0.0001),
+    );
+    expect(venueIntroBody.style?.fontSize, 16);
+    expect(venueIntroBody.style?.height, closeTo(24 / 16, 0.0001));
+    expect(venueCard!.top - venueIntro.bottom, 40);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keeps promotional CTAs safe at mobile and boundary widths', (
+    tester,
+  ) async {
+    for (final locale in AppLocalizations.supportedLocales) {
+      for (final width in [320.0, 390.0, 599.0, 600.0]) {
+        setTestSurface(tester, Size(width, 844));
+        await pumpLandingApp(tester, locale: locale);
+
+        for (final prefix in ['foundingFriends', 'venueCard']) {
+          final cta = find.byKey(Key('${prefix}Cta'));
+          final card = find.byKey(Key('${prefix}CardClip'));
+          final arrow = find.byKey(Key('${prefix}CtaArrow'));
+          final label = find.descendant(of: cta, matching: find.byType(Text));
+          final ctaRect = tester.getRect(cta);
+          final cardRect = tester.getRect(card);
+
+          expect(label, findsOneWidget);
+          expect(tester.widget<Text>(label).data, isNotEmpty);
+          expect(arrow, findsOneWidget);
+          expect(ctaRect.left, greaterThanOrEqualTo(cardRect.left));
+          expect(ctaRect.right, lessThanOrEqualTo(cardRect.right));
+          expect(cardRect.left, greaterThanOrEqualTo(0));
+          expect(cardRect.right, lessThanOrEqualTo(width));
+        }
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${locale.languageCode} must fit promotional CTAs at $width.',
+        );
+      }
     }
   });
 
