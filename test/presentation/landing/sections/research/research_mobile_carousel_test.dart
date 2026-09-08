@@ -328,6 +328,8 @@ void main() {
             await tester.tap(find.byKey(const Key('landingCarouselNext')));
             await tester.pumpAndSettle();
           }
+          await tester.ensureVisible(currentValue);
+          await tester.pump();
           expect(currentValue, findsOneWidget);
           expect(currentValue.hitTestable(), findsOneWidget);
           expect(find.bySemanticsLabel(value), findsOneWidget);
@@ -342,6 +344,99 @@ void main() {
       }
     }
   });
+
+  testWidgets(
+    'grows one coordinated height for enlarged localized text without clipping',
+    (tester) async {
+      setTestSurface(tester, const Size(320, 568));
+
+      for (final locale in AppLocalizations.supportedLocales) {
+        for (final size in const [Size(320, 568), Size(390, 844)]) {
+          tester.view.physicalSize = size;
+          await _pumpResearch(tester, locale: locale);
+          final defaultHeight = tester
+              .getSize(
+                find.byKey(const Key('researchStatCardBounds-49%')),
+              )
+              .height;
+          final designMinimum = size.width == 390 ? 404.0 : 474.0;
+          expect(defaultHeight, greaterThanOrEqualTo(designMinimum));
+          if (locale == const Locale('en')) {
+            expect(defaultHeight, designMinimum);
+          }
+
+          await _pumpResearch(
+            tester,
+            locale: locale,
+            textScaler: const TextScaler.linear(2),
+          );
+          final semantics = tester.ensureSemantics();
+          final l10n = AppLocalizations.of(
+            tester.element(find.byType(ResearchStatsSection)),
+          );
+          final cards = _researchCards(l10n);
+          final next = find.byKey(const Key('landingCarouselNext'));
+          final previous = find.byKey(const Key('landingCarouselPrevious'));
+          final heights = <double>[];
+
+          for (var index = 0; index < cards.length; index++) {
+            final card = cards[index];
+            final cardFinder = find.byKey(
+              Key('researchStatCardBounds-${card.value}'),
+            );
+            final valueFinder = find.byKey(
+              Key('researchStatValue-${card.value}'),
+            );
+            final descriptionFinder = find.byKey(
+              Key('researchStatDescription-${card.value}'),
+            );
+
+            await tester.ensureVisible(valueFinder);
+            await tester.pump();
+
+            final cardRect = tester.getRect(cardFinder);
+            final valueRect = tester.getRect(valueFinder);
+            final descriptionRect = tester.getRect(descriptionFinder);
+            heights.add(cardRect.height);
+
+            expect(
+              _pageLabel(tester),
+              l10n.landingResearchCarouselPosition(index + 1, 4),
+            );
+            expect(valueFinder.hitTestable(), findsOneWidget);
+            expect(valueRect.top, greaterThanOrEqualTo(cardRect.top));
+            expect(valueRect.bottom, lessThanOrEqualTo(cardRect.bottom));
+            expect(descriptionRect.top, greaterThanOrEqualTo(cardRect.top));
+            expect(descriptionRect.bottom, lessThanOrEqualTo(cardRect.bottom));
+            expect(descriptionFinder, findsOneWidget);
+            expect(tester.takeException(), isNull);
+
+            if (index < cards.length - 1) {
+              await tester.ensureVisible(next);
+              await tester.tap(next);
+              await tester.pumpAndSettle();
+            }
+          }
+
+          expect(heights.first, greaterThan(defaultHeight));
+          expect(heights.first, greaterThan(designMinimum));
+          for (final height in heights.skip(1)) {
+            expect(height, heights.first);
+          }
+
+          await tester.ensureVisible(previous);
+          await tester.tap(previous);
+          await tester.pumpAndSettle();
+          expect(
+            _pageLabel(tester),
+            l10n.landingResearchCarouselPosition(3, 4),
+          );
+          expect(tester.takeException(), isNull);
+          semantics.dispose();
+        }
+      }
+    },
+  );
 
   testWidgets('uses immediate programmatic paging with reduced motion', (
     tester,
@@ -419,6 +514,7 @@ Future<void> _pumpResearch(
   WidgetTester tester, {
   Locale locale = const Locale('en'),
   bool disableAnimations = false,
+  TextScaler textScaler = TextScaler.noScaling,
   bool resetState = true,
 }) async {
   if (resetState) {
@@ -431,9 +527,13 @@ Future<void> _pumpResearch(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => MediaQuery(
-        data: MediaQueryData.fromView(
-          tester.view,
-        ).copyWith(disableAnimations: disableAnimations),
+        data:
+            MediaQueryData.fromView(
+              tester.view,
+            ).copyWith(
+              disableAnimations: disableAnimations,
+              textScaler: textScaler,
+            ),
         child: child!,
       ),
       home: const Scaffold(
@@ -448,6 +548,27 @@ Future<void> _pumpResearch(
     await tester.pump();
   }
 }
+
+List<({String value, String description})> _researchCards(
+  AppLocalizations l10n,
+) => [
+  (
+    value: l10n.landingStatsFirstValue,
+    description: l10n.landingStatsFirstDescription,
+  ),
+  (
+    value: l10n.landingStatsSecondValue,
+    description: l10n.landingStatsSecondDescription,
+  ),
+  (
+    value: l10n.landingStatsThirdValue,
+    description: l10n.landingStatsThirdDescription,
+  ),
+  (
+    value: l10n.landingStatsFourthValue,
+    description: l10n.landingStatsFourthDescription,
+  ),
+];
 
 String _pageLabel(WidgetTester tester) => tester
     .getSemantics(

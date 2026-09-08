@@ -4,6 +4,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/research/rese
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_mobile_carousel.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_scroll_reveal.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// Mobile Research carousel and its coordinated one-time reveal.
 final class ResearchMobileCarousel extends StatelessWidget {
@@ -38,7 +39,12 @@ final class ResearchMobileCarousel extends StatelessWidget {
         0,
         _figmaViewportWidth - _supportedMinimumWidth,
       );
-      final cardHeight = _figmaCardHeight + narrowHeightAdjustment;
+      final responsiveMinimumHeight = _figmaCardHeight + narrowHeightAdjustment;
+      final cardHeight = _cardHeightFor(
+        context,
+        cardWidth,
+        responsiveMinimumHeight,
+      );
 
       return LandingScrollReveal(
         key: const Key('researchStatsReveal'),
@@ -87,4 +93,54 @@ final class ResearchMobileCarousel extends StatelessWidget {
       );
     },
   );
+
+  double _cardHeightFor(
+    BuildContext context,
+    double cardWidth,
+    double responsiveMinimumHeight,
+  ) {
+    final textWidth = cardWidth - (ResearchStatCard.horizontalPadding * 2);
+    var tallestRequiredHeight = responsiveMinimumHeight;
+
+    for (final card in cards) {
+      final valueHeight = _textHeight(
+        context,
+        card.value,
+        LandingTextStyles.statValue,
+        textWidth,
+      );
+      final descriptionHeight = _textHeight(
+        context,
+        card.description,
+        LandingTextStyles.statBody,
+        textWidth,
+      );
+      final requiredHeight =
+          (ResearchStatCard.verticalPadding * 2) +
+          valueHeight +
+          ResearchStatCard.minimumContentSeparation +
+          descriptionHeight;
+
+      if (requiredHeight > tallestRequiredHeight) {
+        tallestRequiredHeight = requiredHeight;
+      }
+    }
+
+    return tallestRequiredHeight;
+  }
+
+  double _textHeight(
+    BuildContext context,
+    String text,
+    TextStyle style,
+    double maxWidth,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout(maxWidth: maxWidth);
+
+    return painter.height;
+  }
 }

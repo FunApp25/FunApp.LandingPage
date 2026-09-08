@@ -205,6 +205,10 @@ The mobile Research scroll accent reveals the initial carousel viewport and
 navigation once as a single group rather than staggering offscreen cards;
 reduced motion renders that group immediately and makes programmatic page
 changes immediate while preserving direct swipe interaction.
+The Figma-responsive mobile Research card height remains a minimum. When
+localized or scaled text needs more room, every carousel page shares the
+tallest required height so text is not clipped or truncated to preserve the
+design minimum.
 
 Below a 600px outer viewport width, the three Founding Member benefits use the
 shared horizontal, page-snapping carousel with three decorative page indicators

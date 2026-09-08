@@ -13,6 +13,15 @@ final class ResearchStatCard extends StatelessWidget {
     super.key,
   });
 
+  /// Horizontal inset shared by the card and mobile-height calculation.
+  static const horizontalPadding = 36.0;
+
+  /// Vertical inset shared by the card and mobile-height calculation.
+  static const verticalPadding = 32.0;
+
+  /// Minimum separation between the statistic and its explanation.
+  static const minimumContentSeparation = 40.0;
+
   /// Localized percentage value as displayed in Figma.
   final String value;
 
@@ -43,8 +52,8 @@ final class ResearchStatCard extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: 36,
-            vertical: 32,
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
           ),
           child: Column(
             mainAxisSize: usesDesktopMinimumHeight
@@ -60,7 +69,8 @@ final class ResearchStatCard extends StatelessWidget {
                 key: Key('researchStatValue-$value'),
                 style: LandingTextStyles.statValue,
               ),
-              if (!usesDesktopMinimumHeight) const SizedBox(height: 40),
+              if (!usesDesktopMinimumHeight)
+                const SizedBox(height: minimumContentSeparation),
               Text(
                 description,
                 key: Key('researchStatDescription-$value'),
