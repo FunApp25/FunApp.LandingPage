@@ -27,9 +27,10 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   one-time scroll accents only for Research Statistics, Membership pricing
   cards, Founding Friends, and Venue; the Hero and all other landing sections
   remain static. The first provider-neutral prospective-venue domain model and
-  repository contract, operational failures, and application form BLoC now
-  exist alongside the external HubSpot field-name constants. Concrete
-  submission infrastructure and form presentation are not implemented.
+  application form workflow now sit above one concrete provider-neutral
+  repository. Dependency injection selects a deterministic development data
+  source or the production HubSpot data-source stub. The actual HubSpot
+  transport and form presentation are not implemented.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -75,11 +76,30 @@ Those machine-specific settings remain ignored.
 ## Run Flutter Web
 
 ```bash
-puro flutter run -d chrome
+puro flutter run -d chrome \
+  --dart-define=FUN_APP_ENVIRONMENT=development
 ```
 
 VS Code and VSCodium users can also launch `lib/main.dart` on Chrome in debug
-mode through the committed **Fun App Landing Page** run configuration.
+mode through either committed configuration:
+
+- **Fun App Landing — Development (Fake Repositories)** selects the
+  deterministic local data source.
+- **Fun App Landing — HubSpot** selects the production HubSpot data source.
+
+The HubSpot configuration currently starts the landing page successfully, but
+venue submission is intentionally unavailable until the provider transport is
+implemented. Run the same production composition outside VS Code with:
+
+```bash
+puro flutter run -d chrome \
+  --dart-define=FUN_APP_ENVIRONMENT=production
+```
+
+Omitting `FUN_APP_ENVIRONMENT` defaults to `development`. An unknown non-empty
+value fails during bootstrap instead of silently selecting another environment.
+Build defines are public Flutter Web configuration and must never contain
+credentials or secrets.
 
 ## Localization
 
@@ -95,8 +115,9 @@ puro flutter gen-l10n
 
 Generated localization Dart files are local build inputs and are not committed.
 
-Freezed source is also generated locally and remains uncommitted. Regenerate
-all generated Dart model source after changing a Freezed input:
+Freezed and Injectable sources are generated locally and remain uncommitted.
+Regenerate all generated Dart source after changing a model or dependency
+registration:
 
 ```bash
 puro flutter pub run build_runner build
@@ -121,9 +142,12 @@ responsive viewport contracts.
 ```text
 lib/                         Active Flutter application source
 lib/application/venue/       Venue-lead form state and submission orchestration
+lib/core/config/              Typed application-environment selection
+lib/core/injection/           GetIt/Injectable composition root
 lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
-lib/data/core/               External field-name mapping constants only
+lib/data/core/                External field-name mapping constants
+lib/data/venue/               Venue repository, DTO, and selectable data sources
 lib/l10n/                    Localization ARB source files
 lib/presentation/landing/pages/ Landing-page composition and navigation owner
 lib/presentation/landing/sections/ Section-owned landing presentation widgets
@@ -151,12 +175,12 @@ the same file as its public widget.
 
 Application behavior uses a layer-first direction with `presentation`,
 `application`, `domain`, and `data` responsibilities when active code requires
-them. `domain` now owns the reusable validation foundation and provider-neutral
-prospective-venue model; the only active `data` surface is the HubSpot external
-field-name constants. The venue application BLoC coordinates editable form
-state through a provider-neutral domain repository contract. `core` may own
-bootstrap and shared wiring. Concrete repositories, data sources, dependency
-wiring, and external submission transport remain deferred.
+them. `domain` owns validation and the provider-neutral prospective-venue
+contract; the application BLoC coordinates the form through that contract. One
+data repository maps validated leads into a provider-neutral DTO and delegates
+to an environment-selected data source. `core` parses the compile-time
+environment and configures GetIt through Injectable before the app starts.
+External HubSpot transport remains deferred.
 
 See [`SPECIFICATIONS.md`](SPECIFICATIONS.md) for the complete direction and
 dependency boundaries.
@@ -165,8 +189,10 @@ dependency boundaries.
 
 Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.
 CI installs Puro, creates the `fun-app-landing` stable environment, generates
-localizations, analyzes, tests, and builds Flutter Web. The workflow uploads
-`build/web` and deploys it to [https://funapp.world](https://funapp.world).
+localizations and Dart sources, analyzes, tests, and builds Flutter Web with
+`FUN_APP_ENVIRONMENT=production`. The workflow uploads `build/web` and deploys
+it to [https://funapp.world](https://funapp.world). The selected HubSpot stub
+performs no work until a future form submits a lead.
 
 The custom domain remains configured in GitHub Pages. `web/CNAME` records the
 repository's active domain declaration and is copied into the Flutter artifact.

@@ -83,11 +83,12 @@ The repository is an active Flutter Web project:
 Flutter code uses `presentation`, `application`, `domain`, `data`, and `core`
 areas only when active behavior needs them. `domain` is active for reusable
 validation and the provider-neutral venue-lead model. The narrow active
-`application/venue` surface owns the venue-lead form BLoC, while the narrow
-active `data/core` surface contains external field-name constants only. The
-landing-page repository aligns architectural concepts with the main Fun App
-Flutter application where appropriate, but the repositories do not currently
-share source code or packages.
+`application/venue` surface owns the venue-lead form BLoC. `data/venue` owns one
+provider-neutral repository, its DTO, and environment-specific data sources;
+`data/core` retains the external field-name constants. `core` owns typed
+environment selection and dependency composition. The landing-page repository
+aligns architectural concepts with the main Fun App Flutter application where
+appropriate, but the repositories do not share source code or packages.
 
 ## 6. Architecture
 
@@ -310,11 +311,11 @@ capabilities as implemented.
   venue capacity, and phone number are optional.
 - Present venue type and independent/chain status values are non-empty
   single-line text. Their closed option sets are not established.
-- Generated Freezed source is regenerated locally and in CI and remains
-  uncommitted.
+- Generated Freezed and Injectable source is regenerated locally and in CI and
+  remains uncommitted.
 - HubSpot property names are external mapping details owned only by
-  `data/core/hubspot_fields.dart`. No HubSpot client, DTO, repository, transport,
-  configuration, or submission workflow exists.
+  `data/core/hubspot_fields.dart`. They are not yet consumed by the HubSpot data
+  source because provider payload mapping and transport remain unimplemented.
 - Operational submission failures are provider-neutral `AppFailure` values,
   distinct from field-level `ValueFailure` values. The initial operational
   categories are service unavailable, submission rejected, and unexpected.
@@ -335,6 +336,33 @@ capabilities as implemented.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
+- One concrete `VenueLeadRepository` implements the domain repository contract.
+  It validates the aggregate before extracting values, translates a valid lead
+  into a provider-neutral `VenueLeadDto`, and delegates to
+  `VenueLeadDataSourceInterface`. Invalid aggregate input is treated as an
+  unexpected repository-boundary failure and does not call a data source.
+- Environment/provider variation exists only beneath the repository.
+  `development` resolves a deterministic successful development data source
+  with no persistence or external I/O. `production` resolves
+  `HubSpotVenueLeadDataSource`.
+- The HubSpot data source is an intentional transport stub. Calling it reports
+  an internal integration-not-implemented condition, which the repository maps
+  to `AppFailure.serviceUnavailable`; it never fabricates success or lets an
+  `UnimplementedError` escape.
+- Classified data-source service-unavailable and submission-rejected conditions
+  map to their matching `AppFailure` categories. Unclassified exceptions map to
+  `AppFailure.unexpected`. Data-source exceptions do not cross the domain
+  repository boundary.
+- GetIt and Injectable own composition now that environment-dependent
+  implementations exist. `VenueLeadFormBloc` is a factory registration, the
+  repository is a provider-neutral lazy singleton, and the selected data source
+  is an environment-specific lazy singleton. Application and data classes use
+  constructor injection rather than reading GetIt directly.
+- `FUN_APP_ENVIRONMENT` selects `development` or `production` at compile time.
+  An absent value defaults to development; an unsupported non-empty value fails
+  during bootstrap. The production Pages build sets the value explicitly.
+- Compile-time Flutter Web configuration is public and must not contain HubSpot
+  credentials, tokens, API keys, or other secrets.
 
 ### Provisional
 
@@ -415,6 +443,7 @@ Current baseline verification is:
 
 ```bash
 puro flutter gen-l10n
+puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
 puro flutter build web
@@ -430,7 +459,7 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 
 - GitHub Pages is the production deployment target.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
-- The active workflow installs Puro 1.5.0, creates the named `fun-app-landing` environment from Flutter stable, generates localizations, analyzes, tests, and builds Flutter Web.
+- The active workflow installs Puro 1.5.0, creates the named `fun-app-landing` environment from Flutter stable, generates localizations and Dart sources, analyzes, tests, and builds Flutter Web with `FUN_APP_ENVIRONMENT=production`.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
 - The archived Astro project is not built or deployed.

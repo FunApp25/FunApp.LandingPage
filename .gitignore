@@ -433,3 +433,4 @@ dist/
 lib/l10n/app_localizations*.dart
 **/*.freezed.dart
 **/*.g.dart
+**/*.config.dart

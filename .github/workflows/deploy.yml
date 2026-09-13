@@ -59,7 +59,9 @@ jobs:
         run: puro --env="$PURO_ENV_NAME" flutter test
 
       - name: Build site
-        run: puro --env="$PURO_ENV_NAME" flutter build web
+        run: >-
+          puro --env="$PURO_ENV_NAME" flutter build web
+          --dart-define=FUN_APP_ENVIRONMENT=production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

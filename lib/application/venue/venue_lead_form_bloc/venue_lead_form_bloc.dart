@@ -10,12 +10,14 @@ import 'package:fun_app_landing_page/domain/core/value_objects/positive_integer.
 import 'package:fun_app_landing_page/domain/core/value_objects/website.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
+import 'package:injectable/injectable.dart';
 
 part 'venue_lead_form_bloc.freezed.dart';
 part 'venue_lead_form_event.dart';
 part 'venue_lead_form_state.dart';
 
 /// Owns the prospective-venue form draft and submission workflow.
+@injectable
 class VenueLeadFormBloc extends Bloc<VenueLeadFormEvent, VenueLeadFormState> {
   /// Creates a [VenueLeadFormBloc] backed by a provider-neutral repository.
   VenueLeadFormBloc(this._repository) : super(VenueLeadFormState.initial()) {

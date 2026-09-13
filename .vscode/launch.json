@@ -2,12 +2,26 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Fun App Landing Page",
+      "name": "Fun App Landing — Development (Fake Repositories)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
-      "flutterMode": "debug"
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define=FUN_APP_ENVIRONMENT=development"
+      ]
+    },
+    {
+      "name": "Fun App Landing — HubSpot",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define=FUN_APP_ENVIRONMENT=production"
+      ]
     }
   ]
 }
