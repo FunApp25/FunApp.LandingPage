@@ -72,7 +72,7 @@ Current implementation is evidence of repository state, not automatically a perm
 The repository is an active Flutter Web project:
 
 - `lib/` contains the Flutter bootstrap, active presentation, and the first
-  venue-lead domain/data foundation.
+  venue-lead domain/application/data foundation.
 - `lib/l10n/` contains committed ARB localization inputs; generated localization Dart files remain uncommitted.
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
 - `test/` contains tests for active Flutter behavior.
@@ -83,7 +83,8 @@ The repository is an active Flutter Web project:
 Flutter code uses `presentation`, `application`, `domain`, `data`, and `core`
 areas only when active behavior needs them. `domain` is active for reusable
 validation and the provider-neutral venue-lead model. The narrow active
-`data/core` surface contains external field-name constants only. The
+`application/venue` surface owns the venue-lead form BLoC, while the narrow
+active `data/core` surface contains external field-name constants only. The
 landing-page repository aligns architectural concepts with the main Fun App
 Flutter application where appropriate, but the repositories do not currently
 share source code or packages.
@@ -314,6 +315,26 @@ capabilities as implemented.
 - HubSpot property names are external mapping details owned only by
   `data/core/hubspot_fields.dart`. No HubSpot client, DTO, repository, transport,
   configuration, or submission workflow exists.
+- Operational submission failures are provider-neutral `AppFailure` values,
+  distinct from field-level `ValueFailure` values. The initial operational
+  categories are service unavailable, submission rejected, and unexpected.
+  They expose no provider codes, transport details, raw exceptions, or
+  presentation-facing messages.
+- `VenueLeadRepositoryInterface` is the domain submission boundary. Its
+  `submitVenueLead(VenueLead)` operation performs one logical venue-interest
+  submission and returns `Either<AppFailure, Unit>`; `Unit` acknowledges only
+  application-level success.
+- `VenueLeadFormBloc` owns the editable venue-lead draft, raw field-input
+  interpretation, validation-attempt visibility, submission state, and the
+  semantic submission result. Invalid domain values block repository calls and
+  remain `ValueFailure` values rather than becoming operational failures.
+- Blank optional input represents absence. Non-blank optional and required
+  input is preserved when constructing the established domain value objects.
+- A successful or failed submission preserves the complete form draft. Closing,
+  resetting, and success/error presentation behavior remain unresolved.
+- The application suppresses concurrent submit events while one repository call
+  is in flight. This is client workflow protection, not server idempotency,
+  deduplication, or duplicate-lead prevention.
 
 ### Provisional
 
@@ -324,8 +345,8 @@ capabilities as implemented.
 ### Open
 
 - The prospective-user input model and its required/optional fields.
-- Venue form presentation, validation messages, submission behavior, and
-  application workflow.
+- Venue form presentation, validation messages, success/error UX, and explicit
+  closing or reset behavior.
 - Approved venue-type and independent/chain choices.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count

@@ -10,6 +10,23 @@ import 'package:fun_app_landing_page/domain/core/value_objects/website.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 
 void main() {
+  test('empty creates an invalid typed draft with no optional values', () {
+    final lead = VenueLead.empty();
+
+    expect(lead.venueName, NonEmptySingleLineText(''));
+    expect(lead.website, Website(''));
+    expect(lead.firstName, PersonalName(''));
+    expect(lead.lastName, PersonalName(''));
+    expect(lead.role, NonEmptySingleLineText(''));
+    expect(lead.email, EmailAddress(''));
+    expect(lead.venueType, none<NonEmptySingleLineText>());
+    expect(lead.chainStatus, none<NonEmptySingleLineText>());
+    expect(lead.venueCount, none<PositiveInteger>());
+    expect(lead.venueCapacity, none<PositiveInteger>());
+    expect(lead.phoneNumber, none<PhoneNumber>());
+    expect(lead.isValid, isFalse);
+  });
+
   test('is valid with required fields and all optional fields absent', () {
     final lead = _validLead();
 

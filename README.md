@@ -27,8 +27,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   one-time scroll accents only for Research Statistics, Membership pricing
   cards, Founding Friends, and Venue; the Hero and all other landing sections
   remain static. The first provider-neutral prospective-venue domain model and
-  the external HubSpot field-name constants now exist; application workflows,
-  submission infrastructure, and form presentation are not implemented.
+  repository contract, operational failures, and application form BLoC now
+  exist alongside the external HubSpot field-name constants. Concrete
+  submission infrastructure and form presentation are not implemented.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -111,13 +112,15 @@ puro flutter test
 puro flutter build web
 ```
 
-The widget tests cover the active landing surface, branding, localization,
-theme, interactions, and responsive viewport contracts.
+The test suite covers domain validation, venue-lead form orchestration, and the
+active landing surface's branding, localization, theme, interactions, and
+responsive viewport contracts.
 
 ## Repository structure
 
 ```text
 lib/                         Active Flutter application source
+lib/application/venue/       Venue-lead form state and submission orchestration
 lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
 lib/data/core/               External field-name mapping constants only
@@ -150,9 +153,10 @@ Application behavior uses a layer-first direction with `presentation`,
 `application`, `domain`, and `data` responsibilities when active code requires
 them. `domain` now owns the reusable validation foundation and provider-neutral
 prospective-venue model; the only active `data` surface is the HubSpot external
-field-name constants. `core` may own bootstrap and shared wiring. BLoC/Cubit,
-repositories, data sources, and submission workflows remain deferred until
-corresponding state or external I/O exists.
+field-name constants. The venue application BLoC coordinates editable form
+state through a provider-neutral domain repository contract. `core` may own
+bootstrap and shared wiring. Concrete repositories, data sources, dependency
+wiring, and external submission transport remain deferred.
 
 See [`SPECIFICATIONS.md`](SPECIFICATIONS.md) for the complete direction and
 dependency boundaries.

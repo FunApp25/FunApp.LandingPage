@@ -30,6 +30,21 @@ abstract class VenueLead with _$VenueLead {
 
   const VenueLead._();
 
+  /// Creates an incomplete draft with invalid empty required values.
+  factory VenueLead.empty() => VenueLead(
+    venueName: NonEmptySingleLineText(''),
+    venueType: none(),
+    chainStatus: none(),
+    venueCount: none(),
+    venueCapacity: none(),
+    website: Website(''),
+    firstName: PersonalName(''),
+    lastName: PersonalName(''),
+    role: NonEmptySingleLineText(''),
+    email: EmailAddress(''),
+    phoneNumber: none(),
+  );
+
   /// The first validation failure in product-field order, when present.
   Option<ValueFailure<dynamic>> get failureOption {
     final failuresOrUnit = <Either<ValueFailure<dynamic>, Unit>>[
