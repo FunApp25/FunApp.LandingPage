@@ -17,9 +17,9 @@ final class VenueLeadSubmissionRejectedException
   const VenueLeadSubmissionRejectedException();
 }
 
-/// The selected provider integration has not been implemented yet.
-final class VenueLeadIntegrationNotImplementedException
+/// The data source returned a response without an established classification.
+final class VenueLeadUnexpectedDataSourceException
     extends VenueLeadDataSourceException {
-  /// Creates a [VenueLeadIntegrationNotImplementedException].
-  const VenueLeadIntegrationNotImplementedException();
+  /// Creates a [VenueLeadUnexpectedDataSourceException].
+  const VenueLeadUnexpectedDataSourceException();
 }

@@ -94,9 +94,9 @@ void main() {
           const AppFailure.submissionRejected(),
         ),
         (
-          'integration not implemented',
-          const VenueLeadIntegrationNotImplementedException(),
-          const AppFailure.serviceUnavailable(),
+          'typed unexpected data-source response',
+          const VenueLeadUnexpectedDataSourceException(),
+          const AppFailure.unexpected(),
         ),
         (
           'unexpected',

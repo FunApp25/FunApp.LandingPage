@@ -27,8 +27,8 @@ final class VenueLeadRepository implements VenueLeadRepositoryInterface {
         return left(const AppFailure.serviceUnavailable());
       } on VenueLeadSubmissionRejectedException {
         return left(const AppFailure.submissionRejected());
-      } on VenueLeadIntegrationNotImplementedException {
-        return left(const AppFailure.serviceUnavailable());
+      } on VenueLeadUnexpectedDataSourceException {
+        return left(const AppFailure.unexpected());
       } on Object {
         return left(const AppFailure.unexpected());
       }

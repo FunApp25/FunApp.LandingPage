@@ -59,9 +59,14 @@ jobs:
         run: puro --env="$PURO_ENV_NAME" flutter test
 
       - name: Build site
+        env:
+          FUN_APP_HUBSPOT_PORTAL_ID: ${{ vars.FUN_APP_HUBSPOT_PORTAL_ID }}
+          FUN_APP_HUBSPOT_VENUE_FORM_GUID: ${{ vars.FUN_APP_HUBSPOT_VENUE_FORM_GUID }}
         run: >-
           puro --env="$PURO_ENV_NAME" flutter build web
           --dart-define=FUN_APP_ENVIRONMENT=production
+          --dart-define=FUN_APP_HUBSPOT_PORTAL_ID="$FUN_APP_HUBSPOT_PORTAL_ID"
+          --dart-define=FUN_APP_HUBSPOT_VENUE_FORM_GUID="$FUN_APP_HUBSPOT_VENUE_FORM_GUID"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

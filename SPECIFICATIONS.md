@@ -4,7 +4,11 @@
 
 This repository owns the public Fun App website and landing page. The site should communicate the Fun App product and brand through responsive public marketing content.
 
-The landing page is expected eventually to collect information from interested users and submit it to a backend. Likely examples include name, email, and other deliberately defined interest or sign-up information. Exact fields, flows, consent language, analytics, business behavior, and backend contracts are not yet specified.
+The landing page is expected eventually to collect information from interested
+users. The provider-neutral venue-lead workflow has a production data path that
+submits directly from Flutter Web to HubSpot Forms; its presentation, consent
+language, and CTA wiring are not yet implemented. Prospective-user fields,
+flows, analytics, and business behavior remain unspecified.
 
 ## 2. Decision model
 
@@ -42,6 +46,9 @@ Current implementation is evidence of repository state, not automatically a perm
 - GitHub Pages builds Flutter through Puro and publishes `build/web` from the repository root at base href `/`.
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
+- Production venue-lead submission uses HubSpot's unauthenticated Forms v3
+  submission endpoint directly from Flutter Web. This public-form integration
+  supports CORS and requires no authentication secret.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
 
 ### Open
@@ -59,13 +66,15 @@ Current implementation is evidence of repository state, not automatically a perm
 ### Provisional
 
 - Collection of deliberately defined interested-user information.
-- Submission of that information to a backend through decoupled application and data boundaries.
+- A future server-side submission proxy may replace the direct provider
+  transport without changing the established domain or application contracts.
 - Azure hosting may be considered later, but it is not current deployment scope.
 
 ### Open
 
 - Exact form fields, validation messages, consent copy, sign-up flow, analytics, and marketing behavior.
-- Exact backend, API, authentication, retention, deletion, and error-handling contracts.
+- Prospective-user backend, API, authentication, retention, deletion, and
+  error-handling contracts.
 
 ## 5. Repository shape
 
@@ -313,9 +322,12 @@ capabilities as implemented.
   single-line text. Their closed option sets are not established.
 - Generated Freezed and Injectable source is regenerated locally and in CI and
   remains uncommitted.
-- HubSpot property names are external mapping details owned only by
-  `data/core/hubspot_fields.dart`. They are not yet consumed by the HubSpot data
-  source because provider payload mapping and transport remain unimplemented.
+- HubSpot property names are exact external identifiers owned only by
+  `data/core/hubspot_fields.dart` and consumed only at the HubSpot data
+  boundary. HubSpot-generated trailing and repeated underscores are
+  intentional. In particular, chain status is
+  `independent_or_part_of_chain_` and venue count is
+  `if_chain__number_of_venues`.
 - Operational submission failures are provider-neutral `AppFailure` values,
   distinct from field-level `ValueFailure` values. The initial operational
   categories are service unavailable, submission rejected, and unexpected.
@@ -345,10 +357,23 @@ capabilities as implemented.
   `development` resolves a deterministic successful development data source
   with no persistence or external I/O. `production` resolves
   `HubSpotVenueLeadDataSource`.
-- The HubSpot data source is an intentional transport stub. Calling it reports
-  an internal integration-not-implemented condition, which the repository maps
-  to `AppFailure.serviceUnavailable`; it never fabricates success or lets an
-  `UnimplementedError` escape.
+- `HubSpotVenueLeadDataSource` posts the provider-neutral DTO through HTTPS to
+  HubSpot's unauthenticated, CORS-compatible Forms v3 submission endpoint:
+  `POST https://api.hsforms.com/submissions/v3/integration/submit/{portalId}/{formGuid}`.
+  It uses no authenticated HubSpot API, bearer token, client secret, private-app
+  token, OAuth flow, API key, or Fun App backend proxy.
+- The HubSpot request body contains only a `fields` array of string `name` and
+  `value` entries. Required DTO fields are always emitted. Optional absent
+  values are omitted rather than sent as empty strings, integral quantities use
+  decimal strings, and phone numbers remain strings so leading zeroes survive.
+- HubSpot form-definition validation remains enabled. `skipValidation` is not
+  sent. Every submitted `HubSpotFields` property must exist on the target
+  HubSpot venue form, and every field that HubSpot marks required on that form
+  must be supplied by this contract.
+- A HubSpot 200 response acknowledges success without consuming its redirect
+  URI or inline HTML message. Status 400 is submission rejected; 429 and 5xx
+  responses plus known HTTP transport failures are service unavailable; other
+  statuses are unexpected. No automatic retry occurs.
 - Classified data-source service-unavailable and submission-rejected conditions
   map to their matching `AppFailure` categories. Unclassified exceptions map to
   `AppFailure.unexpected`. Data-source exceptions do not cross the domain
@@ -361,8 +386,17 @@ capabilities as implemented.
 - `FUN_APP_ENVIRONMENT` selects `development` or `production` at compile time.
   An absent value defaults to development; an unsupported non-empty value fails
   during bootstrap. The production Pages build sets the value explicitly.
-- Compile-time Flutter Web configuration is public and must not contain HubSpot
-  credentials, tokens, API keys, or other secrets.
+- `FUN_APP_HUBSPOT_PORTAL_ID` and
+  `FUN_APP_HUBSPOT_VENUE_FORM_GUID` are required, non-empty production
+  compile-time configuration. They are public account/form identifiers visible
+  in the compiled Flutter Web application, not secrets. A gitignored `.env`
+  may supply them locally through `--dart-define-from-file=.env`; this is a
+  build-input mechanism, not runtime dotenv storage.
+- Compile-time Flutter Web configuration must not contain HubSpot credentials,
+  tokens, API keys, or other secrets.
+- There is no Fun App backend proxy for venue leads. A future server-side proxy
+  remains possible without changing the domain repository or application BLoC
+  contracts.
 
 ### Provisional
 
@@ -375,12 +409,17 @@ capabilities as implemented.
 - The prospective-user input model and its required/optional fields.
 - Venue form presentation, validation messages, success/error UX, and explicit
   closing or reset behavior.
+- An approved consent/privacy field contract and any corresponding HubSpot
+  `legalConsentOptions` payload. Consent is not fabricated or submitted by the
+  current implementation.
 - Approved venue-type and independent/chain choices.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count
   cross-field invariant.
-- API endpoints, DTOs, authentication requirements, consent behavior, retention/deletion rules, and error contract.
-- Whether the landing page uses an existing backend or a separately scoped service.
+- Prospective-user API endpoints and DTOs, and venue-lead retention/deletion
+  requirements.
+- Whether venue submission later migrates from direct HubSpot Forms submission
+  to a separately scoped server-side proxy.
 
 Backend implementation must be driven by an actual approved contract rather than inferred from the main mobile application. Do not copy `/profiles`, Entra, OIDC, user-profile, onboarding, or other mobile-app contracts into this project without an explicit landing-page requirement.
 
@@ -459,7 +498,12 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 
 - GitHub Pages is the production deployment target.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
-- The active workflow installs Puro 1.5.0, creates the named `fun-app-landing` environment from Flutter stable, generates localizations and Dart sources, analyzes, tests, and builds Flutter Web with `FUN_APP_ENVIRONMENT=production`.
+- The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
+  environment from Flutter stable, generates localizations and Dart sources,
+  analyzes, tests, and builds Flutter Web with `FUN_APP_ENVIRONMENT=production`.
+  The build consumes the public HubSpot portal ID and venue-form GUID from
+  GitHub Actions repository variables with matching names; those external
+  values are not hardcoded in the workflow.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
 - The archived Astro project is not built or deployed.

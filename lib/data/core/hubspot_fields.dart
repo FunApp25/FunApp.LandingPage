@@ -7,10 +7,10 @@ abstract final class HubSpotFields {
   static const String venueType = 'type_of_venue';
 
   /// External property for independent or chain status.
-  static const String chainStatus = 'independent_or_part_of_chain';
+  static const String chainStatus = 'independent_or_part_of_chain_';
 
   /// External property for the number of venues in a chain.
-  static const String venueCount = 'if_chain_number_of_venues';
+  static const String venueCount = 'if_chain__number_of_venues';
 
   /// External property for venue capacity.
   static const String venueCapacity = 'your_venue_s_capacity';
