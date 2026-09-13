@@ -26,8 +26,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   interaction motion, and
   one-time scroll accents only for Research Statistics, Membership pricing
   cards, Founding Friends, and Venue; the Hero and all other landing sections
-  remain static. Business, domain, application, and data behavior is not
-  implemented.
+  remain static. The first provider-neutral prospective-venue domain model and
+  the external HubSpot field-name constants now exist; application workflows,
+  submission infrastructure, and form presentation are not implemented.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -55,6 +56,7 @@ puro create fun-app-landing stable
 puro use fun-app-landing
 puro flutter pub get
 puro flutter gen-l10n
+puro flutter pub run build_runner build
 ```
 
 Puro records the local selection in `.puro.json`. That file is excluded
@@ -92,10 +94,18 @@ puro flutter gen-l10n
 
 Generated localization Dart files are local build inputs and are not committed.
 
+Freezed source is also generated locally and remains uncommitted. Regenerate
+all generated Dart model source after changing a Freezed input:
+
+```bash
+puro flutter pub run build_runner build
+```
+
 ## Validation
 
 ```bash
 puro flutter gen-l10n
+puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
 puro flutter build web
@@ -108,6 +118,9 @@ theme, interactions, and responsive viewport contracts.
 
 ```text
 lib/                         Active Flutter application source
+lib/domain/core/             Pure-Dart failures, validators, and value objects
+lib/domain/venue/            Provider-neutral prospective-venue domain model
+lib/data/core/               External field-name mapping constants only
 lib/l10n/                    Localization ARB source files
 lib/presentation/landing/pages/ Landing-page composition and navigation owner
 lib/presentation/landing/sections/ Section-owned landing presentation widgets
@@ -133,11 +146,13 @@ the same file as its public widget.
 
 ## Architecture direction
 
-Application behavior will use a layer-first direction with `presentation`,
+Application behavior uses a layer-first direction with `presentation`,
 `application`, `domain`, and `data` responsibilities when active code requires
-them. `core` may own bootstrap and shared wiring. BLoC/Cubit, domain validation,
-repositories, and data sources should be introduced only when corresponding
-state, rules, or external I/O exists.
+them. `domain` now owns the reusable validation foundation and provider-neutral
+prospective-venue model; the only active `data` surface is the HubSpot external
+field-name constants. `core` may own bootstrap and shared wiring. BLoC/Cubit,
+repositories, data sources, and submission workflows remain deferred until
+corresponding state or external I/O exists.
 
 See [`SPECIFICATIONS.md`](SPECIFICATIONS.md) for the complete direction and
 dependency boundaries.

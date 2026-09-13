@@ -49,6 +49,9 @@ jobs:
       - name: Generate localizations
         run: puro --env="$PURO_ENV_NAME" flutter gen-l10n
 
+      - name: Generate Dart sources
+        run: puro --env="$PURO_ENV_NAME" flutter pub run build_runner build
+
       - name: Analyze
         run: puro --env="$PURO_ENV_NAME" flutter analyze
 

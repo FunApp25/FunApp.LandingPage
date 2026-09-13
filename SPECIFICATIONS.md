@@ -71,7 +71,8 @@ Current implementation is evidence of repository state, not automatically a perm
 
 The repository is an active Flutter Web project:
 
-- `lib/` contains the Flutter bootstrap and active presentation foundation.
+- `lib/` contains the Flutter bootstrap, active presentation, and the first
+  venue-lead domain/data foundation.
 - `lib/l10n/` contains committed ARB localization inputs; generated localization Dart files remain uncommitted.
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
 - `test/` contains tests for active Flutter behavior.
@@ -79,7 +80,13 @@ The repository is an active Flutter Web project:
 - `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
 - `.github/workflows/deploy.yml` validates and builds Flutter through Puro, uploads `build/web`, and deploys it through GitHub Pages.
 
-Future Flutter code may introduce `presentation`, `application`, `domain`, `data`, and `core` areas only when active behavior needs them. The landing-page repository aligns architectural concepts with the main Fun App Flutter application where appropriate, but the repositories do not currently share source code or packages.
+Flutter code uses `presentation`, `application`, `domain`, `data`, and `core`
+areas only when active behavior needs them. `domain` is active for reusable
+validation and the provider-neutral venue-lead model. The narrow active
+`data/core` surface contains external field-name constants only. The
+landing-page repository aligns architectural concepts with the main Fun App
+Flutter application where appropriate, but the repositories do not currently
+share source code or packages.
 
 ## 6. Architecture
 
@@ -284,6 +291,30 @@ capabilities as implemented.
 
 ## 8. User input and future backend direction
 
+### Established
+
+- The prospective-venue lead contract is provider-neutral and lives in
+  `domain`. It uses `dartz` `Either` for validation results and `Option` for
+  meaningful absence.
+- Reusable pure-Dart value objects retain invalid editable input without
+  throwing. Required strings reject whitespace-only content, single-line text
+  rejects carriage returns and newlines, email validation is structural, and
+  website validation requires HTTP or HTTPS with a non-empty host.
+- Domain validation does not trim, lowercase, rewrite, or otherwise normalize
+  submitted text. Phone numbers are stored as strings, preserve leading zeroes,
+  and, when present, accept decimal digits only. Venue count and venue capacity
+  are optional positive integral quantities with no established upper bound.
+- `VenueLead` requires venue name, website, contact first name, contact last
+  name, role, and email. Venue type, independent/chain status, venue count,
+  venue capacity, and phone number are optional.
+- Present venue type and independent/chain status values are non-empty
+  single-line text. Their closed option sets are not established.
+- Generated Freezed source is regenerated locally and in CI and remains
+  uncommitted.
+- HubSpot property names are external mapping details owned only by
+  `data/core/hubspot_fields.dart`. No HubSpot client, DTO, repository, transport,
+  configuration, or submission workflow exists.
+
 ### Provisional
 
 - The landing page is expected to collect interested-user information in the future; likely examples include name and email.
@@ -292,7 +323,13 @@ capabilities as implemented.
 
 ### Open
 
-- Exact input model and required/optional fields.
+- The prospective-user input model and its required/optional fields.
+- Venue form presentation, validation messages, submission behavior, and
+  application workflow.
+- Approved venue-type and independent/chain choices.
+- Whether a future approved chain selection makes venue count conditionally
+  required. The current domain contract deliberately has no chain/count
+  cross-field invariant.
 - API endpoints, DTOs, authentication requirements, consent behavior, retention/deletion rules, and error contract.
 - Whether the landing page uses an existing backend or a separately scoped service.
 
