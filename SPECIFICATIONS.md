@@ -72,7 +72,9 @@ Current implementation is evidence of repository state, not automatically a perm
 
 ### Open
 
-- Exact form fields, validation messages, consent copy, sign-up flow, analytics, and marketing behavior.
+- The interested-person form fields and validation rules.
+- Venue form presentation and layout, validation messages, and sign-up flow.
+- Consent and privacy UX, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
 
@@ -348,6 +350,9 @@ capabilities as implemented.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
+- The draft remains editable during submission. A completed result is exposed
+  only when the current draft still equals the submitted snapshot; otherwise
+  the stale result is discarded while validation-attempt visibility remains.
 - One concrete `VenueLeadRepository` implements the domain repository contract.
   It validates the aggregate before extracting values, translates a valid lead
   into a provider-neutral `VenueLeadDto`, and delegates to
@@ -370,28 +375,37 @@ capabilities as implemented.
   sent. Every submitted `HubSpotFields` property must exist on the target
   HubSpot venue form, and every field that HubSpot marks required on that form
   must be supplied by this contract.
-- A HubSpot 200 response acknowledges success without consuming its redirect
-  URI or inline HTML message. Status 400 is submission rejected; 429 and 5xx
-  responses plus known HTTP transport failures are service unavailable; other
-  statuses are unexpected. No automatic retry occurs.
+- Each HubSpot submission has a 15-second abortable deadline. A HubSpot 200
+  response acknowledges success after its response stream is drained without
+  interpreting a redirect URI or inline HTML message. Status 400 is submission
+  rejected; 429 and 5xx responses plus known HTTP transport failures and
+  deadline aborts are service unavailable; other statuses are unexpected. No
+  automatic retry occurs.
 - Classified data-source service-unavailable and submission-rejected conditions
   map to their matching `AppFailure` categories. Unclassified exceptions map to
   `AppFailure.unexpected`. Data-source exceptions do not cross the domain
   repository boundary.
 - GetIt and Injectable own composition now that environment-dependent
   implementations exist. `VenueLeadFormBloc` is a factory registration, the
-  repository is a provider-neutral lazy singleton, and the selected data source
-  is an environment-specific lazy singleton. Application and data classes use
-  constructor injection rather than reading GetIt directly.
-- `FUN_APP_ENVIRONMENT` selects `development` or `production` at compile time.
-  An absent value defaults to development; an unsupported non-empty value fails
-  during bootstrap. The production Pages build sets the value explicitly.
+  repository is a provider-neutral lazy singleton, and core composition
+  registers the selected data-source lazy singleton. Production composition
+  passes validated primitive HubSpot identifiers into the data source.
+  Application and data classes use constructor injection rather than reading
+  GetIt or importing application configuration.
+- Environment selection is structural: `lib/main_dev.dart` passes the typed
+  `AppEnvironment.development` value into bootstrap and resolves deterministic
+  development dependencies, while `lib/main_prod.dart` passes
+  `AppEnvironment.production` and resolves the HubSpot production graph. No
+  environment-selection dart-define or string parsing is used.
 - `FUN_APP_HUBSPOT_PORTAL_ID` and
   `FUN_APP_HUBSPOT_VENUE_FORM_GUID` are required, non-empty production
   compile-time configuration. They are public account/form identifiers visible
   in the compiled Flutter Web application, not secrets. A gitignored `.env`
-  may supply them locally through `--dart-define-from-file=.env`; this is a
-  build-input mechanism, not runtime dotenv storage.
+  may supply only these identifiers locally through
+  `--dart-define-from-file=.env`; the production entrypoint selects the
+  environment. Development neither requires `.env` nor constructs or validates
+  HubSpot configuration. This is a build-input mechanism, not runtime dotenv
+  storage.
 - Compile-time Flutter Web configuration must not contain HubSpot credentials,
   tokens, API keys, or other secrets.
 - There is no Fun App backend proxy for venue leads. A future server-side proxy
@@ -485,7 +499,8 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web
+puro flutter build web -t lib/main_dev.dart
+puro flutter build web -t lib/main_prod.dart --dart-define-from-file=.env
 ```
 
 The active widget test suite covers the landing surface and its durable responsive and interaction contracts. Verification should grow with implemented behavior rather than speculative tooling.
@@ -500,10 +515,15 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
 - The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
   environment from Flutter stable, generates localizations and Dart sources,
-  analyzes, tests, and builds Flutter Web with `FUN_APP_ENVIRONMENT=production`.
+  analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`.
   The build consumes the public HubSpot portal ID and venue-form GUID from
   GitHub Actions repository variables with matching names; those external
-  values are not hardcoded in the workflow.
+  values are not hardcoded in the workflow. The workflow fails before the
+  production build and artifact upload when either variable is empty.
+- Before releasing venue submission, an authorized person must confirm that
+  the configured form GUID identifies the intended venue form, every
+  `HubSpotFields` property exists on it, and its HubSpot-required fields match
+  the application-required venue contract.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
 - The archived Astro project is not built or deployed.

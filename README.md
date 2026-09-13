@@ -78,12 +78,11 @@ Those machine-specific settings remain ignored.
 ## Run Flutter Web
 
 ```bash
-puro flutter run -d chrome \
-  --dart-define=FUN_APP_ENVIRONMENT=development
+puro flutter run -d chrome -t lib/main_dev.dart
 ```
 
-VS Code and VSCodium users can also launch `lib/main.dart` on Chrome in debug
-mode through either committed configuration:
+VS Code and VSCodium users can also launch either explicit Flutter entrypoint
+on Chrome in debug mode through the committed configurations:
 
 - **Fun App Landing — Development (Fake Repositories)** selects the
   deterministic local data source.
@@ -94,15 +93,17 @@ template and replace both HubSpot identifiers in the gitignored local file:
 
 ```bash
 cp .env.example .env
-puro flutter run -d chrome --dart-define-from-file=.env
+puro flutter run -d chrome \
+  -t lib/main_prod.dart \
+  --dart-define-from-file=.env
 ```
 
 The **Fun App Landing — HubSpot** VS Code configuration consumes the same
-`.env` file. It does not load dotenv at runtime; Flutter reads the file as
+`.env` file while `lib/main_prod.dart` structurally selects the production
+environment. It does not load dotenv at runtime; Flutter reads the file as
 compile-time build input. The file must contain non-empty values for:
 
 ```text
-FUN_APP_ENVIRONMENT=production
 FUN_APP_HUBSPOT_PORTAL_ID=123456789
 FUN_APP_HUBSPOT_VENUE_FORM_GUID=00000000-0000-0000-0000-000000000000
 ```
@@ -114,10 +115,19 @@ to avoid committing environment-specific configuration, not because they are
 secrets. Never put authentication credentials, tokens, API keys, or client
 secrets in `.env` or any Flutter Web build define.
 
-Omitting `FUN_APP_ENVIRONMENT` defaults to `development`. An unknown non-empty
-value fails during bootstrap instead of silently selecting another environment.
-Production composition also fails at startup when either required HubSpot
-identifier is empty.
+The entrypoint selects the dependency environment; dart-defines provide only
+configuration required by that environment. Development uses
+`lib/main_dev.dart`, needs no `.env`, and neither constructs nor validates
+HubSpot configuration. Production composition fails at startup when either
+required HubSpot identifier is empty.
+
+Build the production entrypoint locally with the same public configuration:
+
+```bash
+puro flutter build web \
+  -t lib/main_prod.dart \
+  --dart-define-from-file=.env
+```
 
 ## Localization
 
@@ -148,7 +158,7 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web
+puro flutter build web -t lib/main_dev.dart
 ```
 
 The test suite covers domain validation, venue-lead form orchestration, and the
@@ -159,6 +169,8 @@ responsive viewport contracts.
 
 ```text
 lib/                         Active Flutter application source
+lib/main_dev.dart            Development/fake Flutter entrypoint
+lib/main_prod.dart           Production/HubSpot Flutter entrypoint
 lib/application/venue/       Venue-lead form state and submission orchestration
 lib/core/config/              Typed application-environment selection
 lib/core/injection/           GetIt/Injectable composition root
@@ -196,12 +208,15 @@ Application behavior uses a layer-first direction with `presentation`,
 them. `domain` owns validation and the provider-neutral prospective-venue
 contract; the application BLoC coordinates the form through that contract. One
 data repository maps validated leads into a provider-neutral DTO and delegates
-to an environment-selected data source. `core` parses the compile-time
-environment and configures GetIt through Injectable before the app starts.
+to an environment-selected data source. The explicit development and production
+entrypoints pass a typed environment into `core`, which configures GetIt through
+Injectable before the app starts.
 The production data boundary maps the DTO to exact HubSpot property names and
-uses the public Forms endpoint without exposing provider concerns above the
-data layer. A future server-side proxy can replace this transport without
-changing the domain/application contracts.
+uses the public Forms endpoint with an abortable 15-second request deadline.
+Core composition passes validated public identifiers into that boundary
+without exposing provider concerns above the data layer. A future server-side
+proxy can replace this transport without changing the domain/application
+contracts.
 
 See [`SPECIFICATIONS.md`](SPECIFICATIONS.md) for the complete direction and
 dependency boundaries.
@@ -210,9 +225,9 @@ dependency boundaries.
 
 Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.
 CI installs Puro, creates the `fun-app-landing` stable environment, generates
-localizations and Dart sources, analyzes, tests, and builds Flutter Web with
-`FUN_APP_ENVIRONMENT=production`. The production build is ready to consume
-these public GitHub Actions repository variables:
+localizations and Dart sources, analyzes, tests, and explicitly builds
+`lib/main_prod.dart`. The production build consumes these public GitHub Actions
+repository variables:
 
 ```text
 FUN_APP_HUBSPOT_PORTAL_ID
@@ -221,7 +236,8 @@ FUN_APP_HUBSPOT_VENUE_FORM_GUID
 
 Repository administrators must configure both values before relying on the
 deployed production submission path; the workflow does not fabricate or
-hardcode them. The workflow uploads `build/web` and deploys it to
+hardcode them and fails before the production build when either is empty. The
+workflow uploads `build/web` and deploys it to
 [https://funapp.world](https://funapp.world).
 
 HubSpot validates unauthenticated submissions against the target form
@@ -230,6 +246,11 @@ and all HubSpot-required fields must be provided. The implementation leaves
 validation enabled and does not send deprecated `skipValidation`. Consent API
 payloads remain deferred until product/legal requirements establish an
 approved privacy and consent contract.
+
+Before releasing venue submission, an authorized person must confirm in
+HubSpot that the configured form GUID identifies the intended venue form, every
+`HubSpotFields` property exists on that form, and HubSpot-required fields match
+the application-required venue contract.
 
 The custom domain remains configured in GitHub Pages. `web/CNAME` records the
 repository's active domain declaration and is copied into the Flutter artifact.

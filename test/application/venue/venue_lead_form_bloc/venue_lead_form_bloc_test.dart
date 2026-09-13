@@ -386,6 +386,72 @@ void main() {
     },
   );
 
+  for (final (completionName, completionResult) in [
+    ('success', right<AppFailure, Unit>(unit)),
+    (
+      'failure',
+      left<AppFailure, Unit>(const AppFailure.serviceUnavailable()),
+    ),
+  ]) {
+    final editedLead = populatedLead.copyWith(
+      venueName: NonEmptySingleLineText('Edited Venue'),
+    );
+    late Completer<Either<AppFailure, Unit>> resultCompleter;
+
+    blocTest<VenueLeadFormBloc, VenueLeadFormState>(
+      'discards stale $completionName when the draft changes in flight',
+      setUp: () {
+        resultCompleter = Completer<Either<AppFailure, Unit>>();
+        repository.onSubmit = (_) => resultCompleter.future;
+      },
+      build: buildBloc,
+      seed: () => _state(lead: populatedLead),
+      act: (bloc) async {
+        final submitting = bloc.stream.firstWhere(
+          (state) => state.isSubmitting,
+        );
+        bloc.add(const VenueLeadFormEvent.submitted());
+        await submitting;
+
+        final edited = bloc.stream.firstWhere(
+          (state) => state.lead == editedLead,
+        );
+        bloc.add(
+          const VenueLeadFormEvent.venueNameChanged('Edited Venue'),
+        );
+        await edited;
+
+        final settled = bloc.stream.firstWhere(
+          (state) => !state.isSubmitting && state.lead == editedLead,
+        );
+        resultCompleter.complete(completionResult);
+        await settled;
+      },
+      expect: () => [
+        _state(
+          lead: populatedLead,
+          hasAttemptedSubmit: true,
+          isSubmitting: true,
+        ),
+        _state(
+          lead: editedLead,
+          hasAttemptedSubmit: true,
+          isSubmitting: true,
+        ),
+        _state(
+          lead: editedLead,
+          hasAttemptedSubmit: true,
+        ),
+      ],
+      verify: (bloc) {
+        expect(bloc.state.lead, editedLead);
+        expect(bloc.state.isSubmitting, isFalse);
+        expect(bloc.state.submissionResult, none<Either<AppFailure, Unit>>());
+        expect(repository.submittedLeads, [populatedLead]);
+      },
+    );
+  }
+
   blocTest<VenueLeadFormBloc, VenueLeadFormState>(
     'submission can retry successfully after an operational failure',
     setUp: () {

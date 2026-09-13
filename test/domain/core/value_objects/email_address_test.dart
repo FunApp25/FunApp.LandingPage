@@ -44,6 +44,30 @@ void main() {
     );
   });
 
+  test('rejects invalid local-part dot placement', () {
+    for (final input in [
+      '.contact@example.com',
+      'contact.@example.com',
+      'contact..name@example.com',
+    ]) {
+      expect(
+        EmailAddress(input).value,
+        left<ValueFailure<String>, String>(
+          ValueFailure.invalidEmail(failedValue: input),
+        ),
+      );
+    }
+  });
+
+  test('accepts a dotted local part without rewriting it', () {
+    const input = 'first.last@example.com';
+
+    expect(
+      EmailAddress(input).value,
+      right<ValueFailure<String>, String>(input),
+    );
+  });
+
   test('does not silently trim surrounding whitespace', () {
     const input = ' person@example.com ';
 

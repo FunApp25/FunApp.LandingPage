@@ -29,7 +29,14 @@ Either<ValueFailure<String>, String> validateSingleLine(String input) {
 
 /// Validates the structural format of an email address.
 Either<ValueFailure<String>, String> validateEmail(String input) {
-  if (_emailRegex.hasMatch(input)) {
+  final separatorIndex = input.indexOf('@');
+  final localPart = separatorIndex == -1
+      ? input
+      : input.substring(0, separatorIndex);
+  final hasValidDotPlacement =
+      !localPart.startsWith('.') && !localPart.endsWith('.');
+
+  if (_emailRegex.hasMatch(input) && hasValidDotPlacement) {
     return right(input);
   } else {
     return left(ValueFailure.invalidEmail(failedValue: input));

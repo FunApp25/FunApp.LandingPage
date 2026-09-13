@@ -20,7 +20,7 @@ void main() {
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     final pageContext = tester.element(find.byType(LandingPage));
     final l10n = AppLocalizations.of(pageContext);
-    _expectLocalizedTitle(tester, 'Fun App Landing Page');
+    _expectLocalizedTitle(tester, 'Fun App');
     expect(app.debugShowCheckedModeBanner, isFalse);
     expect(app.locale, isNull);
     expect(app.localeListResolutionCallback, isNotNull);
@@ -63,7 +63,7 @@ void main() {
     await _pumpApp(tester, const Locale('es'));
 
     final context = tester.element(find.byType(LandingPage));
-    _expectLocalizedTitle(tester, 'Página de destino de Fun App');
+    _expectLocalizedTitle(tester, 'Fun App');
     expect(Localizations.localeOf(context), const Locale('es'));
   });
 
@@ -71,7 +71,7 @@ void main() {
     await _pumpApp(tester, const Locale('cy'));
 
     final context = tester.element(find.byType(LandingPage));
-    _expectLocalizedTitle(tester, 'Tudalen lanio Fun App');
+    _expectLocalizedTitle(tester, 'Fun App');
     expect(Localizations.localeOf(context), const Locale('cy'));
   });
 
@@ -79,7 +79,7 @@ void main() {
     await _pumpApp(tester, const Locale('be'));
 
     final context = tester.element(find.byType(LandingPage));
-    _expectLocalizedTitle(tester, 'Мэтавая старонка Fun App');
+    _expectLocalizedTitle(tester, 'Fun App');
     expect(Localizations.localeOf(context), const Locale('be'));
   });
 
@@ -89,7 +89,7 @@ void main() {
     await _pumpApp(tester, const Locale('fr'));
 
     final context = tester.element(find.byType(LandingPage));
-    _expectLocalizedTitle(tester, 'Fun App Landing Page');
+    _expectLocalizedTitle(tester, 'Fun App');
     expect(Localizations.localeOf(context), const Locale('en'));
   });
 

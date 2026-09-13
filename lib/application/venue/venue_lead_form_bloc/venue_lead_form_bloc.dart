@@ -179,12 +179,15 @@ class VenueLeadFormBloc extends Bloc<VenueLeadFormEvent, VenueLeadFormState> {
         final submissionResult = await _repository.submitVenueLead(
           submittedLead,
         );
+        final isCurrentDraftSubmitted = state.lead == submittedLead;
 
         emit(
           state.copyWith(
             isSubmitting: false,
             hasAttemptedSubmit: true,
-            submissionResult: some(submissionResult),
+            submissionResult: isCurrentDraftSubmitted
+                ? some(submissionResult)
+                : none(),
           ),
         );
       } else {

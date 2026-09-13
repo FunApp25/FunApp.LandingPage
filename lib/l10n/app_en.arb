@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Fun App Landing Page",
+  "appTitle": "Fun App",
   "@appTitle": {
     "description": "User-facing title for the Fun App landing-page application."
   },

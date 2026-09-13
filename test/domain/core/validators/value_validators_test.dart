@@ -56,17 +56,26 @@ void main() {
   });
 
   group('validateEmail', () {
-    test('accepts a representative email address', () {
-      const input = 'contact@example.com';
-
-      expect(
-        validateEmail(input),
-        right<ValueFailure<String>, String>(input),
-      );
+    test('accepts representative ordinary email addresses', () {
+      for (final input in [
+        'contact@example.com',
+        'first.last@example.com',
+      ]) {
+        expect(
+          validateEmail(input),
+          right<ValueFailure<String>, String>(input),
+        );
+      }
     });
 
     test('rejects invalid email formats', () {
-      for (final input in ['contact', 'a@b', 'a..b@example.com']) {
+      for (final input in [
+        'contact',
+        'a@b',
+        '.contact@example.com',
+        'contact.@example.com',
+        'contact..name@example.com',
+      ]) {
         expect(
           validateEmail(input),
           left<ValueFailure<String>, String>(

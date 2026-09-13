@@ -44,6 +44,23 @@ void main() {
     await bloc.close();
   });
 
+  test('production rejects missing public HubSpot configuration', () {
+    expect(
+      () => configureDependencies(AppEnvironment.production),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains(hubSpotPortalIdDefineName),
+        ),
+      ),
+    );
+    expect(getIt.isRegistered<VenueLeadRepositoryInterface>(), isFalse);
+    expect(getIt.isRegistered<VenueLeadDataSourceInterface>(), isFalse);
+    expect(getIt.isRegistered<HubSpotFormsConfig>(), isFalse);
+    expect(getIt.isRegistered<http.Client>(), isFalse);
+  });
+
   test(
     'production injects HubSpot config and HTTP client without real I/O',
     () async {
@@ -69,6 +86,10 @@ void main() {
       expect(
         getIt<VenueLeadDataSourceInterface>(),
         isA<HubSpotVenueLeadDataSource>(),
+      );
+      expect(
+        getIt<VenueLeadDataSourceInterface>(),
+        isNot(isA<DevelopmentVenueLeadDataSource>()),
       );
       expect(
         await repository.submitVenueLead(_validLead()),

@@ -1,6 +1,7 @@
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
 import 'package:fun_app_landing_page/core/config/hubspot_forms_config.dart';
 import 'package:fun_app_landing_page/core/injection/injection.config.dart';
+import 'package:fun_app_landing_page/data/venue/data_sources/development_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/hubspot_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_interface.dart';
 import 'package:get_it/get_it.dart';
@@ -16,13 +17,18 @@ final GetIt getIt = GetIt.instance;
 /// changing the compile-time configuration used by the application.
 @InjectableInit(
   preferRelativeImports: true,
+  ignoreUnregisteredTypes: [VenueLeadDataSourceInterface],
 )
 void configureDependencies(
   AppEnvironment environment, {
   HubSpotFormsConfig? productionHubSpotConfig,
   http.Client? productionHttpClient,
 }) {
-  if (environment == AppEnvironment.production) {
+  if (environment == AppEnvironment.development) {
+    getIt.registerLazySingleton<VenueLeadDataSourceInterface>(
+      DevelopmentVenueLeadDataSource.new,
+    );
+  } else {
     final hubSpotConfig =
         productionHubSpotConfig ?? HubSpotFormsConfig.fromEnvironment();
 
@@ -34,11 +40,12 @@ void configureDependencies(
       )
       ..registerLazySingleton<VenueLeadDataSourceInterface>(
         () => HubSpotVenueLeadDataSource(
-          getIt<http.Client>(),
-          getIt<HubSpotFormsConfig>(),
+          client: getIt<http.Client>(),
+          portalId: hubSpotConfig.portalId,
+          venueFormGuid: hubSpotConfig.venueFormGuid,
         ),
       );
   }
 
-  getIt.init(environment: environment.name);
+  getIt.init();
 }
