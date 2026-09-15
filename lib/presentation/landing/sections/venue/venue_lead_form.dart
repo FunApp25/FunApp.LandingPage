@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/value_object.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_form_messages.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_disclosure.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// Editable presentation for the established venue-lead BLoC workflow.
@@ -13,6 +14,7 @@ final class VenueLeadForm extends StatefulWidget {
   const VenueLeadForm({
     required this.state,
     required this.submissionFailure,
+    required this.onPrivacyNoticeSelected,
     super.key,
   });
 
@@ -21,6 +23,9 @@ final class VenueLeadForm extends StatefulWidget {
 
   /// Current provider-neutral operational failure, when present.
   final AppFailure? submissionFailure;
+
+  /// Navigates to the hosted Privacy Notice, or null during submission.
+  final VoidCallback? onPrivacyNoticeSelected;
 
   @override
   State<VenueLeadForm> createState() => _VenueLeadFormState();
@@ -234,6 +239,12 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
           ),
         ],
         const SizedBox(height: 24),
+        VenuePrivacyDisclosure(
+          statement: l10n.venueLeadPrivacyDisclosure,
+          privacyNoticeLabel: l10n.venueLeadPrivacyNoticeLinkLabel,
+          onPrivacyNoticeSelected: widget.onPrivacyNoticeSelected,
+        ),
+        const SizedBox(height: 20),
         FilledButton(
           key: const Key('venueLeadSubmitButton'),
           onPressed: state.isSubmitting

@@ -4,6 +4,7 @@ import 'package:fun_app_landing_page/presentation/core/extensions/build_context_
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 
 /// Root widget for the Fun App landing-page application.
 final class FunAppLandingPageApp extends StatelessWidget {
@@ -22,6 +23,9 @@ final class FunAppLandingPageApp extends StatelessWidget {
     supportedLocales: AppLocalizations.supportedLocales,
     localeListResolutionCallback: _resolveLocaleList,
     home: const LandingPage(),
+    routes: {
+      PrivacyNoticePage.routeName: (_) => const PrivacyNoticePage(),
+    },
   );
 }
 

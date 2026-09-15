@@ -40,6 +40,18 @@
   "@landingDialogClose": {
     "description": "Accessible label for closing a landing-page dialog."
   },
+  "privacyNoticeNavigationLabel": "Privacy Notice",
+  "@privacyNoticeNavigationLabel": {
+    "description": "Navigation label for the hosted Privacy Notice page."
+  },
+  "privacyNoticeReturnToLanding": "Back to Fun App",
+  "@privacyNoticeReturnToLanding": {
+    "description": "Navigation label returning from the Privacy Notice to the landing page."
+  },
+  "privacyNoticeLoadError": "The Privacy Notice could not be loaded. Please try again.",
+  "@privacyNoticeLoadError": {
+    "description": "Error shown when the canonical Privacy Notice asset cannot be loaded."
+  },
   "landingInterestedUserComingSoonTitle": "Coming soon",
   "@landingInterestedUserComingSoonTitle": {
     "description": "Title of the presentation-only prospective-user dialog."
@@ -173,6 +185,14 @@
   "venueLeadSuccessTitle": "Thanks — we’ll be in touch.",
   "@venueLeadSuccessTitle": {
     "description": "Venue-interest submission success confirmation."
+  },
+  "venueLeadPrivacyDisclosure": "By submitting this form, you acknowledge that Fun App will use the information you provide to respond to your enquiry. Please see Fun App's Privacy Notice for information about how it collects and processes personal data.",
+  "@venueLeadPrivacyDisclosure": {
+    "description": "Approved English privacy acknowledgement shown immediately before the venue form submit control. This legal/product copy remains English until approved translations are supplied."
+  },
+  "venueLeadPrivacyNoticeLinkLabel": "Privacy Notice",
+  "@venueLeadPrivacyNoticeLinkLabel": {
+    "description": "Exact approved link text within the English venue privacy acknowledgement."
   },
   "landingHeroEyebrow": "A FRIENDLIER WAY TO CONNECT",
   "@landingHeroEyebrow": {

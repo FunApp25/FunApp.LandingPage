@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_privacy_notice_link.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
 
 /// Landing-page footer from Figma node `2190:1664`.
@@ -14,6 +15,7 @@ final class LandingFooter extends StatelessWidget {
     required this.onOurBeliefSelected,
     required this.onFoundingFriendsSelected,
     required this.onVenuesSelected,
+    required this.onPrivacyNoticeSelected,
     super.key,
   });
 
@@ -25,6 +27,9 @@ final class LandingFooter extends StatelessWidget {
 
   /// Scrolls to the venue section.
   final VoidCallback onVenuesSelected;
+
+  /// Navigates to the hosted Privacy Notice page.
+  final VoidCallback onPrivacyNoticeSelected;
 
   /// Visible contact address whose interaction remains intentionally deferred.
   static const contactEmail = 'info@funapp.world';
@@ -53,6 +58,8 @@ final class LandingFooter extends StatelessWidget {
         child: MobileFooter(
           items: navigationItems,
           email: contactEmail,
+          privacyNoticeLabel: context.l10n.privacyNoticeNavigationLabel,
+          onPrivacyNoticeSelected: onPrivacyNoticeSelected,
         ),
       );
     } else {
@@ -86,6 +93,11 @@ final class LandingFooter extends StatelessWidget {
                       FooterLogoAndNavigation(items: navigationItems),
                       SizedBox(height: availableWidth < 600 ? 48 : 80),
                       const FooterEmail(email: contactEmail),
+                      const SizedBox(height: 24),
+                      FooterPrivacyNoticeLink(
+                        label: context.l10n.privacyNoticeNavigationLabel,
+                        onSelected: onPrivacyNoticeSelected,
+                      ),
                     ],
                   ),
                 ),

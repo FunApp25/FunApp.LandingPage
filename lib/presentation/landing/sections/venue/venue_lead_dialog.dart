@@ -10,20 +10,24 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 /// Creates a fresh venue form BLoC.
 typedef VenueLeadFormBlocFactory = VenueLeadFormBloc Function();
 
+/// User-selected destination after the venue dialog closes.
+enum VenueLeadDialogResult {
+  /// The user selected the hosted Privacy Notice.
+  privacyNotice,
+}
+
 /// Opens the functional venue-interest dialog.
-Future<void> showVenueLeadDialog(
+Future<VenueLeadDialogResult?> showVenueLeadDialog(
   BuildContext context, {
   required VenueLeadFormBlocFactory createBloc,
-}) async {
-  await showDialog<void>(
-    context: context,
-    barrierLabel: context.l10n.landingDialogClose,
-    builder: (context) => BlocProvider(
-      create: (_) => createBloc(),
-      child: const VenueLeadDialog(),
-    ),
-  );
-}
+}) => showDialog<VenueLeadDialogResult>(
+  context: context,
+  barrierLabel: context.l10n.landingDialogClose,
+  builder: (context) => BlocProvider(
+    create: (_) => createBloc(),
+    child: const VenueLeadDialog(),
+  ),
+);
 
 /// Coordinates dialog presentation with the venue form submission state.
 final class VenueLeadDialog extends StatelessWidget {
@@ -45,8 +49,13 @@ final class VenueLeadDialog extends StatelessWidget {
           final closeDialog = state.isSubmitting
               ? null
               : () => Navigator.of(context).pop();
+          final openPrivacyNotice = state.isSubmitting
+              ? null
+              : () => Navigator.of(
+                  context,
+                ).pop(VenueLeadDialogResult.privacyNotice);
 
-          return PopScope<void>(
+          return PopScope<VenueLeadDialogResult>(
             key: const Key('venueLeadDialogPopScope'),
             canPop: !state.isSubmitting,
             child: LandingDialog(
@@ -58,6 +67,7 @@ final class VenueLeadDialog extends StatelessWidget {
                   : VenueLeadForm(
                       state: state,
                       submissionFailure: submissionFailure,
+                      onPrivacyNoticeSelected: openPrivacyNotice,
                     ),
             ),
           );

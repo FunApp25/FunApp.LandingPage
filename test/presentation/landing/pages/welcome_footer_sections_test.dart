@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +10,7 @@ import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -37,6 +40,7 @@ void main() {
       expect(find.text(label), findsNWidgets(2));
     }
     expect(find.text(LandingFooter.contactEmail), findsOneWidget);
+    expect(find.text('Privacy Notice'), findsOneWidget);
   });
 
   for (final example in const [
@@ -269,25 +273,58 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('keeps legal controls absent while their contracts are open', (
+  testWidgets(
+    'shows Privacy Notice while unresolved legal controls stay absent',
+    (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(390, 844));
+      await pumpLandingApp(tester);
+
+      final footer = find.byType(LandingFooter);
+      for (final label in [
+        'Terms of Use',
+        'Refund & Cancellation Policy',
+        'Cookie Policy',
+        'Cookie Banner',
+      ]) {
+        expect(
+          find.descendant(of: footer, matching: find.text(label)),
+          findsNothing,
+        );
+      }
+      expect(
+        find.descendant(of: footer, matching: find.text('Privacy Notice')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('footer Privacy Notice link supports route history', (
     tester,
   ) async {
-    setTestSurface(tester, const Size(390, 844));
+    final semantics = tester.ensureSemantics();
     await pumpLandingApp(tester);
 
-    final footer = find.byType(LandingFooter);
-    for (final label in [
-      'Privacy Policy',
-      'Terms of Use',
-      'Refund & Cancellation Policy',
-      'Cookie Policy',
-      'Cookie Banner',
-    ]) {
-      expect(
-        find.descendant(of: footer, matching: find.text(label)),
-        findsNothing,
-      );
-    }
+    final privacyLink = find.byKey(const Key('footerPrivacyNoticeLink'));
+    await tester.ensureVisible(privacyLink);
+    await tester.pumpAndSettle();
+    final interactiveLink = tester.widget<InkWell>(
+      find.descendant(of: privacyLink, matching: find.byType(InkWell)),
+    );
+    interactiveLink.onTap!();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PrivacyNoticePage), findsOneWidget);
+    expect(find.byType(LandingFooter), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PrivacyNoticePage), findsNothing);
+    expect(find.byType(LandingFooter), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
   });
 
   testWidgets('keeps the mobile footer safe across supported locales', (
@@ -364,6 +401,13 @@ void main() {
       expect(navigation.flagsCollection.isLink, isFalse);
       expect(navigation.flagsCollection.isButton, isTrue);
     }
+    final privacyLink = tester
+        .getSemantics(find.byKey(const Key('footerPrivacyNoticeLink')))
+        .getSemanticsData();
+    expect(privacyLink.label, 'Privacy Notice');
+    expect(privacyLink.flagsCollection.isLink, isTrue);
+    expect(privacyLink.flagsCollection.isButton, isFalse);
+    expect(privacyLink.hasAction(SemanticsAction.tap), isTrue);
     expect(
       find.descendant(
         of: find.byType(LandingFooter),

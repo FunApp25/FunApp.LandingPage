@@ -7,9 +7,10 @@ This repository owns the public Fun App website and landing page. The site shoul
 The landing page is expected eventually to collect information from interested
 users. The provider-neutral venue-lead workflow has a production data path that
 submits directly from Flutter Web to HubSpot Forms, and the venue CTA now opens
-its functional localized form. Venue consent language remains unresolved.
-Prospective-user fields, flows, analytics, and business behavior remain
-unspecified.
+its functional localized form. That form now shows the approved informational
+privacy acknowledgement and links to the hosted Privacy Notice; it does not
+submit a consent field. Prospective-user fields, flows, analytics, marketing
+consent behavior, and other business behavior remain unspecified.
 
 ## 2. Decision model
 
@@ -45,6 +46,14 @@ Current implementation is evidence of repository state, not automatically a perm
 - Flutter generated localization supports English, Spanish, Welsh, and Belarusian; English is the source and fallback language.
 - GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
 - GitHub Pages builds Flutter through Puro and publishes `build/web` from the repository root at base href `/`.
+- The approved English Fun App Ltd Privacy Notice is hosted at
+  `https://funapp.world/#/privacy`. Its canonical website source is
+  `assets/legal/privacy_notice.md`; the hash route supports direct access,
+  refresh, and browser history without requiring a GitHub Pages rewrite.
+- The landing footer links to the hosted Privacy Notice. The venue form shows
+  the approved English privacy acknowledgement immediately before submission,
+  with an inline link to the same page. This disclosure is informational: no
+  consent checkbox or submitted consent field is required for the current MVP.
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
 - Production venue-lead submission uses HubSpot's unauthenticated Forms v3
@@ -74,7 +83,7 @@ Current implementation is evidence of repository state, not automatically a perm
 ### Open
 
 - The interested-person form fields and validation rules.
-- Consent and privacy UX, analytics, and marketing behavior.
+- Any future submitted marketing-consent contract, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
 
@@ -86,6 +95,8 @@ The repository is an active Flutter Web project:
   venue-lead domain/application/data foundation.
 - `lib/l10n/` contains committed ARB localization inputs; generated localization Dart files remain uncommitted.
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
+- `assets/legal/privacy_notice.md` is the canonical website representation of
+  the currently approved English Privacy Notice.
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
 - `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
@@ -267,10 +278,12 @@ established Hero and Connection compositions remain unchanged.
 Below a 600px outer viewport width, Footer uses a centered 16px/80px mobile
 composition: the established anchor navigation wraps naturally beneath the
 logo, a divider separates it from the static email presentation, and all
-existing anchor behavior remains unchanged. The Figma legal-policy controls
-remain blocked until authoritative destinations and localized copy exist; inert
-legal-looking controls must not be rendered. At 600px and above, the
-established Footer composition remains unchanged.
+existing anchor behavior remains unchanged. The approved Privacy Notice is
+available through a visible localized footer link. Other Figma legal-policy
+controls remain blocked until authoritative destinations and localized copy
+exist; inert legal-looking controls must not be rendered. At 600px and above,
+the established Footer composition remains unchanged apart from the approved
+Privacy Notice link.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
@@ -434,6 +447,9 @@ capabilities as implemented.
 - An approved consent/privacy field contract and any corresponding HubSpot
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.
+- The current venue privacy acknowledgement is approved informational copy,
+  not a consent field. It adds no checkbox, BLoC state, domain value, DTO
+  property, repository property, HubSpot field, or `legalConsentOptions` value.
 - Approved venue-type and independent/chain choices.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count
@@ -458,6 +474,13 @@ Backend implementation must be driven by an actual approved contract rather than
 - Use HTTPS for production backend communication.
 - Validate untrusted backend responses at data boundaries.
 - Avoid unnecessary third-party scripts and SDKs.
+- Do not add analytics, advertising, non-essential cookies, session replay,
+  marketing pixels, or visitor-profiling telemetry while the approved Privacy
+  Notice states that those technologies are not currently used.
+- The approved Privacy Notice legal prose is maintained in
+  `assets/legal/privacy_notice.md`. It must not be changed casually. A future
+  approved notice must replace or update that canonical source from the newly
+  approved document without independent rewriting or translation.
 - Evaluate dependency changes for supply-chain, maintenance, privacy, and data-handling impact.
 - Settle consent, retention, and deletion requirements before collecting the corresponding personal data.
 - Never introduce client secrets into this public web application.
@@ -478,7 +501,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses the stable hash URL `https://funapp.world/#/privacy`; because the route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -534,6 +557,8 @@ The project tracks Flutter stable through Puro rather than establishing a perman
   the application-required venue contract.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
+- The production artifact includes the canonical Privacy Notice Markdown asset,
+  and its `/#/privacy` route requires no Pages rewrite or `404.html` fallback.
 - The archived Astro project is not built or deployed.
 
 ### Provisional
@@ -542,7 +567,8 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 
 ### Open
 
-- Routing and any required 404/deep-link strategy if multiple Flutter routes are introduced.
+- Routing and any required 404/deep-link strategy for future non-hash paths or
+  additional routes beyond the established Privacy Notice hash route.
 - Future Azure hosting or topology.
 - Release automation beyond current needs.
 

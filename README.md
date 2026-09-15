@@ -34,6 +34,12 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   API through the injected web-compatible HTTP client. The Venue CTA opens a
   localized responsive form backed by a fresh `VenueLeadFormBloc`; success is
   confirmed in the dialog, while failures preserve the draft for retry. The
+  form shows the approved informational privacy acknowledgement immediately
+  before Send and links to the hosted Privacy Notice without adding a consent
+  checkbox or submitted field. The Privacy Notice is also discoverable in the
+  footer at [https://funapp.world/#/privacy](https://funapp.world/#/privacy).
+  Its approved English legal copy lives in
+  `assets/legal/privacy_notice.md`. The
   Founding Friends CTA remains a presentation-only Coming soon flow, and the
   Membership section remains temporarily hidden without removing its source.
 - Reusable branding assets live under `assets/branding/`, with active widget
@@ -146,6 +152,25 @@ puro flutter gen-l10n
 
 Generated localization Dart files are local build inputs and are not committed.
 
+## Privacy Notice content and preview
+
+`assets/legal/privacy_notice.md` is the canonical website representation of
+the currently approved Fun App Ltd Privacy Notice. Do not rewrite or translate
+its legal prose independently. Replace or update it only from a newly approved
+source document.
+
+The site exposes the notice through Flutter's GitHub-Pages-safe hash route:
+
+```text
+https://funapp.world/#/privacy
+```
+
+During local development, append `#/privacy` to the root URL printed by
+`puro flutter run -d chrome -t lib/main_dev.dart`. The build bundles the
+Markdown asset declared in `pubspec.yaml`; `flutter_markdown_plus` renders the
+document, and the web link adapter handles only the approved `mailto:` contact
+links.
+
 Freezed and Injectable sources are generated locally and remain uncommitted.
 Regenerate all generated Dart source after changing a model or dependency
 registration:
@@ -189,6 +214,7 @@ lib/presentation/landing/content/ Landing presentation content definitions
 lib/presentation/landing/theme/ Shared landing typography and motion values
 assets/branding/             Shared Fun App logos and decorative brand shapes
 assets/landing/              Figma assets consumed by active landing sections
+assets/legal/                Approved canonical website legal content
 test/                        Flutter widget tests for active behavior
 web/                         Flutter Web shell and web-root static inputs
 l10n.yaml                    Flutter localization generation configuration

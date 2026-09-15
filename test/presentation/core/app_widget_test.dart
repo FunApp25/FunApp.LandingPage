@@ -8,6 +8,7 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 
 void main() {
   testWidgets('renders the English branded landing page', (tester) async {
@@ -24,6 +25,7 @@ void main() {
     expect(app.debugShowCheckedModeBanner, isFalse);
     expect(app.locale, isNull);
     expect(app.localeListResolutionCallback, isNotNull);
+    expect(app.routes?.containsKey(PrivacyNoticePage.routeName), isTrue);
     expect(
       app.localizationsDelegates,
       AppLocalizations.localizationsDelegates,

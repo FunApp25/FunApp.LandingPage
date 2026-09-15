@@ -19,6 +19,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_s
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
 final class LandingPage extends StatefulWidget {
@@ -126,12 +127,22 @@ final class _LandingPageState extends State<LandingPage> {
   }
 
   void _showVenueLeadDialog() {
-    unawaited(
-      showVenueLeadDialog(
-        context,
-        createBloc: getIt.call<VenueLeadFormBloc>,
-      ),
+    unawaited(_openVenueLeadDialog());
+  }
+
+  Future<void> _openVenueLeadDialog() async {
+    final result = await showVenueLeadDialog(
+      context,
+      createBloc: getIt.call<VenueLeadFormBloc>,
     );
+
+    if (mounted && result == VenueLeadDialogResult.privacyNotice) {
+      await Navigator.of(context).pushNamed(PrivacyNoticePage.routeName);
+    }
+  }
+
+  void _openPrivacyNotice() {
+    Navigator.of(context).pushNamed(PrivacyNoticePage.routeName);
   }
 
   @override
@@ -175,6 +186,7 @@ final class _LandingPageState extends State<LandingPage> {
                     onFoundingFriendsSelected: () =>
                         _scrollTo(_foundingFriendsKey),
                     onVenuesSelected: () => _scrollTo(_venueKey),
+                    onPrivacyNoticeSelected: _openPrivacyNotice,
                   ),
                 ],
               ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:ui' show SemanticsAction;
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,9 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_form_messages.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_disclosure.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_dialog.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -66,6 +69,120 @@ void main() {
     );
     expect(find.byType(TextField), findsNWidgets(11));
     expect(repository.submittedLeads, isEmpty);
+  });
+
+  testWidgets('shows the exact disclosure immediately before Submit', (
+    tester,
+  ) async {
+    const approvedDisclosure =
+        'By submitting this form, you acknowledge that Fun App will use the '
+        'information you provide to respond to your enquiry. Please see Fun '
+        "App's Privacy Notice for information about how it collects and "
+        'processes personal data.';
+    final semantics = tester.ensureSemantics();
+    setTestSurface(tester, const Size(320, 568));
+    await _pumpVenueDialog(tester, repository: repository);
+
+    final disclosure = tester.widget<VenuePrivacyDisclosure>(
+      find.byType(VenuePrivacyDisclosure),
+    );
+    expect(disclosure.statement, approvedDisclosure);
+    expect(disclosure.privacyNoticeLabel, 'Privacy Notice');
+    expect(
+      tester
+          .widget<RichText>(
+            find.descendant(
+              of: find.byType(VenuePrivacyDisclosure),
+              matching: find.byType(RichText),
+            ),
+          )
+          .text
+          .toPlainText(),
+      approvedDisclosure,
+    );
+    expect(find.byType(Checkbox), findsNothing);
+    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.byType(Radio<Object>), findsNothing);
+
+    final submit = find.byKey(const Key('venueLeadSubmitButton'));
+    await tester.ensureVisible(submit);
+    await tester.pumpAndSettle();
+    final phoneField = find.byKey(const Key('venueLeadPhoneNumberField'));
+    final disclosureFinder = find.byKey(
+      const Key('venuePrivacyDisclosure'),
+    );
+    expect(
+      tester.getTopLeft(disclosureFinder).dy,
+      greaterThan(tester.getBottomLeft(phoneField).dy),
+    );
+    expect(
+      tester.getTopLeft(submit).dy,
+      greaterThan(tester.getBottomLeft(disclosureFinder).dy),
+    );
+
+    final privacyLink = find.semantics
+        .byLabel('Privacy Notice')
+        .evaluate()
+        .single
+        .getSemanticsData();
+    expect(privacyLink.label, 'Privacy Notice');
+    expect(privacyLink.flagsCollection.isLink, isTrue);
+    expect(privacyLink.hasAction(SemanticsAction.tap), isTrue);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('venue Privacy Notice navigation closes and discards the draft', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final createdBlocs = <VenueLeadFormBloc>[];
+    getIt.registerFactory<VenueLeadFormBloc>(() {
+      final bloc = VenueLeadFormBloc(repository);
+      createdBlocs.add(bloc);
+      return bloc;
+    });
+    await pumpLandingApp(tester);
+
+    final venueCta = find.byKey(const Key('venueCardCta'));
+    await tester.ensureVisible(venueCta);
+    await tester.tap(venueCta);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('venueLeadVenueNameField')),
+      'Unsaved Venue Draft',
+    );
+    await tester.ensureVisible(
+      find.byKey(const Key('venueLeadSubmitButton')),
+    );
+    await tester.pump();
+    tester.semantics.tap(find.semantics.byLabel('Privacy Notice'));
+    await _pumpPrivacyNavigation(tester);
+
+    expect(find.byType(LandingDialog), findsNothing);
+    expect(find.byType(PrivacyNoticePage), findsOneWidget);
+    expect(createdBlocs, hasLength(1));
+    expect(createdBlocs.single.isClosed, isTrue);
+
+    tester.semantics.tap(find.semantics.byLabel('Back to Fun App'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.ensureVisible(venueCta);
+    await tester.tap(venueCta);
+    await tester.pumpAndSettle();
+
+    expect(createdBlocs, hasLength(2));
+    expect(
+      tester
+          .widget<TextField>(
+            find.byKey(const Key('venueLeadVenueNameField')),
+          )
+          .controller
+          ?.text,
+      isEmpty,
+    );
+    expect(repository.submittedLeads, isEmpty);
+    semantics.dispose();
   });
 
   testWidgets('renders the approved free-text field contract and semantics', (
@@ -170,7 +287,7 @@ void main() {
       );
       expect(
         tester
-            .widget<PopScope<void>>(
+            .widget<PopScope<VenueLeadDialogResult>>(
               find.byKey(const Key('venueLeadDialogPopScope')),
             )
             .canPop,
@@ -183,12 +300,17 @@ void main() {
         ),
       );
       expect(closeButton.onPressed, isNull);
+      final privacyDisclosure = tester.widget<VenuePrivacyDisclosure>(
+        find.byType(VenuePrivacyDisclosure),
+      );
+      expect(privacyDisclosure.onPrivacyNoticeSelected, isNull);
 
       await tester.tap(find.byKey(const Key('venueLeadSubmitButton')));
       await tester.tapAt(const Offset(1, 1));
       await tester.pump();
       expect(repository.submittedLeads, hasLength(1));
       expect(find.byType(LandingDialog), findsOneWidget);
+      expect(find.byType(PrivacyNoticePage), findsNothing);
 
       repository.completeNext(right(unit));
       await tester.pumpAndSettle();
@@ -197,7 +319,7 @@ void main() {
       expect(find.text(_l10n(tester).venueLeadSuccessTitle), findsOneWidget);
       expect(
         tester
-            .widget<PopScope<void>>(
+            .widget<PopScope<VenueLeadDialogResult>>(
               find.byKey(const Key('venueLeadDialogPopScope')),
             )
             .canPop,
@@ -428,6 +550,12 @@ Future<void> _tapSubmit(WidgetTester tester) async {
   await tester.ensureVisible(submit);
   await tester.pumpAndSettle();
   await tester.tap(submit);
+  await tester.pump();
+}
+
+Future<void> _pumpPrivacyNavigation(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
   await tester.pump();
 }
 
