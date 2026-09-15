@@ -9,7 +9,10 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.d
 /// Founding Friends promotional content from Figma node `2190:1620`.
 final class FoundingFriendsSection extends StatelessWidget {
   /// Creates the Founding Friends section.
-  const FoundingFriendsSection({super.key});
+  const FoundingFriendsSection({this.onCtaPressed, super.key});
+
+  /// Opens the presentation owned by the Founding Friends CTA.
+  final VoidCallback? onCtaPressed;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -74,6 +77,7 @@ final class FoundingFriendsSection extends StatelessWidget {
                   ctaLabel: context.l10n.landingFoundingFriendsCta,
                   imageSemanticLabel:
                       context.l10n.landingFoundingFriendsImageDescription,
+                  onCtaPressed: onCtaPressed,
                 ),
               ),
             ),

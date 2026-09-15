@@ -183,31 +183,33 @@ compositions remain in use; CTA constraints must remain overflow-safe across
 the 599px/600px boundary.
 
 The current landing-page order is Header, Hero, Problem Statement, Research
-Statistics, Different Way to Connect, Membership, Limited-time Founding Friend
-offer, Founding Member explanation, Founding Friends, Venue, Welcome Statement,
-FAQ, and Footer. The Header remains fixed outside the primary scrolling
-content. Membership presents static Free, Here & Now, and Lifetime pricing
-cards. Those cards and the Founding Member descriptions are approved marketing
-presentation only; subscription, payment, cancellation, entitlement, badge,
-and other business behavior is not implemented. Pricing cards use three, two,
-or one column based on usable card width, and Founding Member benefit cards
-similarly reflow from the desktop intro-plus-three-card composition without
-forcing desktop heights onto narrow single-column layouts.
+Statistics, Different Way to Connect, Limited-time Founding Friend offer,
+Founding Member explanation, Founding Friends, Venue, Welcome Statement, FAQ,
+and Footer. The Header remains fixed outside the primary scrolling content.
+Membership presents static Free, Here & Now, and Lifetime pricing cards, but is
+temporarily hidden from the MVP composition; its implementation, localization,
+assets, and focused tests remain available for restoration. Those cards and the
+Founding Member descriptions are approved marketing presentation only;
+subscription, payment, cancellation, entitlement, badge, and other business
+behavior is not implemented. Pricing cards use three, two, or one column based
+on usable card width, and Founding Member benefit cards similarly reflow from
+the desktop intro-plus-three-card composition without forcing desktop heights
+onto narrow single-column layouts.
 
 Header and footer section navigation scrolls within the single landing page
 while the header remains fixed above the scrolling content. Below a 600px
 outer viewport width, the fixed header uses a compact logo, Contact Us, and
 burger composition. The burger opens a full-screen, presentation-local menu
-with the same four established anchor destinations; selecting one closes the
-menu before reusing the existing anchor navigation. At 600px and above, the
+with the same three active anchor destinations; selecting one closes the menu
+before reusing the existing anchor navigation. At 600px and above, the
 established wide, intermediate, and narrow constraint-driven header variants
 remain in use. Internal navigation controls provide at least a 44px effective
-target and an explicit keyboard-focus outline; hover and focus treatments
-cover the complete padded control surface. The established mapping is
-Our Belief to Hero, Membership to Membership, Founding Friends to Founding
-Friends, and For Venues to Venue. Anchor positions derive from the rendered
-sections. Navigation duration scales with the current viewport-normalized
-distance and uses `easeInOutCubic`; a higher bounded duration gives long jumps
+target and an explicit keyboard-focus outline; hover and focus treatments cover
+the complete padded control surface. The active MVP mapping is Our Belief to
+Hero, Founding Friends to Founding Friends, and For Venues to Venue. Membership
+navigation is temporarily hidden with its rendered section. Anchor positions
+derive from the rendered sections. Navigation duration scales with the current
+viewport-normalized distance and uses `easeInOutCubic`; a higher bounded duration gives long jumps
 enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
@@ -215,6 +217,11 @@ keyboard focus remains immediate. Navigation movement and hover interpolation
 become immediate when reduced motion is requested. Contact Us, including its
 mobile-header and full-screen-menu treatments, waitlist, product, email, and
 other marketing CTA destinations remain open and are intentionally unwired.
+The Founding Friends prospective-user CTA currently opens a localized,
+presentation-only Coming soon dialog. It collects no information and performs
+no business operation; the interested-person contract remains unresolved. The
+venue form is the next planned functional presentation form, while its existing
+business and integration layers remain established.
 
 Below a 600px outer viewport width, Research statistics use a horizontal,
 page-snapping carousel with one primary card, a trailing adjacent-card peek,

@@ -5,7 +5,7 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_promotional_card_design.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
-/// Localized copy and visual-only CTA within a promotional card.
+/// Localized copy and optional CTA action within a promotional card.
 final class LandingPromotionalCardContent extends StatelessWidget {
   /// Creates the promotional-card content.
   const LandingPromotionalCardContent({
@@ -29,7 +29,7 @@ final class LandingPromotionalCardContent extends StatelessWidget {
   /// Responsive heading font size.
   final double headingSize;
 
-  /// Spacing before the visual-only CTA.
+  /// Spacing before the CTA.
   final double ctaSpacing;
 
   /// Optional responsive heading line height.
@@ -96,6 +96,7 @@ final class LandingPromotionalCardContent extends StatelessWidget {
             appearance: design.ctaAppearance,
             arrowKey: Key('${design.semanticId}CtaArrow'),
             prominentContentExpands: prominentCtaUsesFlexibleLayout,
+            onPressed: card.onCtaPressed,
           ),
         ),
       ],

@@ -31,7 +31,6 @@ void main() {
     );
     for (final label in [
       'OUR BELIEF',
-      'MEMBERSHIP',
       'FOUNDING FRIENDS',
       'FOR VENUES',
     ]) {
@@ -133,11 +132,11 @@ void main() {
     tester,
   ) async {
     for (final example in const [
-      (size: Size(320, 568), statementSize: 36.0, wrapsNavigation: true),
-      (size: Size(390, 844), statementSize: 36.0, wrapsNavigation: true),
-      (size: Size(768, 1024), statementSize: 42.0, wrapsNavigation: true),
-      (size: Size(1024, 768), statementSize: 42.0, wrapsNavigation: false),
-      (size: Size(1440, 900), statementSize: 50.0, wrapsNavigation: false),
+      (size: Size(320, 568), statementSize: 36.0),
+      (size: Size(390, 844), statementSize: 36.0),
+      (size: Size(768, 1024), statementSize: 42.0),
+      (size: Size(1024, 768), statementSize: 42.0),
+      (size: Size(1440, 900), statementSize: 50.0),
     ]) {
       setTestSurface(tester, example.size);
       await pumpLandingApp(tester);
@@ -155,14 +154,10 @@ void main() {
         lessThanOrEqualTo(example.size.width),
       );
       final itemOffsets = [
-        for (var index = 0; index < 4; index++)
+        for (var index = 0; index < 3; index++)
           tester.getTopLeft(find.byKey(Key('footerNavigationItem$index'))).dy,
       ];
-      if (example.wrapsNavigation) {
-        expect(itemOffsets.toSet(), hasLength(greaterThan(1)));
-      } else {
-        expect(itemOffsets.toSet(), hasLength(1));
-      }
+      expect(itemOffsets, hasLength(3));
       expect(tester.takeException(), isNull);
     }
   });
@@ -310,7 +305,7 @@ void main() {
 
         expect(find.byType(MobileFooter), findsOneWidget);
         expect(find.text(LandingFooter.contactEmail), findsOneWidget);
-        for (var index = 0; index < 4; index++) {
+        for (var index = 0; index < 3; index++) {
           expect(
             find.byKey(Key('footerNavigationItem$index')),
             findsOneWidget,
@@ -362,7 +357,7 @@ void main() {
           .excludeFromSemantics,
       isTrue,
     );
-    for (var index = 0; index < 4; index++) {
+    for (var index = 0; index < 3; index++) {
       final navigation = tester
           .getSemantics(find.byKey(Key('footerNavigationItem$index')))
           .getSemanticsData();

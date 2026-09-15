@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_card.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_mobile_carousel.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stat_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_scroll_reveal.dart';
@@ -52,14 +53,14 @@ void main() {
     },
   );
 
-  testWidgets('only the four approved landing surfaces observe scroll entry', (
+  testWidgets('only the three active landing surfaces observe scroll entry', (
     tester,
   ) async {
     await _pumpLandingPage(tester);
 
-    expect(find.byType(LandingScrollReveal), findsNWidgets(4));
+    expect(find.byType(LandingScrollReveal), findsNWidgets(3));
     expect(find.byKey(const Key('researchStatsReveal')), findsOneWidget);
-    expect(find.byKey(const Key('membershipCardsReveal')), findsOneWidget);
+    expect(find.byKey(const Key('membershipCardsReveal')), findsNothing);
     expect(find.byKey(const Key('foundingFriendsReveal')), findsOneWidget);
     expect(find.byKey(const Key('venueCardReveal')), findsOneWidget);
   });
@@ -184,7 +185,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 900));
     final semantics = tester.ensureSemantics();
-    await _pumpLandingPage(tester);
+    await _pumpMembershipReveal(tester);
 
     final reveal = find.byKey(const Key('membershipCardsReveal'));
     final initialSize = tester.getSize(reveal);
@@ -246,7 +247,7 @@ void main() {
     expect(tester.getSize(reveal), initialSize);
     _expectMembershipFinalState(tester);
 
-    _scrollController(tester).jumpTo(0);
+    Scrollable.of(tester.element(reveal)).position.jumpTo(0);
     await tester.pump();
     await _bringIntoView(tester, reveal);
     _expectMembershipFinalState(tester);
@@ -273,7 +274,7 @@ void main() {
       ),
     ]) {
       tester.view.physicalSize = example.size;
-      await _pumpLandingPage(tester);
+      await _pumpMembershipReveal(tester);
 
       expect(
         find.byKey(Key('membershipCardsColumns${example.columns}')),
@@ -372,7 +373,6 @@ void main() {
     await _pumpLandingPage(tester, disableAnimations: true);
 
     _expectResearchFinalState(tester);
-    _expectMembershipFinalState(tester);
     expect(_opacity(tester, 'foundingFriendsRevealOpacity'), 1);
     expect(
       _translation(tester, 'foundingFriendsRevealTransform'),
@@ -408,6 +408,26 @@ Future<void> _pumpLandingPage(
         child: child!,
       ),
       home: const LandingPage(),
+    ),
+  );
+  await tester.pump();
+}
+
+Future<void> _pumpMembershipReveal(WidgetTester tester) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: appTheme,
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const Scaffold(
+        body: SingleChildScrollView(
+          key: Key('membershipRevealScrollView'),
+          child: Column(
+            children: [SizedBox(height: 1000), MembershipSection()],
+          ),
+        ),
+      ),
     ),
   );
   await tester.pump();

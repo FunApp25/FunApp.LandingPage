@@ -12,7 +12,6 @@ final class LandingFooter extends StatelessWidget {
   /// Creates the landing footer.
   const LandingFooter({
     required this.onOurBeliefSelected,
-    required this.onMembershipSelected,
     required this.onFoundingFriendsSelected,
     required this.onVenuesSelected,
     super.key,
@@ -20,9 +19,6 @@ final class LandingFooter extends StatelessWidget {
 
   /// Scrolls to the hero section.
   final VoidCallback onOurBeliefSelected;
-
-  /// Scrolls to the membership section.
-  final VoidCallback onMembershipSelected;
 
   /// Scrolls to the Founding Friends section.
   final VoidCallback onFoundingFriendsSelected;
@@ -39,10 +35,6 @@ final class LandingFooter extends StatelessWidget {
       (
         label: context.l10n.landingHeaderOurBelief,
         onSelected: onOurBeliefSelected,
-      ),
-      (
-        label: context.l10n.landingHeaderMembership,
-        onSelected: onMembershipSelected,
       ),
       (
         label: context.l10n.landingHeaderFoundingFriends,

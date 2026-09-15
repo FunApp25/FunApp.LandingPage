@@ -17,7 +17,11 @@ final class HeaderNavigationGrid extends StatelessWidget {
         if (rowStart > 0) const SizedBox(height: 2),
         Row(
           children: [
-            for (var index = rowStart; index < rowStart + 2; index++) ...[
+            for (
+              var index = rowStart;
+              index < rowStart + 2 && index < items.length;
+              index++
+            ) ...[
               if (index > rowStart) const SizedBox(width: 4),
               Expanded(
                 child: LandingNavigationItem(

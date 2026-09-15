@@ -15,7 +15,6 @@ final class LandingHeader extends StatefulWidget {
   /// Creates the landing-page header.
   const LandingHeader({
     required this.onOurBeliefSelected,
-    required this.onMembershipSelected,
     required this.onFoundingFriendsSelected,
     required this.onVenuesSelected,
     this.onContactSelected,
@@ -24,9 +23,6 @@ final class LandingHeader extends StatefulWidget {
 
   /// Scrolls to the hero section.
   final VoidCallback onOurBeliefSelected;
-
-  /// Scrolls to the membership section.
-  final VoidCallback onMembershipSelected;
 
   /// Scrolls to the Founding Friends section.
   final VoidCallback onFoundingFriendsSelected;
@@ -146,10 +142,6 @@ final class _LandingHeaderState extends State<LandingHeader> {
       (
         label: context.l10n.landingHeaderOurBelief,
         onSelected: widget.onOurBeliefSelected,
-      ),
-      (
-        label: context.l10n.landingHeaderMembership,
-        onSelected: widget.onMembershipSelected,
       ),
       (
         label: context.l10n.landingHeaderFoundingFriends,

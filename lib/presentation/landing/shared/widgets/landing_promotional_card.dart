@@ -27,6 +27,7 @@ final class LandingPromotionalCard extends StatelessWidget {
     required this.bodyParagraphs,
     required this.ctaLabel,
     required this.imageSemanticLabel,
+    this.onCtaPressed,
     super.key,
   });
 
@@ -39,11 +40,14 @@ final class LandingPromotionalCard extends StatelessWidget {
   /// Localized body paragraphs in reading order.
   final List<String> bodyParagraphs;
 
-  /// Localized visual-only CTA label.
+  /// Localized CTA label.
   final String ctaLabel;
 
   /// Localized concise image description.
   final String imageSemanticLabel;
+
+  /// Optional presentation callback for an approved CTA action.
+  final VoidCallback? onCtaPressed;
 
   static const _wideCompositionWidth = 1280.0;
   static const _intermediateCompositionWidth = 780.0;

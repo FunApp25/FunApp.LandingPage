@@ -477,11 +477,21 @@ void main() {
         ),
         findsNothing,
       );
-      expect(
-        find.descendant(of: section, matching: find.byType(InkWell)),
-        findsNothing,
-      );
     }
+    expect(
+      find.descendant(
+        of: find.byType(FoundingFriendsSection),
+        matching: find.byType(InkWell),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(VenueSection),
+        matching: find.byType(InkWell),
+      ),
+      findsNothing,
+    );
     expect(find.byType(LandingCtaButton), findsNWidgets(3));
     semantics.dispose();
   });

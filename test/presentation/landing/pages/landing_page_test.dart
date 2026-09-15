@@ -29,7 +29,9 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.d
 import '../landing_test_helpers.dart';
 
 void main() {
-  testWidgets('renders all 13 landing surfaces in Figma order', (tester) async {
+  testWidgets('renders MVP landing surfaces in composition order', (
+    tester,
+  ) async {
     await pumpLandingApp(tester);
 
     expect(find.byType(LandingPage), findsOneWidget);
@@ -39,7 +41,6 @@ void main() {
       ProblemStatementSection,
       ResearchStatsSection,
       ConnectionExperienceSection,
-      MembershipSection,
       FoundingOfferSection,
       FoundingMemberSection,
       FoundingFriendsSection,
@@ -50,10 +51,11 @@ void main() {
     ];
 
     expect(find.byType(LandingHeader), findsOneWidget);
-    expect(expectedSectionTypes, hasLength(12));
+    expect(expectedSectionTypes, hasLength(11));
     for (final type in expectedSectionTypes) {
       expect(find.byType(type), findsOneWidget);
     }
+    expect(find.byType(MembershipSection), findsNothing);
 
     final sections = tester.widget<Column>(
       find.byKey(const Key('landingPageSections')),
@@ -71,12 +73,12 @@ void main() {
 
     for (final label in [
       'OUR BELIEF',
-      'MEMBERSHIP',
       'FOUNDING FRIENDS',
       'FOR VENUES',
     ]) {
       expect(find.text(label), findsNWidgets(2));
     }
+    expect(find.text('MEMBERSHIP'), findsNothing);
     for (final label in ['Contact Us', 'A FRIENDLIER WAY TO CONNECT']) {
       expect(find.text(label), findsOneWidget);
     }
@@ -219,7 +221,6 @@ void main() {
   ) async {
     const targets = <Type>[
       HeroSection,
-      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
@@ -246,7 +247,6 @@ void main() {
     setTestSurface(tester, const Size(390, 844));
     const targets = <Type>[
       HeroSection,
-      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
@@ -298,7 +298,7 @@ void main() {
     await pumpLandingApp(tester);
 
     final venueNavigation = find.byKey(
-      const Key('landingHeaderNavigationItem3'),
+      const Key('landingHeaderNavigationItem2'),
     );
     await tester.tap(venueNavigation);
     await tester.pump();
@@ -315,7 +315,7 @@ void main() {
     await pumpLandingApp(tester);
 
     await tester.tap(
-      find.byKey(const Key('landingHeaderNavigationItem3')),
+      find.byKey(const Key('landingHeaderNavigationItem2')),
     );
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(
@@ -323,7 +323,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    _expectTargetBelowHeader(tester, MembershipSection);
+    _expectTargetBelowHeader(tester, FoundingFriendsSection);
   });
 
   testWidgets('navigation items support Enter and Space activation', (
@@ -460,7 +460,7 @@ void main() {
       'landingHeaderNavigationItem',
       'footerNavigationItem',
     ]) {
-      for (var index = 0; index < 4; index++) {
+      for (var index = 0; index < 3; index++) {
         final itemFinder = find.byKey(Key('$prefix$index'));
         final itemSemantics = tester
             .getSemantics(itemFinder)
@@ -610,7 +610,7 @@ void main() {
         'footerNavigationItem',
       ];
       for (final prefix in navigationPrefixes) {
-        for (var index = 0; index < 4; index++) {
+        for (var index = 0; index < 3; index++) {
           expect(
             tester.getSize(find.byKey(Key('$prefix$index'))).height,
             greaterThanOrEqualTo(44),
@@ -620,9 +620,8 @@ void main() {
 
       for (final target in const [
         (index: 0, type: HeroSection),
-        (index: 1, type: MembershipSection),
-        (index: 2, type: FoundingFriendsSection),
-        (index: 3, type: VenueSection),
+        (index: 1, type: FoundingFriendsSection),
+        (index: 2, type: VenueSection),
       ]) {
         await _moveToPageEnd(tester);
         if (size.width < LandingHeader.mobileUxBreakpoint) {
@@ -729,7 +728,6 @@ void main() {
         find.byType(ProblemStatementSection),
         find.byType(ResearchStatsSection),
         find.byType(ConnectionExperienceSection),
-        find.byType(MembershipSection),
         find.byType(FoundingOfferSection),
         find.byType(FoundingMemberSection),
         find.byType(FoundingFriendsSection),

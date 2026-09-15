@@ -36,6 +36,18 @@
   "@landingCloseNavigationMenu": {
     "description": "Accessible label for closing the mobile landing navigation menu."
   },
+  "landingDialogClose": "Close",
+  "@landingDialogClose": {
+    "description": "Accessible label for closing a landing-page dialog."
+  },
+  "landingInterestedUserComingSoonTitle": "Coming soon",
+  "@landingInterestedUserComingSoonTitle": {
+    "description": "Title of the presentation-only prospective-user dialog."
+  },
+  "landingInterestedUserComingSoonBody": "We’re preparing this part of Fun App. Check back soon.",
+  "@landingInterestedUserComingSoonBody": {
+    "description": "Supporting text in the presentation-only prospective-user dialog."
+  },
   "landingHeroEyebrow": "A FRIENDLIER WAY TO CONNECT",
   "@landingHeroEyebrow": {
     "description": "Uppercase eyebrow above the landing-page hero headline."

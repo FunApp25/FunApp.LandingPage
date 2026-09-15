@@ -29,7 +29,7 @@ void main() {
   testWidgets('renders the three authoritative English pricing cards', (
     tester,
   ) async {
-    await pumpLandingApp(tester);
+    await _pumpMembershipAndOffer(tester);
 
     expect(find.text('Membership'), findsOneWidget);
     expect(find.text(_membershipBody), findsOneWidget);
@@ -72,7 +72,7 @@ void main() {
   });
 
   testWidgets('renders the current white limited-time offer', (tester) async {
-    await pumpLandingApp(tester);
+    await _pumpMembershipAndOffer(tester);
 
     expect(
       tester
@@ -125,7 +125,7 @@ void main() {
       tester,
     ) async {
       setTestSurface(tester, example.size);
-      await pumpLandingApp(tester, locale: example.locale);
+      await _pumpMembershipAndOffer(tester, locale: example.locale);
 
       expect(find.text(example.heading), findsOneWidget);
       expect(find.text(example.freeTier), findsOneWidget);
@@ -136,7 +136,7 @@ void main() {
   }
 
   testWidgets('uses exact local membership Figma vectors', (tester) async {
-    await pumpLandingApp(tester);
+    await _pumpMembershipAndOffer(tester);
 
     for (final entry in const [
       (key: 'free', asset: AppAssets.membershipFreeEyebrow),
@@ -206,7 +206,7 @@ void main() {
       (size: Size(1440, 900), columns: 3),
     ]) {
       setTestSurface(tester, example.size);
-      await pumpLandingApp(tester);
+      await _pumpMembershipAndOffer(tester);
 
       expect(find.byType(MembershipCard), findsNWidgets(3));
       expect(
@@ -243,7 +243,7 @@ void main() {
       tester,
     ) async {
       setTestSurface(tester, const Size(390, 844));
-      await pumpLandingApp(tester);
+      await _pumpMembershipAndOffer(tester);
 
       final membershipRect = tester.getRect(
         find.byKey(const Key('membershipBackground')),
@@ -376,7 +376,7 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    await pumpLandingApp(tester);
+    await _pumpMembershipAndOffer(tester);
 
     expectHeaderSemantics(
       tester,
@@ -460,3 +460,14 @@ void main() {
     semantics.dispose();
   });
 }
+
+Future<void> _pumpMembershipAndOffer(
+  WidgetTester tester, {
+  Locale locale = const Locale('en'),
+}) => pumpLandingSection(
+  tester,
+  locale: locale,
+  section: const Column(
+    children: [MembershipSection(), FoundingOfferSection()],
+  ),
+);
