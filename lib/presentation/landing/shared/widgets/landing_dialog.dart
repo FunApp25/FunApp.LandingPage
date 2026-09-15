@@ -39,8 +39,8 @@ final class LandingDialog extends StatelessWidget {
   /// Localized tooltip and semantic label for the close control.
   final String closeTooltip;
 
-  /// Dismisses the dialog.
-  final VoidCallback onClose;
+  /// Dismisses the dialog, or null while dismissal is unavailable.
+  final VoidCallback? onClose;
 
   /// Caller-supplied dialog content.
   final Widget child;
@@ -77,6 +77,7 @@ final class LandingDialog extends StatelessWidget {
                   key: const Key('landingDialogCloseButton'),
                   container: true,
                   button: true,
+                  enabled: onClose != null,
                   label: closeTooltip,
                   child: IconButton(
                     tooltip: closeTooltip,

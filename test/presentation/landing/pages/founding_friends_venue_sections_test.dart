@@ -490,7 +490,7 @@ void main() {
         of: find.byType(VenueSection),
         matching: find.byType(InkWell),
       ),
-      findsNothing,
+      findsOneWidget,
     );
     expect(find.byType(LandingCtaButton), findsNWidgets(3));
     semantics.dispose();

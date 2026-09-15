@@ -10,7 +10,10 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.d
 /// Venue introduction and promotional card from Figma node `2190:1627`.
 final class VenueSection extends StatelessWidget {
   /// Creates the venue section.
-  const VenueSection({super.key});
+  const VenueSection({this.onCtaPressed, super.key});
+
+  /// Opens the established venue-interest flow.
+  final VoidCallback? onCtaPressed;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -93,6 +96,7 @@ final class VenueSection extends StatelessWidget {
                       ctaLabel: context.l10n.landingVenueCta,
                       imageSemanticLabel:
                           context.l10n.landingVenueImageDescription,
+                      onCtaPressed: onCtaPressed,
                     ),
                   ),
                 ],

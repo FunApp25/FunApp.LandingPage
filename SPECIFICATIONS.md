@@ -6,9 +6,10 @@ This repository owns the public Fun App website and landing page. The site shoul
 
 The landing page is expected eventually to collect information from interested
 users. The provider-neutral venue-lead workflow has a production data path that
-submits directly from Flutter Web to HubSpot Forms; its presentation, consent
-language, and CTA wiring are not yet implemented. Prospective-user fields,
-flows, analytics, and business behavior remain unspecified.
+submits directly from Flutter Web to HubSpot Forms, and the venue CTA now opens
+its functional localized form. Venue consent language remains unresolved.
+Prospective-user fields, flows, analytics, and business behavior remain
+unspecified.
 
 ## 2. Decision model
 
@@ -73,7 +74,6 @@ Current implementation is evidence of repository state, not automatically a perm
 ### Open
 
 - The interested-person form fields and validation rules.
-- Venue form presentation and layout, validation messages, and sign-up flow.
 - Consent and privacy UX, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
@@ -220,8 +220,9 @@ other marketing CTA destinations remain open and are intentionally unwired.
 The Founding Friends prospective-user CTA currently opens a localized,
 presentation-only Coming soon dialog. It collects no information and performs
 no business operation; the interested-person contract remains unresolved. The
-venue form is the next planned functional presentation form, while its existing
-business and integration layers remain established.
+venue CTA opens a localized functional form in the reusable landing dialog. A
+fresh `VenueLeadFormBloc` owns each dialog session and submits through the
+established environment-selected venue repository/data-source graph.
 
 Below a 600px outer viewport width, Research statistics use a horizontal,
 page-snapping carousel with one primary card, a trailing adjacent-card peek,
@@ -352,8 +353,10 @@ capabilities as implemented.
   remain `ValueFailure` values rather than becoming operational failures.
 - Blank optional input represents absence. Non-blank optional and required
   input is preserved when constructing the established domain value objects.
-- A successful or failed submission preserves the complete form draft. Closing,
-  resetting, and success/error presentation behavior remain unresolved.
+- A successful or failed submission preserves the complete form draft. The
+  venue dialog shows an explicit success confirmation without immediately
+  closing. Operational failure keeps the form open and editable for retry.
+  Each later dialog opening starts with a fresh BLoC and empty draft.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
@@ -428,8 +431,6 @@ capabilities as implemented.
 ### Open
 
 - The prospective-user input model and its required/optional fields.
-- Venue form presentation, validation messages, success/error UX, and explicit
-  closing or reset behavior.
 - An approved consent/privacy field contract and any corresponding HubSpot
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.

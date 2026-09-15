@@ -31,8 +31,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   repository. Dependency injection selects a deterministic development data
   source or the production HubSpot data source. Production submits
   provider-neutral venue leads directly to HubSpot's unauthenticated Forms v3
-  API through the injected web-compatible HTTP client. The venue form
-  presentation and CTA wiring are not implemented.
+  API through the injected web-compatible HTTP client. The Venue CTA opens a
+  localized responsive form backed by a fresh `VenueLeadFormBloc`; success is
+  confirmed in the dialog, while failures preserve the draft for retry. The
+  Founding Friends CTA remains a presentation-only Coming soon flow, and the
+  Membership section remains temporarily hidden without removing its source.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

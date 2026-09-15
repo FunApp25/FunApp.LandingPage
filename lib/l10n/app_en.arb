@@ -48,6 +48,132 @@
   "@landingInterestedUserComingSoonBody": {
     "description": "Supporting text in the presentation-only prospective-user dialog."
   },
+  "venueLeadDialogTitle": "Tell us about your venue",
+  "@venueLeadDialogTitle": {
+    "description": "Title of the functional venue-interest dialog."
+  },
+  "venueLeadDialogBody": "Share your venue and contact details to start the conversation.",
+  "@venueLeadDialogBody": {
+    "description": "Supporting text above the venue-interest form."
+  },
+  "venueLeadVenueDetailsHeading": "Venue details",
+  "@venueLeadVenueDetailsHeading": {
+    "description": "Heading above the venue fields."
+  },
+  "venueLeadContactDetailsHeading": "Contact details",
+  "@venueLeadContactDetailsHeading": {
+    "description": "Heading above the venue contact fields."
+  },
+  "venueLeadRequiredFieldLabel": "{field} (required)",
+  "@venueLeadRequiredFieldLabel": {
+    "description": "Accessible and visible label for a required venue form field.",
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "venueLeadOptionalFieldLabel": "{field} (optional)",
+  "@venueLeadOptionalFieldLabel": {
+    "description": "Accessible and visible label for an optional venue form field.",
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "venueLeadVenueNameLabel": "Venue name",
+  "@venueLeadVenueNameLabel": {
+    "description": "Venue name field label."
+  },
+  "venueLeadVenueTypeLabel": "Venue type",
+  "@venueLeadVenueTypeLabel": {
+    "description": "Venue type field label."
+  },
+  "venueLeadChainStatusLabel": "Independent / part of a chain",
+  "@venueLeadChainStatusLabel": {
+    "description": "Venue independent or chain status field label."
+  },
+  "venueLeadVenueCountLabel": "If a chain, number of venues",
+  "@venueLeadVenueCountLabel": {
+    "description": "Venue count field label."
+  },
+  "venueLeadVenueCapacityLabel": "Venue capacity",
+  "@venueLeadVenueCapacityLabel": {
+    "description": "Venue capacity field label."
+  },
+  "venueLeadWebsiteLabel": "Website",
+  "@venueLeadWebsiteLabel": {
+    "description": "Venue website field label."
+  },
+  "venueLeadFirstNameLabel": "First name",
+  "@venueLeadFirstNameLabel": {
+    "description": "Venue contact first-name field label."
+  },
+  "venueLeadLastNameLabel": "Last name",
+  "@venueLeadLastNameLabel": {
+    "description": "Venue contact last-name field label."
+  },
+  "venueLeadRoleLabel": "Role",
+  "@venueLeadRoleLabel": {
+    "description": "Venue contact role field label."
+  },
+  "venueLeadEmailLabel": "Email",
+  "@venueLeadEmailLabel": {
+    "description": "Venue contact email field label."
+  },
+  "venueLeadPhoneNumberLabel": "Phone number",
+  "@venueLeadPhoneNumberLabel": {
+    "description": "Venue contact phone-number field label."
+  },
+  "venueLeadValidationRequired": "Required field",
+  "@venueLeadValidationRequired": {
+    "description": "Validation message for an empty required venue field."
+  },
+  "venueLeadValidationSingleLine": "Use one line only",
+  "@venueLeadValidationSingleLine": {
+    "description": "Validation message for multiline venue form input."
+  },
+  "venueLeadValidationEmail": "Enter a valid email address",
+  "@venueLeadValidationEmail": {
+    "description": "Validation message for an invalid venue contact email."
+  },
+  "venueLeadValidationWebsite": "Enter a valid web address",
+  "@venueLeadValidationWebsite": {
+    "description": "Validation message for an invalid venue website."
+  },
+  "venueLeadValidationNumbersOnly": "Use numbers only",
+  "@venueLeadValidationNumbersOnly": {
+    "description": "Validation message for non-numeric quantity or phone input."
+  },
+  "venueLeadValidationPositiveInteger": "Enter a value greater than zero",
+  "@venueLeadValidationPositiveInteger": {
+    "description": "Validation message for a non-positive venue quantity."
+  },
+  "venueLeadSubmit": "Send",
+  "@venueLeadSubmit": {
+    "description": "Venue-interest form submission action."
+  },
+  "venueLeadSubmitting": "Sending…",
+  "@venueLeadSubmitting": {
+    "description": "Venue-interest form submission progress label."
+  },
+  "venueLeadSubmissionServiceUnavailable": "We can’t send your details right now. Please try again.",
+  "@venueLeadSubmissionServiceUnavailable": {
+    "description": "Venue submission message when the service is unavailable."
+  },
+  "venueLeadSubmissionRejected": "We couldn’t submit these details. Please check the form and try again.",
+  "@venueLeadSubmissionRejected": {
+    "description": "Venue submission message when the receiving service rejects the details."
+  },
+  "venueLeadSubmissionUnexpected": "Something went wrong. Please try again.",
+  "@venueLeadSubmissionUnexpected": {
+    "description": "Venue submission message for an unexpected failure."
+  },
+  "venueLeadSuccessTitle": "Thanks — we’ll be in touch.",
+  "@venueLeadSuccessTitle": {
+    "description": "Venue-interest submission success confirmation."
+  },
   "landingHeroEyebrow": "A FRIENDLIER WAY TO CONNECT",
   "@landingHeroEyebrow": {
     "description": "Uppercase eyebrow above the landing-page hero headline."

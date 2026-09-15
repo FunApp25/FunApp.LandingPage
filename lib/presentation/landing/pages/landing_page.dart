@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
+import 'package:fun_app_landing_page/core/injection/injection.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/faq/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
@@ -12,6 +14,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/header/landin
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
@@ -122,6 +125,15 @@ final class _LandingPageState extends State<LandingPage> {
     unawaited(showInterestedUserComingSoonDialog(context));
   }
 
+  void _showVenueLeadDialog() {
+    unawaited(
+      showVenueLeadDialog(
+        context,
+        createBloc: getIt.call<VenueLeadFormBloc>,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
@@ -152,7 +164,10 @@ final class _LandingPageState extends State<LandingPage> {
                     key: _foundingFriendsKey,
                     onCtaPressed: _showInterestedUserComingSoonDialog,
                   ),
-                  VenueSection(key: _venueKey),
+                  VenueSection(
+                    key: _venueKey,
+                    onCtaPressed: _showVenueLeadDialog,
+                  ),
                   const WelcomeStatementSection(),
                   const FaqSection(),
                   LandingFooter(

@@ -35,7 +35,7 @@ void main() {
           of: find.byType(VenueSection),
           matching: find.byType(InkWell),
         ),
-        findsNothing,
+        findsOneWidget,
       );
 
       await tester.ensureVisible(foundingCta);
