@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
@@ -194,9 +196,15 @@ final class _LandingHeaderState extends State<LandingHeader> {
                       ),
                       child: LayoutBuilder(
                         builder: (context, contentConstraints) {
+                          final b =
+                              MediaQuery.textScalerOf(context).scale(16) / 16;
                           final usesHorizontalComposition =
                               contentConstraints.maxWidth >=
-                              LandingHeader._horizontalCompositionWidth;
+                              LandingHeader._horizontalCompositionWidth *
+                                  math.max(
+                                    1.0,
+                                    b,
+                                  );
                           final usesIntermediateComposition =
                               contentConstraints.maxWidth >=
                               LandingHeader._intermediateCompositionWidth;

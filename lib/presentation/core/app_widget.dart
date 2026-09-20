@@ -26,6 +26,10 @@ final class FunAppLandingPageApp extends StatelessWidget {
     routes: {
       PrivacyNoticePage.routeName: (_) => const PrivacyNoticePage(),
     },
+    onGenerateRoute: (_) => MaterialPageRoute<void>(
+      settings: const RouteSettings(name: '/'),
+      builder: (_) => const LandingPage(),
+    ),
   );
 }
 

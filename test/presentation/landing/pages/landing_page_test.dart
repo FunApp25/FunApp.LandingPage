@@ -497,6 +497,35 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('active landing sections fit at two times text scale', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(
+      tester.binding.platformDispatcher.clearTextScaleFactorTestValue,
+    );
+
+    for (final locale in AppLocalizations.supportedLocales) {
+      for (final size in const [
+        Size(320, 568),
+        Size(390, 844),
+        Size(600, 600),
+        Size(768, 600),
+        Size(1440, 900),
+      ]) {
+        setTestSurface(tester, size);
+        await pumpLandingApp(tester, locale: locale);
+
+        expect(find.byType(LandingPage), findsOneWidget);
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Expected no overflow for $locale at $size and 2x text.',
+        );
+      }
+    }
+  });
+
   testWidgets('renders safely at narrow, intermediate, and wide widths', (
     tester,
   ) async {

@@ -230,23 +230,50 @@ final class _PrivacyNoticeDocument extends StatelessWidget {
                 ),
                 'h2': _PrivacyHeadingBuilder(),
                 'h3': _PrivacyHeadingBuilder(),
+                'a': _PrivacyContactLinkBuilder(),
               },
               imageBuilder: (_, _, _) => const SizedBox.shrink(),
-              onTapLink: _openApprovedLink,
             ),
           ),
         ),
       );
     },
   );
+}
 
-  void _openApprovedLink(String text, String? href, String title) {
+final class _PrivacyContactLinkBuilder extends MarkdownElementBuilder {
+  @override
+  Widget visitElementAfterWithContext(
+    BuildContext context,
+    markdown.Element element,
+    TextStyle? preferredStyle,
+    TextStyle? parentStyle,
+  ) {
+    final href = element.attributes['href'];
     final uri = href == null ? null : Uri.tryParse(href);
     final isApprovedContact =
         uri?.scheme == 'mailto' && uri?.path == 'info@funapp.world';
-    if (isApprovedContact && uri != null) {
-      launchPrivacyNoticeLink(uri);
+    if (!isApprovedContact || uri == null) {
+      return Text(element.textContent, style: parentStyle);
     }
+
+    return Semantics(
+      label: element.textContent,
+      link: true,
+      onTap: () => launchPrivacyNoticeLink(uri),
+      child: ExcludeSemantics(
+        child: TextButton(
+          onPressed: () => launchPrivacyNoticeLink(uri),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(0, 44),
+            padding: EdgeInsets.zero,
+            foregroundColor: AppColors.energeticPlum,
+            textStyle: preferredStyle,
+          ),
+          child: Text(element.textContent),
+        ),
+      ),
+    );
   }
 }
 

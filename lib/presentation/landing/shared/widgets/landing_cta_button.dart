@@ -107,6 +107,8 @@ final class LandingCtaButton extends StatelessWidget {
           children: [
             if (useConstrainedProminentLayout)
               Expanded(child: labelWidget)
+            else if (constraints.hasBoundedWidth)
+              Flexible(child: labelWidget)
             else
               labelWidget,
             const SizedBox(width: 8),

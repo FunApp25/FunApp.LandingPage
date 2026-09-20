@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
@@ -116,5 +117,49 @@ void main() {
     );
     expect(find.text(l10n.landingInterestedUserComingSoonBody), findsOneWidget);
     expect(find.text('Coming soon'), findsNothing);
+  });
+
+  testWidgets('coming-soon dialog closes by keyboard and reopens at 2x text', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(320, 300));
+    tester.binding.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(
+      tester.binding.platformDispatcher.clearTextScaleFactorTestValue,
+    );
+    await pumpLandingApp(tester, locale: const Locale('be'));
+
+    final foundingCta = find.byKey(const Key('foundingFriendsCta'));
+    await tester.ensureVisible(foundingCta);
+    final ctaText = find.descendant(
+      of: foundingCta,
+      matching: find.byType(Text),
+    );
+    final ctaFocus = Focus.of(tester.element(ctaText.first))..requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    final closeIcon = find.descendant(
+      of: find.byKey(const Key('landingDialogCloseButton')),
+      matching: find.byIcon(Icons.close),
+    );
+    expect(Focus.of(tester.element(closeIcon)).hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingDialog), findsNothing);
+    expect(ctaFocus.hasPrimaryFocus, isTrue);
+
+    await tester.tap(foundingCta);
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingDialog), findsOneWidget);
+    await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingDialog), findsNothing);
   });
 }

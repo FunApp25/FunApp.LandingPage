@@ -4,6 +4,7 @@ import 'dart:ui' show SemanticsAction;
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
@@ -130,6 +131,27 @@ void main() {
     expect(privacyLink.hasAction(SemanticsAction.tap), isTrue);
     expect(tester.takeException(), isNull);
     semantics.dispose();
+  });
+
+  testWidgets('Privacy Notice link follows the last field in keyboard order', (
+    tester,
+  ) async {
+    await _pumpVenueDialog(tester, repository: repository);
+
+    final phoneField = find.byKey(const Key('venueLeadPhoneNumberField'));
+    await tester.ensureVisible(phoneField);
+    await tester.tap(phoneField);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+
+    expect(
+      Focus.of(tester.element(find.byKey(const Key('venuePrivacyDisclosure'))))
+          .hasFocus,
+      isTrue,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingDialog), findsNothing);
   });
 
   testWidgets('venue Privacy Notice navigation closes and discards the draft', (
@@ -266,6 +288,7 @@ void main() {
   testWidgets(
     'submission blocks duplicates and dismissal, then shows success and resets',
     (tester) async {
+      final semantics = tester.ensureSemantics();
       final createdBlocs = <VenueLeadFormBloc>[];
       await _pumpVenueDialog(
         tester,
@@ -304,9 +327,20 @@ void main() {
         find.byType(VenuePrivacyDisclosure),
       );
       expect(privacyDisclosure.onPrivacyNoticeSelected, isNull);
+      final pendingPrivacyLinks = find.semantics.byLabel('Privacy Notice');
+      if (pendingPrivacyLinks.evaluate().isNotEmpty) {
+        expect(
+          pendingPrivacyLinks.evaluate().single.getSemanticsData().hasAction(
+            SemanticsAction.tap,
+          ),
+          isFalse,
+        );
+      }
 
       await tester.tap(find.byKey(const Key('venueLeadSubmitButton')));
       await tester.tapAt(const Offset(1, 1));
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.binding.handlePopRoute();
       await tester.pump();
       expect(repository.submittedLeads, hasLength(1));
       expect(find.byType(LandingDialog), findsOneWidget);
@@ -350,6 +384,7 @@ void main() {
       await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
       await tester.pumpAndSettle();
       expect(createdBlocs.last.isClosed, isTrue);
+      semantics.dispose();
     },
   );
 
@@ -421,6 +456,72 @@ void main() {
     );
   });
 
+  testWidgets('editing during submission discards stale failure in the UI', (
+    tester,
+  ) async {
+    await _pumpVenueDialog(tester, repository: repository);
+    await _fillRequiredFields(tester);
+
+    await _tapSubmit(tester);
+    await tester.enterText(
+      find.byKey(const Key('venueLeadVenueNameField')),
+      'Edited Venue',
+    );
+    await tester.pump();
+    repository.completeNext(left(const AppFailure.submissionRejected()));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('venueLeadSubmissionFailure')), findsNothing);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('venueLeadVenueNameField')))
+          .controller
+          ?.text,
+      'Edited Venue',
+    );
+    await _tapSubmit(tester);
+    expect(repository.submittedLeads, hasLength(2));
+    repository.completeNext(right(unit));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('venueLeadSuccess')), findsOneWidget);
+  });
+
+  for (final failure in const [
+    AppFailure.submissionRejected(),
+    AppFailure.unexpected(),
+  ]) {
+    testWidgets('$failure shows a retryable message without losing the draft', (
+      tester,
+    ) async {
+      await _pumpVenueDialog(tester, repository: repository);
+      await _fillRequiredFields(tester);
+
+      await _tapSubmit(tester);
+      repository.completeNext(left(failure));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(venueLeadSubmissionFailureMessage(_l10n(tester), failure)),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('venueLeadVenueNameField')))
+            .controller
+            ?.text,
+        'Test Venue',
+      );
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const Key('venueLeadSubmitButton')),
+            )
+            .onPressed,
+        isNotNull,
+      );
+    });
+  }
+
   testWidgets('venue form stays bounded and scrollable across viewports', (
     tester,
   ) async {
@@ -458,6 +559,23 @@ void main() {
       await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
       await tester.pumpAndSettle();
     }
+  });
+
+  testWidgets('venue dialog scrolls at two times text scale and short height', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(320, 300));
+    tester.binding.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(
+      tester.binding.platformDispatcher.clearTextScaleFactorTestValue,
+    );
+    await _pumpVenueDialog(tester, repository: repository);
+
+    final submit = find.byKey(const Key('venueLeadSubmitButton'));
+    await tester.ensureVisible(submit);
+    await tester.pumpAndSettle();
+    expect(tester.getRect(submit).right, lessThanOrEqualTo(320));
+    expect(tester.takeException(), isNull);
   });
 
   test('maps every operational failure without provider terminology', () async {

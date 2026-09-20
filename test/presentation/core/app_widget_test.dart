@@ -95,6 +95,55 @@ void main() {
     expect(Localizations.localeOf(context), const Locale('en'));
   });
 
+  testWidgets('unknown named routes show a working landing page', (
+    tester,
+  ) async {
+    await _pumpApp(tester, const Locale('en'));
+
+    Navigator.of(
+      tester.element(find.byType(LandingPage)),
+    ).pushNamed('/unknown-fragment');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byKey(const Key('landingPageScrollView')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('direct privacy route opens and returns through app routing', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        PrivacyNoticePage.routeName;
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    await _pumpApp(tester, const Locale('en'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PrivacyNoticePage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unknown initial fragment falls back to landing', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        '/unexpected-fragment';
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    await _pumpApp(tester, const Locale('en'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byType(PrivacyNoticePage), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('maps each resolved locale to the host document language', (
     tester,
   ) async {

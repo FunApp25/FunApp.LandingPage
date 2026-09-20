@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 
 /// Approved informational disclosure shown before venue submission.
@@ -27,6 +28,7 @@ final class VenuePrivacyDisclosure extends StatefulWidget {
 
 final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
   late final TapGestureRecognizer _privacyNoticeRecognizer;
+  var _isFocused = false;
 
   @override
   void initState() {
@@ -70,26 +72,50 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
       fontWeight: FontWeight.w700,
       decoration: TextDecoration.underline,
       decorationColor: AppColors.energeticPlum,
+      backgroundColor: _isFocused
+          ? AppColors.energeticPlum.withValues(alpha: 0.12)
+          : null,
     );
 
-    return Semantics(
-      key: const Key('venuePrivacyDisclosure'),
-      container: true,
-      child: Text.rich(
-        TextSpan(
-          style: bodyStyle,
-          children: [
-            TextSpan(text: beforeLink),
-            TextSpan(
-              text: privacyNoticeLabel,
-              style: linkStyle,
-              recognizer: _privacyNoticeRecognizer,
-              mouseCursor: widget.onPrivacyNoticeSelected == null
-                  ? SystemMouseCursors.basic
-                  : SystemMouseCursors.click,
-            ),
-            TextSpan(text: afterLink),
-          ],
+    return Focus(
+      key: const Key('venuePrivacyNoticeLinkFocus'),
+      canRequestFocus: widget.onPrivacyNoticeSelected != null,
+      includeSemantics: false,
+      onFocusChange: (focused) => setState(() => _isFocused = focused),
+      onKeyEvent: (node, event) {
+        final activatesLink =
+            event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.numpadEnter ||
+                event.logicalKey == LogicalKeyboardKey.space);
+        if (activatesLink && widget.onPrivacyNoticeSelected != null) {
+          widget.onPrivacyNoticeSelected!();
+          return KeyEventResult.handled;
+        } else {
+          return KeyEventResult.ignored;
+        }
+      },
+      child: Semantics(
+        key: const Key('venuePrivacyDisclosure'),
+        container: true,
+        child: Text.rich(
+          TextSpan(
+            style: bodyStyle,
+            children: [
+              TextSpan(text: beforeLink),
+              TextSpan(
+                text: privacyNoticeLabel,
+                style: linkStyle,
+                recognizer: widget.onPrivacyNoticeSelected == null
+                    ? null
+                    : _privacyNoticeRecognizer,
+                mouseCursor: widget.onPrivacyNoticeSelected == null
+                    ? SystemMouseCursors.basic
+                    : SystemMouseCursors.click,
+              ),
+              TextSpan(text: afterLink),
+            ],
+          ),
         ),
       ),
     );

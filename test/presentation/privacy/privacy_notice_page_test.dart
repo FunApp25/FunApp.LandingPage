@@ -28,7 +28,16 @@ void main() {
       expect(content, startsWith('# Fun App Ltd - Privacy Policy\n'));
       expect(content, contains('**Last updated: 15 September 2026**'));
       expect(content, contains('## 1. About Fun App'));
+      expect(
+        content,
+        contains(
+          '## 4. Information submitted by businesses, venues, clubs '
+          'and charities',
+        ),
+      );
       expect(content, contains('## 10. Cookies and similar technologies'));
+      expect(content, contains('## 11. Your data protection rights'));
+      expect(content, contains('## 13. Complaints'));
       expect(content, contains('## 15. Contact Fun App'));
       expect(content, contains('**Company number:** 17261344'));
       expect(
@@ -126,6 +135,40 @@ void main() {
     expect(returnLink.flagsCollection.isLink, isTrue);
     expect(returnLink.flagsCollection.isButton, isFalse);
     expect(returnLink.hasAction(SemanticsAction.tap), isTrue);
+    semantics.dispose();
+  });
+
+  testWidgets('approved email links have keyboard focus and link semantics', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await _pumpPrivacyPage(tester);
+
+    final emailButtons = find.descendant(
+      of: find.byKey(const Key('privacyNoticeMarkdown')),
+      matching: find.byType(TextButton),
+    );
+    expect(emailButtons, findsWidgets);
+    final firstEmail = emailButtons.first;
+    await tester.ensureVisible(firstEmail);
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<TextButton>(firstEmail);
+    expect(button.onPressed, isNotNull);
+    final emailSemantics = tester.getSemantics(firstEmail).getSemanticsData();
+    expect(emailSemantics.label, 'info@funapp.world');
+    expect(emailSemantics.flagsCollection.isLink, isTrue);
+    expect(emailSemantics.hasAction(SemanticsAction.tap), isTrue);
+
+    final emailText = find.descendant(
+      of: firstEmail,
+      matching: find.text('info@funapp.world'),
+    );
+    final focusNode = Focus.of(tester.element(emailText));
+    expect(focusNode.canRequestFocus, isTrue);
+    focusNode.requestFocus();
+    await tester.pump();
+    expect(focusNode.hasPrimaryFocus, isTrue);
     semantics.dispose();
   });
 

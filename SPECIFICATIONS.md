@@ -214,9 +214,10 @@ burger composition. The burger opens a full-screen, presentation-local menu
 with the same three active anchor destinations; selecting one closes the menu
 before reusing the existing anchor navigation. At 600px and above, the
 established wide, intermediate, and narrow constraint-driven header variants
-remain in use. Internal navigation controls provide at least a 44px effective
-target and an explicit keyboard-focus outline; hover and focus treatments cover
-the complete padded control surface. The active MVP mapping is Our Belief to
+remain in use; larger text can select the intermediate composition when the
+single-row header no longer fits. Internal navigation controls provide at least
+a 44px effective target and an explicit keyboard-focus outline; hover and focus
+treatments cover the complete padded control surface. The active MVP mapping is Our Belief to
 Hero, Founding Friends to Founding Friends, and For Venues to Venue. Membership
 navigation is temporarily hidden with its rendered section. Anchor positions
 derive from the rendered sections. Navigation duration scales with the current
@@ -501,7 +502,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses the stable hash URL `https://funapp.world/#/privacy`; because the route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses the stable hash URL `https://funapp.world/#/privacy`; because the route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
