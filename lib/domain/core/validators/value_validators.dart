@@ -6,6 +6,9 @@ final _emailRegex = RegExp(
   r"^(?!.*\.\.)[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$",
 );
 final _urlWhitespaceRegex = RegExp(r'\s');
+final _websiteHostRegex = RegExp(
+  r'^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$',
+);
 final _numericStringRegex = RegExp(r'^[0-9]+$');
 final _integerStringRegex = RegExp(r'^-?[0-9]+$');
 
@@ -43,14 +46,16 @@ Either<ValueFailure<String>, String> validateEmail(String input) {
   }
 }
 
-/// Validates an HTTP or HTTPS URL with a non-empty host.
+/// Validates a plausible web domain with an optional HTTP or HTTPS scheme.
 Either<ValueFailure<String>, String> validateWebsiteUrl(String input) {
-  final uri = Uri.tryParse(input);
+  final hasScheme = input.contains('://');
+  final uri = Uri.tryParse(hasScheme ? input : 'https://$input');
   final isValidUrl =
       uri != null &&
       !_urlWhitespaceRegex.hasMatch(input) &&
+      !input.contains('@') &&
       (uri.scheme == 'http' || uri.scheme == 'https') &&
-      uri.host.isNotEmpty;
+      _websiteHostRegex.hasMatch(uri.host);
 
   if (isValidUrl) {
     return right(input);

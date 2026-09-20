@@ -32,7 +32,7 @@ final class LandingHeader extends StatefulWidget {
   /// Scrolls to the venue section.
   final VoidCallback onVenuesSelected;
 
-  /// Reserved for the intentionally deferred Contact Us behavior.
+  /// Opens the existing interested-user Coming Soon dialog.
   final VoidCallback? onContactSelected;
 
   // The complete desktop row needs this width in every supported locale.
@@ -109,6 +109,7 @@ final class _LandingHeaderState extends State<LandingHeader> {
               closeSemanticLabel: closeSemanticLabel,
               onClose: navigator.pop,
               onItemSelected: navigator.pop,
+              onContactSelected: () => navigator.pop(-1),
             ),
       );
       _menuNavigator = navigator;
@@ -133,6 +134,8 @@ final class _LandingHeaderState extends State<LandingHeader> {
             selectedIndex >= 0 &&
             selectedIndex < navigationItems.length) {
           navigationItems[selectedIndex].onSelected();
+        } else if (selectedIndex == -1) {
+          widget.onContactSelected?.call();
         }
       }
     }

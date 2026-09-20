@@ -16,13 +16,14 @@ final class LandingMobileMenu extends StatefulWidget {
     required this.closeSemanticLabel,
     required this.onClose,
     required this.onItemSelected,
+    required this.onContactSelected,
     super.key,
   });
 
   /// Localized landing destinations in display order.
   final List<HeaderNavigationItemData> navigationItems;
 
-  /// Localized but intentionally unwired Contact Us label.
+  /// Localized Contact Us label.
   final String contactLabel;
 
   /// Localized close-button semantic label.
@@ -33,6 +34,9 @@ final class LandingMobileMenu extends StatefulWidget {
 
   /// Dismisses the modal with a selected destination.
   final ValueChanged<int> onItemSelected;
+
+  /// Closes the menu before the shared Coming Soon dialog opens.
+  final VoidCallback onContactSelected;
 
   @override
   State<LandingMobileMenu> createState() => _LandingMobileMenuState();
@@ -108,6 +112,7 @@ final class _LandingMobileMenuState extends State<LandingMobileMenu> {
                   key: const Key('landingMobileMenuContactCta'),
                   label: widget.contactLabel,
                   size: LandingCtaSize.compact,
+                  onPressed: widget.onContactSelected,
                 ),
               ),
             ),

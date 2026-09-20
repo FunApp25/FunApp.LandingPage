@@ -20,7 +20,7 @@ final class IntermediateHeader extends StatelessWidget {
   /// Localized Contact Us label.
   final String contactLabel;
 
-  /// Reserved for the intentionally deferred Contact Us behavior.
+  /// Opens the interested-user Coming Soon dialog.
   final VoidCallback? onContactSelected;
 
   @override

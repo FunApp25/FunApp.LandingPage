@@ -9,7 +9,10 @@ import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_p
 /// Root widget for the Fun App landing-page application.
 final class FunAppLandingPageApp extends StatelessWidget {
   /// Creates the root landing-page application widget.
-  const FunAppLandingPageApp({super.key});
+  const FunAppLandingPageApp({this.onPrivacyNoticeLaunch, super.key});
+
+  /// Optional browser-launch override for presentation tests.
+  final ValueChanged<Uri>? onPrivacyNoticeLaunch;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -22,13 +25,13 @@ final class FunAppLandingPageApp extends StatelessWidget {
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     localeListResolutionCallback: _resolveLocaleList,
-    home: const LandingPage(),
+    home: LandingPage(onPrivacyNoticeLaunch: onPrivacyNoticeLaunch),
     routes: {
       PrivacyNoticePage.routeName: (_) => const PrivacyNoticePage(),
     },
     onGenerateRoute: (_) => MaterialPageRoute<void>(
       settings: const RouteSettings(name: '/'),
-      builder: (_) => const LandingPage(),
+      builder: (_) => LandingPage(onPrivacyNoticeLaunch: onPrivacyNoticeLaunch),
     ),
   );
 }

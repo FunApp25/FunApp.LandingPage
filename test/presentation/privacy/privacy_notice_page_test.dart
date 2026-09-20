@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
 import '../landing/landing_test_helpers.dart';
 
@@ -46,6 +47,21 @@ void main() {
       );
       expect(
         content,
+        contains(
+          '**Privacy Contact:**\\\n'
+          '[info@funapp.world](mailto:info@funapp.world)',
+        ),
+      );
+      expect(
+        content,
+        contains(
+          '**Email:**\\\n'
+          '[info@funapp.world](mailto:info@funapp.world)\\\n'
+          '**Registered office:**',
+        ),
+      );
+      expect(
+        content,
         contains('where your doing so is appropriate'),
         reason: 'Approved wording must not be silently corrected.',
       );
@@ -62,6 +78,18 @@ void main() {
       }
     },
   );
+
+  test('privacy hash URL stays on the current origin', () {
+    expect(
+      privacyNoticeUrlFor(Uri.parse('https://funapp.world/#/')).toString(),
+      PrivacyNoticePage.canonicalUrl,
+    );
+    expect(
+      privacyNoticeUrlFor(Uri.parse('http://localhost:4321/?draft=private#/'))
+          .toString(),
+      'http://localhost:4321/#/privacy',
+    );
+  });
 
   testWidgets('direct privacy route renders approved structure', (
     tester,
@@ -102,6 +130,13 @@ void main() {
         of: find.byKey(const Key('privacyNoticeReturnLink')),
         matching: find.byType(TextButton),
       ),
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('privacyNoticeReturnLink')),
+        matching: find.byIcon(Icons.arrow_back),
+      ),
+      findsOneWidget,
     );
     returnButton.onPressed!();
     await tester.pumpAndSettle();

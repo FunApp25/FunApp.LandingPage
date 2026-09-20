@@ -26,7 +26,7 @@ final class MobileFooter extends StatelessWidget {
   /// Localized label for the hosted Privacy Notice.
   final String privacyNoticeLabel;
 
-  /// Navigates to the hosted Privacy Notice page.
+  /// Opens the hosted Privacy Notice in a separate tab.
   final VoidCallback onPrivacyNoticeSelected;
 
   @override

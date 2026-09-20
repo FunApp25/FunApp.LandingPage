@@ -3,7 +3,7 @@ import 'package:fun_app_landing_page/domain/core/failures/value_failure.dart';
 import 'package:fun_app_landing_page/domain/core/validators/value_validators.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/value_object.dart';
 
-/// A required HTTP or HTTPS website URL.
+/// A required web address with an optional HTTP or HTTPS scheme.
 class Website extends ValueObject<String> {
   /// Creates a [Website] without normalizing or resolving [input].
   factory Website(String input) => Website._(

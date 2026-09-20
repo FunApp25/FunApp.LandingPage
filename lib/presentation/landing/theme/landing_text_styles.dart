@@ -127,19 +127,14 @@ abstract final class LandingTextStyles {
     color: AppColors.bodyGray,
   );
 
-  /// Underlined research-source treatment.
-  static final TextStyle statsAttributionSource =
-      AppTextStyles.bodyFontStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        height: 26 / 16,
-        letterSpacing: 0.32,
-        color: AppColors.warmOrange,
-      ).copyWith(
-        decoration: TextDecoration.underline,
-        decorationColor: AppColors.warmOrange,
-        decorationThickness: 0.8,
-      );
+  /// Bold research-source emphasis without link styling.
+  static final TextStyle statsAttributionSource = AppTextStyles.bodyFontStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    height: 26 / 16,
+    letterSpacing: 0.32,
+    color: AppColors.bodyGray,
+  );
 
   /// Separator treatment between visual research sources.
   static final TextStyle statsAttributionSeparator =

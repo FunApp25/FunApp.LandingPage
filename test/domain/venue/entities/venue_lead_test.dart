@@ -65,8 +65,8 @@ void main() {
 
     test('rejects an invalid website', () {
       _expectInvalid(
-        _validLead().copyWith(website: Website('example.com')),
-        const ValueFailure<String>.invalidUrl(failedValue: 'example.com'),
+        _validLead().copyWith(website: Website('example')),
+        const ValueFailure<String>.invalidUrl(failedValue: 'example'),
       );
     });
 

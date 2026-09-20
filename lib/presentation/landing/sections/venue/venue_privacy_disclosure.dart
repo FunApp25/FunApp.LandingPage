@@ -19,7 +19,7 @@ final class VenuePrivacyDisclosure extends StatefulWidget {
   /// Exact approved interactive text within [statement].
   final String privacyNoticeLabel;
 
-  /// Navigates to the hosted Privacy Notice, or null during submission.
+  /// Opens the hosted Privacy Notice; null disables the link.
   final VoidCallback? onPrivacyNoticeSelected;
 
   @override

@@ -28,7 +28,7 @@ final class LandingFooter extends StatelessWidget {
   /// Scrolls to the venue section.
   final VoidCallback onVenuesSelected;
 
-  /// Navigates to the hosted Privacy Notice page.
+  /// Opens the hosted Privacy Notice in a separate tab.
   final VoidCallback onPrivacyNoticeSelected;
 
   /// Visible contact address whose interaction remains intentionally deferred.

@@ -15,7 +15,7 @@ final class FooterPrivacyNoticeLink extends StatefulWidget {
   /// Localized visible and semantic label.
   final String label;
 
-  /// Navigates to the hosted Privacy Notice page.
+  /// Opens the hosted Privacy Notice in a separate tab.
   final VoidCallback onSelected;
 
   @override

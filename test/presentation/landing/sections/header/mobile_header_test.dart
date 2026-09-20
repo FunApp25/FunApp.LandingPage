@@ -267,7 +267,7 @@ void main() {
     },
   );
 
-  testWidgets('menu keeps page scroll fixed and Contact Us unwired', (
+  testWidgets('menu keeps page scroll fixed and Contact Us opens Coming Soon', (
     tester,
   ) async {
     setTestSurface(tester, const Size(390, 844));
@@ -285,7 +285,7 @@ void main() {
     ]) {
       expect(
         find.descendant(of: find.byKey(key), matching: find.byType(InkWell)),
-        findsNothing,
+        findsOneWidget,
       );
     }
     await tester.drag(
@@ -296,8 +296,14 @@ void main() {
     await tester.pump();
     expect(scrollController.offset, initialOffset);
 
-    await tester.tap(find.byKey(const Key('landingMobileMenuCloseButton')));
-    await tester.pump();
+    await tester.tap(find.byKey(const Key('landingMobileMenuContactCta')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('interestedUserComingSoonDialogContent')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
+    await tester.pumpAndSettle();
     await tester.drag(
       find.byKey(const Key('landingPageScrollView')),
       const Offset(0, -250),

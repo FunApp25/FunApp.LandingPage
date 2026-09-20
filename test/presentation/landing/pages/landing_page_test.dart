@@ -450,7 +450,7 @@ void main() {
     await mouse.removePointer();
   });
 
-  testWidgets('navigation is accessible while Contact Us stays unwired', (
+  testWidgets('navigation is accessible and Contact Us opens Coming Soon', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -485,15 +485,22 @@ void main() {
         .getSemantics(find.text('Contact Us'))
         .getSemanticsData();
     expect(contact.label, 'Contact Us');
-    expect(contact.flagsCollection.isButton, isFalse);
+    expect(contact.flagsCollection.isButton, isTrue);
     expect(contact.flagsCollection.isLink, isFalse);
     expect(
       find.descendant(
         of: find.byKey(const Key('landingHeaderContactCta')),
         matching: find.byType(InkWell),
       ),
-      findsNothing,
+      findsOneWidget,
     );
+    await tester.tap(find.byKey(const Key('landingHeaderContactCta')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('interestedUserComingSoonDialogContent')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('venueLeadForm')), findsNothing);
     semantics.dispose();
   });
 

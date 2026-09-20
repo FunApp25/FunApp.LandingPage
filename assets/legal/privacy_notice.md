@@ -12,14 +12,15 @@ At this stage, Fun App’s website is primarily used to allow people to express 
 
 Fun App Ltd is the controller responsible for any personal data you submit to Fun App.
 
-**Company:** Fun App Ltd
-**Registered office:**
-167-169 Great Portland Street,
-5th Floor, London,
-United Kingdom,
-W1W 5PF
-**Company number:** 17261344
-**Privacy Contact:** [info@funapp.world](mailto:info@funapp.world)
+**Company:** Fun App Ltd\
+**Registered office:**\
+167-169 Great Portland Street,\
+5th Floor, London,\
+United Kingdom,\
+W1W 5PF\
+**Company number:** 17261344\
+**Privacy Contact:**\
+[info@funapp.world](mailto:info@funapp.world)
 
 If you have any questions about this Privacy Notice or how Fun App uses your personal data, please contact Fun App’s Privacy Contact above.
 
@@ -227,13 +228,14 @@ The latest version of this Privacy Notice will always be present on Fun App’s 
 
 If you have any questions about this Privacy Notice or Fun App’s use of your personal data, please contact:
 
-**Fun App Ltd**
-**Email:** [info@funapp.world](mailto:info@funapp.world)
-**Registered office:**
-167-169 Great Portland Street,
-5th Floor, London,
-United Kingdom,
-W1W 5PF
+**Fun App Ltd**\
+**Email:**\
+[info@funapp.world](mailto:info@funapp.world)\
+**Registered office:**\
+167-169 Great Portland Street,\
+5th Floor, London,\
+United Kingdom,\
+W1W 5PF\
 **Company number:** 17261344
 
 **Last updated: 15 September 2026**

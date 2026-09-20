@@ -19,12 +19,15 @@ import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_s
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
-import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
 final class LandingPage extends StatefulWidget {
   /// Creates the landing page.
-  const LandingPage({super.key});
+  const LandingPage({this.onPrivacyNoticeLaunch, super.key});
+
+  /// Overrides the browser launcher for presentation tests.
+  final ValueChanged<Uri>? onPrivacyNoticeLaunch;
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -131,18 +134,16 @@ final class _LandingPageState extends State<LandingPage> {
   }
 
   Future<void> _openVenueLeadDialog() async {
-    final result = await showVenueLeadDialog(
+    await showVenueLeadDialog(
       context,
       createBloc: getIt.call<VenueLeadFormBloc>,
+      onPrivacyNoticeSelected: _openPrivacyNotice,
     );
-
-    if (mounted && result == VenueLeadDialogResult.privacyNotice) {
-      await Navigator.of(context).pushNamed(PrivacyNoticePage.routeName);
-    }
   }
 
   void _openPrivacyNotice() {
-    Navigator.of(context).pushNamed(PrivacyNoticePage.routeName);
+    final uri = privacyNoticeUrlFor(Uri.base);
+    (widget.onPrivacyNoticeLaunch ?? launchExternalLinkInNewTab)(uri);
   }
 
   @override
@@ -154,6 +155,7 @@ final class _LandingPageState extends State<LandingPage> {
             onOurBeliefSelected: () => _scrollTo(_heroKey),
             onFoundingFriendsSelected: () => _scrollTo(_foundingFriendsKey),
             onVenuesSelected: () => _scrollTo(_venueKey),
+            onContactSelected: _showInterestedUserComingSoonDialog,
           ),
           Expanded(
             child: SingleChildScrollView(

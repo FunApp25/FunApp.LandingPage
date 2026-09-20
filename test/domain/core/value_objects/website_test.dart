@@ -4,13 +4,20 @@ import 'package:fun_app_landing_page/domain/core/failures/value_failure.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/website.dart';
 
 void main() {
-  test('accepts an HTTPS website with a host', () {
-    const input = 'https://fun.example/venues';
-
-    expect(
-      Website(input).value,
-      right<ValueFailure<String>, String>(input),
-    );
+  test('accepts domains and HTTPS forms without rewriting input', () {
+    for (final input in [
+      'example.com',
+      'www.example.com',
+      'venue.co.uk',
+      'example.com/path?source=test',
+      'test.com',
+      'https://fun.example/venues',
+    ]) {
+      expect(
+        Website(input).value,
+        right<ValueFailure<String>, String>(input),
+      );
+    }
   });
 
   test('reports empty input before URL format', () {
@@ -33,8 +40,8 @@ void main() {
     );
   });
 
-  test('rejects a URL without an approved web scheme', () {
-    const input = 'example.com';
+  test('rejects an address without a plausible domain', () {
+    const input = 'example';
 
     expect(
       Website(input).value,

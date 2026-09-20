@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/research/friendship_project_link.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stat_card.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_mobile_carousel.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -23,6 +26,29 @@ const _connectionBody =
     'sizes and types around the country?';
 
 void main() {
+  testWidgets('Friendship Project is an exact keyboard-accessible link', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final opened = <Uri>[];
+    await pumpLandingSection(
+      tester,
+      section: FriendshipProjectLink(
+        style: LandingTextStyles.statsAttribution,
+        onOpen: opened.add,
+      ),
+    );
+    final link = find.byKey(const Key('friendshipProjectLink'));
+    final data = tester.getSemantics(link).getSemanticsData();
+    expect(data.flagsCollection.isLink, isTrue);
+    expect(data.label, 'The Great Friendship Project');
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(opened, [Uri.parse('https://friendship-project.co.uk/')]);
+    semantics.dispose();
+  });
+
   testWidgets('renders authoritative English research and connection copy', (
     tester,
   ) async {
@@ -56,10 +82,22 @@ void main() {
     );
     expect(
       attribution.textSpan?.toPlainText(),
-      'Recent UK research from Belonging Forum · Marmalade Trust · '
-      'BACP / YouGov. With thanks to The Great Friendship Project, London, '
-      'for compiling these figures.',
+      contains('Recent UK research from Belonging Forum'),
     );
+    expect(find.text('The Great Friendship Project'), findsOneWidget);
+    expect(
+      FriendshipProjectLink.destination.toString(),
+      'https://friendship-project.co.uk/',
+    );
+    expect(
+      LandingTextStyles.statsAttributionSource.color,
+      LandingTextStyles.statsAttribution.color,
+    );
+    expect(
+      LandingTextStyles.statsAttributionSource.fontWeight,
+      FontWeight.w700,
+    );
+    expect(LandingTextStyles.statsAttributionSource.decoration, isNull);
 
     expect(find.text('A DIFFERENT WAY TO CONNECT'), findsOneWidget);
     expect(

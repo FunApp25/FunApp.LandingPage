@@ -106,7 +106,15 @@
   "@venueLeadChainStatusLabel": {
     "description": "Venue independent or chain status field label."
   },
-  "venueLeadVenueCountLabel": "If a chain, number of venues",
+  "venueLeadIndependentOption": "Independent",
+  "@venueLeadIndependentOption": {
+    "description": "Optional venue chain-status choice for an independent venue."
+  },
+  "venueLeadPartOfChainOption": "Part of a chain",
+  "@venueLeadPartOfChainOption": {
+    "description": "Optional venue chain-status choice for a venue in a chain."
+  },
+  "venueLeadVenueCountLabel": "Number of venues",
   "@venueLeadVenueCountLabel": {
     "description": "Venue count field label."
   },
@@ -170,21 +178,21 @@
   "@venueLeadSubmitting": {
     "description": "Venue-interest form submission progress label."
   },
-  "venueLeadSubmissionServiceUnavailable": "We can’t send your details right now. Please try again.",
-  "@venueLeadSubmissionServiceUnavailable": {
-    "description": "Venue submission message when the service is unavailable."
+  "venueLeadSubmissionFailure": "We couldn't submit the form right now. Please try again later.",
+  "@venueLeadSubmissionFailure": {
+    "description": "Generic retry-later message after an operational venue submission failure."
   },
-  "venueLeadSubmissionRejected": "We couldn’t submit these details. Please check the form and try again.",
-  "@venueLeadSubmissionRejected": {
-    "description": "Venue submission message when the receiving service rejects the details."
-  },
-  "venueLeadSubmissionUnexpected": "Something went wrong. Please try again.",
-  "@venueLeadSubmissionUnexpected": {
-    "description": "Venue submission message for an unexpected failure."
-  },
-  "venueLeadSuccessTitle": "Thanks — we’ll be in touch.",
+  "venueLeadSuccessTitle": "Form Submitted",
   "@venueLeadSuccessTitle": {
-    "description": "Venue-interest submission success confirmation."
+    "description": "Heading for the venue-interest submission confirmation."
+  },
+  "venueLeadSuccessBody": "Thank you for reaching out, we'll be in touch shortly.",
+  "@venueLeadSuccessBody": {
+    "description": "Body of the venue-interest submission confirmation."
+  },
+  "venueLeadSuccessSignOff": "The Fun App team.",
+  "@venueLeadSuccessSignOff": {
+    "description": "Sign-off of the venue-interest submission confirmation."
   },
   "venueLeadPrivacyDisclosure": "By submitting this form, you acknowledge that Fun App will use the information you provide to respond to your enquiry. Please see Fun App's Privacy Notice for information about how it collects and processes personal data.",
   "@venueLeadPrivacyDisclosure": {

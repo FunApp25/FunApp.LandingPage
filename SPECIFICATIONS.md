@@ -50,9 +50,10 @@ Current implementation is evidence of repository state, not automatically a perm
   `https://funapp.world/#/privacy`. Its canonical website source is
   `assets/legal/privacy_notice.md`; the hash route supports direct access,
   refresh, and browser history without requiring a GitHub Pages rewrite.
-- The landing footer links to the hosted Privacy Notice. The venue form shows
+- The landing footer opens the hosted Privacy Notice in a new browser tab. The venue form shows
   the approved English privacy acknowledgement immediately before submission,
-  with an inline link to the same page. This disclosure is informational: no
+  with an inline link that opens the same page in a new tab, preserving the
+  current form draft. This disclosure is informational: no
   consent checkbox or submitted consent field is required for the current MVP.
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
@@ -226,9 +227,10 @@ enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
-become immediate when reduced motion is requested. Contact Us, including its
-mobile-header and full-screen-menu treatments, waitlist, product, email, and
-other marketing CTA destinations remain open and are intentionally unwired.
+become immediate when reduced motion is requested. Contact Us in the header
+and mobile menu opens the same localized, presentation-only Coming soon dialog
+as Founding Friends. Waitlist, product, email, and other marketing CTA
+destinations remain open and intentionally unwired.
 The Founding Friends prospective-user CTA currently opens a localized,
 presentation-only Coming soon dialog. It collects no information and performs
 no business operation; the interested-person contract remains unresolved. The
@@ -241,6 +243,9 @@ page-snapping carousel with one primary card, a trailing adjacent-card peek,
 previous/next controls, and four decorative page indicators. The carousel is
 clamped and non-looping pending explicit contrary design direction. At 600px
 and above, the established responsive Research grids remain in use.
+The Great Friendship Project attribution links to
+`https://friendship-project.co.uk/` in a new tab. Other source names in that
+line use bold text emphasis without link styling.
 The mobile Research scroll accent reveals the initial carousel viewport and
 navigation once as a single group rather than staggering offscreen cards;
 reduced motion renders that group immediately and makes programmatic page
@@ -334,7 +339,9 @@ capabilities as implemented.
 - Reusable pure-Dart value objects retain invalid editable input without
   throwing. Required strings reject whitespace-only content, single-line text
   rejects carriage returns and newlines, email validation is structural, and
-  website validation requires HTTP or HTTPS with a non-empty host.
+  website validation accepts plausible DNS-style domains such as
+  `example.com` and `venue.co.uk`, with or without an HTTP or HTTPS scheme,
+  while rejecting malformed and non-web addresses.
 - Domain validation does not trim, lowercase, rewrite, or otherwise normalize
   submitted text. Phone numbers are stored as strings, preserve leading zeroes,
   and, when present, accept decimal digits only. Venue count and venue capacity
@@ -343,7 +350,18 @@ capabilities as implemented.
   name, role, and email. Venue type, independent/chain status, venue count,
   venue capacity, and phone number are optional.
 - Present venue type and independent/chain status values are non-empty
-  single-line text. Their closed option sets are not established.
+  single-line text. The UI presents chain status as optional Independent or
+  Part of a chain choices using stable string values; this does not change the
+  provider-neutral/domain contract. Venue count appears only for a chain and
+  is cleared when switching away. Venue count and capacity controls accept
+  digits only while domain validation still enforces positive integers.
+  The conditional venue count expands and collapses with reduced-motion support,
+  and its visible label is "Number of venues" in English.
+  The venue information group reuses the established beige surface and card
+  radius; text inputs use the same rounded radius. The dialog keeps its action
+  footer pinned below the independently scrolling form body. Scroll-position
+  fades soften the top edge after scrolling and the bottom edge while more
+  content remains beneath the pinned footer.
 - Generated Freezed and Injectable source is regenerated locally and in CI and
   remains uncommitted.
 - HubSpot property names are exact external identifiers owned only by
@@ -368,8 +386,14 @@ capabilities as implemented.
 - Blank optional input represents absence. Non-blank optional and required
   input is preserved when constructing the established domain value objects.
 - A successful or failed submission preserves the complete form draft. The
-  venue dialog shows an explicit success confirmation without immediately
-  closing. Operational failure keeps the form open and editable for retry.
+  venue dialog shows "Form Submitted", "Thank you for reaching out, we'll be
+  in touch shortly.", and "The Fun App team." with a Close action instead of
+  Send, without immediately closing. Operational failure keeps the form open
+  and editable for retry, with a concise retry-later message above Send.
+  While submission is pending, Send is visibly disabled and an indeterminate
+  linear progress indicator appears immediately above it in the pinned footer.
+  The success content has vertical space from the pinned dialog chrome and
+  starts at the top of its own scroll position after submission.
   Each later dialog opening starts with a fresh BLoC and empty draft.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
@@ -451,7 +475,7 @@ capabilities as implemented.
 - The current venue privacy acknowledgement is approved informational copy,
   not a consent field. It adds no checkbox, BLoC state, domain value, DTO
   property, repository property, HubSpot field, or `legalConsentOptions` value.
-- Approved venue-type and independent/chain choices.
+- Approved venue-type choices and any future provider-side chain-value changes.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count
   cross-field invariant.

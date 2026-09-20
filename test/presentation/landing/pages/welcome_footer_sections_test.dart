@@ -300,32 +300,33 @@ void main() {
     },
   );
 
-  testWidgets('footer Privacy Notice link supports route history', (
-    tester,
-  ) async {
-    final semantics = tester.ensureSemantics();
-    await pumpLandingApp(tester);
+  testWidgets(
+    'footer Privacy Notice requests a new tab without app navigation',
+    (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      final launched = <Uri>[];
+      await pumpLandingApp(tester, onPrivacyNoticeLaunch: launched.add);
 
-    final privacyLink = find.byKey(const Key('footerPrivacyNoticeLink'));
-    await tester.ensureVisible(privacyLink);
-    await tester.pumpAndSettle();
-    final interactiveLink = tester.widget<InkWell>(
-      find.descendant(of: privacyLink, matching: find.byType(InkWell)),
-    );
-    interactiveLink.onTap!();
-    await tester.pumpAndSettle();
+      final privacyLink = find.byKey(const Key('footerPrivacyNoticeLink'));
+      await tester.ensureVisible(privacyLink);
+      await tester.pumpAndSettle();
+      final interactiveLink = tester.widget<InkWell>(
+        find.descendant(of: privacyLink, matching: find.byType(InkWell)),
+      );
+      interactiveLink.onTap!();
+      await tester.pumpAndSettle();
 
-    expect(find.byType(PrivacyNoticePage), findsOneWidget);
-    expect(find.byType(LandingFooter), findsNothing);
-
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-
-    expect(find.byType(PrivacyNoticePage), findsNothing);
-    expect(find.byType(LandingFooter), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    semantics.dispose();
-  });
+      expect(launched, hasLength(1));
+      expect(launched.single.fragment, '/privacy');
+      expect(launched.single.path, '/');
+      expect(find.byType(PrivacyNoticePage), findsNothing);
+      expect(find.byType(LandingFooter), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+    },
+  );
 
   testWidgets('keeps the mobile footer safe across supported locales', (
     tester,

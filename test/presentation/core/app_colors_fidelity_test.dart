@@ -17,11 +17,12 @@ void main() {
     );
     expect(
       LandingTextStyles.statsAttributionSource.color,
-      AppColors.warmOrange,
+      AppColors.bodyGray,
     );
+    expect(LandingTextStyles.statsAttributionSource.decoration, isNull);
     expect(
-      LandingTextStyles.statsAttributionSource.decorationColor,
-      AppColors.warmOrange,
+      LandingTextStyles.statsAttributionSource.fontWeight,
+      FontWeight.w700,
     );
   });
 

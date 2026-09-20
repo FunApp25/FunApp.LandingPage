@@ -87,10 +87,25 @@ void main() {
   });
 
   group('validateWebsiteUrl', () {
-    test('accepts HTTP and HTTPS URLs with hosts', () {
+    test('accepts plausible domains with or without web schemes', () {
       for (final input in [
+        'example.com',
+        'www.example.com',
+        'test.com',
+        'www.test.com',
+        'venue.co.uk',
+        'www.venue.co.uk',
+        'subdomain.example.com',
+        'https://example.com',
         'http://example.com',
-        'https://venues.example.com/path?source=fun',
+        'https://subdomain.example.com/path',
+        'example.com/path',
+        'example.com/path?source=test',
+        'https://test.com',
+        'http://test.com',
+        'subdomain.test.com',
+        'https://subdomain.test.com/path',
+        'venue.example.com/path?source=fun',
       ]) {
         expect(
           validateWebsiteUrl(input),
@@ -99,8 +114,13 @@ void main() {
       }
     });
 
-    test('rejects unsupported, hostless, and whitespace-containing URLs', () {
+    test('rejects non-web and malformed addresses', () {
       for (final input in [
+        'test',
+        'hello world',
+        'https//:example.com',
+        'https//:test.com',
+        '@example.com',
         'ftp://example.com',
         'https:///path',
         'https://example.com/a path',

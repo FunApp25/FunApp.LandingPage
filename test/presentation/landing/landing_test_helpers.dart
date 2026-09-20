@@ -9,11 +9,16 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 Future<void> pumpLandingApp(
   WidgetTester tester, {
   Locale locale = const Locale('en'),
+  ValueChanged<Uri>? onPrivacyNoticeLaunch,
 }) async {
   tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
   addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
 
-  await tester.pumpWidget(const FunAppLandingPageApp());
+  await tester.pumpWidget(
+    FunAppLandingPageApp(
+      onPrivacyNoticeLaunch: onPrivacyNoticeLaunch,
+    ),
+  );
   await tester.pump();
 }
 
