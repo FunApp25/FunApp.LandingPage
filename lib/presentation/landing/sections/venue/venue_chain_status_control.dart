@@ -20,7 +20,7 @@ final class VenueChainStatusControl extends StatefulWidget {
   /// Localized Independent option.
   final String independentLabel;
 
-  /// Localized Part of a chain option.
+  /// Localized Part of chain option.
   final String chainLabel;
 
   /// Existing draft value, or null when unanswered.
@@ -33,7 +33,7 @@ final class VenueChainStatusControl extends StatefulWidget {
   static const independentValue = 'Independent';
 
   /// Provider-neutral value sent through the existing BLoC event.
-  static const chainValue = 'Part of a chain';
+  static const chainValue = 'Part of chain';
 
   @override
   State<VenueChainStatusControl> createState() =>

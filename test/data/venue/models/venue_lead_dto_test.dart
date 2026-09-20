@@ -35,7 +35,7 @@ void main() {
     final dto = VenueLeadDto.fromValidDomain(
       _validLead().copyWith(
         venueType: some(NonEmptySingleLineText('Music venue')),
-        chainStatus: some(NonEmptySingleLineText('Part of a chain')),
+        chainStatus: some(NonEmptySingleLineText('Part of chain')),
         venueCount: some(PositiveInteger('4')),
         venueCapacity: some(PositiveInteger('850')),
         phoneNumber: some(PhoneNumber('0034123456789')),
@@ -43,7 +43,7 @@ void main() {
     );
 
     expect(dto.venueType, 'Music venue');
-    expect(dto.chainStatus, 'Part of a chain');
+    expect(dto.chainStatus, 'Part of chain');
     expect(dto.venueCount, 4);
     expect(dto.venueCapacity, 850);
     expect(dto.phoneNumber, '0034123456789');

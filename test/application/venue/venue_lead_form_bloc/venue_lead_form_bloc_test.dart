@@ -539,7 +539,7 @@ VenueLeadFormState _state({
 VenueLead _validLeadWithOptionals() => VenueLead(
   venueName: NonEmptySingleLineText('The Fun Venue'),
   venueType: some(NonEmptySingleLineText('Music venue')),
-  chainStatus: some(NonEmptySingleLineText('Part of a chain')),
+  chainStatus: some(NonEmptySingleLineText('Part of chain')),
   venueCount: some(PositiveInteger('4')),
   venueCapacity: some(PositiveInteger('850')),
   website: Website('https://venue.example.com'),

@@ -351,7 +351,7 @@ capabilities as implemented.
   venue capacity, and phone number are optional.
 - Present venue type and independent/chain status values are non-empty
   single-line text. The UI presents chain status as optional Independent or
-  Part of a chain choices using stable string values; this does not change the
+  Part of chain choices using stable string values; this does not change the
   provider-neutral/domain contract. Venue count appears only for a chain and
   is cleared when switching away. Venue count and capacity controls accept
   digits only while domain validation still enforces positive integers.

@@ -110,7 +110,7 @@
   "@venueLeadIndependentOption": {
     "description": "Optional venue chain-status choice for an independent venue."
   },
-  "venueLeadPartOfChainOption": "Part of a chain",
+  "venueLeadPartOfChainOption": "Part of chain",
   "@venueLeadPartOfChainOption": {
     "description": "Optional venue chain-status choice for a venue in a chain."
   },

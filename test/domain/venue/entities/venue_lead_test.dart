@@ -46,7 +46,7 @@ void main() {
   test('is valid with every optional field populated', () {
     final lead = _validLead().copyWith(
       venueType: some(NonEmptySingleLineText('Music venue')),
-      chainStatus: some(NonEmptySingleLineText('Part of a chain')),
+      chainStatus: some(NonEmptySingleLineText('Part of chain')),
       venueCount: some(PositiveInteger('4')),
       venueCapacity: some(PositiveInteger('850')),
       phoneNumber: some(PhoneNumber('0034123456789')),
@@ -163,7 +163,7 @@ void main() {
 
   test('does not require venue count when a chain status is present', () {
     final lead = _validLead().copyWith(
-      chainStatus: some(NonEmptySingleLineText('Part of a chain')),
+      chainStatus: some(NonEmptySingleLineText('Part of chain')),
       venueCount: none<PositiveInteger>(),
     );
 

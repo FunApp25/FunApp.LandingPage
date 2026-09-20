@@ -43,7 +43,7 @@ void main() {
     final fields = mapper.toFields(
       _requiredOnlyLead.copyWith(
         venueType: 'Music venue',
-        chainStatus: 'Part of a chain',
+        chainStatus: 'Part of chain',
         venueCount: 4,
         venueCapacity: 850,
         phoneNumber: '0034123456789',
@@ -55,7 +55,7 @@ void main() {
       {'name': 'type_of_venue', 'value': 'Music venue'},
       {
         'name': 'independent_or_part_of_chain_',
-        'value': 'Part of a chain',
+        'value': 'Part of chain',
       },
       {'name': 'if_chain__number_of_venues', 'value': '4'},
       {'name': 'your_venue_s_capacity', 'value': '850'},

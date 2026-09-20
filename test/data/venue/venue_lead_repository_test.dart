@@ -48,7 +48,7 @@ void main() {
   test('submits the exact fully populated translation', () async {
     final lead = _validLead().copyWith(
       venueType: some(NonEmptySingleLineText('Music venue')),
-      chainStatus: some(NonEmptySingleLineText('Part of a chain')),
+      chainStatus: some(NonEmptySingleLineText('Part of chain')),
       venueCount: some(PositiveInteger('4')),
       venueCapacity: some(PositiveInteger('850')),
       phoneNumber: some(PhoneNumber('0034123456789')),
@@ -61,7 +61,7 @@ void main() {
       const VenueLeadDto(
         venueName: 'The Fun Venue',
         venueType: 'Music venue',
-        chainStatus: 'Part of a chain',
+      chainStatus: 'Part of chain',
         venueCount: 4,
         venueCapacity: 850,
         website: 'https://venue.example.com',

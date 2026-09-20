@@ -436,7 +436,7 @@ void main() {
             body: VenueChainStatusControl(
               label: 'Chain status',
               independentLabel: 'Independent',
-              chainLabel: 'Part of a chain',
+              chainLabel: 'Part of chain',
               selectedValue: null,
               onSelected: (value) => selected = value,
             ),
