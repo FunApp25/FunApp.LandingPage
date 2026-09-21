@@ -44,10 +44,6 @@
   "@privacyNoticeNavigationLabel": {
     "description": "Navigation label for the hosted Privacy Notice page."
   },
-  "privacyNoticeReturnToLanding": "Back to Fun App",
-  "@privacyNoticeReturnToLanding": {
-    "description": "Navigation label returning from the Privacy Notice to the landing page."
-  },
   "privacyNoticeLoadError": "The Privacy Notice could not be loaded. Please try again.",
   "@privacyNoticeLoadError": {
     "description": "Error shown when the canonical Privacy Notice asset cannot be loaded."

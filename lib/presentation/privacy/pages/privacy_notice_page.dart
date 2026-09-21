@@ -5,7 +5,6 @@ import 'package:fun_app_landing_page/presentation/core/extensions/build_context_
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 import 'package:markdown/markdown.dart' as markdown;
 
@@ -39,9 +38,6 @@ final class PrivacyNoticePage extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: [
-              _PrivacyNoticeNavigation(
-                onReturnToLanding: () => _returnToLanding(context),
-              ),
               Expanded(
                 child: markdownData == null
                     ? FutureBuilder<String>(
@@ -81,71 +77,6 @@ final class PrivacyNoticePage extends StatelessWidget {
       ),
     );
   }
-
-  void _returnToLanding(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
-  }
-}
-
-final class _PrivacyNoticeNavigation extends StatelessWidget {
-  const _PrivacyNoticeNavigation({required this.onReturnToLanding});
-
-  final VoidCallback onReturnToLanding;
-
-  @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: AppColors.beigeAccent,
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final pageGutter = AppSizes.pageGutterFor(constraints.maxWidth);
-
-        return Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: pageGutter,
-            vertical: 16,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: AppSizes.maxContentWidth,
-              ),
-              child: Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 16,
-                runSpacing: 12,
-                children: [
-                  FunAppLogo(
-                    width: AppSizes.headerWordmarkWidth,
-                    height: AppSizes.headerWordmarkHeight,
-                    variant: FunAppLogoVariant.landingV2,
-                    semanticLabel: context.l10n.brandName,
-                    excludeFromSemantics: false,
-                    svgKey: const Key('privacyNoticeLogo'),
-                  ),
-                  Semantics(
-                    key: const Key('privacyNoticeReturnLink'),
-                    label: context.l10n.privacyNoticeReturnToLanding,
-                    link: true,
-                    onTap: onReturnToLanding,
-                    child: ExcludeSemantics(
-                      child: TextButton.icon(
-                        onPressed: onReturnToLanding,
-                        icon: const Icon(Icons.arrow_back),
-                        label: Text(
-                          context.l10n.privacyNoticeReturnToLanding,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    ),
-  );
 }
 
 final class _PrivacyNoticeDocument extends StatelessWidget {
@@ -230,8 +161,8 @@ final class _PrivacyNoticeDocument extends StatelessWidget {
                 ),
                 'h2': _PrivacyHeadingBuilder(),
                 'h3': _PrivacyHeadingBuilder(),
-                'a': _PrivacyContactLinkBuilder(),
               },
+              onTapLink: _launchApprovedPrivacyNoticeLink,
               imageBuilder: (_, _, _) => const SizedBox.shrink(),
             ),
           ),
@@ -241,39 +172,17 @@ final class _PrivacyNoticeDocument extends StatelessWidget {
   );
 }
 
-final class _PrivacyContactLinkBuilder extends MarkdownElementBuilder {
-  @override
-  Widget visitElementAfterWithContext(
-    BuildContext context,
-    markdown.Element element,
-    TextStyle? preferredStyle,
-    TextStyle? parentStyle,
-  ) {
-    final href = element.attributes['href'];
-    final uri = href == null ? null : Uri.tryParse(href);
-    final isApprovedContact =
-        uri?.scheme == 'mailto' && uri?.path == 'info@funapp.world';
-    if (!isApprovedContact || uri == null) {
-      return Text(element.textContent, style: parentStyle);
-    }
+void _launchApprovedPrivacyNoticeLink(
+  String _,
+  String? href,
+  String title,
+) {
+  final uri = href == null ? null : Uri.tryParse(href);
+  final isApprovedContact =
+      uri?.scheme == 'mailto' && uri?.path == 'info@funapp.world';
 
-    return Semantics(
-      label: element.textContent,
-      link: true,
-      onTap: () => launchPrivacyNoticeLink(uri),
-      child: ExcludeSemantics(
-        child: TextButton(
-          onPressed: () => launchPrivacyNoticeLink(uri),
-          style: TextButton.styleFrom(
-            minimumSize: const Size(0, 44),
-            padding: EdgeInsets.zero,
-            foregroundColor: AppColors.energeticPlum,
-            textStyle: preferredStyle,
-          ),
-          child: Text(element.textContent),
-        ),
-      ),
-    );
+  if (isApprovedContact && uri != null) {
+    launchPrivacyNoticeLink(uri);
   }
 }
 

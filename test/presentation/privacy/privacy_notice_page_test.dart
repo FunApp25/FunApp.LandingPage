@@ -117,36 +117,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('return control navigates from privacy to the landing route', (
-    tester,
-  ) async {
-    await _pumpDirectPrivacyRoute(
-      tester,
-      markdownData: '# Fun App Ltd - Privacy Policy',
-    );
-
-    final returnButton = tester.widget<TextButton>(
-      find.descendant(
-        of: find.byKey(const Key('privacyNoticeReturnLink')),
-        matching: find.byType(TextButton),
-      ),
-    );
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('privacyNoticeReturnLink')),
-        matching: find.byIcon(Icons.arrow_back),
-      ),
-      findsOneWidget,
-    );
-    returnButton.onPressed!();
-    await tester.pumpAndSettle();
-
-    expect(find.byType(PrivacyNoticePage), findsNothing);
-    expect(find.byKey(const Key('landingRoute')), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('privacy page exposes heading and navigation semantics', (
+  testWidgets('privacy page exposes heading semantics without return control', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -163,48 +134,61 @@ void main() {
     expect(heading.label, 'Fun App Ltd - Privacy Policy');
     expect(heading.flagsCollection.isHeader, isTrue);
 
-    final returnLink = tester
-        .getSemantics(find.byKey(const Key('privacyNoticeReturnLink')))
-        .getSemanticsData();
-    expect(returnLink.label, 'Back to Fun App');
-    expect(returnLink.flagsCollection.isLink, isTrue);
-    expect(returnLink.flagsCollection.isButton, isFalse);
-    expect(returnLink.hasAction(SemanticsAction.tap), isTrue);
+    expect(find.byKey(const Key('privacyNoticeReturnLink')), findsNothing);
+    expect(find.byIcon(Icons.arrow_back), findsNothing);
     semantics.dispose();
   });
 
-  testWidgets('approved email links have keyboard focus and link semantics', (
+  testWidgets('approved email links retain inline link semantics', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     await _pumpPrivacyPage(tester);
 
-    final emailButtons = find.descendant(
-      of: find.byKey(const Key('privacyNoticeMarkdown')),
-      matching: find.byType(TextButton),
+    final emailLinks = find.semantics.byLabel('info@funapp.world');
+    expect(emailLinks, findsNWidgets(3));
+    for (final emailLink in emailLinks.evaluate()) {
+      final emailSemantics = emailLink.getSemanticsData();
+      expect(emailSemantics.label, 'info@funapp.world');
+      expect(emailSemantics.flagsCollection.isLink, isTrue);
+      expect(emailSemantics.hasAction(SemanticsAction.tap), isTrue);
+    }
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('privacyNoticeMarkdown')),
+        matching: find.byType(TextButton),
+      ),
+      findsNothing,
     );
-    expect(emailButtons, findsWidgets);
-    final firstEmail = emailButtons.first;
-    await tester.ensureVisible(firstEmail);
-    await tester.pumpAndSettle();
-
-    final button = tester.widget<TextButton>(firstEmail);
-    expect(button.onPressed, isNotNull);
-    final emailSemantics = tester.getSemantics(firstEmail).getSemanticsData();
-    expect(emailSemantics.label, 'info@funapp.world');
-    expect(emailSemantics.flagsCollection.isLink, isTrue);
-    expect(emailSemantics.hasAction(SemanticsAction.tap), isTrue);
-
-    final emailText = find.descendant(
-      of: firstEmail,
-      matching: find.text('info@funapp.world'),
-    );
-    final focusNode = Focus.of(tester.element(emailText));
-    expect(focusNode.canRequestFocus, isTrue);
-    focusNode.requestFocus();
-    await tester.pump();
-    expect(focusNode.hasPrimaryFocus, isTrue);
     semantics.dispose();
+  });
+
+  testWidgets('contact email links stay in the notice content column', (
+    tester,
+  ) async {
+    for (final example in const [
+      (size: Size(320, 568), textScaler: TextScaler.linear(2)),
+      (size: Size(390, 844), textScaler: TextScaler.linear(2)),
+      (size: Size(768, 1024), textScaler: TextScaler.noScaling),
+      (size: Size(1440, 900), textScaler: TextScaler.noScaling),
+    ]) {
+      setTestSurface(tester, example.size);
+      await _pumpPrivacyPage(tester, textScaler: example.textScaler);
+
+      final contentRect = tester.getRect(
+        find.byKey(const Key('privacyNoticeContent')),
+      );
+      for (final contactBlock in [
+        _contactBlock('Privacy Contact:'),
+        _contactBlock('Email:'),
+      ]) {
+        expect(contactBlock, findsOneWidget);
+        final contactRect = tester.getRect(contactBlock);
+        expect(contactRect.left, greaterThanOrEqualTo(contentRect.left));
+        expect(contactRect.right, lessThanOrEqualTo(contentRect.right));
+      }
+      expect(tester.takeException(), isNull);
+    }
   });
 
   testWidgets('privacy content scrolls within constrained height', (
@@ -246,6 +230,11 @@ void main() {
     }
   });
 }
+
+Finder _contactBlock(String label) => find.byWidgetPredicate(
+  (widget) => widget is RichText && widget.text.toPlainText().contains(label),
+  description: 'contact block containing $label',
+);
 
 Future<void> _pumpDirectPrivacyRoute(
   WidgetTester tester, {
