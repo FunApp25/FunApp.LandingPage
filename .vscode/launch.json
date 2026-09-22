@@ -10,15 +10,12 @@
       "flutterMode": "debug"
     },
     {
-      "name": "Fun App Landing — HubSpot",
+      "name": "Fun App Landing — Production",
       "request": "launch",
       "type": "dart",
       "program": "lib/main_prod.dart",
       "deviceId": "chrome",
-      "flutterMode": "debug",
-      "toolArgs": [
-        "--dart-define-from-file=.env"
-      ]
+      "flutterMode": "debug"
     }
   ]
 }
