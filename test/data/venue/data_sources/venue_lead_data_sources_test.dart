@@ -5,7 +5,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/development_venue_lead_data_source.dart';
-import 'package:fun_app_landing_page/data/venue/data_sources/hubspot_venue_lead_data_source.dart';
+import 'package:fun_app_landing_page/data/venue/data_sources/production_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_exception.dart';
 import 'package:fun_app_landing_page/data/venue/models/venue_lead_dto.dart';
 import 'package:fun_app_landing_page/data/venue/venue_lead_repository.dart';
@@ -20,7 +20,7 @@ void main() {
     chainStatus: null,
     venueCount: null,
     venueCapacity: null,
-    website: 'https://venue.example.com',
+    website: 'example.com',
     firstName: 'Alex',
     lastName: 'Morgan',
     role: 'General manager',
@@ -34,60 +34,138 @@ void main() {
     await expectLater(dataSource.submitVenueLead(lead), completes);
   });
 
-  test('HubSpot posts the minimal unauthenticated Forms v3 request', () async {
+  test('production resolves the endpoint against the current origin', () async {
     late http.Request capturedRequest;
-    final client = MockClient((request) async {
-      capturedRequest = request;
-      return http.Response('response body is not required', 200);
-    });
-    final dataSource = _hubSpotDataSource(client);
+    final dataSource = ProductionVenueLeadDataSource(
+      client: MockClient((request) async {
+        capturedRequest = request;
+        return http.Response('', 204);
+      }),
+    );
 
     await dataSource.submitVenueLead(lead);
 
-    expect(capturedRequest.method, 'POST');
     expect(
       capturedRequest.url,
-      Uri.parse(
-        'https://api.hsforms.com/submissions/v3/integration/submit/'
-        '123456789/00000000-0000-0000-0000-000000000000',
-      ),
+      Uri.base.resolve(productionVenueLeadEndpointPath),
     );
-    expect(capturedRequest.headers['content-type'], 'application/json');
-    expect(capturedRequest.headers, isNot(contains('authorization')));
-
-    final body = jsonDecode(capturedRequest.body) as Map<String, dynamic>;
-    expect(body.keys, ['fields']);
-    expect(body['fields'], [
-      {'name': 'your_venue_s_name', 'value': 'The Fun Venue'},
-      {'name': 'website', 'value': 'https://venue.example.com'},
-      {'name': 'first_name', 'value': 'Alex'},
-      {'name': 'last_name', 'value': 'Morgan'},
-      {'name': 'role', 'value': 'General manager'},
-      {'name': 'email', 'value': 'alex@venue.example.com'},
-    ]);
-    for (final forbiddenValue in [
-      'authorization',
-      'token',
-      'credential',
-      'skipValidation',
-      'legalConsentOptions',
-      'context',
-      'objectTypeId',
-      'submittedAt',
-    ]) {
-      expect(capturedRequest.body, isNot(contains(forbiddenValue)));
-    }
+    expect(capturedRequest.url.path, productionVenueLeadEndpointPath);
   });
 
-  test('HubSpot accepts 200 without parsing the response body', () async {
-    final dataSource = _hubSpotDataSource(
-      MockClient(
-        (_) async => http.Response('{not valid json', 200),
-      ),
-    );
+  test(
+    'production posts the exact required first-party JSON request',
+    () async {
+      late http.Request capturedRequest;
+      final dataSource = _productionDataSource(
+        MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('ignored worker response body', 204);
+        }),
+      );
 
-    await expectLater(dataSource.submitVenueLead(lead), completes);
-  });
+      await dataSource.submitVenueLead(lead);
+
+      expect(capturedRequest.method, 'POST');
+      expect(capturedRequest.url, _endpoint);
+      expect(capturedRequest.headers['content-type'], 'application/json');
+      expect(capturedRequest.headers, isNot(contains('authorization')));
+      expect(
+        jsonDecode(capturedRequest.body),
+        {
+          'venueName': 'The Fun Venue',
+          'website': 'example.com',
+          'firstName': 'Alex',
+          'lastName': 'Morgan',
+          'role': 'General manager',
+          'email': 'alex@venue.example.com',
+        },
+      );
+      for (final forbiddenValue in ['authorization', 'token', 'credential']) {
+        expect(capturedRequest.body, isNot(contains(forbiddenValue)));
+      }
+    },
+  );
+
+  test(
+    'production serializes an Independent enquiry without venue count',
+    () async {
+      late http.Request capturedRequest;
+      final dataSource = _productionDataSource(
+        MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('', 204);
+        }),
+      );
+
+      await dataSource.submitVenueLead(
+        lead.copyWith(
+          venueType: 'Pub',
+          chainStatus: 'Independent',
+        ),
+      );
+
+      final body = jsonDecode(capturedRequest.body) as Map<String, dynamic>;
+      expect(body['venueType'], 'Pub');
+      expect(body['chainStatus'], 'Independent');
+      expect(body, isNot(contains('venueCount')));
+      expect(body, isNot(contains('venueCapacity')));
+      expect(body, isNot(contains('phoneNumber')));
+    },
+  );
+
+  test(
+    'production serializes a full Part of chain enquiry without mutation',
+    () async {
+      late http.Request capturedRequest;
+      final dataSource = _productionDataSource(
+        MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('', 204);
+        }),
+      );
+
+      await dataSource.submitVenueLead(
+        lead.copyWith(
+          venueType: 'Music venue',
+          chainStatus: 'Part of chain',
+          venueCount: 4,
+          venueCapacity: 850,
+          website: 'subdomain.venue.test/path?interest=fun',
+          phoneNumber: '0034123456789',
+        ),
+      );
+
+      expect(
+        jsonDecode(capturedRequest.body),
+        {
+          'venueName': 'The Fun Venue',
+          'venueType': 'Music venue',
+          'chainStatus': 'Part of chain',
+          'venueCount': 4,
+          'venueCapacity': 850,
+          'website': 'subdomain.venue.test/path?interest=fun',
+          'firstName': 'Alex',
+          'lastName': 'Morgan',
+          'role': 'General manager',
+          'email': 'alex@venue.example.com',
+          'phoneNumber': '0034123456789',
+        },
+      );
+    },
+  );
+
+  test(
+    'production accepts 204 without exposing or parsing the response body',
+    () async {
+      final dataSource = _productionDataSource(
+        MockClient(
+          (_) async => http.Response('{not valid json', 204),
+        ),
+      );
+
+      await expectLater(dataSource.submitVenueLead(lead), completes);
+    },
+  );
 
   final responseCases = <(String, int, Matcher)>[
     (
@@ -96,30 +174,35 @@ void main() {
       isA<VenueLeadSubmissionRejectedException>(),
     ),
     (
+      '422 as submission rejected',
+      422,
+      isA<VenueLeadSubmissionRejectedException>(),
+    ),
+    (
       '429 as service unavailable',
       429,
       isA<VenueLeadServiceUnavailableException>(),
     ),
     (
-      '500 as service unavailable',
-      500,
-      isA<VenueLeadServiceUnavailableException>(),
-    ),
-    (
-      'representative 503 as service unavailable',
+      '503 as service unavailable',
       503,
       isA<VenueLeadServiceUnavailableException>(),
     ),
     (
-      'representative 401 as unexpected',
-      401,
+      '500 as unexpected',
+      500,
+      isA<VenueLeadUnexpectedDataSourceException>(),
+    ),
+    (
+      'unrecognised 418 as unexpected',
+      418,
       isA<VenueLeadUnexpectedDataSourceException>(),
     ),
   ];
 
   for (final (name, statusCode, exceptionMatcher) in responseCases) {
-    test('HubSpot classifies $name without parsing the body', () async {
-      final dataSource = _hubSpotDataSource(
+    test('production classifies $name without parsing the body', () async {
+      final dataSource = _productionDataSource(
         MockClient(
           (_) async => http.Response('{not valid json', statusCode),
         ),
@@ -132,25 +215,28 @@ void main() {
     });
   }
 
-  test('HubSpot classifies client transport failures as unavailable', () async {
-    final dataSource = _hubSpotDataSource(
-      MockClient((request) async {
-        throw http.ClientException(
-          'Synthetic transport failure.',
-          request.url,
-        );
-      }),
-    );
+  test(
+    'production classifies client transport failures as unavailable',
+    () async {
+      final dataSource = _productionDataSource(
+        MockClient((request) async {
+          throw http.ClientException(
+            'Synthetic transport failure.',
+            request.url,
+          );
+        }),
+      );
 
-    await expectLater(
-      dataSource.submitVenueLead(lead),
-      throwsA(isA<VenueLeadServiceUnavailableException>()),
-    );
-  });
+      await expectLater(
+        dataSource.submitVenueLead(lead),
+        throwsA(isA<VenueLeadServiceUnavailableException>()),
+      );
+    },
+  );
 
-  test('HubSpot deadline aborts and settles as unavailable', () async {
+  test('production deadline aborts and settles as unavailable', () async {
     final client = _AbortThenSuccessClient();
-    final dataSource = _hubSpotDataSource(
+    final dataSource = _productionDataSource(
       client,
       submissionTimeout: const Duration(milliseconds: 10),
     );
@@ -169,7 +255,7 @@ void main() {
   test('timeout clears BLoC submission and permits a safe retry', () async {
     final client = _AbortThenSuccessClient();
     final repository = VenueLeadRepository(
-      _hubSpotDataSource(
+      _productionDataSource(
         client,
         submissionTimeout: const Duration(milliseconds: 10),
       ),
@@ -213,13 +299,18 @@ void main() {
   });
 }
 
-HubSpotVenueLeadDataSource _hubSpotDataSource(
+final _endpoint = Uri(
+  scheme: 'https',
+  host: 'venue-interest.test',
+  path: '/api/venue-interest',
+);
+
+ProductionVenueLeadDataSource _productionDataSource(
   http.Client client, {
-  Duration submissionTimeout = defaultHubSpotSubmissionTimeout,
-}) => HubSpotVenueLeadDataSource(
+  Duration submissionTimeout = defaultProductionVenueLeadSubmissionTimeout,
+}) => ProductionVenueLeadDataSource(
   client: client,
-  portalId: '123456789',
-  venueFormGuid: '00000000-0000-0000-0000-000000000000',
+  endpoint: _endpoint,
   submissionTimeout: submissionTimeout,
 );
 
@@ -227,9 +318,7 @@ Future<void> _populateValidDraft(VenueLeadFormBloc bloc) async {
   final validDraft = bloc.stream.firstWhere((state) => state.lead.isValid);
   bloc
     ..add(const VenueLeadFormEvent.venueNameChanged('Synthetic Venue'))
-    ..add(
-      const VenueLeadFormEvent.websiteChanged('https://venue.example.com'),
-    )
+    ..add(const VenueLeadFormEvent.websiteChanged('https://venue.example.com'))
     ..add(const VenueLeadFormEvent.firstNameChanged('Test'))
     ..add(const VenueLeadFormEvent.lastNameChanged('Contact'))
     ..add(const VenueLeadFormEvent.roleChanged('Manager'))
@@ -272,7 +361,7 @@ class _AbortThenSuccessClient extends http.BaseClient {
   http.StreamedResponse _successResponse([http.BaseRequest? request]) =>
       http.StreamedResponse(
         const Stream<List<int>>.empty(),
-        200,
+        204,
         request: request,
       );
 }

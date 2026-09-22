@@ -5,10 +5,9 @@
 This repository owns the public Fun App website and landing page. The site should communicate the Fun App product and brand through responsive public marketing content.
 
 The landing page is expected eventually to collect information from interested
-users. The current Flutter production data path submits directly to HubSpot
-Forms, while this repository also owns an independently testable Cloudflare
-Worker for the intended first-party venue-interest boundary. That Worker is not
-yet deployed, routed, or called by Flutter. The venue CTA now opens its
+users. Flutter production submits Venue enquiries to the deployed same-origin
+first-party venue-interest boundary; its Cloudflare Worker maps to HubSpot
+outside the browser. The venue CTA now opens its
 functional localized form. That form now shows the approved informational
 privacy acknowledgement and links to the hosted Privacy Notice; it does not
 submit a consent field. Prospective-user fields, flows, analytics, marketing
@@ -59,15 +58,15 @@ Current implementation is evidence of repository state, not automatically a perm
   consent checkbox or submitted consent field is required for the current MVP.
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
-- The current Flutter production venue-lead implementation uses HubSpot's
-  unauthenticated Forms v3 submission endpoint directly from Flutter Web. This
-  public-form integration supports CORS and requires no authentication secret.
+- Flutter production posts Venue enquiries to the same-origin, unauthenticated
+  `POST /api/venue-interest` endpoint. Browser code sends only the Fun App
+  request contract and has no HubSpot identifiers, fields, or direct endpoint.
 - `cloudflare/venue-interest-worker/` is the repository-controlled,
   independently testable Worker project targeting the existing
-  `funapp-venue-interest` Worker. Its intended production boundary is
-  first-party `POST /api/venue-interest` on `https://funapp.world`, with a
-  narrow Cloudflare Worker Route configured separately. It has no route,
-  account ID, or zone ID in repository configuration. Its source-controlled
+  `funapp-venue-interest` Worker. Its active production boundary is
+  first-party `POST /api/venue-interest` on `https://funapp.world`, via a
+  dashboard-managed narrow Worker Route. It has no route, account ID, or zone
+  ID in repository configuration. Its source-controlled
   GitHub Actions deployment is manual only and uses the GitHub `production`
   Environment for runtime bindings and Cloudflare authentication. GitHub Pages
   remains the web origin for every other path.
@@ -88,9 +87,6 @@ Current implementation is evidence of repository state, not automatically a perm
 ### Provisional
 
 - Collection of deliberately defined interested-user information.
-- A later, separately scoped Flutter data-source switch may use the established
-  first-party venue-interest Worker boundary without changing the domain or
-  application contracts.
 - Azure hosting may be considered later, but it is not current deployment scope.
 
 ### Open
@@ -122,9 +118,9 @@ Flutter code uses `presentation`, `application`, `domain`, `data`, and `core`
 areas only when active behavior needs them. `domain` is active for reusable
 validation and the provider-neutral venue-lead model. The narrow active
 `application/venue` surface owns the venue-lead form BLoC. `data/venue` owns one
-provider-neutral repository, its DTO, and environment-specific data sources;
-`data/core` retains the external field-name constants. `core` owns typed
-environment selection and dependency composition. The landing-page repository
+provider-neutral repository, its DTO, first-party request model, and
+environment-specific data sources. `core` owns typed environment selection and
+dependency composition. The landing-page repository
 aligns architectural concepts with the main Fun App Flutter application where
 appropriate, but the repositories do not share source code or packages.
 
@@ -379,12 +375,12 @@ capabilities as implemented.
   content remains beneath the pinned footer.
 - Generated Freezed and Injectable source is regenerated locally and in CI and
   remains uncommitted.
-- HubSpot property names are exact external identifiers owned only by
-  `data/core/hubspot_fields.dart` and consumed only at the HubSpot data
-  boundary. HubSpot-generated trailing and repeated underscores are
-  intentional. In particular, chain status is
-  `independent_or_part_of_chain_` and venue count is
-  `if_chain__number_of_venues`.
+- `VenueInterestRequest` is a data-layer first-party request model. It emits
+  only `venueName`, `venueType`, `chainStatus`, `venueCount`,
+  `venueCapacity`, `website`, `firstName`, `lastName`, `role`, `email`, and
+  `phoneNumber`. Required values are always emitted; absent optional values
+  are omitted. Venue count and capacity are JSON integers, and phone numbers
+  remain strings so leading zeroes survive unchanged.
 - Operational submission failures are provider-neutral `AppFailure` values,
   distinct from field-level `ValueFailure` values. The initial operational
   categories are service unavailable, submission rejected, and unexpected.
@@ -424,26 +420,18 @@ capabilities as implemented.
 - Environment/provider variation exists only beneath the repository.
   `development` resolves a deterministic successful development data source
   with no persistence or external I/O. `production` resolves
-  `HubSpotVenueLeadDataSource`.
-- `HubSpotVenueLeadDataSource` posts the provider-neutral DTO through HTTPS to
-  HubSpot's unauthenticated, CORS-compatible Forms v3 submission endpoint:
-  `POST https://api.hsforms.com/submissions/v3/integration/submit/{portalId}/{formGuid}`.
-  It uses no authenticated HubSpot API, bearer token, client secret, private-app
-  token, OAuth flow, API key, or Fun App backend proxy.
-- The HubSpot request body contains only a `fields` array of string `name` and
-  `value` entries. Required DTO fields are always emitted. Optional absent
-  values are omitted rather than sent as empty strings, integral quantities use
-  decimal strings, and phone numbers remain strings so leading zeroes survive.
-- HubSpot form-definition validation remains enabled. `skipValidation` is not
-  sent. Every submitted `HubSpotFields` property must exist on the target
-  HubSpot venue form, and every field that HubSpot marks required on that form
-  must be supplied by this contract.
-- Each HubSpot submission has a 15-second abortable deadline. A HubSpot 200
-  response acknowledges success after its response stream is drained without
-  interpreting a redirect URI or inline HTML message. Status 400 is submission
-  rejected; 429 and 5xx responses plus known HTTP transport failures and
-  deadline aborts are service unavailable; other statuses are unexpected. No
-  automatic retry occurs.
+  `ProductionVenueLeadDataSource`.
+- `ProductionVenueLeadDataSource` resolves `/api/venue-interest` against the
+  current browser origin and posts the `VenueInterestRequest` JSON with
+  `application/json`. It is public and unauthenticated: no bearer token,
+  session data, client secret, API key, or CORS workaround is used.
+- HubSpot mapping, account/form identifiers, provider validation, and response
+  bodies are confined to the Worker boundary and are not required by Flutter.
+- Each production submission has a 15-second abortable deadline. A 204 response
+  acknowledges success after its response stream is drained without parsing its
+  body. Statuses 400 and 422 are submission rejected; 429 and 503 plus known
+  HTTP transport failures and deadline aborts are service unavailable; 500 and
+  unrecognised statuses are unexpected. No automatic retry occurs.
 - Classified data-source service-unavailable and submission-rejected conditions
   map to their matching `AppFailure` categories. Unclassified exceptions map to
   `AppFailure.unexpected`. Data-source exceptions do not cross the domain
@@ -451,36 +439,25 @@ capabilities as implemented.
 - GetIt and Injectable own composition now that environment-dependent
   implementations exist. `VenueLeadFormBloc` is a factory registration, the
   repository is a provider-neutral lazy singleton, and core composition
-  registers the selected data-source lazy singleton. Production composition
-  passes validated primitive HubSpot identifiers into the data source.
+  registers the selected data-source lazy singleton.
   Application and data classes use constructor injection rather than reading
   GetIt or importing application configuration.
 - Environment selection is structural: `lib/main_dev.dart` passes the typed
   `AppEnvironment.development` value into bootstrap and resolves deterministic
   development dependencies, while `lib/main_prod.dart` passes
-  `AppEnvironment.production` and resolves the HubSpot production graph. No
+  `AppEnvironment.production` and resolves the first-party production graph. No
   environment-selection dart-define or string parsing is used.
-- `FUN_APP_HUBSPOT_PORTAL_ID` and
-  `FUN_APP_HUBSPOT_VENUE_FORM_GUID` are required, non-empty production
-  compile-time configuration. They are public account/form identifiers visible
-  in the compiled Flutter Web application, not secrets. A gitignored `.env`
-  may supply only these identifiers locally through
-  `--dart-define-from-file=.env`; the production entrypoint selects the
-  environment. Development neither requires `.env` nor constructs or validates
-  HubSpot configuration. This is a build-input mechanism, not runtime dotenv
-  storage.
-- Compile-time Flutter Web configuration must not contain HubSpot credentials,
-  tokens, API keys, or other secrets.
-- The current Flutter source has no active proxy transport for venue leads.
-  The repository-controlled Cloudflare Worker owns the future first-party
-  `POST /api/venue-interest` boundary, validates untrusted input, maps the
-  Fun App-owned fields to HubSpot Forms v3 only at its provider boundary, and
-  obtains its public HubSpot identifiers from Worker environment bindings.
-  It does not log submitted form content or HubSpot response bodies. A narrow
-  Worker Route will be configured separately; until then, GitHub Pages remains
-  the origin and Flutter continues its current direct transport. The Worker
-  reads at most 16 KiB per request and makes one HubSpot attempt with a
-  10-second deadline; it does not automatically retry submissions.
+- Flutter production needs no Venue submission runtime configuration. A local
+  production browser run resolves the same-origin endpoint to localhost and
+  therefore cannot reach the deployed Worker without separate local routing;
+  development remains the deterministic fake path.
+- The repository-controlled Cloudflare Worker validates the untrusted Fun App
+  request, maps it to HubSpot only at its provider boundary, and obtains its
+  public provider identifiers from Worker environment bindings. It does not log
+  submitted form content or HubSpot response bodies. The deployed narrow route
+  owns `/api/venue-interest`; GitHub Pages remains the origin for all other
+  paths. The Worker reads at most 16 KiB per request and makes one upstream
+  attempt with a 10-second deadline; it does not automatically retry.
 
 ### Provisional
 
@@ -593,14 +570,13 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 ### Established
 
 - GitHub Pages is the production deployment target.
-- GitHub Pages remains the web origin. The intended production
-  `/api/venue-interest` exception is a narrow Cloudflare Worker Route to the
-  repository-controlled `funapp-venue-interest` Worker; route creation and
-  Worker deployment are separately authorized infrastructure work. The
+- GitHub Pages remains the web origin. Its active `/api/venue-interest`
+  exception is a dashboard-managed narrow Cloudflare Worker Route to the
+  repository-controlled `funapp-venue-interest` Worker. The
   `deploy-venue-interest-worker.yml` workflow provides manual-only source
   deployment of that existing Worker after Worker validation. It uses the
   GitHub `production` Environment for public HubSpot and Cloudflare account
-  configuration and the Cloudflare API-token secret; it does not configure a
+  configuration and the Cloudflare API-token secret; it does not configure the
   route.
 - Pull requests targeting `main` run read-only formatting, generation,
   analysis, full-suite coverage, and production-entrypoint compile checks.
@@ -609,15 +585,8 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
 - The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
   environment from Flutter stable, generates localizations and Dart sources,
-  analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`.
-  The build consumes the public HubSpot portal ID and venue-form GUID from
-  GitHub Actions repository variables with matching names; those external
-  values are not hardcoded in the workflow. The workflow fails before the
-  production build and artifact upload when either variable is empty.
-- Before releasing venue submission, an authorized person must confirm that
-  the configured form GUID identifies the intended venue form, every
-  `HubSpotFields` property exists on it, and its HubSpot-required fields match
-  the application-required venue contract.
+  analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`
+  without browser-side HubSpot configuration.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
 - The production artifact includes the canonical Privacy Notice Markdown asset,

@@ -20,8 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PURO_ENV_NAME: fun-app-landing
-      FUN_APP_HUBSPOT_PORTAL_ID: ${{ vars.FUN_APP_HUBSPOT_PORTAL_ID }}
-      FUN_APP_HUBSPOT_VENUE_FORM_GUID: ${{ vars.FUN_APP_HUBSPOT_VENUE_FORM_GUID }}
 
     steps:
       - name: Checkout
@@ -48,20 +46,6 @@ jobs:
       - name: Install dependencies
         run: puro --env="$PURO_ENV_NAME" flutter pub get
 
-      - name: Validate production configuration
-        shell: bash
-        run: |
-          set -euo pipefail
-          for variable_name in \
-            FUN_APP_HUBSPOT_PORTAL_ID \
-            FUN_APP_HUBSPOT_VENUE_FORM_GUID
-          do
-            if [[ -z "${!variable_name:-}" ]]; then
-              echo "::error::Missing required repository variable: $variable_name"
-              exit 1
-            fi
-          done
-
       - name: Generate localizations
         run: puro --env="$PURO_ENV_NAME" flutter gen-l10n
 
@@ -78,8 +62,6 @@ jobs:
         run: >-
           puro --env="$PURO_ENV_NAME" flutter build web
           -t lib/main_prod.dart
-          --dart-define=FUN_APP_HUBSPOT_PORTAL_ID="$FUN_APP_HUBSPOT_PORTAL_ID"
-          --dart-define=FUN_APP_HUBSPOT_VENUE_FORM_GUID="$FUN_APP_HUBSPOT_VENUE_FORM_GUID"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

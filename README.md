@@ -29,12 +29,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   remain static. The first provider-neutral prospective-venue domain model and
   application form workflow now sit above one concrete provider-neutral
   repository. Dependency injection selects a deterministic development data
-  source or the production HubSpot data source. The current Flutter production
-  source submits provider-neutral venue leads directly to HubSpot's
-  unauthenticated Forms v3 API through the injected web-compatible HTTP client.
-  The repository also contains the independently testable Cloudflare Worker
-  intended for the later first-party venue-interest boundary; it is not routed,
-  deployed, or called by Flutter yet. The Venue CTA opens a
+  source or the production first-party data source. Production submits
+  provider-neutral venue leads through the same-origin, unauthenticated
+  `/api/venue-interest` endpoint. The deployed Cloudflare Worker owns the
+  HubSpot mapping behind that boundary; Flutter does not send HubSpot fields or
+  identifiers. The Venue CTA opens a
   localized responsive form backed by a fresh `VenueLeadFormBloc`; success is
   confirmed in the dialog, while failures preserve the draft for retry. The
   form shows the approved informational privacy acknowledgement immediately
@@ -103,47 +102,26 @@ on Chrome in debug mode through the committed configurations:
 
 - **Fun App Landing — Development (Fake Repositories)** selects the
   deterministic local data source.
-- **Fun App Landing — HubSpot** selects the production HubSpot data source.
+- **Fun App Landing — Production** selects the production first-party data
+  source.
 
-For a local production/HubSpot composition, copy the tracked fake-value
-template and replace both HubSpot identifiers in the gitignored local file:
-
-```bash
-cp .env.example .env
-puro flutter run -d chrome \
-  -t lib/main_prod.dart \
-  --dart-define-from-file=.env
-```
-
-The **Fun App Landing — HubSpot** VS Code configuration consumes the same
-`.env` file while `lib/main_prod.dart` structurally selects the production
-environment. It does not load dotenv at runtime; Flutter reads the file as
-compile-time build input. The file must contain non-empty values for:
-
-```text
-FUN_APP_HUBSPOT_PORTAL_ID=123456789
-FUN_APP_HUBSPOT_VENUE_FORM_GUID=00000000-0000-0000-0000-000000000000
-```
-
-The example values are deliberately fake. The HubSpot account/portal ID and
-form GUID are public client configuration and will be recoverable from the
-compiled Flutter Web application. They are kept out of tracked local settings
-to avoid committing environment-specific configuration, not because they are
-secrets. Never put authentication credentials, tokens, API keys, or client
-secrets in `.env` or any Flutter Web build define.
-
-The entrypoint selects the dependency environment; dart-defines provide only
-configuration required by that environment. Development uses
-`lib/main_dev.dart`, needs no `.env`, and neither constructs nor validates
-HubSpot configuration. Production composition fails at startup when either
-required HubSpot identifier is empty.
-
-Build the production entrypoint locally with the same public configuration:
+The production entrypoint requires no browser configuration:
 
 ```bash
-puro flutter build web \
-  -t lib/main_prod.dart \
-  --dart-define-from-file=.env
+puro flutter run -d chrome -t lib/main_prod.dart
+```
+
+The explicit entrypoints select the dependency environment. Development uses
+`lib/main_dev.dart` and its deterministic fake source; production uses
+`lib/main_prod.dart` and sends same-origin requests. A local production browser
+run resolves `/api/venue-interest` to localhost and therefore does not reach
+the deployed Worker. Use development for local form behavior, or test the
+production data source with its deterministic request-target seam.
+
+Build the production entrypoint locally without runtime defines:
+
+```bash
+puro flutter build web -t lib/main_prod.dart
 ```
 
 ## Localization
@@ -204,11 +182,10 @@ responsive viewport contracts.
 ## Cloudflare Worker development
 
 `cloudflare/venue-interest-worker/` is an isolated TypeScript Worker project
-for the future first-party `POST /api/venue-interest` boundary. It targets the
-existing `funapp-venue-interest` Worker name, validates the Fun App-owned
-request contract, and maps to HubSpot only inside the Worker. It has no
-production route or account identifier in repository configuration. GitHub
-Pages remains the web origin.
+for the active first-party `POST /api/venue-interest` boundary. It validates
+the Fun App-owned request contract and maps to HubSpot only inside the Worker.
+Its production route is dashboard-managed; GitHub Pages remains the origin for
+every non-API path.
 
 Install and validate it independently:
 
@@ -233,20 +210,19 @@ only. Its sole job targets the GitHub `production` Environment, validates the
 Worker, and deploys the existing Worker using that Environment's
 `HUBSPOT_PORTAL_ID`, `HUBSPOT_FORM_GUID`, `CLOUDFLARE_ACCOUNT_ID`, and
 `CLOUDFLARE_API_TOKEN`. It deliberately configures no route; route attachment
-remains a separate authorized step.
+remains dashboard-managed.
 
 ## Repository structure
 
 ```text
 lib/                         Active Flutter application source
 lib/main_dev.dart            Development/fake Flutter entrypoint
-lib/main_prod.dart           Production/HubSpot Flutter entrypoint
+lib/main_prod.dart           Production first-party Flutter entrypoint
 lib/application/venue/       Venue-lead form state and submission orchestration
 lib/core/config/              Typed application-environment selection
 lib/core/injection/           GetIt/Injectable composition root
 lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
-lib/data/core/                External field-name mapping constants
 lib/data/venue/               Venue repository, DTO, and selectable data sources
 lib/l10n/                    Localization ARB source files
 lib/presentation/landing/pages/ Landing-page composition and navigation owner
@@ -285,13 +261,9 @@ data repository maps validated leads into a provider-neutral DTO and delegates
 to an environment-selected data source. The explicit development and production
 entrypoints pass a typed environment into `core`, which configures GetIt through
 Injectable before the app starts.
-The current production data boundary maps the DTO to exact HubSpot property
-names and uses the public Forms endpoint with an abortable 15-second request
-deadline. Core composition passes validated public identifiers into that
-boundary without exposing provider concerns above the data layer. The isolated
-Cloudflare Worker keeps the future first-party API contract and HubSpot mapping
-outside the Flutter layers; a later scoped Flutter switch can use it without
-changing the domain/application contracts.
+The production data boundary maps the DTO to the Fun App-owned JSON contract
+and posts to same-origin `/api/venue-interest` with an abortable 15-second
+request deadline. The Worker keeps HubSpot mapping outside Flutter layers.
 
 See [`SPECIFICATIONS.md`](SPECIFICATIONS.md) for the complete direction and
 dependency boundaries.
@@ -299,37 +271,15 @@ dependency boundaries.
 ## Deployment
 
 Pull requests targeting `main` run formatting, generation, analysis, the full
-test suite with coverage, and a synthetic-config production compile through
+test suite with coverage, and a production compile through
 the read-only `PR Checks` workflow. These checks do not deploy anything.
 
 Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.
 CI installs Puro, creates the `fun-app-landing` stable environment, generates
 localizations and Dart sources, analyzes, tests, and explicitly builds
-`lib/main_prod.dart`. The production build consumes these public GitHub Actions
-repository variables:
-
-```text
-FUN_APP_HUBSPOT_PORTAL_ID
-FUN_APP_HUBSPOT_VENUE_FORM_GUID
-```
-
-Repository administrators must configure both values before relying on the
-deployed production submission path; the workflow does not fabricate or
-hardcode them and fails before the production build when either is empty. The
-workflow uploads `build/web` and deploys it to
+`lib/main_prod.dart` without browser-side provider configuration. The workflow
+uploads `build/web` and deploys it to
 [https://funapp.world](https://funapp.world).
-
-HubSpot validates unauthenticated submissions against the target form
-definition. Every property in `HubSpotFields` must exist on that venue form,
-and all HubSpot-required fields must be provided. The implementation leaves
-validation enabled and does not send deprecated `skipValidation`. Consent API
-payloads remain deferred until product/legal requirements establish an
-approved privacy and consent contract.
-
-Before releasing venue submission, an authorized person must confirm in
-HubSpot that the configured form GUID identifies the intended venue form, every
-`HubSpotFields` property exists on that form, and HubSpot-required fields match
-the application-required venue contract.
 
 The custom domain remains configured in GitHub Pages. `web/CNAME` records the
 repository's active domain declaration and is copied into the Flutter artifact.
