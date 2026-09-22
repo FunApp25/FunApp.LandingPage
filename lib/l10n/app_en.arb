@@ -1,0 +1,813 @@
+{
+  "@@locale": "en",
+  "appTitle": "Fun App",
+  "@appTitle": {
+    "description": "User-facing title for the Fun App landing-page application."
+  },
+  "brandName": "Fun App",
+  "@brandName": {
+    "description": "Accessible name for the Fun App brand wordmark."
+  },
+  "landingHeaderOurBelief": "OUR BELIEF",
+  "@landingHeaderOurBelief": {
+    "description": "First visual navigation label in the landing-page header."
+  },
+  "landingHeaderMembership": "MEMBERSHIP",
+  "@landingHeaderMembership": {
+    "description": "Membership visual navigation label in the landing-page header."
+  },
+  "landingHeaderFoundingFriends": "FOUNDING FRIENDS",
+  "@landingHeaderFoundingFriends": {
+    "description": "Founding Friends visual navigation label in the landing-page header."
+  },
+  "landingHeaderForVenues": "FOR VENUES",
+  "@landingHeaderForVenues": {
+    "description": "Venues visual navigation label in the landing-page header."
+  },
+  "landingHeaderContactUs": "Contact Us",
+  "@landingHeaderContactUs": {
+    "description": "Visual contact call to action whose destination is not yet defined."
+  },
+  "landingOpenNavigationMenu": "Open navigation menu",
+  "@landingOpenNavigationMenu": {
+    "description": "Accessible label for opening the mobile landing navigation menu."
+  },
+  "landingCloseNavigationMenu": "Close navigation menu",
+  "@landingCloseNavigationMenu": {
+    "description": "Accessible label for closing the mobile landing navigation menu."
+  },
+  "landingDialogClose": "Close",
+  "@landingDialogClose": {
+    "description": "Accessible label for closing a landing-page dialog."
+  },
+  "privacyNoticeNavigationLabel": "Privacy Notice",
+  "@privacyNoticeNavigationLabel": {
+    "description": "Navigation label for the hosted Privacy Notice page."
+  },
+  "privacyNoticeLoadError": "The Privacy Notice could not be loaded. Please try again.",
+  "@privacyNoticeLoadError": {
+    "description": "Error shown when the canonical Privacy Notice asset cannot be loaded."
+  },
+  "landingInterestedUserComingSoonTitle": "Coming soon",
+  "@landingInterestedUserComingSoonTitle": {
+    "description": "Title of the presentation-only prospective-user dialog."
+  },
+  "landingInterestedUserComingSoonBody": "We’re preparing this part of Fun App. Check back soon.",
+  "@landingInterestedUserComingSoonBody": {
+    "description": "Supporting text in the presentation-only prospective-user dialog."
+  },
+  "venueLeadDialogTitle": "Tell us about your venue",
+  "@venueLeadDialogTitle": {
+    "description": "Title of the functional venue-interest dialog."
+  },
+  "venueLeadDialogBody": "Share your venue and contact details to start the conversation.",
+  "@venueLeadDialogBody": {
+    "description": "Supporting text above the venue-interest form."
+  },
+  "venueLeadVenueDetailsHeading": "Venue details",
+  "@venueLeadVenueDetailsHeading": {
+    "description": "Heading above the venue fields."
+  },
+  "venueLeadContactDetailsHeading": "Contact details",
+  "@venueLeadContactDetailsHeading": {
+    "description": "Heading above the venue contact fields."
+  },
+  "venueLeadRequiredFieldLabel": "{field} (required)",
+  "@venueLeadRequiredFieldLabel": {
+    "description": "Accessible and visible label for a required venue form field.",
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "venueLeadOptionalFieldLabel": "{field} (optional)",
+  "@venueLeadOptionalFieldLabel": {
+    "description": "Accessible and visible label for an optional venue form field.",
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "venueLeadVenueNameLabel": "Venue name",
+  "@venueLeadVenueNameLabel": {
+    "description": "Venue name field label."
+  },
+  "venueLeadVenueTypeLabel": "Venue type",
+  "@venueLeadVenueTypeLabel": {
+    "description": "Venue type field label."
+  },
+  "venueLeadChainStatusLabel": "Independent / part of a chain",
+  "@venueLeadChainStatusLabel": {
+    "description": "Venue independent or chain status field label."
+  },
+  "venueLeadIndependentOption": "Independent",
+  "@venueLeadIndependentOption": {
+    "description": "Optional venue chain-status choice for an independent venue."
+  },
+  "venueLeadPartOfChainOption": "Part of chain",
+  "@venueLeadPartOfChainOption": {
+    "description": "Optional venue chain-status choice for a venue in a chain."
+  },
+  "venueLeadVenueCountLabel": "Number of venues",
+  "@venueLeadVenueCountLabel": {
+    "description": "Venue count field label."
+  },
+  "venueLeadVenueCapacityLabel": "Venue capacity",
+  "@venueLeadVenueCapacityLabel": {
+    "description": "Venue capacity field label."
+  },
+  "venueLeadWebsiteLabel": "Website",
+  "@venueLeadWebsiteLabel": {
+    "description": "Venue website field label."
+  },
+  "venueLeadFirstNameLabel": "First name",
+  "@venueLeadFirstNameLabel": {
+    "description": "Venue contact first-name field label."
+  },
+  "venueLeadLastNameLabel": "Last name",
+  "@venueLeadLastNameLabel": {
+    "description": "Venue contact last-name field label."
+  },
+  "venueLeadRoleLabel": "Role",
+  "@venueLeadRoleLabel": {
+    "description": "Venue contact role field label."
+  },
+  "venueLeadEmailLabel": "Email",
+  "@venueLeadEmailLabel": {
+    "description": "Venue contact email field label."
+  },
+  "venueLeadPhoneNumberLabel": "Phone number",
+  "@venueLeadPhoneNumberLabel": {
+    "description": "Venue contact phone-number field label."
+  },
+  "venueLeadValidationRequired": "Required field",
+  "@venueLeadValidationRequired": {
+    "description": "Validation message for an empty required venue field."
+  },
+  "venueLeadValidationSingleLine": "Use one line only",
+  "@venueLeadValidationSingleLine": {
+    "description": "Validation message for multiline venue form input."
+  },
+  "venueLeadValidationEmail": "Enter a valid email address",
+  "@venueLeadValidationEmail": {
+    "description": "Validation message for an invalid venue contact email."
+  },
+  "venueLeadValidationWebsite": "Enter a valid web address",
+  "@venueLeadValidationWebsite": {
+    "description": "Validation message for an invalid venue website."
+  },
+  "venueLeadValidationNumbersOnly": "Use numbers only",
+  "@venueLeadValidationNumbersOnly": {
+    "description": "Validation message for non-numeric quantity or phone input."
+  },
+  "venueLeadValidationPositiveInteger": "Enter a value greater than zero",
+  "@venueLeadValidationPositiveInteger": {
+    "description": "Validation message for a non-positive venue quantity."
+  },
+  "venueLeadSubmit": "Send",
+  "@venueLeadSubmit": {
+    "description": "Venue-interest form submission action."
+  },
+  "venueLeadSubmitting": "Sending…",
+  "@venueLeadSubmitting": {
+    "description": "Venue-interest form submission progress label."
+  },
+  "venueLeadSubmissionFailure": "We couldn't submit the form right now. Please try again later.",
+  "@venueLeadSubmissionFailure": {
+    "description": "Generic retry-later message after an operational venue submission failure."
+  },
+  "venueLeadSuccessTitle": "Form Submitted",
+  "@venueLeadSuccessTitle": {
+    "description": "Heading for the venue-interest submission confirmation."
+  },
+  "venueLeadSuccessBody": "Thank you for reaching out, we'll be in touch shortly.",
+  "@venueLeadSuccessBody": {
+    "description": "Body of the venue-interest submission confirmation."
+  },
+  "venueLeadSuccessSignOff": "The Fun App team.",
+  "@venueLeadSuccessSignOff": {
+    "description": "Sign-off of the venue-interest submission confirmation."
+  },
+  "venueLeadPrivacyDisclosure": "By submitting this form, you acknowledge that Fun App will use the information you provide to respond to your enquiry. Please see Fun App's Privacy Notice for information about how it collects and processes personal data.",
+  "@venueLeadPrivacyDisclosure": {
+    "description": "Approved English privacy acknowledgement shown immediately before the venue form submit control. This legal/product copy remains English until approved translations are supplied."
+  },
+  "venueLeadPrivacyNoticeLinkLabel": "Privacy Notice",
+  "@venueLeadPrivacyNoticeLinkLabel": {
+    "description": "Exact approved link text within the English venue privacy acknowledgement."
+  },
+  "landingHeroEyebrow": "A FRIENDLIER WAY TO CONNECT",
+  "@landingHeroEyebrow": {
+    "description": "Uppercase eyebrow above the landing-page hero headline."
+  },
+  "landingHeroHeadlineLeading": "Fun App started from a belief that creating connections should be",
+  "@landingHeroHeadlineLeading": {
+    "description": "Regular-style leading portion of the hero headline."
+  },
+  "landingHeroHeadlineEmphasis": "SO much better",
+  "@landingHeroHeadlineEmphasis": {
+    "description": "Italic emphasized ending of the hero headline."
+  },
+  "landingHeroSupporting": "Fun App is going to work differently… very differently! A warm, welcoming and respectful environment where users can meet others online or IRL, free of charge, in thousands of venues of all shapes, sizes and types around the country. But, let us explain why change is needed.",
+  "@landingHeroSupporting": {
+    "description": "Supporting paragraph beneath the hero headline."
+  },
+  "landingHeroJoinWaitlist": "Join the Waitlist",
+  "@landingHeroJoinWaitlist": {
+    "description": "Visual waitlist call to action whose destination is not yet defined."
+  },
+  "landingHeroImageDescription": "Three smiling people looking toward the camera.",
+  "@landingHeroImageDescription": {
+    "description": "Concise semantic description of the hero photograph."
+  },
+  "landingProblemEyebrow": "THE PROBLEM",
+  "@landingProblemEyebrow": {
+    "description": "Uppercase eyebrow above the problem statement."
+  },
+  "landingProblemStatementLeading": "Widespread research highlights shocking statistics about ",
+  "@landingProblemStatementLeading": {
+    "description": "Regular-style leading portion of the problem statement."
+  },
+  "landingProblemStatementEmphasis": "a loneliness epidemic across the UK and the world,",
+  "@landingProblemStatementEmphasis": {
+    "description": "Italic emphasized portion of the problem statement."
+  },
+  "landingProblemStatementTrailing": " especially amongst young adults.",
+  "@landingProblemStatementTrailing": {
+    "description": "Regular-style ending of the problem statement."
+  },
+  "landingStatsHeading": "Did you know that in the UK?",
+  "@landingStatsHeading": {
+    "description": "Heading above the UK research statistic cards."
+  },
+  "landingStatsAttributionIntro": "Recent UK research from",
+  "@landingStatsAttributionIntro": {
+    "description": "Introduction to the research organization names."
+  },
+  "landingStatsBelongingForum": "Belonging Forum",
+  "@landingStatsBelongingForum": {
+    "description": "Research organization proper name; do not translate."
+  },
+  "landingStatsMarmaladeTrust": "Marmalade Trust",
+  "@landingStatsMarmaladeTrust": {
+    "description": "Research organization proper name; do not translate."
+  },
+  "landingStatsBacpYouGov": "BACP / YouGov.",
+  "@landingStatsBacpYouGov": {
+    "description": "Research organization proper names; do not translate."
+  },
+  "landingStatsAttributionThanks": "With thanks to The Great Friendship Project, London, for compiling these figures.",
+  "@landingStatsAttributionThanks": {
+    "description": "Acknowledgement following the research organization names."
+  },
+  "landingStatsFirstValue": "49%",
+  "@landingStatsFirstValue": {
+    "description": "First UK research statistic value."
+  },
+  "landingStatsFirstDescription": "of 18-24 year old women feel lonely some or all of the time",
+  "@landingStatsFirstDescription": {
+    "description": "Explanation for the 49 percent statistic."
+  },
+  "landingStatsSecondValue": "67%",
+  "@landingStatsSecondValue": {
+    "description": "Second UK research statistic value."
+  },
+  "landingStatsSecondDescription": "of 18-29 year olds feel lonely at least once a week",
+  "@landingStatsSecondDescription": {
+    "description": "Explanation for the 67 percent statistic."
+  },
+  "landingStatsThirdValue": "70%",
+  "@landingStatsThirdValue": {
+    "description": "Third UK research statistic value."
+  },
+  "landingStatsThirdDescription": "of 16-24 year olds say loneliness negatively affects their mental health",
+  "@landingStatsThirdDescription": {
+    "description": "Explanation for the 70 percent statistic."
+  },
+  "landingStatsFourthValue": "44%",
+  "@landingStatsFourthValue": {
+    "description": "Fourth UK research statistic value."
+  },
+  "landingStatsFourthDescription": "of all young people find it difficult to move from screen to making friends IRL",
+  "@landingStatsFourthDescription": {
+    "description": "Explanation for the 44 percent statistic."
+  },
+  "landingResearchCarouselPrevious": "Previous Research statistic",
+  "@landingResearchCarouselPrevious": {
+    "description": "Accessible label for the previous Research statistic control."
+  },
+  "landingResearchCarouselNext": "Next Research statistic",
+  "@landingResearchCarouselNext": {
+    "description": "Accessible label for the next Research statistic control."
+  },
+  "landingResearchCarouselPosition": "Research statistic {currentPage} of {pageCount}",
+  "@landingResearchCarouselPosition": {
+    "description": "Accessible current position in the Research statistic carousel.",
+    "placeholders": {
+      "currentPage": {
+        "type": "int"
+      },
+      "pageCount": {
+        "type": "int"
+      }
+    }
+  },
+  "landingConnectionEyebrow": "A DIFFERENT WAY TO CONNECT",
+  "@landingConnectionEyebrow": {
+    "description": "Uppercase eyebrow above the connection section heading."
+  },
+  "landingConnectionHeading": "Do you recognise any of these experiences?",
+  "@landingConnectionHeading": {
+    "description": "Heading for the alternative connection experience section."
+  },
+  "landingConnectionBody": "What if the existing introductions app culture — where users are largely viewed as an asset to generate profit for the connection platforms — was replaced with a warm, welcoming and respectful environment where users meet others IRL, free of charge, in thousands of venues of all shapes, sizes and types around the country?",
+  "@landingConnectionBody": {
+    "description": "Explanatory paragraph in the alternative connection section."
+  },
+  "landingConnectionImageDescription": "Four smiling people posing closely together outdoors.",
+  "@landingConnectionImageDescription": {
+    "description": "Concise semantic description of the connection photograph."
+  },
+  "landingMembershipHeading": "Membership",
+  "@landingMembershipHeading": {
+    "description": "Heading for the membership section."
+  },
+  "landingMembershipBody": "Connections for everyone. Choose the membership that works for you and enjoy a friendlier future with Fun App.",
+  "@landingMembershipBody": {
+    "description": "Centered supporting paragraph above the membership cards."
+  },
+  "landingMembershipFreeTier": "FREE MEMBERSHIP",
+  "@landingMembershipFreeTier": {
+    "description": "Title of the free membership tier."
+  },
+  "landingMembershipHereNowTier": "HERE & NOW MEMBERSHIP",
+  "@landingMembershipHereNowTier": {
+    "description": "Title of the paid Here & Now membership tier."
+  },
+  "landingMembershipLifetimeTier": "LIFETIME MEMBERSHIP",
+  "@landingMembershipLifetimeTier": {
+    "description": "Eyebrow of the Lifetime membership tier."
+  },
+  "landingMembershipFreePrice": "£0",
+  "@landingMembershipFreePrice": {
+    "description": "Visual price of the free membership tier."
+  },
+  "landingMembershipHereNowPrice": "£11",
+  "@landingMembershipHereNowPrice": {
+    "description": "Visual price of the Here & Now membership tier."
+  },
+  "landingMembershipLifetimePrice": "£249",
+  "@landingMembershipLifetimePrice": {
+    "description": "Visual price of the Lifetime membership tier."
+  },
+  "landingMembershipBillingPeriod": "/ month",
+  "@landingMembershipBillingPeriod": {
+    "description": "Visual monthly billing period displayed beside a membership price."
+  },
+  "landingMembershipOneTimePeriod": "/ one time",
+  "@landingMembershipOneTimePeriod": {
+    "description": "Visual one-time billing period displayed beside the Lifetime price."
+  },
+  "landingMembershipFreePriceSemantics": "£0 per month",
+  "@landingMembershipFreePriceSemantics": {
+    "description": "Accessible spoken price for the free membership tier."
+  },
+  "landingMembershipHereNowPriceSemantics": "£11 per month",
+  "@landingMembershipHereNowPriceSemantics": {
+    "description": "Accessible spoken price for the Here & Now membership tier."
+  },
+  "landingMembershipLifetimePriceSemantics": "£249 one-time payment",
+  "@landingMembershipLifetimePriceSemantics": {
+    "description": "Accessible spoken price for the Lifetime membership tier."
+  },
+  "landingMembershipFreeDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape",
+  "@landingMembershipFreeDescription": {
+    "description": "Description of the free membership tier."
+  },
+  "landingMembershipHereNowDescription": "Full access from day one. You get every feature now and lock in permanent Founding status.",
+  "@landingMembershipHereNowDescription": {
+    "description": "Description of the Here & Now membership tier."
+  },
+  "landingMembershipLifetimeDescription": "Pay once, keep full access forever, and never deal with a monthly renewal again",
+  "@landingMembershipLifetimeDescription": {
+    "description": "Description of the Lifetime membership tier."
+  },
+  "landingMembershipFreeBenefitBeta": "First look at beta releases",
+  "@landingMembershipFreeBenefitBeta": {
+    "description": "First benefit of Free Membership."
+  },
+  "landingMembershipFreeBenefitCommunity": "Direct access to the team in community channels",
+  "@landingMembershipFreeBenefitCommunity": {
+    "description": "Second benefit of Free Membership."
+  },
+  "landingMembershipFreeBenefitFeedback": "Vote on features and share unfiltered feedback",
+  "@landingMembershipFreeBenefitFeedback": {
+    "description": "Third benefit of Free Membership."
+  },
+  "landingMembershipFreeBenefitProgress": "Transparent progress updates",
+  "@landingMembershipFreeBenefitProgress": {
+    "description": "Fourth benefit of Free Membership."
+  },
+  "landingMembershipHereNowBenefitFree": "Everything in Free Membership",
+  "@landingMembershipHereNowBenefitFree": {
+    "description": "Emphasized first benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitAccess": "Complete, unrestricted access to the full app",
+  "@landingMembershipHereNowBenefitAccess": {
+    "description": "Second benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitBadge": "Permanent Founding Member badge on your profile",
+  "@landingMembershipHereNowBenefitBadge": {
+    "description": "Third benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitSupport": "Priority support when you run into an issue",
+  "@landingMembershipHereNowBenefitSupport": {
+    "description": "Fourth benefit of Here & Now Membership."
+  },
+  "landingMembershipHereNowBenefitReleases": "Direct input on upcoming releases",
+  "@landingMembershipHereNowBenefitReleases": {
+    "description": "Fifth benefit of Here & Now Membership."
+  },
+  "landingMembershipLifetimeBenefitPerks": "All Here & Now perks for life",
+  "@landingMembershipLifetimeBenefitPerks": {
+    "description": "Emphasized first benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitFees": "Zero monthly or annual subscription fees",
+  "@landingMembershipLifetimeBenefitFees": {
+    "description": "Second benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitPrices": "Protected from all future price changes",
+  "@landingMembershipLifetimeBenefitPrices": {
+    "description": "Third benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitTesting": "Exclusive access to early private testing",
+  "@landingMembershipLifetimeBenefitTesting": {
+    "description": "Fourth benefit of Lifetime Membership."
+  },
+  "landingMembershipLifetimeBenefitAvailability": "Only available during the pre-launch phase",
+  "@landingMembershipLifetimeBenefitAvailability": {
+    "description": "Fifth benefit of Lifetime Membership."
+  },
+  "landingMembershipFreeCta": "Join the Community",
+  "@landingMembershipFreeCta": {
+    "description": "Visual-only CTA in the Free Membership card."
+  },
+  "landingMembershipHereNowCta": "Start Here & Now",
+  "@landingMembershipHereNowCta": {
+    "description": "Visual-only CTA in the Here & Now Membership card."
+  },
+  "landingMembershipLifetimeCta": "Get Lifetime Membership",
+  "@landingMembershipLifetimeCta": {
+    "description": "Visual-only CTA in the Lifetime Membership card."
+  },
+  "landingMembershipCancelFootnote": "*Cancel anytime. Your Founding badge stays forever.",
+  "@landingMembershipCancelFootnote": {
+    "description": "Footnote beneath the Free and Here & Now membership CTAs."
+  },
+  "landingMembershipLifetimeFootnote": "*Available only before the public launch",
+  "@landingMembershipLifetimeFootnote": {
+    "description": "Footnote beneath the Lifetime membership CTA."
+  },
+  "landingMembershipLifetimeBadge": "LIMITED FOUNDING OFFER",
+  "@landingMembershipLifetimeBadge": {
+    "description": "Floating badge above the Lifetime Membership card."
+  },
+  "landingFoundingOfferEyebrow": "LIMITED TIME OFFER",
+  "@landingFoundingOfferEyebrow": {
+    "description": "Uppercase eyebrow above the Founding Friend offer."
+  },
+  "landingFoundingOfferLeading": "Become A Fun App ",
+  "@landingFoundingOfferLeading": {
+    "description": "Regular leading portion of the Founding Friend offer statement."
+  },
+  "landingFoundingOfferFoundingFriend": "Founding Friend",
+  "@landingFoundingOfferFoundingFriend": {
+    "description": "Italic product term in the Founding Friend offer statement; do not translate."
+  },
+  "landingFoundingOfferTrailing": "... for free. Enjoy ‘Here & Now’ membership on us.",
+  "@landingFoundingOfferTrailing": {
+    "description": "Regular ending of the Founding Friend offer statement; Here & Now is a product term."
+  },
+  "landingFoundingMemberHeading": "What does Founding Member mean",
+  "@landingFoundingMemberHeading": {
+    "description": "Heading for the Founding Member explanation section."
+  },
+  "landingFoundingMemberBody": "It simply means you supported Fun App before everyone else. In return, we keep it simple.",
+  "@landingFoundingMemberBody": {
+    "description": "Supporting copy for the Founding Member explanation section."
+  },
+  "landingFoundingMemberCarouselPrevious": "Previous Founding Member benefit",
+  "@landingFoundingMemberCarouselPrevious": {
+    "description": "Accessible label for the previous Founding Member carousel control."
+  },
+  "landingFoundingMemberCarouselNext": "Next Founding Member benefit",
+  "@landingFoundingMemberCarouselNext": {
+    "description": "Accessible label for the next Founding Member carousel control."
+  },
+  "landingFoundingMemberCarouselPosition": "Founding Member benefit {currentPage} of {pageCount}",
+  "@landingFoundingMemberCarouselPosition": {
+    "description": "Accessible current-page announcement for the Founding Member carousel.",
+    "placeholders": {
+      "currentPage": {"type": "int"},
+      "pageCount": {"type": "int"}
+    }
+  },
+  "landingFoundingMemberRecognisedTitle": "Recognised Forever",
+  "@landingFoundingMemberRecognisedTitle": {
+    "description": "Title of the first Founding Member benefit card."
+  },
+  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed the project from the start",
+  "@landingFoundingMemberRecognisedBody": {
+    "description": "Body of the first Founding Member benefit card."
+  },
+  "landingFoundingMemberAccessTitle": "Early Access Always",
+  "@landingFoundingMemberAccessTitle": {
+    "description": "Title of the second Founding Member benefit card."
+  },
+  "landingFoundingMemberAccessBody": "Try new tools and experiments before they roll out publicly",
+  "@landingFoundingMemberAccessBody": {
+    "description": "Body of the second Founding Member benefit card."
+  },
+  "landingFoundingMemberVoiceTitle": "A Direct Voice",
+  "@landingFoundingMemberVoiceTitle": {
+    "description": "Title of the third Founding Member benefit card."
+  },
+  "landingFoundingMemberVoiceBody": "Your feedback goes straight to the team building the roadmap",
+  "@landingFoundingMemberVoiceBody": {
+    "description": "Body of the third Founding Member benefit card."
+  },
+  "landingFoundingFriendsHeading": "Founding Friends are Besties",
+  "@landingFoundingFriendsHeading": {
+    "description": "Heading in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsBodyFirst": "Thank you for being an early bird and joining Fun App as a Founding Friend. You can keep this status forever, helping change the way the world makes friends.",
+  "@landingFoundingFriendsBodyFirst": {
+    "description": "First paragraph in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsBodySecond": "Welcome aboard, this is going to be an exciting journey.",
+  "@landingFoundingFriendsBodySecond": {
+    "description": "Second paragraph in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsCta": "Become a Founding Friend",
+  "@landingFoundingFriendsCta": {
+    "description": "Visual-only CTA in the Founding Friends promotional card."
+  },
+  "landingFoundingFriendsImageDescription": "Two people posing closely together outdoors.",
+  "@landingFoundingFriendsImageDescription": {
+    "description": "Concise semantic description of the Founding Friends photograph."
+  },
+  "landingVenueHeadingLeading": "I Run a ",
+  "@landingVenueHeadingLeading": {
+    "description": "Regular leading portion of the venue introduction heading."
+  },
+  "landingVenueHeadingEmphasis": "Venue",
+  "@landingVenueHeadingEmphasis": {
+    "description": "Italic orange emphasis in the venue introduction heading."
+  },
+  "landingVenueHeadingTrailing": "",
+  "@landingVenueHeadingTrailing": {
+    "description": "Optional trailing portion of the venue introduction heading; empty in the current design."
+  },
+  "landingVenueIntroductionFirst": "Venues and events of every shape, size, type and location will be central to Fun App’s mission to make the world a friendlier place.",
+  "@landingVenueIntroductionFirst": {
+    "description": "First paragraph in the venue section introduction."
+  },
+  "landingVenueIntroductionSecond": "Venues love what Fun App is doing. Fun App loves talking to venues.",
+  "@landingVenueIntroductionSecond": {
+    "description": "Second paragraph in the venue section introduction."
+  },
+  "landingVenueCardHeading": "I Run a Venue...",
+  "@landingVenueCardHeading": {
+    "description": "Heading in the venue promotional card."
+  },
+  "landingVenueCardSupporting": "How can I help change the world?",
+  "@landingVenueCardSupporting": {
+    "description": "Supporting question in the venue promotional card."
+  },
+  "landingVenueCta": "Let’s Start a Conversation",
+  "@landingVenueCta": {
+    "description": "Visual-only CTA in the venue promotional card."
+  },
+  "landingVenueImageDescription": "Five people lying in a circle with their heads together.",
+  "@landingVenueImageDescription": {
+    "description": "Concise semantic description of the venue photograph."
+  },
+  "landingWelcomeEyebrow": "Welcome to Fun App",
+  "@landingWelcomeEyebrow": {
+    "description": "Eyebrow above the closing welcome statement."
+  },
+  "landingWelcomeStatementLeading": "Fun App believes friendship, group and dating platforms can be SO much better.",
+  "@landingWelcomeStatementLeading": {
+    "description": "Regular leading portion of the closing welcome statement."
+  },
+  "landingWelcomeStatementEmphasis": "Welcome to a friendlier future.",
+  "@landingWelcomeStatementEmphasis": {
+    "description": "Italic orange ending of the closing welcome statement."
+  },
+  "landingFaqEyebrow": "FAQ",
+  "@landingFaqEyebrow": {
+    "description": "Eyebrow above the FAQ section heading."
+  },
+  "landingFaqHeading": "Everything You Need To Know",
+  "@landingFaqHeading": {
+    "description": "Heading for the FAQ section."
+  },
+  "landingFaqFreeQuestion": "Is Fun App free?",
+  "@landingFaqFreeQuestion": {
+    "description": "FAQ question about the cost of Fun App."
+  },
+  "landingFaqFreeAnswer1": "Yes. The core Fun App experience is free because finding someone to grab coffee with should not require a financial strategy.",
+  "@landingFaqFreeAnswer1": {
+    "description": "First paragraph answering whether Fun App is free."
+  },
+  "landingFaqFreeAnswer2": "We offer an optional subscription for extra features, higher limits, and additional storage. Nice to have, not required to enjoy using the app. However, join early as a Founding Friend and the subscription is included for free.",
+  "@landingFaqFreeAnswer2": {
+    "description": "Second paragraph answering whether Fun App is free."
+  },
+  "landingFaqLifetimeQuestion": "Is a Founding Friend subscription really lifetime?",
+  "@landingFaqLifetimeQuestion": {
+    "description": "FAQ question about the lifetime Founding Friend subscription."
+  },
+  "landingFaqLifetimeAnswer1": "Yep. Lifetime means lifetime.",
+  "@landingFaqLifetimeAnswer1": {
+    "description": "First paragraph answering the lifetime subscription question."
+  },
+  "landingFaqLifetimeAnswer2": "The one obvious exception: if your account is banned for violating our rules or misconduct reported by other users, the subscription does not come with diplomatic immunity.",
+  "@landingFaqLifetimeAnswer2": {
+    "description": "Second paragraph answering the lifetime subscription question."
+  },
+  "landingFaqCancelQuestion": "Can I change my mind and cancel my subscription?",
+  "@landingFaqCancelQuestion": {
+    "description": "FAQ question about cancelling a subscription."
+  },
+  "landingFaqCancelAnswer1": "Of course.",
+  "@landingFaqCancelAnswer1": {
+    "description": "First paragraph answering the cancellation question."
+  },
+  "landingFaqCancelAnswer2": "After launch and the initial one-month trial period, you can cancel your Founding Friend free subscription, and after 14 days for other, later, free and paid subscription types. We want you here because the Fun App is useful and enjoyable, not because you forgot where the cancel button is.",
+  "@landingFaqCancelAnswer2": {
+    "description": "Second paragraph answering the cancellation question."
+  },
+  "landingFaqPhotoQuestion": "What photo should I use?",
+  "@landingFaqPhotoQuestion": {
+    "description": "FAQ question about profile photos."
+  },
+  "landingFaqPhotoAnswer1": "The one where it’s actually you.",
+  "@landingFaqPhotoAnswer1": {
+    "description": "First paragraph answering the profile photo question."
+  },
+  "landingFaqPhotoAnswer2": "Clear face, decent light, preferably taken sometime this decade. Group photos, random landscapes, memes, and pictures without you may be removed from discovery.",
+  "@landingFaqPhotoAnswer2": {
+    "description": "Second paragraph answering the profile photo question."
+  },
+  "landingFaqPhotoAnswer3": "People are trying to figure out who they are meeting. Give them a fighting chance.",
+  "@landingFaqPhotoAnswer3": {
+    "description": "Third paragraph answering the profile photo question."
+  },
+  "landingFaqBioQuestion": "What should I put in my bio?",
+  "@landingFaqBioQuestion": {
+    "description": "FAQ question about profile biography content."
+  },
+  "landingFaqBioAnswer1": "Anything from two lines to a small autobiography.",
+  "@landingFaqBioAnswer1": {
+    "description": "First paragraph answering the biography question."
+  },
+  "landingFaqBioAnswer2": "Tell people what you enjoy, what you are curious about, or what you’d happily leave the house for.",
+  "@landingFaqBioAnswer2": {
+    "description": "Second paragraph answering the biography question."
+  },
+  "landingFaqBioAnswer3": "Fun App isn’t a dating app. You don’t need to sell yourself as “fluent in sarcasm and travel.” You are here to find someone to see a movie with, grab coffee, play tennis, visit an exhibition, or do something else in the real world.",
+  "@landingFaqBioAnswer3": {
+    "description": "Third paragraph answering the biography question."
+  },
+  "landingFaqEventsQuestion": "Can regular users create events?",
+  "@landingFaqEventsQuestion": {
+    "description": "FAQ question about creating events."
+  },
+  "landingFaqEventsAnswer1": "Yes.",
+  "@landingFaqEventsAnswer1": {
+    "description": "First paragraph answering the event creation question."
+  },
+  "landingFaqEventsAnswer2": "Verified users can create a limited number of events each month. You don’t need to be a professional organizer, nightlife promoter, or person with a clipboard. Have a plan? Invite people.",
+  "@landingFaqEventsAnswer2": {
+    "description": "Second paragraph answering the event creation question."
+  },
+  "landingFaqMatchingQuestion": "How does matching work?",
+  "@landingFaqMatchingQuestion": {
+    "description": "FAQ question about matching."
+  },
+  "landingFaqMatchingAnswer1": "It doesn’t. We don’t have matches.",
+  "@landingFaqMatchingAnswer1": {
+    "description": "First paragraph answering the matching question."
+  },
+  "landingFaqMatchingAnswer2": "Fun App gives you plenty of ways to search for the right person, but we care more about shared intent than algorithmic destiny.",
+  "@landingFaqMatchingAnswer2": {
+    "description": "Second paragraph answering the matching question."
+  },
+  "landingFaqSharedIntentTerm": "shared intent",
+  "@landingFaqSharedIntentTerm": {
+    "description": "Localized phrase emphasized within the matching answer."
+  },
+  "landingFaqMatchingAnswer3": "You want to go climbing tonight. Someone else wants to go climbing tonight. That’s already more useful than knowing you are both Capricorns.",
+  "@landingFaqMatchingAnswer3": {
+    "description": "Third paragraph answering the matching question."
+  },
+  "landingFaqLoveQuestion": "Can I find love on Fun App?",
+  "@landingFaqLoveQuestion": {
+    "description": "FAQ question about finding love."
+  },
+  "landingFaqLoveAnswer1": "Anything can happen here.",
+  "@landingFaqLoveAnswer1": {
+    "description": "First paragraph answering the finding love question."
+  },
+  "landingFaqLoveAnswer2": "We just don’t believe an algorithm can calculate chemistry for you. Chemistry has an annoying habit of happening in real life.",
+  "@landingFaqLoveAnswer2": {
+    "description": "Second paragraph answering the finding love question."
+  },
+  "landingFaqLoveAnswer3": "Find events. Meet actual people. See what happens.",
+  "@landingFaqLoveAnswer3": {
+    "description": "Third paragraph answering the finding love question."
+  },
+  "landingFaqSafetyQuestion": "Is Fun App safe?",
+  "@landingFaqSafetyQuestion": {
+    "description": "FAQ question about safety."
+  },
+  "landingFaqSafetyAnswer1": "No app can honestly promise that meeting strangers is 100% safe and we won’t pretend otherwise.",
+  "@landingFaqSafetyAnswer1": {
+    "description": "First paragraph answering the safety question."
+  },
+  "landingFaqSafetyAnswer2": "Features like Safe Guard and Footprint are designed to add an extra layer of safety, not replace your judgment.",
+  "@landingFaqSafetyAnswer2": {
+    "description": "Second paragraph answering the safety question."
+  },
+  "landingFaqSafetyAnswer3": "Meet in public places. Prefer daytime for first meetings. Don’t get into a stranger’s car or go to a private location. And if something feels even slightly off, you do not owe anyone the benefit of the doubt.",
+  "@landingFaqSafetyAnswer3": {
+    "description": "Third paragraph answering the safety question."
+  },
+  "landingFaqSafeGuardQuestion": "What is Safe Guard?",
+  "@landingFaqSafeGuardQuestion": {
+    "description": "FAQ question about the future Safe Guard feature."
+  },
+  "landingFaqSafeGuardAnswer1": "Safe Guard lets you tell a trusted person where you are going, who you are meeting, and when they should expect to hear from you, even if they don’t use Fun App.",
+  "@landingFaqSafeGuardAnswer1": {
+    "description": "First paragraph describing the future Safe Guard feature."
+  },
+  "landingFaqSafeGuardAnswer2": "You can also set a timer. If you don’t check in before it expires, your chosen contact can be notified automatically.",
+  "@landingFaqSafeGuardAnswer2": {
+    "description": "Second paragraph describing the future Safe Guard feature."
+  },
+  "landingFaqSafeGuardAnswer3": "Basically: someone has your back without needing to join the group chat.",
+  "@landingFaqSafeGuardAnswer3": {
+    "description": "Third paragraph describing the future Safe Guard feature."
+  },
+  "landingFaqFootprintQuestion": "What is Footprint?",
+  "@landingFaqFootprintQuestion": {
+    "description": "FAQ question about the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer1": "With both users’ consent, Footprint can temporarily share or track your location during a meeting.",
+  "@landingFaqFootprintAnswer1": {
+    "description": "First paragraph describing the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer2": "It only works when both people agree.",
+  "@landingFaqFootprintAnswer2": {
+    "description": "Second paragraph describing the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer3": "If you are meeting someone for the first time and they strongly refuse to use a safety feature you’d feel more comfortable having, that doesn’t automatically mean something is wrong. It does mean you are allowed to reconsider the meeting.",
+  "@landingFaqFootprintAnswer3": {
+    "description": "Third paragraph describing the future Footprint feature."
+  },
+  "landingFaqFootprintAnswer4": "Comfort beats politeness.",
+  "@landingFaqFootprintAnswer4": {
+    "description": "Fourth paragraph describing the future Footprint feature."
+  },
+  "landingFaqGroupsQuestion": "Isn’t saving people into groups a little weird?",
+  "@landingFaqGroupsQuestion": {
+    "description": "FAQ question about saving profiles into groups."
+  },
+  "landingFaqGroupsAnswer1": "Fun App is built around doing different things with different people. You might have someone you love running with, someone you visit galleries with, and someone who will actually discuss the book instead of saying, “Yeah, I started it.”",
+  "@landingFaqGroupsAnswer1": {
+    "description": "First paragraph answering the saved groups question."
+  },
+  "landingFaqGroupsAnswer2": "Saved profiles and filters simply help you find the right companions for the right plans.",
+  "@landingFaqGroupsAnswer2": {
+    "description": "Second paragraph answering the saved groups question."
+  },
+  "landingFaqHarassmentQuestion": "What happens if someone harasses me or uses hate speech?",
+  "@landingFaqHarassmentQuestion": {
+    "description": "FAQ question about harassment and hate speech."
+  },
+  "landingFaqHarassmentAnswer1": "Fun App has no tolerance for harassment, threats, discriminatory abuse, or hate speech targeting people based on identity or protected characteristics.",
+  "@landingFaqHarassmentAnswer1": {
+    "description": "First paragraph answering the harassment question."
+  },
+  "landingFaqHarassmentAnswer2": "Accounts that violate our rules may be restricted or banned.",
+  "@landingFaqHarassmentAnswer2": {
+    "description": "Second paragraph answering the harassment question."
+  },
+  "landingFaqHarassmentAnswer3": "If someone makes you uncomfortable, report them through their profile. You are never required to keep interacting just to be polite. Connections made through Fun App should be enjoyable.",
+  "@landingFaqHarassmentAnswer3": {
+    "description": "Third paragraph answering the harassment question."
+  }
+}
