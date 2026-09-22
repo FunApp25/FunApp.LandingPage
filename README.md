@@ -29,9 +29,12 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   remain static. The first provider-neutral prospective-venue domain model and
   application form workflow now sit above one concrete provider-neutral
   repository. Dependency injection selects a deterministic development data
-  source or the production HubSpot data source. Production submits
-  provider-neutral venue leads directly to HubSpot's unauthenticated Forms v3
-  API through the injected web-compatible HTTP client. The Venue CTA opens a
+  source or the production HubSpot data source. The current Flutter production
+  source submits provider-neutral venue leads directly to HubSpot's
+  unauthenticated Forms v3 API through the injected web-compatible HTTP client.
+  The repository also contains the independently testable Cloudflare Worker
+  intended for the later first-party venue-interest boundary; it is not routed,
+  deployed, or called by Flutter yet. The Venue CTA opens a
   localized responsive form backed by a fresh `VenueLeadFormBloc`; success is
   confirmed in the dialog, while failures preserve the draft for retry. The
   form shows the approved informational privacy acknowledgement immediately
@@ -198,6 +201,40 @@ The test suite covers domain validation, venue-lead form orchestration, and the
 active landing surface's branding, localization, theme, interactions, and
 responsive viewport contracts.
 
+## Cloudflare Worker development
+
+`cloudflare/venue-interest-worker/` is an isolated TypeScript Worker project
+for the future first-party `POST /api/venue-interest` boundary. It targets the
+existing `funapp-venue-interest` Worker name, validates the Fun App-owned
+request contract, and maps to HubSpot only inside the Worker. It has no
+production route or account identifier in repository configuration. GitHub
+Pages remains the web origin.
+
+Install and validate it independently:
+
+```bash
+cd cloudflare/venue-interest-worker
+npm ci
+npm run typecheck
+npm test
+npm run wrangler:validate
+```
+
+Fake local values live only in the tracked `.dev.vars.example`; copy that file
+to an ignored `.dev.vars` for local Wrangler development if needed. The
+`wrangler.jsonc` file declares no deployable HubSpot `vars` and sets
+`keep_vars: true`, so an authorized code deployment preserves separately
+configured dashboard bindings. The Worker does not log submitted form content
+or HubSpot response bodies. It reads at most 16 KiB per request and makes one
+HubSpot attempt with a 10-second timeout; it does not retry form submissions.
+
+`.github/workflows/deploy-venue-interest-worker.yml` is manually triggered
+only. Its sole job targets the GitHub `production` Environment, validates the
+Worker, and deploys the existing Worker using that Environment's
+`HUBSPOT_PORTAL_ID`, `HUBSPOT_FORM_GUID`, `CLOUDFLARE_ACCOUNT_ID`, and
+`CLOUDFLARE_API_TOKEN`. It deliberately configures no route; route attachment
+remains a separate authorized step.
+
 ## Repository structure
 
 ```text
@@ -223,9 +260,11 @@ assets/fonts/                Bundled Google Fonts files and OFL license assets
 assets/legal/                Approved canonical website legal content
 test/                        Flutter widget tests for active behavior
 web/                         Flutter Web shell and web-root static inputs
+cloudflare/venue-interest-worker/ Isolated first-party Venue enquiry Worker
 l10n.yaml                    Flutter localization generation configuration
 archive/astro_site/          Deprecated pre-Flutter historical reference
 .github/workflows/deploy.yml Flutter GitHub Pages workflow
+.github/workflows/deploy-venue-interest-worker.yml Manual Worker deployment
 SPECIFICATIONS.md            Authoritative project decisions
 AGENTS.md                    Coding-agent working rules
 ```
@@ -246,12 +285,13 @@ data repository maps validated leads into a provider-neutral DTO and delegates
 to an environment-selected data source. The explicit development and production
 entrypoints pass a typed environment into `core`, which configures GetIt through
 Injectable before the app starts.
-The production data boundary maps the DTO to exact HubSpot property names and
-uses the public Forms endpoint with an abortable 15-second request deadline.
-Core composition passes validated public identifiers into that boundary
-without exposing provider concerns above the data layer. A future server-side
-proxy can replace this transport without changing the domain/application
-contracts.
+The current production data boundary maps the DTO to exact HubSpot property
+names and uses the public Forms endpoint with an abortable 15-second request
+deadline. Core composition passes validated public identifiers into that
+boundary without exposing provider concerns above the data layer. The isolated
+Cloudflare Worker keeps the future first-party API contract and HubSpot mapping
+outside the Flutter layers; a later scoped Flutter switch can use it without
+changing the domain/application contracts.
 
 See [`SPECIFICATIONS.md`](SPECIFICATIONS.md) for the complete direction and
 dependency boundaries.

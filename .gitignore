@@ -301,6 +301,10 @@ FakesAssemblies/
 .ntvs_analysis.dat
 node_modules/
 
+# Cloudflare Worker local bindings; keep the tracked example only.
+cloudflare/venue-interest-worker/.dev.vars*
+!cloudflare/venue-interest-worker/.dev.vars.example
+
 # Visual Studio 6 build log
 *.plg
 

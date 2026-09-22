@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "funapp-venue-interest",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-22",
+  // HubSpot bindings are configured separately on the existing Worker.
+  // Preserve dashboard-managed values when deploying code-only changes.
+  "keep_vars": true
+}
