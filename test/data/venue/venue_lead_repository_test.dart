@@ -61,7 +61,7 @@ void main() {
       const VenueLeadDto(
         venueName: 'The Fun Venue',
         venueType: 'Music venue',
-      chainStatus: 'Part of chain',
+        chainStatus: 'Part of chain',
         venueCount: 4,
         venueCapacity: 850,
         website: 'https://venue.example.com',

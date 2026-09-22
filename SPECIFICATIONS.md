@@ -568,6 +568,10 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 ### Established
 
 - GitHub Pages is the production deployment target.
+- Pull requests targeting `main` run read-only formatting, generation,
+  analysis, full-suite coverage, and production-entrypoint compile checks.
+  Pull-request checks do not deploy; pushes to `main` remain the production
+  Pages deployment trigger.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
 - The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
   environment from Flutter stable, generates localizations and Dart sources,

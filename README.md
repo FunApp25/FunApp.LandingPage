@@ -252,6 +252,10 @@ dependency boundaries.
 
 ## Deployment
 
+Pull requests targeting `main` run formatting, generation, analysis, the full
+test suite with coverage, and a synthetic-config production compile through
+the read-only `PR Checks` workflow. These checks do not deploy anything.
+
 Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.
 CI installs Puro, creates the `fun-app-landing` stable environment, generates
 localizations and Dart sources, analyzes, tests, and explicitly builds
