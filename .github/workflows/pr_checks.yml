@@ -90,11 +90,6 @@ jobs:
           ' coverage/lcov.info
 
       - name: Build production site
-        env:
-          FUN_APP_HUBSPOT_PORTAL_ID: ci-synthetic-portal-id
-          FUN_APP_HUBSPOT_VENUE_FORM_GUID: 00000000-0000-0000-0000-000000000000
         run: >-
           puro --env="$PURO_ENV_NAME" flutter build web
           -t lib/main_prod.dart
-          --dart-define=FUN_APP_HUBSPOT_PORTAL_ID="$FUN_APP_HUBSPOT_PORTAL_ID"
-          --dart-define=FUN_APP_HUBSPOT_VENUE_FORM_GUID="$FUN_APP_HUBSPOT_VENUE_FORM_GUID"

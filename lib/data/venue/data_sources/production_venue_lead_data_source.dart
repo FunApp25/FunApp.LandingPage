@@ -1,63 +1,44 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:fun_app_landing_page/data/venue/data_sources/hubspot_venue_lead_mapper.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_exception.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_interface.dart';
+import 'package:fun_app_landing_page/data/venue/models/venue_interest_request.dart';
 import 'package:fun_app_landing_page/data/venue/models/venue_lead_dto.dart';
 import 'package:http/http.dart' as http;
 
-/// Maximum time allowed for one production venue-lead submission.
-const defaultHubSpotSubmissionTimeout = Duration(seconds: 15);
+/// Relative path for the same-origin public venue-interest endpoint.
+const productionVenueLeadEndpointPath = '/api/venue-interest';
 
-/// Production venue-lead boundary backed by HubSpot's public Forms API.
-final class HubSpotVenueLeadDataSource implements VenueLeadDataSourceInterface {
-  /// Creates a [HubSpotVenueLeadDataSource].
-  factory HubSpotVenueLeadDataSource({
+/// Maximum time allowed for one production venue-lead submission.
+const defaultProductionVenueLeadSubmissionTimeout = Duration(seconds: 15);
+
+/// Production venue-lead boundary backed by Fun App's first-party endpoint.
+final class ProductionVenueLeadDataSource
+    implements VenueLeadDataSourceInterface {
+  /// Creates a [ProductionVenueLeadDataSource].
+  factory ProductionVenueLeadDataSource({
     required http.Client client,
-    required String portalId,
-    required String venueFormGuid,
-    Duration submissionTimeout = defaultHubSpotSubmissionTimeout,
-    HubSpotVenueLeadMapper mapper = const HubSpotVenueLeadMapper(),
-  }) => HubSpotVenueLeadDataSource._(
+    Uri? endpoint,
+    Duration submissionTimeout = defaultProductionVenueLeadSubmissionTimeout,
+  }) => ProductionVenueLeadDataSource._(
     client,
-    portalId,
-    venueFormGuid,
+    endpoint ?? Uri.base.resolve(productionVenueLeadEndpointPath),
     submissionTimeout,
-    mapper,
   );
 
-  const HubSpotVenueLeadDataSource._(
+  const ProductionVenueLeadDataSource._(
     this._client,
-    this._portalId,
-    this._venueFormGuid,
+    this._endpoint,
     this._submissionTimeout,
-    this._mapper,
   );
 
   final http.Client _client;
-  final String _portalId;
-  final String _venueFormGuid;
+  final Uri _endpoint;
   final Duration _submissionTimeout;
-  final HubSpotVenueLeadMapper _mapper;
 
   @override
   Future<void> submitVenueLead(VenueLeadDto lead) async {
-    final endpoint = Uri(
-      scheme: 'https',
-      host: 'api.hsforms.com',
-      pathSegments: [
-        'submissions',
-        'v3',
-        'integration',
-        'submit',
-        _portalId,
-        _venueFormGuid,
-      ],
-    );
-    final payload = <String, Object>{
-      'fields': _mapper.toFields(lead),
-    };
     final abortCompleter = Completer<void>();
     final timeoutTimer = Timer(
       _submissionTimeout,
@@ -66,11 +47,13 @@ final class HubSpotVenueLeadDataSource implements VenueLeadDataSourceInterface {
     final request =
         http.AbortableRequest(
             'POST',
-            endpoint,
+            _endpoint,
             abortTrigger: abortCompleter.future,
           )
           ..headers['Content-Type'] = 'application/json'
-          ..body = jsonEncode(payload);
+          ..body = jsonEncode(
+            VenueInterestRequest.fromVenueLead(lead).toJson(),
+          );
     final int statusCode;
 
     try {
@@ -85,11 +68,11 @@ final class HubSpotVenueLeadDataSource implements VenueLeadDataSourceInterface {
       timeoutTimer.cancel();
     }
 
-    if (statusCode == 200) {
+    if (statusCode == 204) {
       return;
-    } else if (statusCode == 400) {
+    } else if (statusCode == 400 || statusCode == 422) {
       throw const VenueLeadSubmissionRejectedException();
-    } else if (statusCode == 429 || statusCode >= 500 && statusCode <= 599) {
+    } else if (statusCode == 429 || statusCode == 503) {
       throw const VenueLeadServiceUnavailableException();
     } else {
       throw const VenueLeadUnexpectedDataSourceException();

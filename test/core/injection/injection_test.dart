@@ -2,10 +2,9 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
-import 'package:fun_app_landing_page/core/config/hubspot_forms_config.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/development_venue_lead_data_source.dart';
-import 'package:fun_app_landing_page/data/venue/data_sources/hubspot_venue_lead_data_source.dart';
+import 'package:fun_app_landing_page/data/venue/data_sources/production_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_interface.dart';
 import 'package:fun_app_landing_page/data/venue/venue_lead_repository.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
@@ -38,54 +37,30 @@ void main() {
       getIt<VenueLeadDataSourceInterface>(),
       isA<DevelopmentVenueLeadDataSource>(),
     );
-    expect(getIt.isRegistered<HubSpotFormsConfig>(), isFalse);
     expect(getIt.isRegistered<http.Client>(), isFalse);
     final bloc = getIt<VenueLeadFormBloc>();
     await bloc.close();
   });
 
-  test('production rejects missing public HubSpot configuration', () {
-    expect(
-      () => configureDependencies(AppEnvironment.production),
-      throwsA(
-        isA<FormatException>().having(
-          (error) => error.message,
-          'message',
-          contains(hubSpotPortalIdDefineName),
-        ),
-      ),
-    );
-    expect(getIt.isRegistered<VenueLeadRepositoryInterface>(), isFalse);
-    expect(getIt.isRegistered<VenueLeadDataSourceInterface>(), isFalse);
-    expect(getIt.isRegistered<HubSpotFormsConfig>(), isFalse);
-    expect(getIt.isRegistered<http.Client>(), isFalse);
-  });
-
   test(
-    'production injects HubSpot config and HTTP client without real I/O',
+    'production injects the first-party data source without real I/O',
     () async {
-      final config = HubSpotFormsConfig.fromValues(
-        portalId: '123456789',
-        venueFormGuid: '00000000-0000-0000-0000-000000000000',
-      );
       late http.Request capturedRequest;
       final client = MockClient((request) async {
         capturedRequest = request;
-        return http.Response('response body is not required', 200);
+        return http.Response('response body is not required', 204);
       });
       configureDependencies(
         AppEnvironment.production,
-        productionHubSpotConfig: config,
         productionHttpClient: client,
       );
 
       final repository = getIt<VenueLeadRepositoryInterface>();
       expect(repository, isA<VenueLeadRepository>());
-      expect(getIt<HubSpotFormsConfig>(), same(config));
       expect(getIt<http.Client>(), same(client));
       expect(
         getIt<VenueLeadDataSourceInterface>(),
-        isA<HubSpotVenueLeadDataSource>(),
+        isA<ProductionVenueLeadDataSource>(),
       );
       expect(
         getIt<VenueLeadDataSourceInterface>(),
@@ -97,10 +72,7 @@ void main() {
       );
       expect(
         capturedRequest.url,
-        Uri.parse(
-          'https://api.hsforms.com/submissions/v3/integration/submit/'
-          '123456789/00000000-0000-0000-0000-000000000000',
-        ),
+        Uri.base.resolve('/api/venue-interest'),
       );
       final bloc = getIt<VenueLeadFormBloc>();
       await bloc.close();

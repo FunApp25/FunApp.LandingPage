@@ -47,15 +47,6 @@ void main() {
     expect(dto.venueCount, 4);
     expect(dto.venueCapacity, 850);
     expect(dto.phoneNumber, '0034123456789');
-    expect(dto.toString(), isNot(contains('HubSpot')));
-    expect(
-      dto.toString(),
-      isNot(contains('independent_or_part_of_chain_')),
-    );
-    expect(
-      dto.toString(),
-      isNot(contains('if_chain__number_of_venues')),
-    );
   });
 }
 
