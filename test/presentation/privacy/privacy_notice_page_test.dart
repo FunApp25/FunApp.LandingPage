@@ -1,6 +1,5 @@
-import 'dart:ui' show SemanticsAction;
-
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
@@ -139,29 +138,68 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('approved email links retain inline link semantics', (
-    tester,
-  ) async {
-    final semantics = tester.ensureSemantics();
-    await _pumpPrivacyPage(tester);
+  testWidgets(
+    'approved email links support keyboard focus and link semantics',
+    (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      final launchedUris = <Uri>[];
+      await _pumpPrivacyPage(tester, onLinkLaunch: launchedUris.add);
 
-    final emailLinks = find.semantics.byLabel('info@funapp.world');
-    expect(emailLinks, findsNWidgets(3));
-    for (final emailLink in emailLinks.evaluate()) {
-      final emailSemantics = emailLink.getSemanticsData();
-      expect(emailSemantics.label, 'info@funapp.world');
-      expect(emailSemantics.flagsCollection.isLink, isTrue);
-      expect(emailSemantics.hasAction(SemanticsAction.tap), isTrue);
-    }
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('privacyNoticeMarkdown')),
-        matching: find.byType(TextButton),
-      ),
-      findsNothing,
-    );
-    semantics.dispose();
-  });
+      final emailButtons = _emailButtons;
+      expect(emailButtons, findsNWidgets(3));
+      for (final emailButton in emailButtons.evaluate()) {
+        final buttonFinder = find.byWidget(emailButton.widget);
+        final button = emailButton.widget as TextButton;
+        expect(button.onPressed, isNotNull);
+
+        final focusNode = Focus.of(
+          tester.element(
+            find
+                .descendant(
+                  of: buttonFinder,
+                  matching: find.text('info@funapp.world'),
+                )
+                .first,
+          ),
+        );
+        expect(focusNode.canRequestFocus, isTrue);
+        focusNode.requestFocus();
+        await tester.pump();
+        expect(focusNode.hasPrimaryFocus, isTrue);
+        expect(
+          button.style?.side?.resolve({WidgetState.focused})?.width,
+          2,
+        );
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pump();
+
+        final emailSemantics = tester
+            .getSemantics(
+              find
+                  .ancestor(
+                    of: buttonFinder,
+                    matching: find.byType(Semantics),
+                  )
+                  .first,
+            )
+            .getSemanticsData();
+        expect(emailSemantics.label, 'info@funapp.world');
+        expect(emailSemantics.flagsCollection.isLink, isTrue);
+        expect(emailSemantics.hasAction(SemanticsAction.tap), isTrue);
+      }
+      expect(launchedUris, hasLength(6));
+      expect(
+        launchedUris,
+        everyElement(Uri.parse('mailto:info@funapp.world')),
+      );
+      semantics.dispose();
+    },
+  );
 
   testWidgets('contact email links stay in the notice content column', (
     tester,
@@ -170,7 +208,9 @@ void main() {
       (size: Size(320, 568), textScaler: TextScaler.linear(2)),
       (size: Size(390, 844), textScaler: TextScaler.linear(2)),
       (size: Size(768, 1024), textScaler: TextScaler.noScaling),
+      (size: Size(768, 1024), textScaler: TextScaler.linear(2)),
       (size: Size(1440, 900), textScaler: TextScaler.noScaling),
+      (size: Size(1440, 900), textScaler: TextScaler.linear(2)),
     ]) {
       setTestSurface(tester, example.size);
       await _pumpPrivacyPage(tester, textScaler: example.textScaler);
@@ -178,6 +218,14 @@ void main() {
       final contentRect = tester.getRect(
         find.byKey(const Key('privacyNoticeContent')),
       );
+      final emailButtons = _emailButtons;
+      expect(emailButtons, findsNWidgets(3));
+      for (final emailButton in emailButtons.evaluate()) {
+        final emailRect = tester.getRect(find.byWidget(emailButton.widget));
+        expect(emailRect.left, greaterThanOrEqualTo(contentRect.left));
+        expect(emailRect.right, lessThanOrEqualTo(contentRect.right));
+        expect(emailRect.left, closeTo(contentRect.left, 0.5));
+      }
       for (final contactBlock in [
         _contactBlock('Privacy Contact:'),
         _contactBlock('Email:'),
@@ -186,6 +234,104 @@ void main() {
         final contactRect = tester.getRect(contactBlock);
         expect(contactRect.left, greaterThanOrEqualTo(contentRect.left));
         expect(contactRect.right, lessThanOrEqualTo(contentRect.right));
+      }
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('contact email links retain compact legal-information spacing', (
+    tester,
+  ) async {
+    for (final example in const [
+      (size: Size(320, 568), textScaler: TextScaler.linear(2)),
+      (size: Size(390, 844), textScaler: TextScaler.linear(2)),
+      (size: Size(768, 1024), textScaler: TextScaler.noScaling),
+      (size: Size(768, 1024), textScaler: TextScaler.linear(2)),
+      (size: Size(1440, 900), textScaler: TextScaler.noScaling),
+      (size: Size(1440, 900), textScaler: TextScaler.linear(2)),
+    ]) {
+      setTestSurface(tester, example.size);
+      await _pumpPrivacyPage(tester, textScaler: example.textScaler);
+
+      final lineHeight = example.textScaler.scale(16) * 1.65;
+      final maximumVisualGap = lineHeight * 0.8 + 1;
+      final emailButtons = _emailButtons;
+      expect(emailButtons, findsNWidgets(3));
+
+      final privacyContactEmail = _emailTextRect(
+        tester,
+        0,
+      );
+      final contactEmail = _emailTextRect(tester, 2);
+      final privacyContact = _richTextLineRect(
+        tester,
+        _contactBlock('Privacy Contact:'),
+        'Privacy Contact:',
+      );
+      final emailLabel = _richTextLineRect(
+        tester,
+        _contactBlock('Email:'),
+        'Email:',
+      );
+      final registeredOffices = _contactBlock('Registered office:');
+      expect(registeredOffices, findsNWidgets(2));
+      final registeredOffice = _richTextLineRect(
+        tester,
+        registeredOffices.at(1),
+        'Registered office:',
+      );
+      final privacyContactButton = tester.getRect(emailButtons.at(0));
+      final contactButton = tester.getRect(emailButtons.at(2));
+      final privacyContactGap = privacyContactEmail.top - privacyContact.bottom;
+      final contactEmailGap = contactEmail.top - emailLabel.bottom;
+      final registeredOfficeGap = registeredOffice.top - contactEmail.bottom;
+      expect(
+        privacyContactGap,
+        greaterThanOrEqualTo(-1),
+      );
+      expect(
+        privacyContactGap,
+        lessThanOrEqualTo(maximumVisualGap),
+        reason:
+            'Privacy Contact spacing at ${example.size}: '
+            'label=$privacyContact email=$privacyContactEmail '
+            'button=${tester.getRect(emailButtons.at(0))}',
+      );
+      expect(
+        contactEmailGap,
+        greaterThanOrEqualTo(-1),
+      );
+      expect(
+        contactEmailGap,
+        lessThanOrEqualTo(maximumVisualGap),
+        reason: 'Section 15 Email spacing at ${example.size}',
+      );
+      expect(
+        registeredOfficeGap,
+        greaterThanOrEqualTo(-1),
+      );
+      expect(
+        registeredOfficeGap,
+        lessThanOrEqualTo(maximumVisualGap),
+        reason: 'Registered office spacing at ${example.size}',
+      );
+      expect(
+        privacyContactButton.top,
+        greaterThanOrEqualTo(privacyContact.bottom - 1),
+      );
+      expect(
+        contactButton.top,
+        greaterThanOrEqualTo(emailLabel.bottom - 1),
+      );
+      expect(
+        contactButton.bottom,
+        lessThanOrEqualTo(registeredOffice.top + 1),
+      );
+      for (final emailButton in emailButtons.evaluate()) {
+        expect(
+          tester.getRect(find.byWidget(emailButton.widget)).height,
+          greaterThanOrEqualTo(44),
+        );
       }
       expect(tester.takeException(), isNull);
     }
@@ -236,6 +382,54 @@ Finder _contactBlock(String label) => find.byWidgetPredicate(
   description: 'contact block containing $label',
 );
 
+final Finder _emailButtons = find.byKey(
+  const Key('privacyNoticeEmailButton'),
+);
+
+Rect _emailTextRect(WidgetTester tester, int emailIndex) {
+  final textFinder = find.text('info@funapp.world').at(emailIndex);
+  final renderParagraph = tester.renderObject<RenderParagraph>(textFinder);
+  return _globalSelectionRect(
+    renderParagraph,
+    const TextSelection(baseOffset: 0, extentOffset: 17),
+  );
+}
+
+Rect _richTextLineRect(
+  WidgetTester tester,
+  Finder richTextFinder,
+  String line,
+) {
+  final richText = tester.widget<RichText>(richTextFinder);
+  final start = richText.text.toPlainText().indexOf(line);
+  final renderParagraph = tester.renderObject<RenderParagraph>(richTextFinder);
+  return _globalSelectionRect(
+    renderParagraph,
+    TextSelection(baseOffset: start, extentOffset: start + line.length),
+  );
+}
+
+Rect _globalSelectionRect(
+  RenderParagraph renderParagraph,
+  TextSelection selection,
+) {
+  final origin = renderParagraph.localToGlobal(Offset.zero);
+  final boxes = renderParagraph.getBoxesForSelection(selection);
+
+  return boxes
+      .map(
+        (box) => Rect.fromLTRB(
+          origin.dx + box.left,
+          origin.dy + box.top,
+          origin.dx + box.right,
+          origin.dy + box.bottom,
+        ),
+      )
+      .reduce(
+        (selectionRect, boxRect) => selectionRect.expandToInclude(boxRect),
+      );
+}
+
 Future<void> _pumpDirectPrivacyRoute(
   WidgetTester tester, {
   String? markdownData,
@@ -262,6 +456,7 @@ Future<void> _pumpPrivacyPage(
   WidgetTester tester, {
   TextScaler textScaler = TextScaler.noScaling,
   String? markdownData,
+  ValueChanged<Uri>? onLinkLaunch,
 }) async {
   final content = markdownData ?? _approvedMarkdown;
   await tester.pumpWidget(
@@ -273,7 +468,10 @@ Future<void> _pumpPrivacyPage(
         data: MediaQuery.of(context).copyWith(textScaler: textScaler),
         child: child!,
       ),
-      home: PrivacyNoticePage(markdownData: content),
+      home: PrivacyNoticePage(
+        markdownData: content,
+        onLinkLaunch: onLinkLaunch,
+      ),
     ),
   );
   await tester.pump();
