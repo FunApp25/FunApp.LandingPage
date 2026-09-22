@@ -166,8 +166,7 @@ abstract final class AppTextStyles {
     }
   }
 
-  // Runtime Google Fonts fetching is intentionally unchanged in this cleanup.
-  // Tests use deterministic family names without triggering network requests.
+  // Tests use deterministic family names without triggering local font loads.
   static bool get _usesTestFontFallback {
     try {
       return WidgetsBinding.instance.runtimeType.toString().contains('Test');

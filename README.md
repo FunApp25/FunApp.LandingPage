@@ -45,6 +45,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
+- Google Fonts typography remains implemented through `google_fonts`, but its
+  required Manrope and Instrument Serif files are bundled under `assets/fonts/`.
+  Runtime font fetching is disabled in the common bootstrap. When adding a
+  family, weight, or style, add its correctly named official font file and OFL
+  license asset, then keep the bootstrap license registration in sync.
 - Flutter localization supports English, Spanish, Welsh, and Belarusian, with
   English as the source and fallback language.
 - Dart analysis follows the main Fun App Flutter project's
@@ -214,6 +219,7 @@ lib/presentation/landing/content/ Landing presentation content definitions
 lib/presentation/landing/theme/ Shared landing typography and motion values
 assets/branding/             Shared Fun App logos and decorative brand shapes
 assets/landing/              Figma assets consumed by active landing sections
+assets/fonts/                Bundled Google Fonts files and OFL license assets
 assets/legal/                Approved canonical website legal content
 test/                        Flutter widget tests for active behavior
 web/                         Flutter Web shell and web-root static inputs

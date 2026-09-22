@@ -50,6 +50,8 @@ flutter:
     - assets/landing/membership/
     - assets/landing/venues/
     - assets/landing/welcome/
+    - assets/fonts/manrope/
+    - assets/fonts/instrument_serif/
     - assets/legal/privacy_notice.md
   generate: true
   uses-material-design: true
