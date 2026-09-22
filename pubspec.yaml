@@ -1,0 +1,64 @@
+name: fun_app_landing_page
+description: "The Flutter Web landing page and public website for Fun App."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  bloc: ^9.2.1
+  dartz: ^0.10.1
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  flutter_localizations:
+    sdk: flutter
+  flutter_markdown_plus: ^1.0.12
+  flutter_svg: ^2.3.0
+  freezed_annotation: ^3.1.0
+  get_it: ^9.2.1
+  google_fonts: ^8.2.1
+  http: ^1.6.0
+  injectable: ^3.0.0
+  intl: ^0.20.3
+  markdown: ^7.3.1
+  web: ^1.1.1
+
+dev_dependencies:
+  bloc_test: ^10.0.0
+  build_runner: ^2.16.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_test:
+    sdk: flutter
+  freezed: ^4.0.0
+  injectable_generator: ^3.1.3
+  very_good_analysis: ^10.3.0
+
+flutter:
+  assets:
+    - assets/branding/logos/
+    - assets/branding/shapes/
+    - assets/landing/carousel/
+    - assets/landing/connection/
+    - assets/landing/faq/
+    - assets/landing/founding_member/
+    - assets/landing/founding_friends/
+    - assets/landing/footer/
+    - assets/landing/header/
+    - assets/landing/hero/
+    - assets/landing/membership/
+    - assets/landing/venues/
+    - assets/landing/welcome/
+    - assets/fonts/manrope/
+    - assets/fonts/instrument_serif/
+    - assets/legal/privacy_notice.md
+  generate: true
+  uses-material-design: true
+
+flutter_launcher_icons:
+  web:
+    generate: true
+    image_path: assets/branding/logos/fun_app_symbol.png
+    background_color: '#ece1ce'
+    theme_color: '#ef6632'

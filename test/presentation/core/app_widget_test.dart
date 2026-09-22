@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/l10n/app_localizations.dart';
+import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
+import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+
+void main() {
+  testWidgets('renders the English branded landing page', (tester) async {
+    await _pumpApp(tester, const Locale('en'));
+
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byType(FunAppLogo), findsNWidgets(2));
+    expect(find.bySemanticsLabel('Fun App'), findsNWidgets(2));
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final pageContext = tester.element(find.byType(LandingPage));
+    final l10n = AppLocalizations.of(pageContext);
+    _expectLocalizedTitle(tester, 'Fun App');
+    expect(app.debugShowCheckedModeBanner, isFalse);
+    expect(app.locale, isNull);
+    expect(app.localeListResolutionCallback, isNotNull);
+    expect(app.routes?.containsKey(PrivacyNoticePage.routeName), isTrue);
+    expect(
+      app.localizationsDelegates,
+      AppLocalizations.localizationsDelegates,
+    );
+    expect(app.supportedLocales, AppLocalizations.supportedLocales);
+    expect(
+      AppLocalizations.supportedLocales.map((locale) => locale.languageCode),
+      unorderedEquals(<String>['en', 'es', 'cy', 'be']),
+    );
+    expect(l10n.brandName, 'Fun App');
+
+    final theme = Theme.of(pageContext);
+    expect(theme.useMaterial3, isTrue);
+    expect(theme.colorScheme.primary, AppColors.primary);
+    expect(theme.colorScheme.secondary, AppColors.yellowAccent);
+    expect(theme.colorScheme.surface, AppColors.lightForeground);
+    expect(
+      theme.colorScheme.surfaceContainerHighest,
+      AppColors.beigeAccent,
+    );
+    expect(theme.colorScheme.onSurfaceVariant, AppColors.bodyGray);
+    expect(theme.scaffoldBackgroundColor, AppColors.scaffoldBackground);
+    expect(theme.textTheme.bodyMedium?.color, AppColors.bodyGray);
+
+    final logo = tester.widget<SvgPicture>(
+      find.byKey(const Key('funAppLogo')),
+    );
+    expect(logo.key, const Key('funAppLogo'));
+    expect(logo.bytesLoader, isA<SvgAssetLoader>());
+    expect(
+      (logo.bytesLoader as SvgAssetLoader).assetName,
+      AppAssets.funAppLogoV2,
+    );
+  });
+
+  testWidgets('resolves Spanish localization', (tester) async {
+    await _pumpApp(tester, const Locale('es'));
+
+    final context = tester.element(find.byType(LandingPage));
+    _expectLocalizedTitle(tester, 'Fun App');
+    expect(Localizations.localeOf(context), const Locale('es'));
+  });
+
+  testWidgets('resolves Welsh localization', (tester) async {
+    await _pumpApp(tester, const Locale('cy'));
+
+    final context = tester.element(find.byType(LandingPage));
+    _expectLocalizedTitle(tester, 'Fun App');
+    expect(Localizations.localeOf(context), const Locale('cy'));
+  });
+
+  testWidgets('resolves Belarusian localization', (tester) async {
+    await _pumpApp(tester, const Locale('be'));
+
+    final context = tester.element(find.byType(LandingPage));
+    _expectLocalizedTitle(tester, 'Fun App');
+    expect(Localizations.localeOf(context), const Locale('be'));
+  });
+
+  testWidgets('falls back to English for an unsupported locale', (
+    tester,
+  ) async {
+    await _pumpApp(tester, const Locale('fr'));
+
+    final context = tester.element(find.byType(LandingPage));
+    _expectLocalizedTitle(tester, 'Fun App');
+    expect(Localizations.localeOf(context), const Locale('en'));
+  });
+
+  testWidgets('unknown named routes show a working landing page', (
+    tester,
+  ) async {
+    await _pumpApp(tester, const Locale('en'));
+
+    Navigator.of(
+      tester.element(find.byType(LandingPage)),
+    ).pushNamed('/unknown-fragment');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byKey(const Key('landingPageScrollView')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('direct privacy route opens and returns through app routing', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        PrivacyNoticePage.routeName;
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    await _pumpApp(tester, const Locale('en'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PrivacyNoticePage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unknown initial fragment falls back to landing', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        '/unexpected-fragment';
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    await _pumpApp(tester, const Locale('en'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byType(PrivacyNoticePage), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('maps each resolved locale to the host document language', (
+    tester,
+  ) async {
+    for (final locale in AppLocalizations.supportedLocales) {
+      await _pumpApp(tester, locale);
+
+      final context = tester.element(find.byType(LandingPage));
+      expect(
+        documentLanguageFor(Localizations.localeOf(context)),
+        locale.languageCode,
+      );
+    }
+
+    await _pumpApp(tester, const Locale('fr'));
+    final context = tester.element(find.byType(LandingPage));
+    expect(documentLanguageFor(Localizations.localeOf(context)), 'en');
+  });
+}
+
+Future<void> _pumpApp(WidgetTester tester, Locale locale) async {
+  tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
+  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+
+  await tester.pumpWidget(const FunAppLandingPageApp());
+  await tester.pump();
+}
+
+void _expectLocalizedTitle(WidgetTester tester, String expectedTitle) {
+  final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+  final context = tester.element(find.byType(LandingPage));
+
+  expect(AppLocalizations.of(context).appTitle, expectedTitle);
+  expect(app.onGenerateTitle?.call(context), expectedTitle);
+}

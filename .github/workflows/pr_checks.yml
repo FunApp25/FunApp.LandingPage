@@ -1,0 +1,100 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PURO_ENV_NAME: fun-app-landing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Puro
+        env:
+          PURO_VERSION: 1.5.0
+        run: curl -o- https://puro.dev/install.sh | bash
+
+      - name: Add Puro to PATH
+        run: echo "$HOME/.puro/bin" >> "$GITHUB_PATH"
+
+      - name: Set up Flutter SDK with Puro
+        run: |
+          puro create "$PURO_ENV_NAME" stable
+          puro --env="$PURO_ENV_NAME" --version
+          puro --env="$PURO_ENV_NAME" flutter --version
+          puro --env="$PURO_ENV_NAME" dart --version
+
+      - name: Install dependencies
+        run: puro --env="$PURO_ENV_NAME" flutter pub get
+
+      - name: Check formatting
+        run: >-
+          puro --env="$PURO_ENV_NAME" dart format
+          --output=none
+          --set-exit-if-changed
+          lib test
+
+      - name: Generate localizations
+        run: puro --env="$PURO_ENV_NAME" flutter gen-l10n
+
+      - name: Generate Dart sources
+        run: puro --env="$PURO_ENV_NAME" flutter pub run build_runner build
+
+      - name: Analyze
+        run: puro --env="$PURO_ENV_NAME" flutter analyze
+
+      - name: Test with coverage
+        run: puro --env="$PURO_ENV_NAME" flutter test --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: error
+
+      - name: Enforce line coverage
+        shell: bash
+        run: |
+          awk -F: -v threshold=90 '
+            /^LF:/ { lines_found += $2 }
+            /^LH:/ { lines_hit += $2 }
+            END {
+              if (lines_found == 0) {
+                print "::error::No line coverage data found."
+                exit 1
+              }
+
+              coverage = 100 * lines_hit / lines_found
+              printf "Line coverage: %.2f%% (%d/%d)\n", coverage, lines_hit, lines_found
+
+              if (coverage < threshold) {
+                printf "::error::Line coverage %.2f%% is below %.0f%%.\n", coverage, threshold
+                exit 1
+              }
+            }
+          ' coverage/lcov.info
+
+      - name: Build production site
+        env:
+          FUN_APP_HUBSPOT_PORTAL_ID: ci-synthetic-portal-id
+          FUN_APP_HUBSPOT_VENUE_FORM_GUID: 00000000-0000-0000-0000-000000000000
+        run: >-
+          puro --env="$PURO_ENV_NAME" flutter build web
+          -t lib/main_prod.dart
+          --dart-define=FUN_APP_HUBSPOT_PORTAL_ID="$FUN_APP_HUBSPOT_PORTAL_ID"
+          --dart-define=FUN_APP_HUBSPOT_VENUE_FORM_GUID="$FUN_APP_HUBSPOT_VENUE_FORM_GUID"

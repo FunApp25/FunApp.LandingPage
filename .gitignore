@@ -398,7 +398,6 @@ FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
 .vscode/*
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -418,3 +417,20 @@ FodyWeavers.xsd
 *.msp
 .astro/
 dist/
+
+# IntelliJ/Android Studio project files
+*.iml
+.idea/
+
+# Flutter/Dart/Pub generated files
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+.widget_preview/
+lib/l10n/app_localizations*.dart
+**/*.freezed.dart
+**/*.g.dart
+**/*.config.dart
