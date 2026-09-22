@@ -5,9 +5,11 @@
 This repository owns the public Fun App website and landing page. The site should communicate the Fun App product and brand through responsive public marketing content.
 
 The landing page is expected eventually to collect information from interested
-users. The provider-neutral venue-lead workflow has a production data path that
-submits directly from Flutter Web to HubSpot Forms, and the venue CTA now opens
-its functional localized form. That form now shows the approved informational
+users. The current Flutter production data path submits directly to HubSpot
+Forms, while this repository also owns an independently testable Cloudflare
+Worker for the intended first-party venue-interest boundary. That Worker is not
+yet deployed, routed, or called by Flutter. The venue CTA now opens its
+functional localized form. That form now shows the approved informational
 privacy acknowledgement and links to the hosted Privacy Notice; it does not
 submit a consent field. Prospective-user fields, flows, analytics, marketing
 consent behavior, and other business behavior remain unspecified.
@@ -57,9 +59,18 @@ Current implementation is evidence of repository state, not automatically a perm
   consent checkbox or submitted consent field is required for the current MVP.
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
-- Production venue-lead submission uses HubSpot's unauthenticated Forms v3
-  submission endpoint directly from Flutter Web. This public-form integration
-  supports CORS and requires no authentication secret.
+- The current Flutter production venue-lead implementation uses HubSpot's
+  unauthenticated Forms v3 submission endpoint directly from Flutter Web. This
+  public-form integration supports CORS and requires no authentication secret.
+- `cloudflare/venue-interest-worker/` is the repository-controlled,
+  independently testable Worker project targeting the existing
+  `funapp-venue-interest` Worker. Its intended production boundary is
+  first-party `POST /api/venue-interest` on `https://funapp.world`, with a
+  narrow Cloudflare Worker Route configured separately. It has no route,
+  account ID, or zone ID in repository configuration. Its source-controlled
+  GitHub Actions deployment is manual only and uses the GitHub `production`
+  Environment for runtime bindings and Cloudflare authentication. GitHub Pages
+  remains the web origin for every other path.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
 
 ### Open
@@ -77,8 +88,9 @@ Current implementation is evidence of repository state, not automatically a perm
 ### Provisional
 
 - Collection of deliberately defined interested-user information.
-- A future server-side submission proxy may replace the direct provider
-  transport without changing the established domain or application contracts.
+- A later, separately scoped Flutter data-source switch may use the established
+  first-party venue-interest Worker boundary without changing the domain or
+  application contracts.
 - Azure hosting may be considered later, but it is not current deployment scope.
 
 ### Open
@@ -100,6 +112,9 @@ The repository is an active Flutter Web project:
   the currently approved English Privacy Notice.
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
+- `cloudflare/venue-interest-worker/` contains the isolated TypeScript
+  first-party venue-interest Worker and its focused tests; it is not part of
+  Flutter's `lib/` architecture.
 - `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
 - `.github/workflows/deploy.yml` validates and builds Flutter through Puro, uploads `build/web`, and deploys it through GitHub Pages.
 
@@ -456,9 +471,16 @@ capabilities as implemented.
   storage.
 - Compile-time Flutter Web configuration must not contain HubSpot credentials,
   tokens, API keys, or other secrets.
-- There is no Fun App backend proxy for venue leads. A future server-side proxy
-  remains possible without changing the domain repository or application BLoC
-  contracts.
+- The current Flutter source has no active proxy transport for venue leads.
+  The repository-controlled Cloudflare Worker owns the future first-party
+  `POST /api/venue-interest` boundary, validates untrusted input, maps the
+  Fun App-owned fields to HubSpot Forms v3 only at its provider boundary, and
+  obtains its public HubSpot identifiers from Worker environment bindings.
+  It does not log submitted form content or HubSpot response bodies. A narrow
+  Worker Route will be configured separately; until then, GitHub Pages remains
+  the origin and Flutter continues its current direct transport. The Worker
+  reads at most 16 KiB per request and makes one HubSpot attempt with a
+  10-second deadline; it does not automatically retry submissions.
 
 ### Provisional
 
@@ -481,8 +503,8 @@ capabilities as implemented.
   cross-field invariant.
 - Prospective-user API endpoints and DTOs, and venue-lead retention/deletion
   requirements.
-- Whether venue submission later migrates from direct HubSpot Forms submission
-  to a separately scoped server-side proxy.
+- Timing and authorized deployment of the Cloudflare Worker, its narrow route,
+  and the later Flutter data-source switch to the first-party endpoint.
 
 Backend implementation must be driven by an actual approved contract rather than inferred from the main mobile application. Do not copy `/profiles`, Entra, OIDC, user-profile, onboarding, or other mobile-app contracts into this project without an explicit landing-page requirement.
 
@@ -496,6 +518,9 @@ Backend implementation must be driven by an actual approved contract rather than
 - Treat every value embedded in Flutter Web as publicly recoverable, including values injected by CI.
 - Client-side validation improves usability but is not a security boundary; backend validation and authorization must exist where applicable.
 - Do not include personal information in logs, analytics, diagnostics, crash reports, fixtures, or examples without explicit, justified handling.
+- The venue-interest Worker must not log request bodies, submitted field values,
+  HubSpot payloads, HubSpot response bodies, or request headers/cookies. It
+  returns only provider-neutral response codes and opaque request IDs.
 - Use HTTPS for production backend communication.
 - Validate untrusted backend responses at data boundaries.
 - Avoid unnecessary third-party scripts and SDKs.
@@ -568,6 +593,15 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 ### Established
 
 - GitHub Pages is the production deployment target.
+- GitHub Pages remains the web origin. The intended production
+  `/api/venue-interest` exception is a narrow Cloudflare Worker Route to the
+  repository-controlled `funapp-venue-interest` Worker; route creation and
+  Worker deployment are separately authorized infrastructure work. The
+  `deploy-venue-interest-worker.yml` workflow provides manual-only source
+  deployment of that existing Worker after Worker validation. It uses the
+  GitHub `production` Environment for public HubSpot and Cloudflare account
+  configuration and the Cloudflare API-token secret; it does not configure a
+  route.
 - Pull requests targeting `main` run read-only formatting, generation,
   analysis, full-suite coverage, and production-entrypoint compile checks.
   Pull-request checks do not deploy; pushes to `main` remain the production
