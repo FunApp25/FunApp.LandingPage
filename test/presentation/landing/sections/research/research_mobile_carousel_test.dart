@@ -139,7 +139,7 @@ void main() {
     final secondCard = find.byKey(const Key('researchStatCardBounds-67%'));
 
     expect(tester.getRect(firstCard).left, 16);
-    expect(tester.getSize(firstCard), const Size(288, 474));
+    expect(tester.getSize(firstCard), const Size(288, 514));
     expect(tester.getRect(viewport).right, 320);
     expect(tester.getRect(secondCard).left, 312);
     expect(tester.getRect(viewport).right - tester.getRect(secondCard).left, 8);
@@ -359,10 +359,10 @@ void main() {
                 find.byKey(const Key('researchStatCardBounds-49%')),
               )
               .height;
-          final designMinimum = size.width == 390 ? 404.0 : 474.0;
-          expect(defaultHeight, greaterThanOrEqualTo(designMinimum));
+          final expectedEnglishHeight = size.width == 390 ? 404.0 : 514.0;
+          expect(defaultHeight, greaterThanOrEqualTo(expectedEnglishHeight));
           if (locale == const Locale('en')) {
-            expect(defaultHeight, designMinimum);
+            expect(defaultHeight, expectedEnglishHeight);
           }
 
           await _pumpResearch(
@@ -419,7 +419,7 @@ void main() {
           }
 
           expect(heights.first, greaterThan(defaultHeight));
-          expect(heights.first, greaterThan(designMinimum));
+          expect(heights.first, greaterThan(expectedEnglishHeight));
           for (final height in heights.skip(1)) {
             expect(height, heights.first);
           }

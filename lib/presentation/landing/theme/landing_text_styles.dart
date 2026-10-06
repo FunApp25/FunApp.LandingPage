@@ -148,9 +148,9 @@ abstract final class LandingTextStyles {
 
   /// Percentage treatment used by research statistic cards.
   static final TextStyle statValue = AppTextStyles.bodyFontStyle(
-    fontSize: 64,
+    fontSize: 80,
     fontWeight: FontWeight.w600,
-    height: 72 / 64,
+    height: 88 / 80,
     color: AppColors.textPrimary,
     fontFeatures: const [
       FontFeature.liningFigures(),

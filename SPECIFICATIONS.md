@@ -286,11 +286,11 @@ responsive layouts unless product or design explicitly changes it.
 Below a 600px outer viewport width, Hero uses a dedicated centered-overflow
 composition with one artwork instance clipped by the Hero card and centered
 copy beneath a reserved artwork region. Its height remains content-aware for
-localization, and Hero remains static. Connection uses centered copy, 16px
-horizontal bounds, 80px vertical section padding, and a near-square
-`BoxFit.cover` image crop. The repository Connection copy remains shared across
-responsive layouts pending content approval. At 600px and above, the
-established Hero and Connection compositions remain unchanged.
+localization, and Hero remains static. Connection uses leading-aligned copy,
+16px horizontal bounds, 80px vertical section padding, and a near-square
+`BoxFit.cover` image crop. The approved Connection copy remains shared across
+responsive layouts and preserves its two-paragraph structure. At 600px and
+above, Hero and Connection use their established wider compositions.
 
 Below a 600px outer viewport width, Footer uses a centered 16px/80px mobile
 composition: the established anchor navigation wraps naturally beneath the

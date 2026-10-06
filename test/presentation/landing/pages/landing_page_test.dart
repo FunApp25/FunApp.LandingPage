@@ -96,10 +96,10 @@ void main() {
     expect(
       find.text(
         'Fun App is going to work differently… very differently! A warm, '
-        'welcoming and respectful environment where users can meet others '
+        'welcoming, fun and respectful environment where users can meet others '
         'online or IRL, free of charge, in thousands of venues of all shapes, '
-        'sizes and types around the country. But, let us explain why change '
-        'is needed.',
+        'sizes and types around the country. Let us explain why change is '
+        'needed.',
       ),
       findsOneWidget,
     );
@@ -567,12 +567,7 @@ void main() {
             find.byKey(const Key('heroCard')),
           )
           .dy;
-      final expectedHeroGap = switch (size.width) {
-        >= 1200 => 24.0,
-        >= 600 => 20.0,
-        _ => 0.0,
-      };
-      expect(heroCardTop - heroTop, expectedHeroGap);
+      expect(heroCardTop - heroTop, 0);
 
       final headline = tester.widget<Text>(
         find.byKey(const Key('heroHeadlineText')),

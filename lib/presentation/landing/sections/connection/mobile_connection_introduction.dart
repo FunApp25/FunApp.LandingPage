@@ -15,10 +15,9 @@ final class MobileConnectionIntroduction extends StatelessWidget {
       ConnectionTitle(
         headingSize: 32,
         headingLineHeight: 42,
-        centered: true,
       ),
       SizedBox(height: 12),
-      ConnectionBody(textAlign: TextAlign.center),
+      ConnectionBody(),
     ],
   );
 }

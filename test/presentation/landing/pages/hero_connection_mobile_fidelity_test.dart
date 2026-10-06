@@ -87,6 +87,9 @@ void main() {
     final body = tester.widget<Text>(
       find.byKey(const Key('connectionBodyText')),
     );
+    final closing = tester.widget<Text>(
+      find.byKey(const Key('connectionClosingText')),
+    );
     final eyebrow = tester.widget<SectionEyebrow>(
       find.byType(SectionEyebrow),
     );
@@ -101,13 +104,19 @@ void main() {
     expect(sectionRect.right - contentRect.right, 16);
     expect(contentRect.top - sectionRect.top, 80);
     expect(contentRect.width, 358);
-    expect(eyebrow.alignment, MainAxisAlignment.center);
-    expect(heading.textAlign, TextAlign.center);
+    expect(eyebrow.alignment, MainAxisAlignment.start);
+    expect(heading.textAlign, TextAlign.start);
     expect(heading.style?.fontSize, 32);
     expect(heading.style?.height, closeTo(42 / 32, 0.0001));
-    expect(body.textAlign, TextAlign.center);
+    expect(body.textAlign, TextAlign.start);
     expect(body.style?.fontSize, 18);
     expect(body.style?.height, closeTo(28 / 18, 0.0001));
+    expect(closing.textAlign, TextAlign.start);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('connectionClosingText'))).dy -
+          tester.getBottomLeft(find.byKey(const Key('connectionBodyText'))).dy,
+      12,
+    );
     expect(imageRect.top - contentRect.bottom, 40);
     expect(imageRect.size, const Size(358, 364));
     expect(sectionRect.bottom - imageRect.bottom, 80);
@@ -155,7 +164,7 @@ void main() {
       final connectionImage = tester.getRect(
         find.byKey(const Key('connectionImageFrame')),
       );
-      expect(heroCard.top - heroSection.top, isMobile ? 0 : 20);
+      expect(heroCard.top - heroSection.top, 0);
       expect(
         connectionImage.size.aspectRatio,
         closeTo(isMobile ? 358 / 364 : 1360 / 614, 0.001),

@@ -210,7 +210,7 @@
   "@landingHeroHeadlineEmphasis": {
     "description": "Italic emphasized ending of the hero headline."
   },
-  "landingHeroSupporting": "Fun App is going to work differently… very differently! A warm, welcoming and respectful environment where users can meet others online or IRL, free of charge, in thousands of venues of all shapes, sizes and types around the country. But, let us explain why change is needed.",
+  "landingHeroSupporting": "Fun App is going to work differently… very differently! A warm, welcoming, fun and respectful environment where users can meet others online or IRL, free of charge, in thousands of venues of all shapes, sizes and types around the country. Let us explain why change is needed.",
   "@landingHeroSupporting": {
     "description": "Supporting paragraph beneath the hero headline."
   },
@@ -238,7 +238,7 @@
   "@landingProblemStatementTrailing": {
     "description": "Regular-style ending of the problem statement."
   },
-  "landingStatsHeading": "Did you know that in the UK?",
+  "landingStatsHeading": "Did you know that in the UK",
   "@landingStatsHeading": {
     "description": "Heading above the UK research statistic cards."
   },
@@ -322,9 +322,13 @@
   "@landingConnectionHeading": {
     "description": "Heading for the alternative connection experience section."
   },
-  "landingConnectionBody": "What if the existing introductions app culture — where users are largely viewed as an asset to generate profit for the connection platforms — was replaced with a warm, welcoming and respectful environment where users meet others IRL, free of charge, in thousands of venues of all shapes, sizes and types around the country?",
+  "landingConnectionBody": "You might be feeling lonely, you might have a jam-packed social life. Either way, making new friends, meeting new groups, joining new activities enriches life and makes it more enjoyable. So, what if the existing introductions app culture – where users are regarded as revenue – was replaced with the warm, welcoming, fun and respectful new world of introductions promised above. Where venues, clubs and groups of all types, shapes and sizes around the country welcome you in. Where users meet one another face-to-face, enjoy the future of socialising and make new friends. Sound fun?",
   "@landingConnectionBody": {
-    "description": "Explanatory paragraph in the alternative connection section."
+    "description": "First explanatory paragraph in the alternative connection section."
+  },
+  "landingConnectionClosing": "Like so many others, you’re going to enjoy Fun App.",
+  "@landingConnectionClosing": {
+    "description": "Closing paragraph in the alternative connection section."
   },
   "landingConnectionImageDescription": "Four smiling people posing closely together outdoors.",
   "@landingConnectionImageDescription": {
