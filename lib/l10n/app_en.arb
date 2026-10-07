@@ -482,21 +482,25 @@
   "@landingMembershipLifetimeBadge": {
     "description": "Floating badge above the Lifetime Membership card."
   },
-  "landingFoundingOfferEyebrow": "LIMITED TIME OFFER",
+  "landingFoundingOfferEyebrow": "Limited time offer",
   "@landingFoundingOfferEyebrow": {
-    "description": "Uppercase eyebrow above the Founding Friend offer."
+    "description": "Eyebrow above the Limited-Time Offer section."
   },
-  "landingFoundingOfferLeading": "Become A Fun App ",
+  "landingFoundingOfferLeading": "For the first 100,000 UK users during first 6 months of Fun App launch, we’d like to spoil you… ",
   "@landingFoundingOfferLeading": {
-    "description": "Regular leading portion of the Founding Friend offer statement."
+    "description": "Regular leading portion of the Limited-Time Offer headline."
   },
-  "landingFoundingOfferFoundingFriend": "Founding Friend",
-  "@landingFoundingOfferFoundingFriend": {
-    "description": "Italic product term in the Founding Friend offer statement; do not translate."
+  "landingFoundingOfferEmphasis": "Enjoy Here & Now membership on us.",
+  "@landingFoundingOfferEmphasis": {
+    "description": "Italic orange ending of the Limited-Time Offer headline."
   },
-  "landingFoundingOfferTrailing": "... for free. Enjoy ‘Here & Now’ membership on us.",
-  "@landingFoundingOfferTrailing": {
-    "description": "Regular ending of the Founding Friend offer statement; Here & Now is a product term."
+  "landingFoundingOfferBody": "You can enjoy the friendly Fun App world, we can enjoy building that world, together we will change the world.",
+  "@landingFoundingOfferBody": {
+    "description": "Supporting copy beneath the Limited-Time Offer headline."
+  },
+  "landingFoundingOfferCta": "Secure your Place in the Queue",
+  "@landingFoundingOfferCta": {
+    "description": "Presentation-only CTA for the Limited-Time Offer section."
   },
   "landingFoundingMemberHeading": "What does Founding Member mean",
   "@landingFoundingMemberHeading": {

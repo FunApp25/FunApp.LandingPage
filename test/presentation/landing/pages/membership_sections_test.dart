@@ -27,8 +27,11 @@ const _resaleBenefit =
     'You can choose to resell your Founding Friend status through Fun App in '
     'future years. Resale prices will be determined by buyers and sellers';
 const _foundingOffer =
-    'Become A Fun App Founding Friend... for free. Enjoy ‘Here & Now’ '
-    'membership on us.';
+    'For the first 100,000 UK users during first 6 months of Fun App launch, '
+    'we’d like to spoil you… Enjoy Here & Now membership on us.';
+const _foundingOfferBody =
+    'You can enjoy the friendly Fun App world, we can enjoy building that '
+    'world, together we will change the world.';
 
 void main() {
   testWidgets('renders the three authoritative English pricing cards', (
@@ -91,6 +94,30 @@ void main() {
       find.byKey(const Key('foundingOfferStatementText')),
     );
     expect(statement.textSpan?.toPlainText(), _foundingOffer);
+    final statementSpan = statement.textSpan! as TextSpan;
+    final emphasisSpan = statementSpan.children!.single as TextSpan;
+    expect(emphasisSpan.text, 'Enjoy Here & Now membership on us.');
+    expect(emphasisSpan.style?.fontStyle, FontStyle.italic);
+    expect(emphasisSpan.style?.color, AppColors.warmOrange);
+    expect(find.text(_foundingOfferBody), findsOneWidget);
+    expect(find.text('Secure your Place in the Queue'), findsOneWidget);
+    expectSvgAsset(
+      tester,
+      const Key('foundingOfferCtaArrow'),
+      AppAssets.arrowUpRight,
+    );
+    final semantics = tester.ensureSemantics();
+    final cta = find.bySemanticsLabel('Secure your Place in the Queue');
+    expect(
+      tester.getSemantics(cta).getSemanticsData().flagsCollection.isButton,
+      isTrue,
+    );
+    await tester.ensureVisible(cta);
+    await tester.tap(cta);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.byType(FoundingOfferSection), findsOneWidget);
+    semantics.dispose();
   });
 
   for (final example in const [
@@ -100,9 +127,7 @@ void main() {
       heading: 'Fun App Membership',
       freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
       lifetimeCta: 'Welcome To Lifetime Membership',
-      offer:
-          'Hazte Founding Friend de Fun App... gratis. Disfruta de la '
-          'membresía ‘Here & Now’ por nuestra cuenta.',
+      offer: _foundingOffer,
     ),
     (
       locale: Locale('cy'),
@@ -110,9 +135,7 @@ void main() {
       heading: 'Fun App Membership',
       freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
       lifetimeCta: 'Welcome To Lifetime Membership',
-      offer:
-          'Dewch yn Founding Friend i Fun App... am ddim. Mwynhewch aelodaeth '
-          '‘Here & Now’ ar ein cyfrif ni.',
+      offer: _foundingOffer,
     ),
     (
       locale: Locale('be'),
@@ -120,9 +143,7 @@ void main() {
       heading: 'Fun App Membership',
       freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
       lifetimeCta: 'Welcome To Lifetime Membership',
-      offer:
-          'Станьце Founding Friend Fun App... бясплатна. Атрымайце членства '
-          '«Here & Now» за наш кошт.',
+      offer: _foundingOffer,
     ),
   ]) {
     testWidgets('renders responsive ${example.locale.languageCode} content', (

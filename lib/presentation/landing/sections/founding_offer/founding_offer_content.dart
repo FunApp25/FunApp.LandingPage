@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/section_eyebrow.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
@@ -11,6 +12,7 @@ final class FoundingOfferContent extends StatelessWidget {
   const FoundingOfferContent({
     required this.statementSize,
     required this.statementLineHeight,
+    required this.usesMobileFidelity,
     super.key,
   });
 
@@ -20,13 +22,15 @@ final class FoundingOfferContent extends StatelessWidget {
   /// Responsive statement line height.
   final double statementLineHeight;
 
+  /// Whether the mobile Figma width and typography treatment are active.
+  final bool usesMobileFidelity;
+
   @override
   Widget build(BuildContext context) {
     final leading = context.l10n.landingFoundingOfferLeading;
-    final foundingFriend = context.l10n.landingFoundingOfferFoundingFriend;
-    final trailing = context.l10n.landingFoundingOfferTrailing;
-    final semanticLabel = '$leading$foundingFriend$trailing';
-    final letterSpacing = statementSize * -0.01;
+    final emphasis = context.l10n.landingFoundingOfferEmphasis;
+    final semanticLabel = '$leading$emphasis';
+    final letterSpacing = statementSize * -0.03;
     final regularStyle = LandingTextStyles.foundingOfferStatement.copyWith(
       fontSize: statementSize,
       height: statementLineHeight / statementSize,
@@ -37,39 +41,75 @@ final class FoundingOfferContent extends StatelessWidget {
           fontSize: statementSize,
           height: statementLineHeight / statementSize,
           letterSpacing: letterSpacing,
+          color: AppColors.warmOrange,
         );
+    final eyebrow = context.l10n.landingFoundingOfferEyebrow;
+    final bodyStyle = LandingTextStyles.compactSectionBody.copyWith(
+      fontWeight: usesMobileFidelity ? FontWeight.w500 : FontWeight.w400,
+      height: 26 / 16,
+      letterSpacing: usesMobileFidelity ? 0.32 : 0,
+    );
 
     return Column(
       key: const Key('foundingOfferContent'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        SectionEyebrow(
-          label: context.l10n.landingFoundingOfferEyebrow,
-          glyphAsset: AppAssets.foundingOfferGlyph,
-          foregroundColor: AppColors.energeticPlum,
-          glyphSize: const Size.square(12),
-          alignment: MainAxisAlignment.center,
-          textAlign: TextAlign.center,
-          glyphKey: const Key('foundingOfferGlyph'),
+        Semantics(
+          key: const Key('foundingOfferEyebrowSemantics'),
+          label: eyebrow,
+          excludeSemantics: true,
+          child: SectionEyebrow(
+            label: eyebrow.toUpperCase(),
+            glyphAsset: AppAssets.foundingOfferGlyph,
+            foregroundColor: AppColors.energeticPlum,
+            glyphSize: const Size.square(12),
+            alignment: MainAxisAlignment.center,
+            textAlign: TextAlign.center,
+            glyphKey: const Key('foundingOfferGlyph'),
+          ),
         ),
         const SizedBox(height: 24),
-        Semantics(
-          key: const Key('foundingOfferHeadingSemantics'),
-          label: semanticLabel,
-          header: true,
-          excludeSemantics: true,
-          child: Text.rich(
-            key: const Key('foundingOfferStatementText'),
-            TextSpan(
-              text: leading,
-              style: regularStyle,
-              children: [
-                TextSpan(text: foundingFriend, style: emphasisStyle),
-                TextSpan(text: trailing),
-              ],
+        Column(
+          key: const Key('foundingOfferCopyGroup'),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Semantics(
+              key: const Key('foundingOfferHeadingSemantics'),
+              label: semanticLabel,
+              header: true,
+              excludeSemantics: true,
+              child: Text.rich(
+                key: const Key('foundingOfferStatementText'),
+                TextSpan(
+                  text: leading,
+                  style: regularStyle,
+                  children: [
+                    TextSpan(text: emphasis, style: emphasisStyle),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
+            const SizedBox(height: 12),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 602),
+              child: Text(
+                context.l10n.landingFoundingOfferBody,
+                key: const Key('foundingOfferSupportingText'),
+                textAlign: TextAlign.center,
+                style: bodyStyle,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 40),
+        LandingCtaButton(
+          key: const Key('foundingOfferCta'),
+          label: context.l10n.landingFoundingOfferCta,
+          size: LandingCtaSize.prominent,
+          prominentContentExpands: usesMobileFidelity,
+          arrowKey: const Key('foundingOfferCtaArrow'),
+          onPressed: () {},
         ),
       ],
     );

@@ -38,10 +38,11 @@ final class FoundingOfferSection extends StatelessWidget {
           ),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 884),
+              constraints: const BoxConstraints(maxWidth: 788),
               child: FoundingOfferContent(
                 statementSize: statementSize,
                 statementLineHeight: statementLineHeight,
+                usesMobileFidelity: usesMobileFidelity,
               ),
             ),
           ),

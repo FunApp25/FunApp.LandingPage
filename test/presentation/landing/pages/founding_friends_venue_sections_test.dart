@@ -458,6 +458,7 @@ void main() {
     );
 
     for (final key in const [
+      Key('foundingOfferCtaArrow'),
       Key('foundingFriendsCtaArrow'),
       Key('venueCardCtaArrow'),
     ]) {
@@ -492,7 +493,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byType(LandingCtaButton), findsNWidgets(3));
+    expect(find.byType(LandingCtaButton), findsNWidgets(4));
     semantics.dispose();
   });
 }
