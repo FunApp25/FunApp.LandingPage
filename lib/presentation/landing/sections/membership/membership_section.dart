@@ -71,104 +71,80 @@ final class MembershipSection extends StatelessWidget {
 
   static List<MembershipCardContent> _membershipCards(
     BuildContext context,
-  ) => [
-    (
-      semanticId: 'free',
-      variant: MembershipCardVariant.free,
-      tierName: context.l10n.landingMembershipFreeTier,
-      price: context.l10n.landingMembershipFreePrice,
-      billingPeriod: context.l10n.landingMembershipBillingPeriod,
-      priceSemanticLabel: context.l10n.landingMembershipFreePriceSemantics,
-      description: context.l10n.landingMembershipFreeDescription,
-      benefits: [
-        (
-          label: context.l10n.landingMembershipFreeBenefitBeta,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipFreeBenefitCommunity,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipFreeBenefitFeedback,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipFreeBenefitProgress,
-          emphasized: false,
-        ),
-      ],
-      ctaLabel: context.l10n.landingMembershipFreeCta,
-      footnote: context.l10n.landingMembershipCancelFootnote,
-      badgeLabel: null,
-    ),
-    (
-      semanticId: 'hereNow',
-      variant: MembershipCardVariant.hereNow,
-      tierName: context.l10n.landingMembershipHereNowTier,
-      price: context.l10n.landingMembershipHereNowPrice,
-      billingPeriod: context.l10n.landingMembershipBillingPeriod,
-      priceSemanticLabel: context.l10n.landingMembershipHereNowPriceSemantics,
-      description: context.l10n.landingMembershipHereNowDescription,
-      benefits: [
-        (
-          label: context.l10n.landingMembershipHereNowBenefitFree,
-          emphasized: true,
-        ),
-        (
-          label: context.l10n.landingMembershipHereNowBenefitAccess,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipHereNowBenefitBadge,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipHereNowBenefitSupport,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipHereNowBenefitReleases,
-          emphasized: false,
-        ),
-      ],
-      ctaLabel: context.l10n.landingMembershipHereNowCta,
-      footnote: context.l10n.landingMembershipCancelFootnote,
-      badgeLabel: null,
-    ),
-    (
-      semanticId: 'lifetime',
-      variant: MembershipCardVariant.lifetime,
-      tierName: context.l10n.landingMembershipLifetimeTier,
-      price: context.l10n.landingMembershipLifetimePrice,
-      billingPeriod: context.l10n.landingMembershipOneTimePeriod,
-      priceSemanticLabel: context.l10n.landingMembershipLifetimePriceSemantics,
-      description: context.l10n.landingMembershipLifetimeDescription,
-      benefits: [
-        (
-          label: context.l10n.landingMembershipLifetimeBenefitPerks,
-          emphasized: true,
-        ),
-        (
-          label: context.l10n.landingMembershipLifetimeBenefitFees,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipLifetimeBenefitPrices,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipLifetimeBenefitTesting,
-          emphasized: false,
-        ),
-        (
-          label: context.l10n.landingMembershipLifetimeBenefitAvailability,
-          emphasized: false,
-        ),
-      ],
-      ctaLabel: context.l10n.landingMembershipLifetimeCta,
-      footnote: context.l10n.landingMembershipLifetimeFootnote,
-      badgeLabel: context.l10n.landingMembershipLifetimeBadge,
-    ),
-  ];
+  ) {
+    final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
+
+    return [
+      (
+        semanticId: 'free',
+        variant: MembershipCardVariant.free,
+        tierName: context.l10n.landingMembershipFreeTier,
+        price: context.l10n.landingMembershipFreePrice,
+        billingPeriod: context.l10n.landingMembershipBillingPeriod,
+        priceSemanticLabel: context.l10n.landingMembershipFreePriceSemantics,
+        description: context.l10n.landingMembershipFreeDescription,
+        benefits: [
+          (
+            label: context.l10n.landingMembershipFreeBenefitBeta,
+            emphasized: false,
+          ),
+        ],
+        ctaLabel: context.l10n.landingMembershipFreeCta,
+        badgeLabel: null,
+      ),
+      (
+        semanticId: 'hereNow',
+        variant: MembershipCardVariant.hereNow,
+        tierName: context.l10n.landingMembershipHereNowTier,
+        price: context.l10n.landingMembershipHereNowPrice,
+        billingPeriod: context.l10n.landingMembershipBillingPeriod,
+        priceSemanticLabel: context.l10n.landingMembershipHereNowPriceSemantics,
+        description: context.l10n.landingMembershipHereNowDescription,
+        benefits: [
+          (
+            label: context.l10n.landingMembershipHereNowBenefitFree,
+            emphasized: false,
+          ),
+          (
+            label: context.l10n.landingMembershipHereNowBenefitAccess,
+            emphasized: false,
+          ),
+        ],
+        ctaLabel: context.l10n.landingMembershipHereNowCta,
+        badgeLabel: null,
+      ),
+      (
+        semanticId: 'lifetime',
+        variant: MembershipCardVariant.lifetime,
+        tierName: context.l10n.landingMembershipLifetimeTier,
+        price: context.l10n.landingMembershipLifetimePrice,
+        billingPeriod: context.l10n.landingMembershipOneTimePeriod,
+        priceSemanticLabel:
+            context.l10n.landingMembershipLifetimePriceSemantics,
+        description: usesMobileFidelity
+            ? context.l10n.landingMembershipLifetimeMobileDescription
+            : context.l10n.landingMembershipLifetimeDescription,
+        benefits: [
+          (
+            label: context.l10n.landingMembershipLifetimeBenefitPerks,
+            emphasized: false,
+          ),
+          (
+            label: context.l10n.landingMembershipLifetimeBenefitFees,
+            emphasized: false,
+          ),
+          (
+            label: context.l10n.landingMembershipLifetimeBenefitPrices,
+            emphasized: false,
+          ),
+          (
+            label: context.l10n.landingMembershipLifetimeBenefitTesting,
+            emphasized: false,
+          ),
+        ],
+        ctaLabel: context.l10n.landingMembershipLifetimeCta,
+        badgeLabel: context.l10n.landingMembershipLifetimeBadge,
+      ),
+    ];
+  }
 }

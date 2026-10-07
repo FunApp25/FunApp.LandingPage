@@ -12,6 +12,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_memb
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_offer/founding_offer_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_dialog.dart';
@@ -36,6 +37,9 @@ final class LandingPage extends StatefulWidget {
 final class _LandingPageState extends State<LandingPage> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _heroKey = GlobalKey(debugLabel: 'landingHeroSection');
+  final GlobalKey _membershipKey = GlobalKey(
+    debugLabel: 'landingMembershipSection',
+  );
   final GlobalKey _foundingFriendsKey = GlobalKey(
     debugLabel: 'landingFoundingFriendsSection',
   );
@@ -153,6 +157,7 @@ final class _LandingPageState extends State<LandingPage> {
         children: [
           LandingHeader(
             onOurBeliefSelected: () => _scrollTo(_heroKey),
+            onMembershipSelected: () => _scrollTo(_membershipKey),
             onFoundingFriendsSelected: () => _scrollTo(_foundingFriendsKey),
             onVenuesSelected: () => _scrollTo(_venueKey),
             onContactSelected: _showInterestedUserComingSoonDialog,
@@ -169,8 +174,7 @@ final class _LandingPageState extends State<LandingPage> {
                   const ProblemStatementSection(),
                   const ResearchStatsSection(),
                   const ConnectionExperienceSection(),
-                  // MVP: Membership is temporarily hidden from the rendered
-                  // composition. Its implementation remains available.
+                  MembershipSection(key: _membershipKey),
                   const FoundingOfferSection(),
                   const FoundingMemberSection(),
                   FoundingFriendsSection(

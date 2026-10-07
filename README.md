@@ -42,8 +42,10 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   footer at [https://funapp.world/#/privacy](https://funapp.world/#/privacy).
   Its approved English legal copy lives in
   `assets/legal/privacy_notice.md`. The
-  Founding Friends CTA remains a presentation-only Coming soon flow, and the
-  Membership section remains temporarily hidden without removing its source.
+  Founding Friends CTA remains a presentation-only Coming soon flow. Membership
+  is rendered between Connection and Limited Offer; its header and mobile-menu
+  anchor is active, while its pricing CTAs remain presentation-only no-op
+  controls pending approved business and payment behavior.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

@@ -14,7 +14,6 @@ enum MembershipCardDesign {
     checkAsset: AppAssets.membershipCheckWhite,
     ctaBackgroundColor: AppColors.warmOrange,
     ctaForegroundColor: AppColors.lightForeground,
-    ctaArrowAsset: AppAssets.arrowUpRight,
   ),
 
   /// Here & Now membership card tokens.
@@ -27,7 +26,6 @@ enum MembershipCardDesign {
     checkAsset: AppAssets.membershipCheckBlue,
     ctaBackgroundColor: AppColors.blueMain,
     ctaForegroundColor: AppColors.lightForeground,
-    ctaArrowAsset: AppAssets.arrowUpRight,
   ),
 
   /// Lifetime membership card tokens.
@@ -40,7 +38,6 @@ enum MembershipCardDesign {
     checkAsset: AppAssets.membershipCheckWhite,
     ctaBackgroundColor: AppColors.yellowAccent,
     ctaForegroundColor: AppColors.textPrimary,
-    ctaArrowAsset: AppAssets.membershipArrowCharcoal,
   );
 
   const MembershipCardDesign({
@@ -52,7 +49,6 @@ enum MembershipCardDesign {
     required this.checkAsset,
     required this.ctaBackgroundColor,
     required this.ctaForegroundColor,
-    required this.ctaArrowAsset,
   });
 
   /// Card background color.
@@ -78,7 +74,4 @@ enum MembershipCardDesign {
 
   /// Visual CTA foreground color.
   final Color ctaForegroundColor;
-
-  /// Visual CTA arrow asset.
-  final String ctaArrowAsset;
 }

@@ -11,6 +11,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_frie
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_mobile_menu.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 
 import '../../landing_test_helpers.dart';
@@ -236,7 +237,8 @@ void main() {
         tester.getRect(menu).bottom - tester.getRect(bottomContact).bottom,
         16,
       );
-      for (var index = 0; index < 3; index++) {
+      expect(find.text('MEMBERSHIP'), findsOneWidget);
+      for (var index = 0; index < 4; index++) {
         final item = find.byKey(Key('landingMobileMenuNavigationItem$index'));
         expect(_semanticButtonState(tester, item), isTrue);
         expect(tester.getSize(item).height, greaterThanOrEqualTo(44));
@@ -401,6 +403,7 @@ void main() {
     setTestSurface(tester, const Size(390, 844));
     const targets = <Type>[
       HeroSection,
+      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
@@ -445,7 +448,7 @@ void main() {
 
     expect(find.byKey(const Key('landingMobileMenu')), findsNothing);
     expect(controller.position.isScrollingNotifier.value, isFalse);
-    _expectTargetBelowHeader(tester, FoundingFriendsSection);
+    _expectTargetBelowHeader(tester, MembershipSection);
   });
 }
 
@@ -537,6 +540,7 @@ Future<void> _pumpHeader(
           children: [
             LandingHeader(
               onOurBeliefSelected: onOurBeliefSelected ?? () {},
+              onMembershipSelected: () {},
               onFoundingFriendsSelected: () {},
               onVenuesSelected: () {},
             ),

@@ -206,34 +206,36 @@ compositions remain in use; CTA constraints must remain overflow-safe across
 the 599px/600px boundary.
 
 The current landing-page order is Header, Hero, Problem Statement, Research
-Statistics, Different Way to Connect, Limited-time Founding Friend offer,
-Founding Member explanation, Founding Friends, Venue, Welcome Statement, FAQ,
-and Footer. The Header remains fixed outside the primary scrolling content.
-Membership presents static Free, Here & Now, and Lifetime pricing cards, but is
-temporarily hidden from the MVP composition; its implementation, localization,
-assets, and focused tests remain available for restoration. Those cards and the
-Founding Member descriptions are approved marketing presentation only;
-subscription, payment, cancellation, entitlement, badge, and other business
-behavior is not implemented. Pricing cards use three, two, or one column based
-on usable card width, and Founding Member benefit cards similarly reflow from
-the desktop intro-plus-three-card composition without forcing desktop heights
-onto narrow single-column layouts.
+Statistics, Different Way to Connect, Membership, Limited-time Founding Friend
+offer, Founding Member explanation, Founding Friends, Venue, Welcome Statement,
+FAQ, and Footer. The Header remains fixed outside the primary scrolling
+content. Membership presents static Free, Here & Now, and Founding Friend
+pricing cards. Those cards and the Founding Member descriptions are approved
+marketing presentation only; subscription, payment, cancellation, entitlement,
+badge, and other business behavior is not implemented. Membership CTA controls
+use their enabled Figma treatment and remain presentation-only no-op actions
+until product and payment behavior is approved. Pricing cards use three, two,
+or one column based on usable card width, and Founding Member benefit cards
+similarly reflow from the desktop intro-plus-three-card composition without
+forcing desktop heights onto narrow single-column layouts.
 
 Header and footer section navigation scrolls within the single landing page
-while the header remains fixed above the scrolling content. Below a 600px
+while the header remains fixed above the scrolling content. The header exposes
+four active anchor destinations; the footer retains its established three
+destinations pending its dedicated redesign. Below a 600px
 outer viewport width, the fixed header uses a compact logo, Contact Us, and
 burger composition. The burger opens a full-screen, presentation-local menu
-with the same three active anchor destinations; selecting one closes the menu
+with the same four header anchor destinations; selecting one closes the menu
 before reusing the existing anchor navigation. At 600px and above, the
 established wide, intermediate, and narrow constraint-driven header variants
 remain in use; larger text can select the intermediate composition when the
 single-row header no longer fits. Internal navigation controls provide at least
 a 44px effective target and an explicit keyboard-focus outline; hover and focus
-treatments cover the complete padded control surface. The active MVP mapping is Our Belief to
-Hero, Founding Friends to Founding Friends, and For Venues to Venue. Membership
-navigation is temporarily hidden with its rendered section. Anchor positions
-derive from the rendered sections. Navigation duration scales with the current
-viewport-normalized distance and uses `easeInOutCubic`; a higher bounded duration gives long jumps
+treatments cover the complete padded control surface. The active header mapping
+is Our Belief to Hero, Membership to Membership, Founding Friends to Founding
+Friends, and For Venues to Venue. Anchor positions derive from the rendered
+sections. Navigation duration scales with the current viewport-normalized
+distance and uses `easeInOutCubic`; a higher bounded duration gives long jumps
 enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
@@ -278,8 +280,9 @@ programmatic carousel page changes immediate while preserving direct swipe.
 Below a 600px outer viewport width, Problem, Membership, Limited Offer, Welcome,
 and FAQ opt into the approved mobile 16px page bounds and section-specific
 Figma rhythm and type roles. Membership remains a one-column, naturally sized
-pricing-card stack with its approved reveal unchanged. FAQ retains its existing
-independent expansion, semantics, focus, and motion behavior while using its
+pricing-card stack with its approved reveal unchanged. Its Founding Friend
+supporting line follows the distinct approved mobile copy. FAQ retains its
+existing independent expansion, semantics, focus, and motion behavior while using its
 mobile-specific spacing and type. Marketing copy remains shared across
 responsive layouts unless product or design explicitly changes it.
 

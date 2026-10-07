@@ -20,7 +20,6 @@ final class MembershipCard extends StatelessWidget {
     required this.description,
     required this.benefits,
     required this.ctaLabel,
-    required this.footnote,
     required this.usesCoordinatedHeight,
     this.badgeLabel,
     super.key,
@@ -52,9 +51,6 @@ final class MembershipCard extends StatelessWidget {
 
   /// Localized visual-only CTA label.
   final String ctaLabel;
-
-  /// Localized note beneath the visual CTA.
-  final String footnote;
 
   /// Localized optional badge above the Lifetime card.
   final String? badgeLabel;
@@ -120,7 +116,6 @@ final class MembershipCard extends StatelessWidget {
                       semanticId: semanticId,
                       design: design,
                       label: ctaLabel,
-                      footnote: footnote,
                     ),
                   ],
                 ),

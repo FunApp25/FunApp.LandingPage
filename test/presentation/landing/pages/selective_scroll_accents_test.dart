@@ -53,14 +53,14 @@ void main() {
     },
   );
 
-  testWidgets('only the three active landing surfaces observe scroll entry', (
+  testWidgets('only active landing surfaces observe scroll entry', (
     tester,
   ) async {
     await _pumpLandingPage(tester);
 
-    expect(find.byType(LandingScrollReveal), findsNWidgets(3));
+    expect(find.byType(LandingScrollReveal), findsNWidgets(4));
     expect(find.byKey(const Key('researchStatsReveal')), findsOneWidget);
-    expect(find.byKey(const Key('membershipCardsReveal')), findsNothing);
+    expect(find.byKey(const Key('membershipCardsReveal')), findsOneWidget);
     expect(find.byKey(const Key('foundingFriendsReveal')), findsOneWidget);
     expect(find.byKey(const Key('venueCardReveal')), findsOneWidget);
   });
@@ -229,7 +229,10 @@ void main() {
         isTrue,
       );
     }
-    expect(find.bySemanticsLabel('FREE MEMBERSHIP'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Free Membership (Not yet open)'),
+      findsOneWidget,
+    );
 
     await _bringIntoView(tester, reveal);
     await tester.pump(const Duration(milliseconds: 100));

@@ -12,15 +12,20 @@ import '../landing_test_helpers.dart';
 const _membershipBody =
     'Connections for everyone. Choose the membership that works for you and '
     'enjoy a friendlier future with Fun App.';
-const _freeDescription =
-    'For testing early builds, sharing honest thoughts, and watching the app '
-    'take shape';
-const _hereNowDescription =
-    'Full access from day one. You get every feature now and lock in permanent '
-    'Founding status.';
+const _freeDescription = 'Free access from day one';
+const _hereNowDescription = 'Full access from day one, you get EVERY feature';
 const _lifetimeDescription =
     'Pay once, keep full access forever, and never deal with a monthly renewal '
     'again';
+const _lifetimeMobileDescription =
+    'For testing early builds, sharing honest thoughts, and watching the app '
+    'take shape';
+const _futurePrivilegesBenefit =
+    'A lifetime of other Fun App privileges - there are some very, very '
+    'exciting plans to come…';
+const _resaleBenefit =
+    'You can choose to resell your Founding Friend status through Fun App in '
+    'future years. Resale prices will be determined by buyers and sellers';
 const _foundingOffer =
     'Become A Fun App Founding Friend... for free. Enjoy ‘Here & Now’ '
     'membership on us.';
@@ -31,7 +36,7 @@ void main() {
   ) async {
     await _pumpMembershipAndOffer(tester);
 
-    expect(find.text('Membership'), findsOneWidget);
+    expect(find.text('Fun App Membership'), findsOneWidget);
     expect(find.text(_membershipBody), findsOneWidget);
     expect(find.byType(MembershipCard), findsNWidgets(3));
     expect(
@@ -40,9 +45,9 @@ void main() {
           tester.widget<Text>(find.byKey(Key('membershipTierName-$id'))).data,
       ],
       orderedEquals([
-        'FREE MEMBERSHIP',
-        'HERE & NOW MEMBERSHIP',
-        'LIFETIME MEMBERSHIP',
+        'FREE MEMBERSHIP (NOT YET OPEN)',
+        'HERE & NOW MEMBERSHIP (NOT YET OPEN)',
+        'FOUNDING FRIEND MEMBERSHIP (OPEN NOW)',
       ]),
     );
     expect(find.text('£0'), findsOneWidget);
@@ -55,16 +60,15 @@ void main() {
     expect(find.text(_lifetimeDescription), findsOneWidget);
 
     for (final copy in [
-      'First look at beta releases',
-      'Everything in Free Membership',
-      'Permanent Founding Member badge on your profile',
-      'All Here & Now perks for life',
-      'Only available during the pre-launch phase',
-      'Join the Community',
-      'Start Here & Now',
-      'Get Lifetime Membership',
-      '*Cancel anytime. Your Founding badge stays forever.',
-      '*Available only before the public launch',
+      'All of the core functionality that makes Fun App so much fun',
+      'All the core functionality plus, plus and more plusses',
+      'You might not need it but everyone will LOVE Here & Now!',
+      'Lifetime Founding Friend profile badge',
+      'Lifetime Here & Now membership',
+      _futurePrivilegesBenefit,
+      _resaleBenefit,
+      'Welcome',
+      'Welcome To Lifetime Membership',
       'LIMITED FOUNDING OFFER',
     ]) {
       expect(find.text(copy), findsAtLeastNWidgets(1));
@@ -93,9 +97,9 @@ void main() {
     (
       locale: Locale('es'),
       size: Size(390, 844),
-      heading: 'Membresía',
-      freeTier: 'MEMBRESÍA GRATUITA',
-      lifetimeCta: 'Obtén la membresía de por vida',
+      heading: 'Fun App Membership',
+      freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
+      lifetimeCta: 'Welcome To Lifetime Membership',
       offer:
           'Hazte Founding Friend de Fun App... gratis. Disfruta de la '
           'membresía ‘Here & Now’ por nuestra cuenta.',
@@ -103,9 +107,9 @@ void main() {
     (
       locale: Locale('cy'),
       size: Size(900, 800),
-      heading: 'Aelodaeth',
-      freeTier: 'AELODAETH AM DDIM',
-      lifetimeCta: 'Cael Aelodaeth Oes',
+      heading: 'Fun App Membership',
+      freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
+      lifetimeCta: 'Welcome To Lifetime Membership',
       offer:
           'Dewch yn Founding Friend i Fun App... am ddim. Mwynhewch aelodaeth '
           '‘Here & Now’ ar ein cyfrif ni.',
@@ -113,9 +117,9 @@ void main() {
     (
       locale: Locale('be'),
       size: Size(1440, 900),
-      heading: 'Членства',
-      freeTier: 'БЯСПЛАТНАЕ ЧЛЕНСТВА',
-      lifetimeCta: 'Атрымаць пажыццёвае членства',
+      heading: 'Fun App Membership',
+      freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
+      lifetimeCta: 'Welcome To Lifetime Membership',
       offer:
           'Станьце Founding Friend Fun App... бясплатна. Атрымайце членства '
           '«Here & Now» за наш кошт.',
@@ -166,16 +170,6 @@ void main() {
     );
     expectSvgAsset(
       tester,
-      const Key('membershipCtaArrow-free'),
-      AppAssets.arrowUpRight,
-    );
-    expectSvgAsset(
-      tester,
-      const Key('membershipCtaArrow-lifetime'),
-      AppAssets.membershipArrowCharcoal,
-    );
-    expectSvgAsset(
-      tester,
       const Key('foundingOfferGlyph'),
       AppAssets.foundingOfferGlyph,
     );
@@ -186,11 +180,20 @@ void main() {
       AppAssets.membershipLifetimeEyebrow,
       AppAssets.membershipCheckWhite,
       AppAssets.membershipCheckBlue,
-      AppAssets.membershipArrowCharcoal,
     ]) {
       expect(asset, startsWith('assets/'));
       expect(asset, isNot(contains('figma.com')));
     }
+  });
+
+  testWidgets('uses the distinct mobile Founding Friend supporting copy', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await _pumpMembershipAndOffer(tester);
+
+    expect(find.text(_lifetimeMobileDescription), findsOneWidget);
+    expect(find.text(_lifetimeDescription), findsNothing);
   });
 
   testWidgets('uses deliberate pricing-card column transitions', (
@@ -381,14 +384,22 @@ void main() {
     expectHeaderSemantics(
       tester,
       const Key('membershipHeadingSemantics'),
-      'Membership',
+      'Fun App Membership',
     );
     for (final entry in const [
-      (id: 'free', tier: 'FREE MEMBERSHIP', price: '£0 per month'),
-      (id: 'hereNow', tier: 'HERE & NOW MEMBERSHIP', price: '£11 per month'),
+      (
+        id: 'free',
+        tier: 'Free Membership (Not yet open)',
+        price: '£0 per month',
+      ),
+      (
+        id: 'hereNow',
+        tier: 'Here & Now Membership (Not yet open)',
+        price: '£11 per month',
+      ),
       (
         id: 'lifetime',
-        tier: 'LIFETIME MEMBERSHIP',
+        tier: 'Founding Friend membership (open now)',
         price: '£249 one-time payment',
       ),
     ]) {
@@ -442,20 +453,32 @@ void main() {
         of: find.byType(MembershipSection),
         matching: find.byType(InkWell),
       ),
-      findsNothing,
+      findsNWidgets(3),
     );
     for (final key in const [
       Key('membershipCheck-free-0'),
       Key('membershipCheck-hereNow-0'),
       Key('membershipCheck-lifetime-0'),
-      Key('membershipCtaArrow-free'),
-      Key('membershipCtaArrow-hereNow'),
-      Key('membershipCtaArrow-lifetime'),
     ]) {
       expect(
         tester.widget<SvgPicture>(find.byKey(key)).excludeFromSemantics,
         isTrue,
       );
+    }
+    for (final id in const ['free', 'hereNow', 'lifetime']) {
+      final action = find.byKey(Key('membershipCta-$id'));
+      final data = tester.getSemantics(action).getSemanticsData();
+      expect(data.flagsCollection.isButton, isTrue);
+      expect(
+        tester.widget<InkWell>(action).mouseCursor,
+        SystemMouseCursors.click,
+      );
+      await tester.ensureVisible(action);
+      await tester.pumpAndSettle();
+      await tester.tap(action);
+      await tester.pumpAndSettle();
+      expect(find.byType(MembershipSection), findsOneWidget);
+      expect(find.byType(Dialog), findsNothing);
     }
     semantics.dispose();
   });

@@ -334,7 +334,7 @@
   "@landingConnectionImageDescription": {
     "description": "Concise semantic description of the connection photograph."
   },
-  "landingMembershipHeading": "Membership",
+  "landingMembershipHeading": "Fun App Membership",
   "@landingMembershipHeading": {
     "description": "Heading for the membership section."
   },
@@ -342,15 +342,15 @@
   "@landingMembershipBody": {
     "description": "Centered supporting paragraph above the membership cards."
   },
-  "landingMembershipFreeTier": "FREE MEMBERSHIP",
+  "landingMembershipFreeTier": "Free Membership (Not yet open)",
   "@landingMembershipFreeTier": {
     "description": "Title of the free membership tier."
   },
-  "landingMembershipHereNowTier": "HERE & NOW MEMBERSHIP",
+  "landingMembershipHereNowTier": "Here & Now Membership (Not yet open)",
   "@landingMembershipHereNowTier": {
     "description": "Title of the paid Here & Now membership tier."
   },
-  "landingMembershipLifetimeTier": "LIFETIME MEMBERSHIP",
+  "landingMembershipLifetimeTier": "Founding Friend membership (open now)",
   "@landingMembershipLifetimeTier": {
     "description": "Eyebrow of the Lifetime membership tier."
   },
@@ -386,19 +386,23 @@
   "@landingMembershipLifetimePriceSemantics": {
     "description": "Accessible spoken price for the Lifetime membership tier."
   },
-  "landingMembershipFreeDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape",
+  "landingMembershipFreeDescription": "Free access from day one",
   "@landingMembershipFreeDescription": {
     "description": "Description of the free membership tier."
   },
-  "landingMembershipHereNowDescription": "Full access from day one. You get every feature now and lock in permanent Founding status.",
+  "landingMembershipHereNowDescription": "Full access from day one, you get EVERY feature",
   "@landingMembershipHereNowDescription": {
     "description": "Description of the Here & Now membership tier."
   },
   "landingMembershipLifetimeDescription": "Pay once, keep full access forever, and never deal with a monthly renewal again",
   "@landingMembershipLifetimeDescription": {
-    "description": "Description of the Lifetime membership tier."
+    "description": "Desktop description of the Founding Friend membership tier."
   },
-  "landingMembershipFreeBenefitBeta": "First look at beta releases",
+  "landingMembershipLifetimeMobileDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape",
+  "@landingMembershipLifetimeMobileDescription": {
+    "description": "Mobile description of the Founding Friend membership tier."
+  },
+  "landingMembershipFreeBenefitBeta": "All of the core functionality that makes Fun App so much fun",
   "@landingMembershipFreeBenefitBeta": {
     "description": "First benefit of Free Membership."
   },
@@ -414,11 +418,11 @@
   "@landingMembershipFreeBenefitProgress": {
     "description": "Fourth benefit of Free Membership."
   },
-  "landingMembershipHereNowBenefitFree": "Everything in Free Membership",
+  "landingMembershipHereNowBenefitFree": "All the core functionality plus, plus and more plusses",
   "@landingMembershipHereNowBenefitFree": {
     "description": "Emphasized first benefit of Here & Now Membership."
   },
-  "landingMembershipHereNowBenefitAccess": "Complete, unrestricted access to the full app",
+  "landingMembershipHereNowBenefitAccess": "You might not need it but everyone will LOVE Here & Now!",
   "@landingMembershipHereNowBenefitAccess": {
     "description": "Second benefit of Here & Now Membership."
   },
@@ -434,19 +438,19 @@
   "@landingMembershipHereNowBenefitReleases": {
     "description": "Fifth benefit of Here & Now Membership."
   },
-  "landingMembershipLifetimeBenefitPerks": "All Here & Now perks for life",
+  "landingMembershipLifetimeBenefitPerks": "Lifetime Founding Friend profile badge",
   "@landingMembershipLifetimeBenefitPerks": {
     "description": "Emphasized first benefit of Lifetime Membership."
   },
-  "landingMembershipLifetimeBenefitFees": "Zero monthly or annual subscription fees",
+  "landingMembershipLifetimeBenefitFees": "Lifetime Here & Now membership",
   "@landingMembershipLifetimeBenefitFees": {
     "description": "Second benefit of Lifetime Membership."
   },
-  "landingMembershipLifetimeBenefitPrices": "Protected from all future price changes",
+  "landingMembershipLifetimeBenefitPrices": "A lifetime of other Fun App privileges - there are some very, very exciting plans to come…",
   "@landingMembershipLifetimeBenefitPrices": {
     "description": "Third benefit of Lifetime Membership."
   },
-  "landingMembershipLifetimeBenefitTesting": "Exclusive access to early private testing",
+  "landingMembershipLifetimeBenefitTesting": "You can choose to resell your Founding Friend status through Fun App in future years. Resale prices will be determined by buyers and sellers",
   "@landingMembershipLifetimeBenefitTesting": {
     "description": "Fourth benefit of Lifetime Membership."
   },
@@ -454,15 +458,15 @@
   "@landingMembershipLifetimeBenefitAvailability": {
     "description": "Fifth benefit of Lifetime Membership."
   },
-  "landingMembershipFreeCta": "Join the Community",
+  "landingMembershipFreeCta": "Welcome",
   "@landingMembershipFreeCta": {
     "description": "Visual-only CTA in the Free Membership card."
   },
-  "landingMembershipHereNowCta": "Start Here & Now",
+  "landingMembershipHereNowCta": "Welcome",
   "@landingMembershipHereNowCta": {
     "description": "Visual-only CTA in the Here & Now Membership card."
   },
-  "landingMembershipLifetimeCta": "Get Lifetime Membership",
+  "landingMembershipLifetimeCta": "Welcome To Lifetime Membership",
   "@landingMembershipLifetimeCta": {
     "description": "Visual-only CTA in the Lifetime Membership card."
   },

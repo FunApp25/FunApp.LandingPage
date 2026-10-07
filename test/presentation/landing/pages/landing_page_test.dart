@@ -41,6 +41,7 @@ void main() {
       ProblemStatementSection,
       ResearchStatsSection,
       ConnectionExperienceSection,
+      MembershipSection,
       FoundingOfferSection,
       FoundingMemberSection,
       FoundingFriendsSection,
@@ -51,12 +52,10 @@ void main() {
     ];
 
     expect(find.byType(LandingHeader), findsOneWidget);
-    expect(expectedSectionTypes, hasLength(11));
+    expect(expectedSectionTypes, hasLength(12));
     for (final type in expectedSectionTypes) {
       expect(find.byType(type), findsOneWidget);
     }
-    expect(find.byType(MembershipSection), findsNothing);
-
     final sections = tester.widget<Column>(
       find.byKey(const Key('landingPageSections')),
     );
@@ -78,7 +77,7 @@ void main() {
     ]) {
       expect(find.text(label), findsNWidgets(2));
     }
-    expect(find.text('MEMBERSHIP'), findsNothing);
+    expect(find.text('MEMBERSHIP'), findsOneWidget);
     for (final label in ['Contact Us', 'A FRIENDLIER WAY TO CONNECT']) {
       expect(find.text(label), findsOneWidget);
     }
@@ -219,25 +218,34 @@ void main() {
   testWidgets('maps header and footer navigation to anchored sections', (
     tester,
   ) async {
-    const targets = <Type>[
+    const headerTargets = <Type>[
+      HeroSection,
+      MembershipSection,
+      FoundingFriendsSection,
+      VenueSection,
+    ];
+    const footerTargets = <Type>[
       HeroSection,
       FoundingFriendsSection,
       VenueSection,
     ];
 
-    for (var index = 0; index < targets.length; index++) {
+    for (var index = 0; index < headerTargets.length; index++) {
       await pumpLandingApp(tester);
       await _moveToPageEnd(tester);
       await tester.tap(
         find.byKey(Key('landingHeaderNavigationItem$index')),
       );
       await tester.pumpAndSettle();
-      _expectTargetBelowHeader(tester, targets[index]);
+      _expectTargetBelowHeader(tester, headerTargets[index]);
+    }
 
+    for (var index = 0; index < footerTargets.length; index++) {
+      await pumpLandingApp(tester);
       await _moveToPageEnd(tester);
       await tester.tap(find.byKey(Key('footerNavigationItem$index')));
       await tester.pumpAndSettle();
-      _expectTargetBelowHeader(tester, targets[index]);
+      _expectTargetBelowHeader(tester, footerTargets[index]);
     }
   });
 
@@ -298,7 +306,7 @@ void main() {
     await pumpLandingApp(tester);
 
     final venueNavigation = find.byKey(
-      const Key('landingHeaderNavigationItem2'),
+      const Key('landingHeaderNavigationItem3'),
     );
     await tester.tap(venueNavigation);
     await tester.pump();
@@ -323,7 +331,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    _expectTargetBelowHeader(tester, FoundingFriendsSection);
+    _expectTargetBelowHeader(tester, MembershipSection);
   });
 
   testWidgets('navigation items support Enter and Space activation', (
@@ -456,12 +464,12 @@ void main() {
     final semantics = tester.ensureSemantics();
     await pumpLandingApp(tester);
 
-    for (final prefix in [
-      'landingHeaderNavigationItem',
-      'footerNavigationItem',
+    for (final entry in const [
+      (prefix: 'landingHeaderNavigationItem', count: 4),
+      (prefix: 'footerNavigationItem', count: 3),
     ]) {
-      for (var index = 0; index < 3; index++) {
-        final itemFinder = find.byKey(Key('$prefix$index'));
+      for (var index = 0; index < entry.count; index++) {
+        final itemFinder = find.byKey(Key('${entry.prefix}$index'));
         final itemSemantics = tester
             .getSemantics(itemFinder)
             .getSemanticsData();
@@ -635,15 +643,15 @@ void main() {
         );
       }
 
-      final navigationPrefixes = [
+      final navigationGroups = [
         if (size.width >= LandingHeader.mobileUxBreakpoint)
-          'landingHeaderNavigationItem',
-        'footerNavigationItem',
+          (prefix: 'landingHeaderNavigationItem', count: 4),
+        (prefix: 'footerNavigationItem', count: 3),
       ];
-      for (final prefix in navigationPrefixes) {
-        for (var index = 0; index < 3; index++) {
+      for (final group in navigationGroups) {
+        for (var index = 0; index < group.count; index++) {
           expect(
-            tester.getSize(find.byKey(Key('$prefix$index'))).height,
+            tester.getSize(find.byKey(Key('${group.prefix}$index'))).height,
             greaterThanOrEqualTo(44),
           );
         }
@@ -651,8 +659,9 @@ void main() {
 
       for (final target in const [
         (index: 0, type: HeroSection),
-        (index: 1, type: FoundingFriendsSection),
-        (index: 2, type: VenueSection),
+        (index: 1, type: MembershipSection),
+        (index: 2, type: FoundingFriendsSection),
+        (index: 3, type: VenueSection),
       ]) {
         await _moveToPageEnd(tester);
         if (size.width < LandingHeader.mobileUxBreakpoint) {

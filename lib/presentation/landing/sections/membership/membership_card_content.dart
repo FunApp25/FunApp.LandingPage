@@ -11,6 +11,5 @@ typedef MembershipCardContent = ({
   String description,
   List<MembershipBenefit> benefits,
   String ctaLabel,
-  String footnote,
   String? badgeLabel,
 });
