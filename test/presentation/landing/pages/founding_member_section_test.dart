@@ -9,15 +9,15 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_memb
 import '../landing_test_helpers.dart';
 
 void main() {
-  testWidgets('renders authoritative English Founding Member content', (
+  testWidgets('renders authoritative English Founding Friend content', (
     tester,
   ) async {
     await pumpLandingApp(tester);
 
-    expect(find.text('What does Founding Member mean'), findsOneWidget);
+    expect(find.text('What does Founding Friend mean?'), findsOneWidget);
     expect(
       find.text(
-        'It simply means you supported Fun App before everyone else. In '
+        'It means you supported Fun App before everyone else. In '
         'return, we keep it simple.',
       ),
       findsOneWidget,
@@ -25,32 +25,34 @@ void main() {
     expect(find.byType(FoundingMemberBenefitCard), findsNWidgets(3));
     expect(
       [
-        for (final id in ['recognised', 'access', 'voice'])
+        for (final id in ['recognised', 'lifetime', 'access'])
           tester
               .widget<Text>(find.byKey(Key('foundingMemberCardTitle-$id')))
               .data,
       ],
       orderedEquals([
         'Recognised Forever',
+        'Lifetime Here & Now Membership',
         'Early Access Always',
-        'A Direct Voice',
       ]),
     );
     expect(
       find.text(
-        'A clean profile badge showing you backed the project from the start',
+        'A clean profile badge showing you backed Fun App from the start',
       ),
       findsOneWidget,
     );
     expect(
       find.text(
-        'Try new tools and experiments before they roll out publicly',
+        'All the Here & Now functionality that every Fun App user will love… '
+        'FOREVER.',
       ),
       findsOneWidget,
     );
     expect(
       find.text(
-        'Your feedback goes straight to the team building the roadmap',
+        'Try new tools and some very exciting experiments before they roll '
+        'out publicly',
       ),
       findsOneWidget,
     );
@@ -60,19 +62,19 @@ void main() {
     (
       locale: Locale('es'),
       size: Size(390, 844),
-      heading: '¿Qué significa ser Founding Member?',
+      heading: 'What does Founding Friend mean?',
       firstTitle: 'Reconocimiento para siempre',
     ),
     (
       locale: Locale('cy'),
       size: Size(900, 800),
-      heading: 'Beth mae Founding Member yn ei olygu?',
+      heading: 'What does Founding Friend mean?',
       firstTitle: 'Cydnabyddiaeth am Byth',
     ),
     (
       locale: Locale('be'),
       size: Size(1440, 900),
-      heading: 'Што азначае Founding Member?',
+      heading: 'What does Founding Friend mean?',
       firstTitle: 'Прызнанне назаўсёды',
     ),
   ]) {
@@ -92,13 +94,13 @@ void main() {
     });
   }
 
-  testWidgets('uses the exact committed Founding Member icons', (tester) async {
+  testWidgets('uses the exact committed Founding Friend icons', (tester) async {
     await pumpLandingApp(tester);
 
     for (final entry in const [
       (id: 'recognised', asset: AppAssets.foundingMemberUsers),
+      (id: 'lifetime', asset: AppAssets.foundingMemberChat),
       (id: 'access', asset: AppAssets.foundingMemberRocket),
-      (id: 'voice', asset: AppAssets.foundingMemberChat),
     ]) {
       expectSvgAsset(
         tester,
@@ -118,7 +120,7 @@ void main() {
     }
   });
 
-  testWidgets('uses deliberate Founding Member layout transitions', (
+  testWidgets('uses deliberate Founding Friend layout transitions', (
     tester,
   ) async {
     for (final example in const [
@@ -176,7 +178,7 @@ void main() {
     expectHeaderSemantics(
       tester,
       const Key('foundingMemberHeadingSemantics'),
-      'What does Founding Member mean',
+      'What does Founding Friend mean?',
     );
     expectHeaderSemantics(
       tester,

@@ -15,7 +15,6 @@ import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
-import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_chain_status_control.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_disclosure.dart';
@@ -37,7 +36,7 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets('venue and Founding Friends CTAs open distinct flows', (
+  testWidgets('Founding Friend CTA is a no-op while Venue opens its form', (
     tester,
   ) async {
     getIt.registerFactory<VenueLeadFormBloc>(
@@ -45,20 +44,14 @@ void main() {
     );
     await pumpLandingApp(tester);
 
-    final context = tester.element(find.byType(LandingPage));
-    final l10n = AppLocalizations.of(context);
     final foundingCta = find.byKey(const Key('foundingFriendsCta'));
     await tester.ensureVisible(foundingCta);
     await tester.tap(foundingCta);
     await tester.pumpAndSettle();
 
-    expect(
-      find.text(l10n.landingInterestedUserComingSoonTitle),
-      findsOneWidget,
-    );
+    expect(find.byType(LandingDialog), findsNothing);
     expect(find.byKey(const Key('venueLeadForm')), findsNothing);
-    await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
-    await tester.pumpAndSettle();
+    expect(repository.submittedLeads, isEmpty);
 
     final venueCta = find.byKey(const Key('venueCardCta'));
     await tester.ensureVisible(venueCta);
@@ -66,10 +59,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
-    expect(
-      find.text(l10n.landingInterestedUserComingSoonTitle),
-      findsNothing,
-    );
+    expect(find.byType(LandingDialog), findsOneWidget);
     expect(find.byType(TextField), findsNWidgets(9));
     expect(
       find.byKey(const Key('venueLeadChainStatusControl')),

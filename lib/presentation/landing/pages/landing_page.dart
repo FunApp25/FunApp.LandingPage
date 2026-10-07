@@ -177,10 +177,7 @@ final class _LandingPageState extends State<LandingPage> {
                   MembershipSection(key: _membershipKey),
                   const FoundingOfferSection(),
                   const FoundingMemberSection(),
-                  FoundingFriendsSection(
-                    key: _foundingFriendsKey,
-                    onCtaPressed: _showInterestedUserComingSoonDialog,
-                  ),
+                  FoundingFriendsSection(key: _foundingFriendsKey),
                   VenueSection(
                     key: _venueKey,
                     onCtaPressed: _showVenueLeadDialog,

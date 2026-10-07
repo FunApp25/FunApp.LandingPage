@@ -99,7 +99,7 @@ abstract final class AppAssets {
   static const String foundingMemberRocket =
       '$_landingFoundingMemberPath/rocket_launch.svg';
 
-  /// Chat icon used by the A Direct Voice benefit card.
+  /// Chat icon used by the Lifetime Here & Now Membership benefit card.
   static const String foundingMemberChat =
       '$_landingFoundingMemberPath/chat_teardrop_text.svg';
 

@@ -15,14 +15,14 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 - The active web-only Flutter package is `fun_app_landing_page`.
 - All 13 surfaces in Figma `Landing Page - V1` now have a presentation-only
   Flutter implementation, including the Free, Here & Now, and Lifetime
-  Membership cards and the Founding Member explanation. The header remains
+  Membership cards and the Founding Friend explanation. The header remains
   fixed above the scrolling page, repeated header/footer navigation moves to
   the corresponding page sections, and the independently expandable FAQ
   supports its complete item surface. Contact and product CTAs remain
   intentionally unwired; pricing
   is static marketing UI rather than subscription functionality. The stable
   responsive presentation includes the mobile navigation menu, a mobile
-  Research-statistics and Founding Member carousels, restrained anchor/FAQ
+  Research-statistics and Founding Friend carousels, restrained anchor/FAQ
   interaction motion, and
   one-time scroll accents only for Research Statistics, Membership pricing
   cards, Founding Friends, and Venue; the Hero and all other landing sections
@@ -42,7 +42,7 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   footer at [https://funapp.world/#/privacy](https://funapp.world/#/privacy).
   Its approved English legal copy lives in
   `assets/legal/privacy_notice.md`. The
-  Founding Friends CTA remains a presentation-only Coming soon flow. Membership
+  Founding Friends CTA remains a presentation-only no-op. Membership
   is rendered between Connection and Limited Offer; its header and mobile-menu
   anchor is active, while its pricing CTAs remain presentation-only no-op
   controls pending approved business and payment behavior.

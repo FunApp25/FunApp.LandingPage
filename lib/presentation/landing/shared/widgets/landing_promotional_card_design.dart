@@ -23,10 +23,10 @@ enum LandingPromotionalCardDesign {
     imageAsset: AppAssets.foundingFriendsGroup,
     artworkSide: LandingPromotionalArtworkSide.trailing,
     intrinsicArtworkSize: Size(673, 410),
-    wideHeight: 534,
-    wideContentWidth: 494,
+    wideHeight: 612,
+    wideContentWidth: 520,
     wideContentInset: 128,
-    wideArtworkTop: 62,
+    wideArtworkTop: 101,
   ),
 
   /// Venue promotional-card tokens.

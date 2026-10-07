@@ -235,7 +235,7 @@ abstract final class LandingTextStyles {
     color: AppColors.textPrimary.withValues(alpha: 0.6),
   );
 
-  /// Founding Member benefit-card title.
+  /// Founding Friend benefit-card title.
   static final TextStyle foundingMemberCardTitle =
       AppTextStyles.headlineFontStyle(
         fontSize: 32,

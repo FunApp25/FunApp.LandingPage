@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
-/// Heading and supporting copy for the Founding Member section.
+/// Heading and supporting copy for the Founding Friend section.
 final class FoundingMemberIntroduction extends StatelessWidget {
-  /// Creates the Founding Member introduction.
+  /// Creates the Founding Friend introduction.
   const FoundingMemberIntroduction({
     required this.headingSize,
     this.usesMobileFigmaTypography = false,

@@ -4,9 +4,9 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
-/// One static benefit in the Founding Member explanation section.
+/// One static benefit in the Founding Friend explanation section.
 final class FoundingMemberBenefitCard extends StatelessWidget {
-  /// Creates a Founding Member benefit card.
+  /// Creates a Founding Friend benefit card.
   const FoundingMemberBenefitCard({
     required this.semanticId,
     required this.iconAsset,

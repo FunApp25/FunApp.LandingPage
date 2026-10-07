@@ -34,7 +34,7 @@ Current implementation is evidence of repository state, not automatically a perm
 - The current Ready-for-Dev design in Figma file
   `J326dKMVr5dHcC92xLkfbm`, frame `2190:1567` (`Landing Page - V1`), is fully
   represented in Flutter, including the current three-tier Membership design
-  and Founding Member explanation section. Its static and responsive
+  and Founding Friend explanation section. Its static and responsive
   presentation is stable, and its current restrained motion pass is complete
   before business, domain, application, or data implementation.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
@@ -207,15 +207,15 @@ the 599px/600px boundary.
 
 The current landing-page order is Header, Hero, Problem Statement, Research
 Statistics, Different Way to Connect, Membership, Limited-time Founding Friend
-offer, Founding Member explanation, Founding Friends, Venue, Welcome Statement,
+offer, Founding Friend explanation, Founding Friends, Venue, Welcome Statement,
 FAQ, and Footer. The Header remains fixed outside the primary scrolling
 content. Membership presents static Free, Here & Now, and Founding Friend
-pricing cards. Those cards and the Founding Member descriptions are approved
+pricing cards. Those cards and the Founding Friend descriptions are approved
 marketing presentation only; subscription, payment, cancellation, entitlement,
 badge, and other business behavior is not implemented. Membership CTA controls
 use their enabled Figma treatment and remain presentation-only no-op actions
 until product and payment behavior is approved. Pricing cards use three, two,
-or one column based on usable card width, and Founding Member benefit cards
+or one column based on usable card width, and Founding Friend benefit cards
 similarly reflow from the desktop intro-plus-three-card composition without
 forcing desktop heights onto narrow single-column layouts.
 
@@ -241,12 +241,12 @@ responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
 become immediate when reduced motion is requested. Contact Us in the header
-and mobile menu opens the same localized, presentation-only Coming soon dialog
-as Founding Friends. Waitlist, product, email, and other marketing CTA
-destinations remain open and intentionally unwired.
-The Founding Friends prospective-user CTA currently opens a localized,
-presentation-only Coming soon dialog. It collects no information and performs
-no business operation; the interested-person contract remains unresolved. The
+and mobile menu opens a localized, presentation-only Coming soon dialog.
+Waitlist, product, email, and other marketing CTA destinations remain open and
+intentionally unwired.
+The Founding Friends prospective-user CTA is currently a keyboard-operable,
+presentation-only no-op. It collects no information and performs no business
+operation; the interested-person contract remains unresolved. The
 venue CTA opens a localized functional form in the reusable landing dialog. A
 fresh `VenueLeadFormBloc` owns each dialog session and submits through the
 established environment-selected venue repository/data-source graph.
@@ -268,13 +268,12 @@ localized or scaled text needs more room, every carousel page shares the
 tallest required height so text is not clipped or truncated to preserve the
 design minimum.
 
-Below a 600px outer viewport width, the three Founding Member benefits use the
+Below a 600px outer viewport width, the three Founding Friend benefits use the
 shared horizontal, page-snapping carousel with three decorative page indicators
-derived from the real content count. Figma node `2270:2640` currently shows four
-indicators despite containing only three cards; implementation follows the three
-cards pending design clarification. The carousel is clamped and non-looping. At
-600px and above, the established Founding Member cards and grids remain in use.
-Founding Member has no scroll-entry reveal, and reduced motion makes its
+derived from the real content count, matching the three indicators now present
+in Figma node `2270:2640`. The carousel is clamped and non-looping. At
+600px and above, the established Founding Friend cards and grids remain in use.
+Founding Friend has no scroll-entry reveal, and reduced motion makes its
 programmatic carousel page changes immediate while preserving direct swipe.
 
 Below a 600px outer viewport width, Problem, Membership, Limited Offer, Welcome,

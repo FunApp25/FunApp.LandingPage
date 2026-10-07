@@ -9,9 +9,9 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_memb
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_layout.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_mobile_carousel.dart';
 
-/// Founding Member explanation from Figma node `2243:2446`.
+/// Founding Friend explanation from Figma node `2243:2446`.
 final class FoundingMemberSection extends StatelessWidget {
-  /// Creates the Founding Member explanation section.
+  /// Creates the Founding Friend explanation section.
   const FoundingMemberSection({super.key});
 
   static const _wideCompositionWidth = 1360.0;
@@ -136,16 +136,16 @@ final class FoundingMemberSection extends StatelessWidget {
       body: context.l10n.landingFoundingMemberRecognisedBody,
     ),
     (
+      semanticId: 'lifetime',
+      iconAsset: AppAssets.foundingMemberChat,
+      title: context.l10n.landingFoundingMemberLifetimeTitle,
+      body: context.l10n.landingFoundingMemberLifetimeBody,
+    ),
+    (
       semanticId: 'access',
       iconAsset: AppAssets.foundingMemberRocket,
       title: context.l10n.landingFoundingMemberAccessTitle,
       body: context.l10n.landingFoundingMemberAccessBody,
-    ),
-    (
-      semanticId: 'voice',
-      iconAsset: AppAssets.foundingMemberChat,
-      title: context.l10n.landingFoundingMemberVoiceTitle,
-      body: context.l10n.landingFoundingMemberVoiceBody,
     ),
   ];
 }

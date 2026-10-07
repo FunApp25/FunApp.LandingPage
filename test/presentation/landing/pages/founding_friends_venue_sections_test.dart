@@ -1,4 +1,7 @@
+import 'dart:ui' show SemanticsAction;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
@@ -11,9 +14,11 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 import '../landing_test_helpers.dart';
 
 const _foundingFriendsBodyFirst =
-    'Thank you for being an early bird and joining Fun App as a Founding '
-    'Friend. You can keep this status forever, helping change the way the '
-    'world makes friends.';
+    'Thank you for your interest in joining Fun App as a Founding Friend. '
+    'Founding Friends are besties. You can keep this status forever, helping '
+    'change the way the world makes friends. Or, you might choose to resell '
+    'your Founding Friend status through Fun App in future years. Resale '
+    'prices will be determined by buyers and sellers.';
 const _foundingFriendsBodySecond =
     'Welcome aboard, this is going to be an exciting journey.';
 const _venueIntroductionFirst =
@@ -28,7 +33,7 @@ void main() {
   ) async {
     await pumpLandingApp(tester);
 
-    expect(find.text('Founding Friends are Besties'), findsOneWidget);
+    expect(find.text('I want to become a Founding Friend'), findsOneWidget);
     expect(find.text(_foundingFriendsBodyFirst), findsOneWidget);
     expect(find.text(_foundingFriendsBodySecond), findsOneWidget);
     expect(find.text('Become a Founding Friend'), findsOneWidget);
@@ -50,7 +55,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      foundingHeading: 'Los Founding Friends son los mejores amigos',
+      foundingHeading: 'I want to become a Founding Friend',
       foundingCta: 'Hazte Founding Friend',
       venueIntro: 'Gestiono un espacio',
       venueCard: 'Gestiono un espacio...',
@@ -58,7 +63,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      foundingHeading: 'Founding Friends yw’r Ffrindiau Gorau',
+      foundingHeading: 'I want to become a Founding Friend',
       foundingCta: 'Dewch yn Founding Friend',
       venueIntro: 'Rwy’n Rhedeg Lleoliad',
       venueCard: 'Rwy’n Rhedeg Lleoliad...',
@@ -66,7 +71,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      foundingHeading: 'Founding Friends — найлепшыя сябры',
+      foundingHeading: 'I want to become a Founding Friend',
       foundingCta: 'Станьце Founding Friend',
       venueIntro: 'Я кірую пляцоўкай',
       venueCard: 'Я кірую пляцоўкай...',
@@ -206,11 +211,13 @@ void main() {
           expect(artworkRect.size, const Size(673, 410));
           expect(
             wideLayout.constraints.minHeight,
-            prefix == 'foundingFriends' ? 534 : 444,
+            prefix == 'foundingFriends' ? 612 : 444,
           );
           if (prefix == 'foundingFriends') {
             expect(contentRect.left - cardRect.left, 128);
+            expect(contentRect.width, 520);
             expect(artworkRect.left - cardRect.left, 716);
+            expect(artworkRect.top - cardRect.top, 101);
             expect(
               tester
                   .widget<FittedBox>(
@@ -328,7 +335,6 @@ void main() {
       find.byKey(const Key('foundingFriendsBody1')),
     );
     expect(foundingSecondBody.top - foundingFirstBody.bottom, 12);
-
     final venueIntro = tester.getRect(
       find.byKey(const Key('venueIntroductionBounds')),
     );
@@ -413,7 +419,7 @@ void main() {
     expectHeaderSemantics(
       tester,
       const Key('foundingFriendsHeadingSemantics'),
-      'Founding Friends are Besties',
+      'I want to become a Founding Friend',
     );
     expectHeaderSemantics(
       tester,
@@ -450,7 +456,7 @@ void main() {
     expect(
       foundingCardText,
       orderedEquals([
-        'Founding Friends are Besties',
+        'I want to become a Founding Friend',
         _foundingFriendsBodyFirst,
         _foundingFriendsBodySecond,
         'Become a Founding Friend',
@@ -496,6 +502,44 @@ void main() {
     expect(find.byType(LandingCtaButton), findsNWidgets(4));
     semantics.dispose();
   });
+
+  testWidgets('keeps the Founding Friend CTA operable and side-effect free', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    setTestSurface(tester, const Size(390, 844));
+    await pumpLandingApp(tester);
+
+    final cta = find.byKey(const Key('foundingFriendsCta'));
+    await tester.ensureVisible(cta);
+    await tester.pumpAndSettle();
+
+    final ctaSemantics = tester
+        .getSemantics(find.bySemanticsLabel('Become a Founding Friend'))
+        .getSemanticsData();
+    expect(ctaSemantics.flagsCollection.isButton, isTrue);
+    expect(ctaSemantics.label, 'Become a Founding Friend');
+    expect(ctaSemantics.hasAction(SemanticsAction.tap), isTrue);
+
+    await tester.tap(cta);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.byType(TextField), findsNothing);
+
+    final ctaText = find.descendant(of: cta, matching: find.byType(Text));
+    final focus = Focus.of(tester.element(ctaText))..requestFocus();
+    await tester.pump();
+    expect(focus.hasPrimaryFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pumpAndSettle();
+    expect(focus.hasPrimaryFocus, isTrue);
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.byType(TextField), findsNothing);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
 }
 
 Future<void> _pumpPromotionalCard(
@@ -511,7 +555,7 @@ Future<void> _pumpPromotionalCard(
             width: width,
             child: const LandingPromotionalCard(
               variant: LandingPromotionalCardVariant.foundingFriends,
-              heading: 'Founding Friends are Besties',
+              heading: 'I want to become a Founding Friend',
               bodyParagraphs: [
                 _foundingFriendsBodyFirst,
                 _foundingFriendsBodySecond,

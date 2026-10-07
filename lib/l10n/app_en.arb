@@ -502,25 +502,25 @@
   "@landingFoundingOfferCta": {
     "description": "Presentation-only CTA for the Limited-Time Offer section."
   },
-  "landingFoundingMemberHeading": "What does Founding Member mean",
+  "landingFoundingMemberHeading": "What does Founding Friend mean?",
   "@landingFoundingMemberHeading": {
-    "description": "Heading for the Founding Member explanation section."
+    "description": "Heading for the Founding Friend explanation section."
   },
-  "landingFoundingMemberBody": "It simply means you supported Fun App before everyone else. In return, we keep it simple.",
+  "landingFoundingMemberBody": "It means you supported Fun App before everyone else. In return, we keep it simple.",
   "@landingFoundingMemberBody": {
-    "description": "Supporting copy for the Founding Member explanation section."
+    "description": "Supporting copy for the Founding Friend explanation section."
   },
-  "landingFoundingMemberCarouselPrevious": "Previous Founding Member benefit",
+  "landingFoundingMemberCarouselPrevious": "Previous Founding Friend benefit",
   "@landingFoundingMemberCarouselPrevious": {
-    "description": "Accessible label for the previous Founding Member carousel control."
+    "description": "Accessible label for the previous Founding Friend carousel control."
   },
-  "landingFoundingMemberCarouselNext": "Next Founding Member benefit",
+  "landingFoundingMemberCarouselNext": "Next Founding Friend benefit",
   "@landingFoundingMemberCarouselNext": {
-    "description": "Accessible label for the next Founding Member carousel control."
+    "description": "Accessible label for the next Founding Friend carousel control."
   },
-  "landingFoundingMemberCarouselPosition": "Founding Member benefit {currentPage} of {pageCount}",
+  "landingFoundingMemberCarouselPosition": "Founding Friend benefit {currentPage} of {pageCount}",
   "@landingFoundingMemberCarouselPosition": {
-    "description": "Accessible current-page announcement for the Founding Member carousel.",
+    "description": "Accessible current-page announcement for the Founding Friend carousel.",
     "placeholders": {
       "currentPage": {"type": "int"},
       "pageCount": {"type": "int"}
@@ -528,33 +528,33 @@
   },
   "landingFoundingMemberRecognisedTitle": "Recognised Forever",
   "@landingFoundingMemberRecognisedTitle": {
-    "description": "Title of the first Founding Member benefit card."
+    "description": "Title of the first Founding Friend benefit card."
   },
-  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed the project from the start",
+  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed Fun App from the start",
   "@landingFoundingMemberRecognisedBody": {
-    "description": "Body of the first Founding Member benefit card."
+    "description": "Body of the first Founding Friend benefit card."
   },
   "landingFoundingMemberAccessTitle": "Early Access Always",
   "@landingFoundingMemberAccessTitle": {
-    "description": "Title of the second Founding Member benefit card."
+    "description": "Title of the third Founding Friend benefit card."
   },
-  "landingFoundingMemberAccessBody": "Try new tools and experiments before they roll out publicly",
+  "landingFoundingMemberAccessBody": "Try new tools and some very exciting experiments before they roll out publicly",
   "@landingFoundingMemberAccessBody": {
-    "description": "Body of the second Founding Member benefit card."
+    "description": "Body of the third Founding Friend benefit card."
   },
-  "landingFoundingMemberVoiceTitle": "A Direct Voice",
-  "@landingFoundingMemberVoiceTitle": {
-    "description": "Title of the third Founding Member benefit card."
+  "landingFoundingMemberLifetimeTitle": "Lifetime Here & Now Membership",
+  "@landingFoundingMemberLifetimeTitle": {
+    "description": "Title of the second Founding Friend benefit card."
   },
-  "landingFoundingMemberVoiceBody": "Your feedback goes straight to the team building the roadmap",
-  "@landingFoundingMemberVoiceBody": {
-    "description": "Body of the third Founding Member benefit card."
+  "landingFoundingMemberLifetimeBody": "All the Here & Now functionality that every Fun App user will love… FOREVER.",
+  "@landingFoundingMemberLifetimeBody": {
+    "description": "Body of the second Founding Friend benefit card."
   },
-  "landingFoundingFriendsHeading": "Founding Friends are Besties",
+  "landingFoundingFriendsHeading": "I want to become a Founding Friend",
   "@landingFoundingFriendsHeading": {
     "description": "Heading in the Founding Friends promotional card."
   },
-  "landingFoundingFriendsBodyFirst": "Thank you for being an early bird and joining Fun App as a Founding Friend. You can keep this status forever, helping change the way the world makes friends.",
+  "landingFoundingFriendsBodyFirst": "Thank you for your interest in joining Fun App as a Founding Friend. Founding Friends are besties. You can keep this status forever, helping change the way the world makes friends. Or, you might choose to resell your Founding Friend status through Fun App in future years. Resale prices will be determined by buyers and sellers.",
   "@landingFoundingFriendsBodyFirst": {
     "description": "First paragraph in the Founding Friends promotional card."
   },

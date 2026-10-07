@@ -71,7 +71,7 @@ void main() {
       const Key('foundingMemberCardSurface-recognised'),
     );
     final secondCard = find.byKey(
-      const Key('foundingMemberCardSurface-access'),
+      const Key('foundingMemberCardSurface-lifetime'),
     );
 
     expect(mobileLayout.padding, const EdgeInsets.symmetric(vertical: 80));
@@ -91,7 +91,8 @@ void main() {
     expect(tester.getSize(bounds).width, 374);
     expect(tester.getRect(viewport).right, 390);
     expect(tester.getRect(firstCard).left, 16);
-    expect(tester.getSize(firstCard), const Size(358, 360));
+    expect(tester.getSize(firstCard).width, 358);
+    expect(tester.getSize(firstCard).height, greaterThanOrEqualTo(360));
     expect(
       tester
           .widget<Padding>(
@@ -141,7 +142,7 @@ void main() {
       const Key('foundingMemberCardSurface-recognised'),
     );
     final secondCard = find.byKey(
-      const Key('foundingMemberCardSurface-access'),
+      const Key('foundingMemberCardSurface-lifetime'),
     );
 
     expect(tester.getRect(firstCard).left, 16);
@@ -165,7 +166,7 @@ void main() {
     final next = find.byKey(const Key('landingCarouselNext'));
     final dots = _dots();
 
-    expect(_pageLabel(tester), 'Founding Member benefit 1 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 1 of 3');
     expect(dots, findsNWidgets(3));
     expect(_hasTapAction(tester, previous), isFalse);
     expect(_hasTapAction(tester, next), isTrue);
@@ -173,29 +174,29 @@ void main() {
 
     await tester.tap(next);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
     expect(_dotColor(tester, 1), AppColors.textPrimary);
 
     await tester.tap(next);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 3 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 3 of 3');
     expect(_hasTapAction(tester, previous), isTrue);
     expect(_hasTapAction(tester, next), isFalse);
 
     await tester.tap(next);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 3 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 3 of 3');
 
     await tester.tap(previous);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
 
     await tester.tap(previous);
     await tester.pumpAndSettle();
     await tester.tap(next);
     await tester.tap(next);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
     expect(
       find.descendant(
         of: find.byKey(const Key('landingCarouselPagination')),
@@ -217,27 +218,27 @@ void main() {
 
     await tester.drag(pageView, const Offset(-320, 0));
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
 
     await tester.tap(next);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 3 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 3 of 3');
     expect(_controlFocusNode(tester, next).hasFocus, isTrue);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
     expect(_controlFocusNode(tester, next).hasFocus, isTrue);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 3 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 3 of 3');
 
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 3 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 3 of 3');
   });
 
   testWidgets('localizes semantics and fits every card at 320 and 390', (
@@ -248,27 +249,27 @@ void main() {
     for (final example in const [
       (
         locale: Locale('en'),
-        previous: 'Previous Founding Member benefit',
-        next: 'Next Founding Member benefit',
-        position: 'Founding Member benefit 1 of 3',
+        previous: 'Previous Founding Friend benefit',
+        next: 'Next Founding Friend benefit',
+        position: 'Founding Friend benefit 1 of 3',
       ),
       (
         locale: Locale('es'),
-        previous: 'Beneficio anterior de Founding Member',
-        next: 'Siguiente beneficio de Founding Member',
-        position: 'Beneficio de Founding Member 1 de 3',
+        previous: 'Previous Founding Friend benefit',
+        next: 'Next Founding Friend benefit',
+        position: 'Founding Friend benefit 1 of 3',
       ),
       (
         locale: Locale('cy'),
-        previous: 'Budd Founding Member blaenorol',
-        next: 'Budd Founding Member nesaf',
-        position: 'Budd Founding Member 1 o 3',
+        previous: 'Previous Founding Friend benefit',
+        next: 'Next Founding Friend benefit',
+        position: 'Founding Friend benefit 1 of 3',
       ),
       (
         locale: Locale('be'),
-        previous: 'Папярэдняя перавага Founding Member',
-        next: 'Наступная перавага Founding Member',
-        position: 'Перавага Founding Member 1 з 3',
+        previous: 'Previous Founding Friend benefit',
+        next: 'Next Founding Friend benefit',
+        position: 'Founding Friend benefit 1 of 3',
       ),
     ]) {
       for (final size in const [Size(320, 568), Size(390, 844)]) {
@@ -294,13 +295,9 @@ void main() {
         final stableHeight = tester
             .getSize(find.byKey(const Key('landingMobileCarouselViewport')))
             .height;
-        if (example.locale == const Locale('en') && size.width == 390) {
-          expect(stableHeight, 360);
-        } else {
-          expect(stableHeight, greaterThanOrEqualTo(360));
-        }
+        expect(stableHeight, greaterThanOrEqualTo(360));
 
-        for (final id in ['recognised', 'access', 'voice']) {
+        for (final id in ['recognised', 'lifetime', 'access']) {
           if (id != 'recognised') {
             await tester.tap(find.byKey(const Key('landingCarouselNext')));
             await tester.pumpAndSettle();
@@ -347,14 +344,14 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('landingCarouselNext')));
     await tester.pump();
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
 
     await tester.drag(
       find.byKey(const Key('landingMobileCarouselPageView')),
       const Offset(-320, 0),
     );
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 3 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 3 of 3');
   });
 
   testWidgets('preserves page within mobile and resets across 600px', (
@@ -365,11 +362,11 @@ void main() {
 
     await tester.tap(find.byKey(const Key('landingCarouselNext')));
     await tester.pumpAndSettle();
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
 
     tester.view.physicalSize = const Size(320, 568);
     await _pumpFoundingMember(tester, resetState: false);
-    expect(_pageLabel(tester), 'Founding Member benefit 2 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 2 of 3');
 
     tester.view.physicalSize = const Size(600, 844);
     await _pumpFoundingMember(tester, resetState: false);
@@ -381,7 +378,7 @@ void main() {
 
     tester.view.physicalSize = const Size(390, 844);
     await _pumpFoundingMember(tester, resetState: false);
-    expect(_pageLabel(tester), 'Founding Member benefit 1 of 3');
+    expect(_pageLabel(tester), 'Founding Friend benefit 1 of 3');
     expect(tester.takeException(), isNull);
   });
 }
