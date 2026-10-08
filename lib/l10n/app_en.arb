@@ -44,6 +44,26 @@
   "@privacyNoticeNavigationLabel": {
     "description": "Navigation label for the hosted Privacy Notice page."
   },
+  "landingFooterPrivacyPolicy": "Privacy Policy",
+  "@landingFooterPrivacyPolicy": {
+    "description": "Footer label for the authoritative hosted Privacy Notice destination."
+  },
+  "landingFooterTermsOfUse": "Terms of Use",
+  "@landingFooterTermsOfUse": {
+    "description": "Presentation-only footer label; no authoritative destination exists yet."
+  },
+  "landingFooterRefundCancellationPolicy": "Refund & Cancellation Policy",
+  "@landingFooterRefundCancellationPolicy": {
+    "description": "Presentation-only footer label; no authoritative destination exists yet."
+  },
+  "landingFooterCookiePolicy": "Cookie Policy",
+  "@landingFooterCookiePolicy": {
+    "description": "Presentation-only footer label; no authoritative destination exists yet."
+  },
+  "landingFooterCookieBanner": "Cookie Banner",
+  "@landingFooterCookieBanner": {
+    "description": "Presentation-only footer label; no cookie-consent behavior exists yet."
+  },
   "privacyNoticeLoadError": "The Privacy Notice could not be loaded. Please try again.",
   "@privacyNoticeLoadError": {
     "description": "Error shown when the canonical Privacy Notice asset cannot be loaded."
@@ -634,11 +654,11 @@
   "@landingFaqFreeAnswer1": {
     "description": "First paragraph answering whether Fun App is free."
   },
-  "landingFaqFreeAnswer2": "We offer an optional subscription for extra features, higher limits, and additional storage. Nice to have, not required to enjoy using the app. However, join early as a Founding Friend and the subscription is included for free.",
+  "landingFaqFreeAnswer2": "However, join early and get Here & Now membership free for six months from Fun App launch.",
   "@landingFaqFreeAnswer2": {
     "description": "Second paragraph answering whether Fun App is free."
   },
-  "landingFaqLifetimeQuestion": "Is a Founding Friend subscription really lifetime?",
+  "landingFaqLifetimeQuestion": "Is a Lifetime subscription really lifetime?",
   "@landingFaqLifetimeQuestion": {
     "description": "FAQ question about the lifetime Founding Friend subscription."
   },

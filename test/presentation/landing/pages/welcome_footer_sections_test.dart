@@ -34,13 +34,14 @@ void main() {
     );
     for (final label in [
       'OUR BELIEF',
+      'MEMBERSHIP',
       'FOUNDING FRIENDS',
       'FOR VENUES',
     ]) {
       expect(find.text(label), findsNWidgets(2));
     }
     expect(find.text(LandingFooter.contactEmail), findsOneWidget);
-    expect(find.text('Privacy Notice'), findsOneWidget);
+    expect(find.text('Privacy Policy'), findsOneWidget);
   });
 
   for (final example in const [
@@ -158,11 +159,15 @@ void main() {
         lessThanOrEqualTo(example.size.width),
       );
       final itemOffsets = [
-        for (var index = 0; index < 3; index++)
+        for (var index = 0; index < 4; index++)
           tester.getTopLeft(find.byKey(Key('footerNavigationItem$index'))).dy,
       ];
-      expect(itemOffsets, hasLength(3));
-      expect(tester.takeException(), isNull);
+      expect(itemOffsets, hasLength(4));
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'Footer must fit at ${example.size}.',
+      );
     }
   });
 
@@ -273,8 +278,42 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('aligns the 1440px desktop footer rows to Figma', (tester) async {
+    setTestSurface(tester, const Size(1440, 900));
+    await pumpLandingApp(tester);
+
+    final footerRect = tester.getRect(find.byType(LandingFooter));
+    final contentRect = tester.getRect(
+      find.byKey(const Key('footerDesktopContent')),
+    );
+    final logoRect = tester.getRect(find.byKey(const Key('footerLogoAsset')));
+    final navigationRect = tester.getRect(
+      find.byKey(const Key('footerNavigationWrap')),
+    );
+    final dividerRect = tester.getRect(
+      find.byKey(const Key('footerDesktopDivider')),
+    );
+    final emailRect = tester.getRect(
+      find.byKey(const Key('footerEmailSemantics')),
+    );
+    final legalRect = tester.getRect(
+      find.byKey(const Key('footerLegalItems')),
+    );
+
+    expect(footerRect.height, greaterThanOrEqualTo(392));
+    expect(contentRect.left - footerRect.left, 40);
+    expect(contentRect.right - footerRect.right, -40);
+    expect(contentRect.top - footerRect.top, 88);
+    expect(logoRect.left, contentRect.left);
+    expect(dividerRect.width, 1360);
+    expect(dividerRect.top - navigationRect.bottom, 72);
+    expect(legalRect.top - dividerRect.bottom, 71);
+    expect(legalRect.center.dy, closeTo(emailRect.center.dy, 0.01));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
-    'shows Privacy Notice while unresolved legal controls stay absent',
+    'shows all five legal labels without fabricating unresolved controls',
     (
       tester,
     ) async {
@@ -282,7 +321,8 @@ void main() {
       await pumpLandingApp(tester);
 
       final footer = find.byType(LandingFooter);
-      for (final label in [
+      for (final label in const [
+        'Privacy Policy',
         'Terms of Use',
         'Refund & Cancellation Policy',
         'Cookie Policy',
@@ -290,13 +330,17 @@ void main() {
       ]) {
         expect(
           find.descendant(of: footer, matching: find.text(label)),
-          findsNothing,
+          findsOneWidget,
         );
       }
-      expect(
-        find.descendant(of: footer, matching: find.text('Privacy Notice')),
-        findsOneWidget,
-      );
+      for (var index = 1; index < 5; index++) {
+        final data = tester
+            .getSemantics(find.byKey(Key('footerLegalLabel$index')))
+            .getSemanticsData();
+        expect(data.flagsCollection.isLink, isFalse);
+        expect(data.flagsCollection.isButton, isFalse);
+        expect(data.hasAction(SemanticsAction.tap), isFalse);
+      }
     },
   );
 
@@ -343,7 +387,7 @@ void main() {
 
         expect(find.byType(MobileFooter), findsOneWidget);
         expect(find.text(LandingFooter.contactEmail), findsOneWidget);
-        for (var index = 0; index < 3; index++) {
+        for (var index = 0; index < 4; index++) {
           expect(
             find.byKey(Key('footerNavigationItem$index')),
             findsOneWidget,
@@ -395,7 +439,7 @@ void main() {
           .excludeFromSemantics,
       isTrue,
     );
-    for (var index = 0; index < 3; index++) {
+    for (var index = 0; index < 4; index++) {
       final navigation = tester
           .getSemantics(find.byKey(Key('footerNavigationItem$index')))
           .getSemanticsData();
@@ -405,7 +449,7 @@ void main() {
     final privacyLink = tester
         .getSemantics(find.byKey(const Key('footerPrivacyNoticeLink')))
         .getSemanticsData();
-    expect(privacyLink.label, 'Privacy Notice');
+    expect(privacyLink.label, 'Privacy Policy');
     expect(privacyLink.flagsCollection.isLink, isTrue);
     expect(privacyLink.flagsCollection.isButton, isFalse);
     expect(privacyLink.hasAction(SemanticsAction.tap), isTrue);

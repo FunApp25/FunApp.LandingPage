@@ -25,9 +25,7 @@ final class FooterPrivacyNoticeLink extends StatefulWidget {
 
 final class _FooterPrivacyNoticeLinkState
     extends State<FooterPrivacyNoticeLink> {
-  static const _minimumTargetHeight = 44.0;
-  static const _horizontalPadding = 12.0;
-  static const _radius = BorderRadius.all(Radius.circular(10));
+  static const _radius = BorderRadius.all(Radius.circular(4));
 
   bool _isFocused = false;
   bool _isHovered = false;
@@ -80,26 +78,10 @@ final class _FooterPrivacyNoticeLinkState
                 splashColor: Colors.transparent,
                 highlightColor: Colors.transparent,
                 borderRadius: _radius,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: _minimumTargetHeight,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: _horizontalPadding,
-                    ),
-                    child: Center(
-                      widthFactor: 1,
-                      child: Text(
-                        widget.label,
-                        textAlign: TextAlign.center,
-                        style: LandingTextStyles.headerNavigation.copyWith(
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
+                child: Text(
+                  widget.label,
+                  textAlign: TextAlign.center,
+                  style: LandingTextStyles.footerLegal,
                 ),
               ),
             ),

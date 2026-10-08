@@ -12,6 +12,7 @@ final class FooterLogoAndNavigation extends StatelessWidget {
     required this.items,
     this.navigationSpacing = 16,
     this.navigationRunSpacing = 8,
+    this.horizontal = false,
     super.key,
   });
 
@@ -24,33 +25,52 @@ final class FooterLogoAndNavigation extends StatelessWidget {
   /// Vertical space between wrapped footer navigation controls.
   final double navigationRunSpacing;
 
+  /// Whether the logo and navigation share the desktop top row.
+  final bool horizontal;
+
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      FunAppLogo(
-        width: AppSizes.footerWordmarkWidth,
-        height: AppSizes.footerWordmarkHeight,
-        variant: FunAppLogoVariant.landingV2,
-        semanticLabel: context.l10n.brandName,
-        excludeFromSemantics: false,
-        svgKey: const Key('footerLogoAsset'),
-      ),
-      const SizedBox(height: 32),
-      Wrap(
-        key: const Key('footerNavigationWrap'),
-        alignment: WrapAlignment.center,
-        spacing: navigationSpacing,
-        runSpacing: navigationRunSpacing,
+  Widget build(BuildContext context) {
+    final logo = FunAppLogo(
+      width: AppSizes.footerWordmarkWidth,
+      height: AppSizes.footerWordmarkHeight,
+      variant: FunAppLogoVariant.landingV2,
+      semanticLabel: context.l10n.brandName,
+      excludeFromSemantics: false,
+      svgKey: const Key('footerLogoAsset'),
+    );
+    final navigation = Wrap(
+      key: const Key('footerNavigationWrap'),
+      alignment: WrapAlignment.center,
+      spacing: navigationSpacing,
+      runSpacing: navigationRunSpacing,
+      children: [
+        for (var index = 0; index < items.length; index++)
+          LandingNavigationItem(
+            key: Key('footerNavigationItem$index'),
+            label: items[index].label,
+            onSelected: items[index].onSelected,
+          ),
+      ],
+    );
+
+    if (horizontal) {
+      return Row(
         children: [
-          for (var index = 0; index < items.length; index++)
-            LandingNavigationItem(
-              key: Key('footerNavigationItem$index'),
-              label: items[index].label,
-              onSelected: items[index].onSelected,
+          logo,
+          const SizedBox(width: 40),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: navigation,
             ),
+          ),
         ],
-      ),
-    ],
-  );
+      );
+    } else {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [logo, const SizedBox(height: 32), navigation],
+      );
+    }
+  }
 }

@@ -77,7 +77,7 @@ void main() {
     ]) {
       expect(find.text(label), findsNWidgets(2));
     }
-    expect(find.text('MEMBERSHIP'), findsOneWidget);
+    expect(find.text('MEMBERSHIP'), findsNWidgets(2));
     for (final label in ['Contact Us', 'A FRIENDLIER WAY TO CONNECT']) {
       expect(find.text(label), findsOneWidget);
     }
@@ -226,6 +226,7 @@ void main() {
     ];
     const footerTargets = <Type>[
       HeroSection,
+      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
@@ -255,6 +256,7 @@ void main() {
     setTestSurface(tester, const Size(390, 844));
     const targets = <Type>[
       HeroSection,
+      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
@@ -466,7 +468,7 @@ void main() {
 
     for (final entry in const [
       (prefix: 'landingHeaderNavigationItem', count: 4),
-      (prefix: 'footerNavigationItem', count: 3),
+      (prefix: 'footerNavigationItem', count: 4),
     ]) {
       for (var index = 0; index < entry.count; index++) {
         final itemFinder = find.byKey(Key('${entry.prefix}$index'));
@@ -646,7 +648,7 @@ void main() {
       final navigationGroups = [
         if (size.width >= LandingHeader.mobileUxBreakpoint)
           (prefix: 'landingHeaderNavigationItem', count: 4),
-        (prefix: 'footerNavigationItem', count: 3),
+        (prefix: 'footerNavigationItem', count: 4),
       ];
       for (final group in navigationGroups) {
         for (var index = 0; index < group.count; index++) {

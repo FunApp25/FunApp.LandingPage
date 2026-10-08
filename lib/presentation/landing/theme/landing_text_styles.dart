@@ -16,6 +16,19 @@ abstract final class LandingTextStyles {
     color: AppColors.textPrimary,
   );
 
+  /// Underlined legal-label treatment from the landing footer.
+  static final TextStyle footerLegal =
+      AppTextStyles.bodyFontStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        height: 20 / 12,
+        letterSpacing: 0.96,
+        color: AppColors.bodyGray,
+      ).copyWith(
+        decoration: TextDecoration.underline,
+        decorationColor: AppColors.bodyGray,
+      );
+
   /// Navigation label style from the full-screen mobile landing menu.
   static final TextStyle mobileMenuNavigation = AppTextStyles.bodyFontStyle(
     fontSize: 18,

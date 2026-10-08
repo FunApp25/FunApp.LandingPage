@@ -186,6 +186,7 @@ final class _LandingPageState extends State<LandingPage> {
                   const FaqSection(),
                   LandingFooter(
                     onOurBeliefSelected: () => _scrollTo(_heroKey),
+                    onMembershipSelected: () => _scrollTo(_membershipKey),
                     onFoundingFriendsSelected: () =>
                         _scrollTo(_foundingFriendsKey),
                     onVenuesSelected: () => _scrollTo(_venueKey),

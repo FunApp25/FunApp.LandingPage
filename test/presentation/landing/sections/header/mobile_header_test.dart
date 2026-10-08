@@ -237,7 +237,10 @@ void main() {
         tester.getRect(menu).bottom - tester.getRect(bottomContact).bottom,
         16,
       );
-      expect(find.text('MEMBERSHIP'), findsOneWidget);
+      expect(
+        find.descendant(of: menu, matching: find.text('MEMBERSHIP')),
+        findsOneWidget,
+      );
       for (var index = 0; index < 4; index++) {
         final item = find.byKey(Key('landingMobileMenuNavigationItem$index'));
         expect(_semanticButtonState(tester, item), isTrue);

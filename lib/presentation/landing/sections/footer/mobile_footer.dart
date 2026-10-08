@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_legal_items.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
-import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_privacy_notice_link.dart';
 
-/// Mobile footer composition from Figma node `2270:3307`.
+/// Mobile footer composition from Figma node `2270:3308`.
 final class MobileFooter extends StatelessWidget {
   /// Creates the mobile footer composition.
   const MobileFooter({
     required this.items,
     required this.email,
-    required this.privacyNoticeLabel,
+    required this.legalLabels,
     required this.onPrivacyNoticeSelected,
     super.key,
   });
@@ -23,8 +23,8 @@ final class MobileFooter extends StatelessWidget {
   /// Static contact address.
   final String email;
 
-  /// Localized label for the hosted Privacy Notice.
-  final String privacyNoticeLabel;
+  /// Legal labels in the Figma display order.
+  final List<String> legalLabels;
 
   /// Opens the hosted Privacy Notice in a separate tab.
   final VoidCallback onPrivacyNoticeSelected;
@@ -57,9 +57,10 @@ final class MobileFooter extends StatelessWidget {
         const SizedBox(height: 60),
         FooterEmail(email: email),
         const SizedBox(height: 32),
-        FooterPrivacyNoticeLink(
-          label: privacyNoticeLabel,
-          onSelected: onPrivacyNoticeSelected,
+        FooterLegalItems(
+          labels: legalLabels,
+          onPrivacyNoticeSelected: onPrivacyNoticeSelected,
+          spacing: 20,
         ),
       ],
     ),

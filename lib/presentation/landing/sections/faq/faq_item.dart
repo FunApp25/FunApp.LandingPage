@@ -20,6 +20,7 @@ final class FaqItem extends StatefulWidget {
     required this.questionLineHeight,
     required this.verticalPadding,
     required this.horizontalPadding,
+    required this.alignIconToTop,
     required this.onToggle,
     super.key,
   });
@@ -47,6 +48,9 @@ final class FaqItem extends StatefulWidget {
 
   /// Responsive horizontal item padding.
   final double horizontalPadding;
+
+  /// Whether the icon aligns to the first mobile question line.
+  final bool alignIconToTop;
 
   /// Toggles this item's expansion state.
   final VoidCallback onToggle;
@@ -205,6 +209,9 @@ final class _FaqItemState extends State<FaqItem> {
                           0,
                         ),
                         child: Row(
+                          crossAxisAlignment: widget.alignIconToTop
+                              ? CrossAxisAlignment.start
+                              : CrossAxisAlignment.center,
                           children: [
                             Expanded(
                               child: Text(
@@ -220,31 +227,36 @@ final class _FaqItemState extends State<FaqItem> {
                               ),
                             ),
                             const SizedBox(width: 16),
-                            SizedBox.square(
-                              key: Key('faqIcon${widget.index}'),
-                              dimension: 28,
-                              child: AnimatedSwitcher(
-                                key: Key('faqIconSwitcher${widget.index}'),
-                                duration: fastDuration,
-                                switchInCurve: LandingMotion.standardCurve,
-                                switchOutCurve: LandingMotion.standardCurve,
-                                transitionBuilder: (child, animation) =>
-                                    FadeTransition(
-                                      opacity: animation,
-                                      child: child,
-                                    ),
-                                child: SvgPicture.asset(
-                                  widget.isExpanded
-                                      ? AppAssets.faqMinus
-                                      : AppAssets.faqPlus,
-                                  key: Key(
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: widget.alignIconToTop ? 4 : 0,
+                              ),
+                              child: SizedBox.square(
+                                key: Key('faqIcon${widget.index}'),
+                                dimension: 28,
+                                child: AnimatedSwitcher(
+                                  key: Key('faqIconSwitcher${widget.index}'),
+                                  duration: fastDuration,
+                                  switchInCurve: LandingMotion.standardCurve,
+                                  switchOutCurve: LandingMotion.standardCurve,
+                                  transitionBuilder: (child, animation) =>
+                                      FadeTransition(
+                                        opacity: animation,
+                                        child: child,
+                                      ),
+                                  child: SvgPicture.asset(
                                     widget.isExpanded
-                                        ? 'faqMinus${widget.index}'
-                                        : 'faqPlus${widget.index}',
+                                        ? AppAssets.faqMinus
+                                        : AppAssets.faqPlus,
+                                    key: Key(
+                                      widget.isExpanded
+                                          ? 'faqMinus${widget.index}'
+                                          : 'faqPlus${widget.index}',
+                                    ),
+                                    width: 28,
+                                    height: 28,
+                                    excludeFromSemantics: true,
                                   ),
-                                  width: 28,
-                                  height: 28,
-                                  excludeFromSemantics: true,
                                 ),
                               ),
                             ),

@@ -164,8 +164,9 @@ Do not introduce layers, folders, abstractions, or dependencies before active co
 The active presentation foundation centralizes established Fun App color,
 typography, sizing, and Material 3 theme values. The complete section topology,
 desktop typography, and broad desktop color rhythm follow Figma `Landing Page -
-V1`. Responsive adaptations are constraint-driven because Figma supplies no
-tablet or phone frames. Research statistics use four, two, or one column as
+V1`. Responsive adaptations are constraint-driven where Figma does not supply
+a targeted mobile frame; the current FAQ and Footer use their approved 390px
+mobile frames. Research statistics use four, two, or one column as
 available width decreases; desktop card minimum heights do not automatically
 apply to single-column phone cards. Major section, statement, and FAQ type roles
 scale down deliberately on narrower viewports while preserving the desktop
@@ -220,9 +221,8 @@ similarly reflow from the desktop intro-plus-three-card composition without
 forcing desktop heights onto narrow single-column layouts.
 
 Header and footer section navigation scrolls within the single landing page
-while the header remains fixed above the scrolling content. The header exposes
-four active anchor destinations; the footer retains its established three
-destinations pending its dedicated redesign. Below a 600px
+while the header remains fixed above the scrolling content. The header and
+footer expose the same four active anchor destinations. Below a 600px
 outer viewport width, the fixed header uses a compact logo, Contact Us, and
 burger composition. The burger opens a full-screen, presentation-local menu
 with the same four header anchor destinations; selecting one closes the menu
@@ -294,15 +294,16 @@ localization, and Hero remains static. Connection uses leading-aligned copy,
 responsive layouts and preserves its two-paragraph structure. At 600px and
 above, Hero and Connection use their established wider compositions.
 
-Below a 600px outer viewport width, Footer uses a centered 16px/80px mobile
-composition: the established anchor navigation wraps naturally beneath the
-logo, a divider separates it from the static email presentation, and all
-existing anchor behavior remains unchanged. The approved Privacy Notice is
-available through a visible localized footer link. Other Figma legal-policy
-controls remain blocked until authoritative destinations and localized copy
-exist; inert legal-looking controls must not be rendered. At 600px and above,
-the established Footer composition remains unchanged apart from the approved
-Privacy Notice link.
+Below a 600px outer viewport width, Footer uses the approved centered 16px/80px
+mobile composition: the four anchor controls wrap beneath the logo, a divider
+separates them from the static email presentation, and the five Figma legal
+labels wrap beneath it. At 1200px and above, logo/navigation and email/legal
+content form the two approved desktop rows around the full-width divider;
+intermediate widths stack those groups without fixed heights or horizontal
+overflow. Privacy Policy opens the authoritative hosted Privacy Notice. Terms
+of Use, Refund & Cancellation Policy, Cookie Policy, and Cookie Banner remain
+non-interactive presentation text until authoritative destinations or behavior
+exist; their presence does not establish policy pages or cookie consent.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
