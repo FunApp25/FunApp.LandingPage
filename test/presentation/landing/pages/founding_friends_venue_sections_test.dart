@@ -1,7 +1,6 @@
 import 'dart:ui' show SemanticsAction;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
@@ -10,6 +9,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_frie
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_promotional_card.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -503,7 +503,7 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('keeps the Founding Friend CTA operable and side-effect free', (
+  testWidgets('keeps the Founding Friend CTA operable and route-only', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -524,19 +524,11 @@ void main() {
     await tester.tap(cta);
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsNothing);
-    expect(find.byType(TextField), findsNothing);
-
-    final ctaText = find.descendant(of: cta, matching: find.byType(Text));
-    final focus = Focus.of(tester.element(ctaText))..requestFocus();
-    await tester.pump();
-    expect(focus.hasPrimaryFocus, isTrue);
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyEvent(LogicalKeyboardKey.space);
-    await tester.pumpAndSettle();
-    expect(focus.hasPrimaryFocus, isTrue);
-    expect(find.byType(Dialog), findsNothing);
-    expect(find.byType(TextField), findsNothing);
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
+    expect(
+      find.byKey(const Key('userSignUpForm-foundingFriend')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
     semantics.dispose();
   });

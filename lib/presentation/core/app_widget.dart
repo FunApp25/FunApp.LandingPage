@@ -6,6 +6,8 @@ import 'package:fun_app_landing_page/presentation/core/utils/document_language.d
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 /// Root widget for the Fun App landing-page application.
@@ -47,6 +49,16 @@ final class FunAppLandingPageApp extends StatelessWidget {
             createBloc: createVenueLeadFormBloc,
             onPrivacyNoticeLaunch: onPrivacyNoticeLaunch,
           ),
+        );
+      } else if (settings.name == HereAndNowPage.routeName) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => const HereAndNowPage(),
+        );
+      } else if (settings.name == FoundingFriendPage.routeName) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => const FoundingFriendPage(),
         );
       } else {
         final initialSection =

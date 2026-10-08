@@ -12,4 +12,5 @@ typedef MembershipCardContent = ({
   List<MembershipBenefit> benefits,
   String ctaLabel,
   String? badgeLabel,
+  void Function()? onCtaPressed,
 });

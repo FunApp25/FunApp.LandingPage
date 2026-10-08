@@ -18,9 +18,17 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Membership cards and the Founding Friend explanation. The header remains
   fixed above the scrolling page, repeated header/footer navigation moves to
   the corresponding page sections, and the independently expandable FAQ
-  supports its complete item surface. Contact and product CTAs remain
-  intentionally unwired; pricing
-  is static marketing UI rather than subscription functionality. The stable
+  supports its complete item surface. Contact and unrelated product CTAs
+  remain intentionally unwired; pricing is static marketing UI rather than
+  subscription functionality. The Limited Offer queue CTA and Here & Now
+  membership CTA navigate to `/#/here-and-now`; the Founding Friend CTA
+  navigates to `/#/founding-friend`. Both destinations use responsive branded
+  UI-only forms with local validation and optional, unchecked marketing
+  consent. Their production actions are disabled until the approved
+  Cloudflare-backed HubSpot workflow exists, so no personal data is discarded
+  or falsely reported as submitted. The Here & Now confirmation is available
+  only through an injected test/development state; Founding Friend has no
+  invented success or payment behavior. The stable
   responsive presentation includes the mobile navigation menu, a mobile
   Research-statistics and Founding Friend carousels, restrained anchor/FAQ
   interaction motion, and
@@ -46,10 +54,10 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   footer at [https://funapp.world/#/privacy](https://funapp.world/#/privacy).
   Its approved English legal copy lives in
   `assets/legal/privacy_notice.md`. The
-  Founding Friends CTA remains a presentation-only no-op. Membership
-  is rendered between Connection and Limited Offer; its header and mobile-menu
-  anchor is active, while its pricing CTAs remain presentation-only no-op
-  controls pending approved business and payment behavior.
+  Membership section is rendered between Connection and Limited Offer; its
+  header and mobile-menu anchor is active. Free and Lifetime pricing controls
+  retain their presentation-only behavior pending approved business and
+  payment behavior.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -181,9 +189,9 @@ puro flutter test
 puro flutter build web -t lib/main_dev.dart
 ```
 
-The test suite covers domain validation, venue-lead form orchestration, and the
-active landing surface's branding, localization, theme, interactions, and
-responsive viewport contracts.
+The test suite covers domain validation, venue-lead form orchestration, the
+UI-only user sign-up forms, and the active landing surface's branding,
+localization, theme, interactions, and responsive viewport contracts.
 
 ## Cloudflare Worker development
 

@@ -19,6 +19,8 @@ import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welco
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
@@ -156,6 +158,14 @@ final class _LandingPageState extends State<LandingPage> {
     Navigator.of(context).pushNamed(VenuePage.routeName);
   }
 
+  void _openHereAndNowPage() {
+    Navigator.of(context).pushNamed(HereAndNowPage.routeName);
+  }
+
+  void _openFoundingFriendPage() {
+    Navigator.of(context).pushNamed(FoundingFriendPage.routeName);
+  }
+
   GlobalKey _sectionKeyFor(LandingSectionTarget section) => switch (section) {
     LandingSectionTarget.ourBelief => _heroKey,
     LandingSectionTarget.membership => _membershipKey,
@@ -192,10 +202,18 @@ final class _LandingPageState extends State<LandingPage> {
                   const ProblemStatementSection(),
                   const ResearchStatsSection(),
                   const ConnectionExperienceSection(),
-                  MembershipSection(key: _membershipKey),
-                  const FoundingOfferSection(),
+                  MembershipSection(
+                    key: _membershipKey,
+                    onHereAndNowCtaPressed: _openHereAndNowPage,
+                  ),
+                  FoundingOfferSection(
+                    onCtaPressed: _openHereAndNowPage,
+                  ),
                   const FoundingMemberSection(),
-                  FoundingFriendsSection(key: _foundingFriendsKey),
+                  FoundingFriendsSection(
+                    key: _foundingFriendsKey,
+                    onCtaPressed: _openFoundingFriendPage,
+                  ),
                   VenueSection(
                     key: _venueKey,
                     onCtaPressed: _openVenuePage,

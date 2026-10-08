@@ -11,6 +11,7 @@ final class MembershipCardAction extends StatelessWidget {
     required this.semanticId,
     required this.design,
     required this.label,
+    this.onPressed,
     super.key,
   });
 
@@ -23,17 +24,20 @@ final class MembershipCardAction extends StatelessWidget {
   /// Localized presentation-only CTA label.
   final String label;
 
+  /// Approved action, or null to preserve the established no-op behavior.
+  final VoidCallback? onPressed;
+
   @override
   Widget build(BuildContext context) => Semantics(
     label: label,
     button: true,
-    onTap: _handlePressed,
+    onTap: onPressed ?? _handleDeferredPress,
     excludeSemantics: true,
     child: Material(
       color: Colors.transparent,
       child: InkWell(
         key: Key('membershipCta-$semanticId'),
-        onTap: _handlePressed,
+        onTap: onPressed ?? _handleDeferredPress,
         excludeFromSemantics: true,
         mouseCursor: SystemMouseCursors.click,
         focusColor: AppColors.energeticPlum.withValues(alpha: 0.1),
@@ -68,5 +72,5 @@ final class MembershipCardAction extends StatelessWidget {
     ),
   );
 
-  void _handlePressed() {}
+  static void _handleDeferredPress() {}
 }

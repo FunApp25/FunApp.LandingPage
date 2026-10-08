@@ -22,6 +22,7 @@ final class MembershipCard extends StatelessWidget {
     required this.ctaLabel,
     required this.usesCoordinatedHeight,
     this.badgeLabel,
+    this.onCtaPressed,
     super.key,
   });
 
@@ -57,6 +58,9 @@ final class MembershipCard extends StatelessWidget {
 
   /// Whether the card participates in a coordinated multi-column row.
   final bool usesCoordinatedHeight;
+
+  /// Optional approved action for this membership tier.
+  final VoidCallback? onCtaPressed;
 
   MembershipCardDesign get _design => switch (variant) {
     MembershipCardVariant.free => MembershipCardDesign.free,
@@ -116,6 +120,7 @@ final class MembershipCard extends StatelessWidget {
                       semanticId: semanticId,
                       design: design,
                       label: ctaLabel,
+                      onPressed: onCtaPressed,
                     ),
                   ],
                 ),

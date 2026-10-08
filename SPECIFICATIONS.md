@@ -11,9 +11,11 @@ outside the browser. The venue CTA now navigates to the dedicated `/venues`
 hash route, whose localized form preserves the established application and
 data workflow. That form shows the approved informational
 privacy acknowledgement with a presentation-local checkbox and links to the
-hosted Privacy Notice; it does not submit a consent field. Prospective-user
-fields, flows, analytics, marketing
-consent behavior, and other business behavior remain unspecified.
+hosted Privacy Notice; it does not submit a consent field. The Here & Now and
+Founding Friend prospective-user field surfaces are now approved UI-only
+experiences at `/here-and-now` and `/founding-friend`. They validate locally
+but cannot submit in production until their Cloudflare-backed HubSpot workflow,
+age-eligibility policy, and consent semantics are approved and implemented.
 
 ## 2. Decision model
 
@@ -74,6 +76,9 @@ Current implementation is evidence of repository state, not automatically a perm
   Environment for runtime bindings and Cloudflare authentication. GitHub Pages
   remains the web origin for every other path.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
+- The Here & Now and Founding Friend forms are responsive presentation-only
+  routes. Their production actions are disabled and perform no network,
+  persistence, success, payment, or membership-status operation.
 
 ### Open
 
@@ -86,6 +91,8 @@ Current implementation is evidence of repository state, not automatically a perm
 - Public Fun App product and brand communication.
 - Responsive Flutter Web presentation.
 - Deliberate public-web, accessibility, and SEO behavior throughout implementation and release work.
+- Approved UI-only Here & Now waitlist and Founding Friend sign-up fields,
+  copy, validation, and route navigation.
 
 ### Provisional
 
@@ -94,7 +101,6 @@ Current implementation is evidence of repository state, not automatically a perm
 
 ### Open
 
-- The interested-person form fields and validation rules.
 - Any future submitted marketing-consent contract, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
@@ -216,9 +222,9 @@ FAQ, and Footer. The Header remains fixed outside the primary scrolling
 content. Membership presents static Free, Here & Now, and Founding Friend
 pricing cards. Those cards and the Founding Friend descriptions are approved
 marketing presentation only; subscription, payment, cancellation, entitlement,
-badge, and other business behavior is not implemented. Membership CTA controls
-use their enabled Figma treatment and remain presentation-only no-op actions
-until product and payment behavior is approved. Pricing cards use three, two,
+badge, and other business behavior is not implemented. The Here & Now card
+opens the approved `/here-and-now` UI; the Free and Lifetime controls preserve
+their existing presentation-only behavior. Pricing cards use three, two,
 or one column based on usable card width, and Founding Friend benefit cards
 similarly reflow from the desktop intro-plus-three-card composition without
 forcing desktop heights onto narrow single-column layouts.
@@ -245,12 +251,12 @@ Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
 become immediate when reduced motion is requested. Contact Us in the header
 and mobile menu opens a localized, presentation-only Coming soon dialog.
-Waitlist, product, email, and other marketing CTA destinations remain open and
-intentionally unwired.
-The Founding Friends prospective-user CTA is currently a keyboard-operable,
-presentation-only no-op. It collects no information and performs no business
-operation; the interested-person contract remains unresolved. The
-venue CTA navigates to the dedicated `/venues` page. A fresh
+The Limited Offer queue CTA and Here & Now membership CTA navigate to
+`/here-and-now`. The Founding Friends prospective-user CTA navigates to
+`/founding-friend`. Those routes collect no information in production because
+their submission/payment controls are disabled until integration; Contact Us
+and unrelated product controls preserve their existing behavior. The venue CTA
+navigates to the dedicated `/venues` page. A fresh
 `VenueLeadFormBloc` owns each Venue route lifecycle and submits through the
 established environment-selected venue repository/data-source graph. Shared
 header and footer navigation returns to `/` with a render-derived landing
@@ -345,12 +351,37 @@ capabilities as implemented.
 - Locale negotiation follows the browser or platform locale. The application does not force a locale.
 - The host document language follows Flutter's resolved application locale; the static web shell defaults to English before Flutter starts.
 - No language selector or persisted manual locale choice exists yet.
-- User-facing Flutter copy must come from generated localizations rather than hardcoded presentation strings. New source copy and its supported translations belong in the same implementation scope.
+- User-facing Flutter copy must come from generated localizations rather than hardcoded presentation strings. Approved new English source copy may use the established English fallback in other supported locales when translation completion is explicitly deferred and tracked.
 - Locale-specific product and marketing copy remains subject to product and translation review as content expands.
 
 ## 8. User input and future backend direction
 
 ### Established
+
+- The Here & Now UI requires first name, last name, email, and integer age;
+  gender and usage reason are optional. The Founding Friend UI adds required
+  country while keeping gender and usage reason optional. Both forms expose a
+  separate optional marketing-consent checkbox that starts unchecked and does
+  not block local validation.
+- Presentation validation rejects blank required names, structurally invalid
+  email, non-integer age input, and a missing Founding Friend country. It does
+  not invent an age threshold. This validation is usability only and does not
+  authorize production collection without matching backend validation.
+- Current live HubSpot contact properties are `firstname`, `lastname`,
+  `email`, `age`, `gender`, `country`, `usage_reason`, and
+  `marketing_consent`. Gender stores `Man`, `Woman`, `Non-binary`, or
+  `Prefer not to answer`. The Founding Friend country control uses the complete
+  live `country` property label/value set captured in the English localization
+  source rather than a shortened list.
+- Future integration references portal `149114580`, Here & Now form
+  `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
+  `39f027d9-e786-4768-b532-54ed44e1f718`. These documented identifiers do not
+  appear in Flutter submission code, and no browser-to-HubSpot path exists.
+- Production supplies no submit callback to either user form. A small
+  presentation draft and injected callback exist only for isolated UI tests and
+  previews. The approved Here & Now success copy is reachable only through an
+  explicitly injected confirmed-success state; no Founding Friend success copy
+  or payment state exists.
 
 - The prospective-venue lead contract is provider-neutral and lives in
   `domain`. It uses `dartz` `Either` for validation results and `Option` for
@@ -468,13 +499,12 @@ capabilities as implemented.
 
 ### Provisional
 
-- The landing page is expected to collect interested-user information in the future; likely examples include name and email.
-- The eventual backend may be the same Microsoft/Azure-backed backend used by the main Fun App product.
+- The user forms will eventually submit through a Fun App-owned Cloudflare
+  boundary following the established Venue integration pattern.
 - Flutter should remain decoupled from backend implementation through interfaces, repositories, data sources, DTO/boundary mapping, and configuration.
 
 ### Open
 
-- The prospective-user input model and its required/optional fields.
 - An approved consent/privacy field contract and any corresponding HubSpot
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.
@@ -488,6 +518,13 @@ capabilities as implemented.
   cross-field invariant.
 - Prospective-user API endpoints and DTOs, and venue-lead retention/deletion
   requirements.
+- The minimum/maximum age eligibility policy and corresponding backend rule.
+- Whether approved display labels should differ from the confirmed HubSpot
+  gender values, and any explicit reversible mapping if they do.
+- Ongoing synchronization of the HubSpot country option source before
+  integration and release.
+- The Founding Friend payment provider, checkout ordering, payment status, and
+  success behavior.
 - Timing and authorized deployment of the Cloudflare Worker, its narrow route,
   and the later Flutter data-source switch to the first-party endpoint.
 
@@ -536,7 +573,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses `https://funapp.world/#/privacy`, and the Venue sign-up page uses `https://funapp.world/#/venues`; because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses `https://funapp.world/#/privacy`; sign-up pages use `https://funapp.world/#/venues`, `https://funapp.world/#/here-and-now`, and `https://funapp.world/#/founding-friend`. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 

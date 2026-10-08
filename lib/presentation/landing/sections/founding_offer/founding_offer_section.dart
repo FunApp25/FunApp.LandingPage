@@ -6,7 +6,10 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_offe
 /// Limited-time Founding Friend offer from Figma node `2243:2549`.
 final class FoundingOfferSection extends StatelessWidget {
   /// Creates the founding-offer section.
-  const FoundingOfferSection({super.key});
+  const FoundingOfferSection({this.onCtaPressed, super.key});
+
+  /// Opens the approved Here & Now waitlist destination.
+  final VoidCallback? onCtaPressed;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -43,6 +46,7 @@ final class FoundingOfferSection extends StatelessWidget {
                 statementSize: statementSize,
                 statementLineHeight: statementLineHeight,
                 usesMobileFidelity: usesMobileFidelity,
+                onCtaPressed: onCtaPressed,
               ),
             ),
           ),

@@ -20,6 +20,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_l
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_disclosure.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_dialog.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 import '../landing_test_helpers.dart';
@@ -37,7 +38,7 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets('Founding Friend CTA is a no-op while Venue opens its route', (
+  testWidgets('Founding Friend and Venue CTAs open only their routes', (
     tester,
   ) async {
     getIt.registerFactory<VenueLeadFormBloc>(
@@ -50,9 +51,12 @@ void main() {
     await tester.tap(foundingCta);
     await tester.pumpAndSettle();
 
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
     expect(find.byType(LandingDialog), findsNothing);
-    expect(find.byKey(const Key('venueLeadForm')), findsNothing);
     expect(repository.submittedLeads, isEmpty);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
 
     final venueCta = find.byKey(const Key('venueCardCta'));
     await tester.ensureVisible(venueCta);

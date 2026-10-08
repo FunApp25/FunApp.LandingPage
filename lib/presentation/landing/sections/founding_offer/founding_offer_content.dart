@@ -13,6 +13,7 @@ final class FoundingOfferContent extends StatelessWidget {
     required this.statementSize,
     required this.statementLineHeight,
     required this.usesMobileFidelity,
+    this.onCtaPressed,
     super.key,
   });
 
@@ -24,6 +25,9 @@ final class FoundingOfferContent extends StatelessWidget {
 
   /// Whether the mobile Figma width and typography treatment are active.
   final bool usesMobileFidelity;
+
+  /// Opens the approved Here & Now waitlist destination when supplied.
+  final VoidCallback? onCtaPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -109,9 +113,11 @@ final class FoundingOfferContent extends StatelessWidget {
           size: LandingCtaSize.prominent,
           prominentContentExpands: usesMobileFidelity,
           arrowKey: const Key('foundingOfferCtaArrow'),
-          onPressed: () {},
+          onPressed: onCtaPressed ?? _handleDeferredCta,
         ),
       ],
     );
   }
+
+  static void _handleDeferredCta() {}
 }

@@ -14,6 +14,8 @@ import 'package:fun_app_landing_page/presentation/core/utils/document_language.d
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 void main() {
@@ -161,6 +163,45 @@ void main() {
     expect(find.byType(LandingPage), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('direct Here & Now route opens and returns through routing', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        HereAndNowPage.routeName;
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    await _pumpApp(tester, const Locale('en'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HereAndNowPage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'direct Founding Friend route opens and returns through routing',
+    (
+      tester,
+    ) async {
+      tester.binding.platformDispatcher.defaultRouteNameTestValue =
+          FoundingFriendPage.routeName;
+      addTearDown(
+        tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+      );
+      await _pumpApp(tester, const Locale('en'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FoundingFriendPage), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(LandingPage), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('unknown initial fragment falls back to landing', (
     tester,

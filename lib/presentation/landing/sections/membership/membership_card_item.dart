@@ -54,6 +54,7 @@ final class MembershipCardItem extends StatelessWidget {
           ctaLabel: card.ctaLabel,
           badgeLabel: card.badgeLabel,
           usesCoordinatedHeight: usesCoordinatedHeight,
+          onCtaPressed: card.onCtaPressed,
         ),
       ),
     );
