@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
-import 'package:fun_app_landing_page/presentation/landing/shared/widgets/section_eyebrow.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
@@ -184,20 +182,20 @@ final class _UserSignUpMain extends StatelessWidget {
               color: AppColors.beigeAccent,
               borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             ),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                mobile ? 16 : 40,
-                mobile ? 80 : 128,
-                mobile ? 16 : 40,
-                mobile ? 80 : 128,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  key: Key('userSignUpContent-${experience.name}'),
-                  constraints: const BoxConstraints(maxWidth: 1016),
-                  child: showConfirmedSuccess
-                      ? UserSignUpSuccess(mobile: mobile)
-                      : Column(
+            child: showConfirmedSuccess
+                ? UserSignUpSuccess(mobile: mobile)
+                : Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      mobile ? 16 : 40,
+                      mobile ? 80 : 128,
+                      mobile ? 16 : 40,
+                      mobile ? 80 : 128,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        key: Key('userSignUpContent-${experience.name}'),
+                        constraints: const BoxConstraints(maxWidth: 1016),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _UserSignUpIntroduction(
@@ -211,9 +209,9 @@ final class _UserSignUpMain extends StatelessWidget {
                             ),
                           ],
                         ),
-                ),
-              ),
-            ),
+                      ),
+                    ),
+                  ),
           ),
         ),
       );
@@ -233,44 +231,74 @@ final class _UserSignUpIntroduction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final eyebrow = switch (experience) {
-      UserSignUpExperience.hereAndNow => l10n.userSignUpHereAndNowEyebrow,
-      UserSignUpExperience.foundingFriend =>
-        l10n.userSignUpFoundingFriendEyebrow,
-    };
     final introduction = switch (experience) {
       UserSignUpExperience.hereAndNow => l10n.userSignUpHereAndNowIntroduction,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendIntroduction,
     };
+    final emphasis = switch (experience) {
+      UserSignUpExperience.hereAndNow =>
+        l10n.userSignUpHereAndNowHeadingEmphasis,
+      UserSignUpExperience.foundingFriend =>
+        l10n.userSignUpFoundingFriendHeadingEmphasis,
+    };
+    final bodyStart = introduction.indexOf('. ');
+    final heading = bodyStart == -1
+        ? introduction
+        : introduction.substring(0, bodyStart);
+    final body = bodyStart == -1 ? '' : introduction.substring(bodyStart + 2);
+    final leading = heading.endsWith(emphasis)
+        ? heading.substring(0, heading.length - emphasis.length)
+        : heading;
+    final headingStyle = LandingTextStyles.heroHeadline.copyWith(
+      fontSize: mobile ? 36 : 60,
+      height: mobile ? 46 / 36 : 70 / 60,
+      letterSpacing: mobile ? -1.08 : -1.8,
+    );
+    final emphasisStyle = LandingTextStyles.heroHeadlineEmphasis.copyWith(
+      fontSize: mobile ? 36 : 60,
+      height: mobile ? 46 / 36 : 70 / 60,
+      letterSpacing: mobile ? -1.08 : -1.8,
+    );
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760),
+        key: Key('userSignUpIntroductionGroup-${experience.name}'),
+        constraints: BoxConstraints(
+          maxWidth: mobile
+              ? double.infinity
+              : experience == UserSignUpExperience.foundingFriend
+              ? 742
+              : 648,
+        ),
         child: Column(
           children: [
-            SectionEyebrow(
-              label: eyebrow.toUpperCase(),
-              glyphAsset: AppAssets.heroEyebrowGlyph,
-              foregroundColor: AppColors.blueMain,
-              glyphSize: Size(18, mobile ? 16 : 12),
-              alignment: MainAxisAlignment.center,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
             Semantics(
               key: Key('userSignUpIntroduction-${experience.name}'),
               header: true,
-              child: Text(
-                introduction,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyFontStyle(
-                  fontSize: mobile ? 18 : 20,
-                  fontWeight: FontWeight.w500,
-                  height: mobile ? 28 / 18 : 30 / 20,
-                  letterSpacing: mobile ? 0.36 : 0.4,
-                  color: AppColors.bodyGray,
+              label: heading,
+              excludeSemantics: true,
+              child: Text.rich(
+                TextSpan(
+                  text: leading,
+                  style: headingStyle,
+                  children: [
+                    TextSpan(text: emphasis, style: emphasisStyle),
+                  ],
                 ),
+                key: Key('userSignUpHeading-${experience.name}'),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            SizedBox(height: mobile ? 14 : 16),
+            Text(
+              body,
+              key: Key('userSignUpIntroductionBody-${experience.name}'),
+              textAlign: TextAlign.center,
+              style: LandingTextStyles.heroSupporting.copyWith(
+                fontSize: mobile ? 16 : 18,
+                height: mobile ? 24 / 16 : 26 / 18,
+                letterSpacing: mobile ? 0.32 : 0.36,
               ),
             ),
           ],

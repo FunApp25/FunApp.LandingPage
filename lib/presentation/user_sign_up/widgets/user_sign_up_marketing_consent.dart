@@ -81,51 +81,46 @@ final class _UserSignUpMarketingConsentState
           splashColor: AppColors.warmOrange.withValues(alpha: 0.10),
           highlightColor: Colors.transparent,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox.square(
-                  dimension: 44,
-                  child: Center(
-                    child: DecoratedBox(
-                      key: Key('marketingConsentVisual-${widget.semanticId}'),
-                      decoration: BoxDecoration(
-                        color: widget.value
-                            ? AppColors.warmOrange
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: _isFocused
-                              ? AppColors.energeticPlum
-                              : AppColors.warmOrange,
-                          width: _isFocused ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(4),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: DecoratedBox(
+                    key: Key('marketingConsentVisual-${widget.semanticId}'),
+                    decoration: BoxDecoration(
+                      color: widget.value
+                          ? AppColors.warmOrange
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: _isFocused
+                            ? AppColors.energeticPlum
+                            : AppColors.warmOrange,
+                        width: _isFocused ? 2 : 1,
                       ),
-                      child: SizedBox.square(
-                        dimension: 16,
-                        child: widget.value
-                            ? const Icon(
-                                Icons.check,
-                                size: 12,
-                                color: AppColors.lightForeground,
-                              )
-                            : null,
-                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: SizedBox.square(
+                      dimension: 16,
+                      child: widget.value
+                          ? const Icon(
+                              Icons.check,
+                              size: 12,
+                              color: AppColors.lightForeground,
+                            )
+                          : null,
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 11),
-                    child: Text(
-                      widget.label,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.bodyGray,
-                        height: 22 / 14,
-                        fontSize: 14,
-                      ),
+                  child: Text(
+                    widget.label,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.bodyGray,
+                      height: 22 / 14,
+                      fontSize: 14,
                     ),
                   ),
                 ),

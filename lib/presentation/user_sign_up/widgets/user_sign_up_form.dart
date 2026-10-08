@@ -128,6 +128,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
+              final usesDesktopGrid = constraints.maxWidth >= 760;
               final firstName = _textField(
                 key: Key('firstNameField-$_semanticId'),
                 controller: _firstNameController,
@@ -147,79 +148,84 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
                 validator: _requiredValidator,
               );
 
-              if (constraints.maxWidth >= 760) {
-                return Row(
-                  key: Key('nameFieldsRow-$_semanticId'),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: firstName),
-                    const SizedBox(width: 16),
-                    Expanded(child: lastName),
-                  ],
-                );
-              } else {
-                return Column(
-                  key: Key('nameFieldsColumn-$_semanticId'),
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    firstName,
-                    const SizedBox(height: 16),
-                    lastName,
-                  ],
-                );
-              }
+              final email = _textField(
+                key: Key('emailField-$_semanticId'),
+                controller: _emailController,
+                label: l10n.userSignUpEmailLabel,
+                required: true,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                validator: _emailValidator,
+              );
+              final age = _textField(
+                key: Key('ageField-$_semanticId'),
+                controller: _ageController,
+                label: l10n.userSignUpAgeLabel,
+                required: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: const [_AsciiDigitsOnlyFormatter()],
+                validator: _ageValidator,
+              );
+              final gender = _dropdownField(
+                key: Key('genderField-$_semanticId'),
+                label: l10n.userSignUpGenderLabel,
+                placeholder: l10n.userSignUpGenderPlaceholder,
+                value: _gender,
+                options: genderOptions,
+                onChanged: (value) => setState(() => _gender = value),
+              );
+              final country = _requiresCountry
+                  ? _dropdownField(
+                      key: Key('countryField-$_semanticId'),
+                      label: l10n.userSignUpCountryLabel,
+                      placeholder: l10n.userSignUpCountryPlaceholder,
+                      required: true,
+                      value: _country,
+                      options: countryOptions,
+                      validator: _requiredSelectionValidator,
+                      onChanged: (value) => setState(() => _country = value),
+                    )
+                  : null;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _fieldPair(
+                    rowKey: Key('nameFieldsRow-$_semanticId'),
+                    columnKey: Key('nameFieldsColumn-$_semanticId'),
+                    leading: firstName,
+                    trailing: lastName,
+                    usesDesktopGrid: usesDesktopGrid,
+                  ),
+                  const SizedBox(height: 16),
+                  _fieldPair(
+                    rowKey: Key('contactFieldsRow-$_semanticId'),
+                    columnKey: Key('contactFieldsColumn-$_semanticId'),
+                    leading: email,
+                    trailing: age,
+                    usesDesktopGrid: usesDesktopGrid,
+                  ),
+                  const SizedBox(height: 16),
+                  _fieldPair(
+                    rowKey: Key('demographicFieldsRow-$_semanticId'),
+                    columnKey: Key('demographicFieldsColumn-$_semanticId'),
+                    leading: country ?? gender,
+                    trailing: country == null ? null : gender,
+                    usesDesktopGrid: usesDesktopGrid,
+                  ),
+                ],
+              );
             },
-          ),
-          const SizedBox(height: 16),
-          _textField(
-            key: Key('emailField-$_semanticId'),
-            controller: _emailController,
-            label: l10n.userSignUpEmailLabel,
-            required: true,
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.email],
-            validator: _emailValidator,
-          ),
-          const SizedBox(height: 16),
-          _textField(
-            key: Key('ageField-$_semanticId'),
-            controller: _ageController,
-            label: l10n.userSignUpAgeLabel,
-            required: true,
-            keyboardType: TextInputType.number,
-            inputFormatters: const [_AsciiDigitsOnlyFormatter()],
-            validator: _ageValidator,
-          ),
-          if (_requiresCountry) ...[
-            const SizedBox(height: 16),
-            _dropdownField(
-              key: Key('countryField-$_semanticId'),
-              label: l10n.userSignUpCountryLabel,
-              placeholder: l10n.userSignUpCountryPlaceholder,
-              required: true,
-              value: _country,
-              options: countryOptions,
-              validator: _requiredSelectionValidator,
-              onChanged: (value) => setState(() => _country = value),
-            ),
-          ],
-          const SizedBox(height: 16),
-          _dropdownField(
-            key: Key('genderField-$_semanticId'),
-            label: l10n.userSignUpGenderLabel,
-            placeholder: l10n.userSignUpGenderPlaceholder,
-            value: _gender,
-            options: genderOptions,
-            onChanged: (value) => setState(() => _gender = value),
           ),
           const SizedBox(height: 16),
           _textField(
             key: Key('usageReasonField-$_semanticId'),
             controller: _usageReasonController,
             label: usageReasonLabel,
-            minLines: 3,
-            maxLines: 5,
+            minLines: 5,
+            maxLines: 7,
             textInputAction: TextInputAction.newline,
+            multiline: true,
           ),
           const SizedBox(height: 20),
           UserSignUpMarketingConsent(
@@ -247,6 +253,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
     int minLines = 1,
     int maxLines = 1,
     TextInputAction textInputAction = TextInputAction.next,
+    bool multiline = false,
   }) {
     final semanticLabel = required
         ? context.l10n.userSignUpRequiredFieldSemantics(label)
@@ -263,7 +270,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
             key: key,
             controller: controller,
             style: _inputStyle,
-            decoration: _fieldDecoration(),
+            decoration: _fieldDecoration(multiline: multiline),
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
             autofillHints: autofillHints,
@@ -358,13 +365,46 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
     color: AppColors.bodyGray,
   );
 
-  InputDecoration _fieldDecoration() {
+  Widget _fieldPair({
+    required Key rowKey,
+    required Key columnKey,
+    required Widget leading,
+    required Widget? trailing,
+    required bool usesDesktopGrid,
+  }) {
+    if (usesDesktopGrid) {
+      return Row(
+        key: rowKey,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: leading),
+          const SizedBox(width: 16),
+          Expanded(child: trailing ?? const SizedBox.shrink()),
+        ],
+      );
+    } else {
+      return Column(
+        key: columnKey,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          leading,
+          if (trailing != null) ...[
+            const SizedBox(height: 16),
+            trailing,
+          ],
+        ],
+      );
+    }
+  }
+
+  InputDecoration _fieldDecoration({bool multiline = false}) {
+    final radius = multiline ? 16.0 : AppSizes.pillRadius;
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppSizes.pillRadius),
+      borderRadius: BorderRadius.circular(radius),
       borderSide: BorderSide.none,
     );
     final errorBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppSizes.pillRadius),
+      borderRadius: BorderRadius.circular(radius),
       borderSide: const BorderSide(color: AppColors.cherryRed, width: 2),
     );
 
@@ -376,7 +416,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
       border: border,
       enabledBorder: border,
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSizes.pillRadius),
+        borderRadius: BorderRadius.circular(radius),
         borderSide: const BorderSide(color: AppColors.warmOrange, width: 2),
       ),
       errorBorder: errorBorder,
@@ -394,9 +434,12 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
   Widget _submitButton(String label) => LayoutBuilder(
     builder: (context, constraints) {
       final expands = constraints.maxWidth < 760;
+      final desktopWidth = widget.experience == UserSignUpExperience.hereAndNow
+          ? 291.0
+          : null;
       return Align(
         child: SizedBox(
-          width: expands ? double.infinity : null,
+          width: expands ? double.infinity : desktopWidth,
           height: 48,
           child: FilledButton(
             key: Key('userSignUpSubmit-$_semanticId'),
@@ -408,15 +451,9 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
               padding: const WidgetStatePropertyAll(
                 EdgeInsets.symmetric(horizontal: 40, vertical: 12),
               ),
-              backgroundColor: WidgetStateProperty.resolveWith<Color>((
-                states,
-              ) {
-                if (states.contains(WidgetState.disabled)) {
-                  return AppColors.warmOrange.withValues(alpha: 0.45);
-                } else {
-                  return AppColors.warmOrange;
-                }
-              }),
+              backgroundColor: const WidgetStatePropertyAll(
+                AppColors.warmOrange,
+              ),
               foregroundColor: const WidgetStatePropertyAll(
                 AppColors.lightForeground,
               ),

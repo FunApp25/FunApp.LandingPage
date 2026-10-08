@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
@@ -17,11 +18,14 @@ import '../landing/landing_test_helpers.dart';
 void main() {
   const hereAndNowIntroduction =
       'Thank you for interest in joining Fun App with a 6 month free trial '
-      'of Here & Now membership. Sign up by entering your details on this '
-      "form and secure your place in the queue. We'll stay in touch as Fun "
-      'App moves towards launch. Welcome!';
+      'of Here & Now membership';
+  const hereAndNowIntroductionBody =
+      'Sign up by entering your details on this form and secure your place '
+      "in the queue. We'll stay in touch as Fun App moves towards launch. "
+      'Welcome!';
   const foundingFriendIntroduction =
-      'Thank you for your interest in becoming a Fun App Founding Friend. '
+      'Thank you for your interest in becoming a Fun App Founding Friend';
+  const foundingFriendIntroductionBody =
       'Sign up by entering your details below and get ready for an exciting '
       'journey as you gain Founding Friend status and help Fun App to change '
       'the world. Welcome!';
@@ -127,7 +131,11 @@ void main() {
     setTestSurface(tester, const Size(1440, 1200));
     await _pumpPage(tester, const HereAndNowPage());
 
-    expect(find.text(hereAndNowIntroduction), findsOneWidget);
+    expect(
+      find.text(hereAndNowIntroduction, findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text(hereAndNowIntroductionBody), findsOneWidget);
     expect(find.text('Your first name*'), findsOneWidget);
     expect(find.text('Your last name*'), findsOneWidget);
     expect(find.text('Email*'), findsOneWidget);
@@ -141,12 +149,23 @@ void main() {
     expect(find.text('Join the Here & Now waitlist'), findsOneWidget);
     expect(find.text('Country*'), findsNothing);
     expect(find.byKey(const Key('nameFieldsRow-hereAndNow')), findsOneWidget);
+    expect(
+      find.byKey(const Key('contactFieldsRow-hereAndNow')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('demographicFieldsRow-hereAndNow')),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const Key('emailField-hereAndNow'))).dy,
+      tester.getTopLeft(find.byKey(const Key('ageField-hereAndNow'))).dy,
+    );
     _expectOrdered(
       tester,
       const [
         Key('firstNameField-hereAndNow'),
         Key('emailField-hereAndNow'),
-        Key('ageField-hereAndNow'),
         Key('genderField-hereAndNow'),
         Key('usageReasonField-hereAndNow'),
         Key('marketingConsent-hereAndNow'),
@@ -159,6 +178,14 @@ void main() {
     );
     expect(submit.onPressed, isNull);
     expect(find.byType(UserSignUpSuccess), findsNothing);
+    final usageReason = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(const Key('usageReasonField-hereAndNow')),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(usageReason.minLines, 5);
+    expect(usageReason.maxLines, 7);
   });
 
   testWidgets(
@@ -169,7 +196,11 @@ void main() {
       setTestSurface(tester, const Size(1440, 1200));
       await _pumpPage(tester, const FoundingFriendPage());
 
-      expect(find.text(foundingFriendIntroduction), findsOneWidget);
+      expect(
+        find.text(foundingFriendIntroduction, findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.text(foundingFriendIntroductionBody), findsOneWidget);
       expect(find.text('First Name*'), findsOneWidget);
       expect(find.text('Last Name*'), findsOneWidget);
       expect(find.text('Email*'), findsOneWidget);
@@ -186,14 +217,28 @@ void main() {
         find.byKey(const Key('nameFieldsRow-foundingFriend')),
         findsOneWidget,
       );
+      expect(
+        find.byKey(const Key('contactFieldsRow-foundingFriend')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('demographicFieldsRow-foundingFriend')),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .getTopLeft(find.byKey(const Key('countryField-foundingFriend')))
+            .dy,
+        tester
+            .getTopLeft(find.byKey(const Key('genderField-foundingFriend')))
+            .dy,
+      );
       _expectOrdered(
         tester,
         const [
           Key('firstNameField-foundingFriend'),
           Key('emailField-foundingFriend'),
-          Key('ageField-foundingFriend'),
           Key('countryField-foundingFriend'),
-          Key('genderField-foundingFriend'),
           Key('usageReasonField-foundingFriend'),
           Key('marketingConsent-foundingFriend'),
           Key('userSignUpSubmit-foundingFriend'),
@@ -363,7 +408,10 @@ void main() {
     );
     expect(find.byType(UserSignUpSuccess), findsOneWidget);
     expect(
-      find.text('Thank you for signing up for Here & Now membership'),
+      find.text(
+        'Thank you for signing up for Here & Now membership',
+        findRichText: true,
+      ),
       findsOneWidget,
     );
     expect(
@@ -371,6 +419,12 @@ void main() {
         'Fun App will be launching soon and we look forward to welcoming you '
         'as an early member.',
       ),
+      findsOneWidget,
+    );
+    expect(find.text('info@funapp.world'), findsWidgets);
+    expect(find.text('THE FUN APP TEAM'), findsOneWidget);
+    expect(
+      find.byKey(const Key('hereAndNowSuccessEnvelope')),
       findsOneWidget,
     );
     expect(find.byKey(const Key('userSignUpForm-hereAndNow')), findsNothing);
@@ -381,6 +435,68 @@ void main() {
       find.byKey(const Key('userSignUpForm-foundingFriend')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('mixed headings use the approved responsive emphasis', (
+    tester,
+  ) async {
+    for (final width in const [390.0, 1440.0]) {
+      setTestSurface(tester, Size(width, 1200));
+      await _pumpPage(tester, const HereAndNowPage());
+
+      final introduction = tester.widget<Text>(
+        find.byKey(const Key('userSignUpHeading-hereAndNow')),
+      );
+      final introductionSpan = introduction.textSpan! as TextSpan;
+      final introductionEmphasis =
+          introductionSpan.children!.single as TextSpan;
+      expect(introductionSpan.style?.fontSize, width == 390 ? 36 : 60);
+      expect(introductionEmphasis.style?.fontStyle, FontStyle.italic);
+      expect(introductionEmphasis.style?.color, AppColors.warmOrange);
+      expect(
+        tester
+            .getSize(
+              find.byKey(const Key('userSignUpIntroductionGroup-hereAndNow')),
+            )
+            .width,
+        width == 390 ? 326 : 648,
+      );
+
+      await _pumpPage(
+        tester,
+        const HereAndNowPage(showConfirmedSuccess: true),
+      );
+      final success = tester.widget<Text>(
+        find.byKey(const Key('hereAndNowSuccessHeading')),
+      );
+      final successSpan = success.textSpan! as TextSpan;
+      final successEmphasis = successSpan.children!.single as TextSpan;
+      expect(successSpan.style?.fontSize, width == 390 ? 36 : 60);
+      expect(successEmphasis.style?.fontStyle, FontStyle.italic);
+      expect(successEmphasis.style?.color, AppColors.warmOrange);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('Here & Now success remains bounded with scaled text', (
+    tester,
+  ) async {
+    for (final width in const [390.0, 1440.0]) {
+      setTestSurface(tester, Size(width, 1200));
+      await _pumpPage(
+        tester,
+        const HereAndNowPage(showConfirmedSuccess: true),
+        textScaleFactor: 2,
+      );
+
+      final card = tester.getRect(
+        find.byKey(const Key('userSignUpCard-hereAndNow')),
+      );
+      expect(card.left, greaterThanOrEqualTo(0));
+      expect(card.right, lessThanOrEqualTo(width));
+      expect(find.byType(UserSignUpSuccess), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
   });
 
   testWidgets('both forms remain bounded at required responsive widths', (
@@ -407,9 +523,25 @@ void main() {
             find.byKey(Key('nameFieldsRow-$semanticId')),
             findsOneWidget,
           );
+          expect(
+            find.byKey(Key('contactFieldsRow-$semanticId')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(Key('demographicFieldsRow-$semanticId')),
+            findsOneWidget,
+          );
         } else {
           expect(
             find.byKey(Key('nameFieldsColumn-$semanticId')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(Key('contactFieldsColumn-$semanticId')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(Key('demographicFieldsColumn-$semanticId')),
             findsOneWidget,
           );
         }
