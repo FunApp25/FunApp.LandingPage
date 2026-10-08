@@ -11,6 +11,8 @@ final class SectionEyebrow extends StatelessWidget {
     required this.foregroundColor,
     required this.glyphSize,
     this.alignment = MainAxisAlignment.start,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.spacing = 10,
     this.textAlign = TextAlign.start,
     this.glyphKey,
     super.key,
@@ -31,6 +33,12 @@ final class SectionEyebrow extends StatelessWidget {
   /// Horizontal placement of the combined glyph and label.
   final MainAxisAlignment alignment;
 
+  /// Vertical alignment of the glyph and a potentially wrapped label.
+  final CrossAxisAlignment crossAxisAlignment;
+
+  /// Horizontal space between the glyph and label.
+  final double spacing;
+
   /// Text alignment when a localized label wraps.
   final TextAlign textAlign;
 
@@ -40,6 +48,7 @@ final class SectionEyebrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: alignment,
+    crossAxisAlignment: crossAxisAlignment,
     children: [
       SvgPicture.asset(
         glyphAsset,
@@ -49,7 +58,7 @@ final class SectionEyebrow extends StatelessWidget {
         colorFilter: ColorFilter.mode(foregroundColor, BlendMode.srcIn),
         excludeFromSemantics: true,
       ),
-      const SizedBox(width: 10),
+      SizedBox(width: spacing),
       Flexible(
         child: Text(
           label,

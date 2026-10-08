@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
-import 'package:fun_app_landing_page/core/injection/injection.dart';
+import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/faq/faq_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
@@ -15,17 +14,24 @@ import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_sec
 import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
+import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
 final class LandingPage extends StatefulWidget {
   /// Creates the landing page.
-  const LandingPage({this.onPrivacyNoticeLaunch, super.key});
+  const LandingPage({
+    this.initialSection,
+    this.onPrivacyNoticeLaunch,
+    super.key,
+  });
+
+  /// Section requested by route-aware navigation from another page.
+  final LandingSectionTarget? initialSection;
 
   /// Overrides the browser launcher for presentation tests.
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
@@ -46,6 +52,19 @@ final class _LandingPageState extends State<LandingPage> {
   final GlobalKey _venueKey = GlobalKey(debugLabel: 'landingVenueSection');
   GlobalKey? _activeNavigationTarget;
   var _navigationRequest = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialSection = widget.initialSection;
+    if (initialSection != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _scrollTo(_sectionKeyFor(initialSection));
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -133,17 +152,16 @@ final class _LandingPageState extends State<LandingPage> {
     unawaited(showInterestedUserComingSoonDialog(context));
   }
 
-  void _showVenueLeadDialog() {
-    unawaited(_openVenueLeadDialog());
+  void _openVenuePage() {
+    Navigator.of(context).pushNamed(VenuePage.routeName);
   }
 
-  Future<void> _openVenueLeadDialog() async {
-    await showVenueLeadDialog(
-      context,
-      createBloc: getIt.call<VenueLeadFormBloc>,
-      onPrivacyNoticeSelected: _openPrivacyNotice,
-    );
-  }
+  GlobalKey _sectionKeyFor(LandingSectionTarget section) => switch (section) {
+    LandingSectionTarget.ourBelief => _heroKey,
+    LandingSectionTarget.membership => _membershipKey,
+    LandingSectionTarget.foundingFriends => _foundingFriendsKey,
+    LandingSectionTarget.venues => _venueKey,
+  };
 
   void _openPrivacyNotice() {
     final uri = privacyNoticeUrlFor(Uri.base);
@@ -180,7 +198,7 @@ final class _LandingPageState extends State<LandingPage> {
                   FoundingFriendsSection(key: _foundingFriendsKey),
                   VenueSection(
                     key: _venueKey,
-                    onCtaPressed: _showVenueLeadDialog,
+                    onCtaPressed: _openVenuePage,
                   ),
                   const WelcomeStatementSection(),
                   const FaqSection(),

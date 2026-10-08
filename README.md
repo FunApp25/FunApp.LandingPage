@@ -33,9 +33,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   provider-neutral venue leads through the same-origin, unauthenticated
   `/api/venue-interest` endpoint. The deployed Cloudflare Worker owns the
   HubSpot mapping behind that boundary; Flutter does not send HubSpot fields or
-  identifiers. The Venue CTA opens a
-  localized responsive form backed by a fresh `VenueLeadFormBloc`; success is
-  confirmed in the dialog, while failures preserve the draft for retry. The
+  identifiers. The Venue CTA navigates to the dedicated `/#/venues` page,
+  whose responsive Figma-aligned shell contains the localized form backed by a
+  fresh `VenueLeadFormBloc`; failures preserve the draft for retry and the
+  established temporary success content remains in place pending its dedicated
+  design pass. The
   form shows the approved informational privacy acknowledgement immediately
   before Send and links to the hosted Privacy Notice without adding a consent
   checkbox or submitted field. The Privacy Notice is also discoverable in the

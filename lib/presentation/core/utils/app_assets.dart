@@ -110,6 +110,10 @@ abstract final class AppAssets {
   /// Masked photograph used by the venue promotional card.
   static const String venueGroup = '$_landingVenuesPath/venue_group.png';
 
+  /// Exact 18×16 Shape 07 wrapper used by the mobile Venue-page eyebrow.
+  static const String venuePageEyebrowMobile =
+      '$_landingVenuesPath/venue_page_eyebrow_mobile.svg';
+
   /// Exact decorative glyph used by the welcome-statement eyebrow.
   static const String welcomeGlyph = '$_landingWelcomePath/welcome_glyph.svg';
 

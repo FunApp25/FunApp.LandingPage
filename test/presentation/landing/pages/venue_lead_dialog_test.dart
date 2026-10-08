@@ -20,6 +20,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_l
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_disclosure.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_dialog.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -36,7 +37,7 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets('Founding Friend CTA is a no-op while Venue opens its form', (
+  testWidgets('Founding Friend CTA is a no-op while Venue opens its route', (
     tester,
   ) async {
     getIt.registerFactory<VenueLeadFormBloc>(
@@ -59,7 +60,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
-    expect(find.byType(LandingDialog), findsOneWidget);
+    expect(find.byType(VenuePage), findsOneWidget);
+    expect(find.byType(LandingDialog), findsNothing);
     expect(find.byType(TextField), findsNWidgets(9));
     expect(
       find.byKey(const Key('venueLeadChainStatusControl')),
@@ -191,7 +193,7 @@ void main() {
     tester.semantics.tap(find.semantics.byLabel('Privacy Notice'));
     await tester.pump();
 
-    expect(find.byType(LandingDialog), findsOneWidget);
+    expect(find.byType(VenuePage), findsOneWidget);
     expect(find.byType(PrivacyNoticePage), findsNothing);
     expect(createdBlocs, hasLength(1));
     expect(createdBlocs.single.isClosed, isFalse);

@@ -7,8 +7,9 @@ This repository owns the public Fun App website and landing page. The site shoul
 The landing page is expected eventually to collect information from interested
 users. Flutter production submits Venue enquiries to the deployed same-origin
 first-party venue-interest boundary; its Cloudflare Worker maps to HubSpot
-outside the browser. The venue CTA now opens its
-functional localized form. That form now shows the approved informational
+outside the browser. The venue CTA now navigates to the dedicated `/venues`
+hash route, whose localized form preserves the established application and
+data workflow. That form shows the approved informational
 privacy acknowledgement and links to the hosted Privacy Notice; it does not
 submit a consent field. Prospective-user fields, flows, analytics, marketing
 consent behavior, and other business behavior remain unspecified.
@@ -247,9 +248,11 @@ intentionally unwired.
 The Founding Friends prospective-user CTA is currently a keyboard-operable,
 presentation-only no-op. It collects no information and performs no business
 operation; the interested-person contract remains unresolved. The
-venue CTA opens a localized functional form in the reusable landing dialog. A
-fresh `VenueLeadFormBloc` owns each dialog session and submits through the
-established environment-selected venue repository/data-source graph.
+venue CTA navigates to the dedicated `/venues` page. A fresh
+`VenueLeadFormBloc` owns each Venue route lifecycle and submits through the
+established environment-selected venue repository/data-source graph. Shared
+header and footer navigation returns to `/` with a render-derived landing
+section target rather than trying to scroll keys that are absent on `/venues`.
 
 Below a 600px outer viewport width, Research statistics use a horizontal,
 page-snapping carousel with one primary card, a trailing adjacent-card peek,
@@ -371,11 +374,9 @@ capabilities as implemented.
   digits only while domain validation still enforces positive integers.
   The conditional venue count expands and collapses with reduced-motion support,
   and its visible label is "Number of venues" in English.
-  The venue information group reuses the established beige surface and card
-  radius; text inputs use the same rounded radius. The dialog keeps its action
-  footer pinned below the independently scrolling form body. Scroll-position
-  fades soften the top edge after scrolling and the bottom edge while more
-  content remains beneath the pinned footer.
+  The venue information group and text inputs retain their established styling
+  while the routed page shell is aligned separately. Detailed form-control
+  restyling remains deferred to the dedicated Venue form pass.
 - Generated Freezed and Injectable source is regenerated locally and in CI and
   remains uncommitted.
 - `VenueInterestRequest` is a data-layer first-party request model. It emits
@@ -400,15 +401,14 @@ capabilities as implemented.
 - Blank optional input represents absence. Non-blank optional and required
   input is preserved when constructing the established domain value objects.
 - A successful or failed submission preserves the complete form draft. The
-  venue dialog shows "Form Submitted", "Thank you for reaching out, we'll be
-  in touch shortly.", and "The Fun App team." with a Close action instead of
-  Send, without immediately closing. Operational failure keeps the form open
+  Venue page temporarily shows the established "Form Submitted", "Thank you
+  for reaching out, we'll be in touch shortly.", and "The Fun App team."
+  content with a Close action instead of Send. The approved full-page success
+  design remains deferred. Operational failure keeps the form open
   and editable for retry, with a concise retry-later message above Send.
   While submission is pending, Send is visibly disabled and an indeterminate
-  linear progress indicator appears immediately above it in the pinned footer.
-  The success content has vertical space from the pinned dialog chrome and
-  starts at the top of its own scroll position after submission.
-  Each later dialog opening starts with a fresh BLoC and empty draft.
+  linear progress indicator appears immediately above it. Each later Venue
+  route lifecycle starts with a fresh BLoC and empty draft.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
@@ -531,7 +531,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses the stable hash URL `https://funapp.world/#/privacy`; because the route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses `https://funapp.world/#/privacy`, and the Venue sign-up page uses `https://funapp.world/#/venues`; because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -602,8 +602,7 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 
 ### Open
 
-- Routing and any required 404/deep-link strategy for future non-hash paths or
-  additional routes beyond the established Privacy Notice hash route.
+- Routing and any required 404/deep-link strategy for future non-hash paths.
 - Future Azure hosting or topology.
 - Release automation beyond current needs.
 

@@ -11,6 +11,7 @@ final class VenueLeadActionFooter extends StatelessWidget {
     required this.hasSubmissionFailure,
     required this.onClose,
     required this.onSubmit,
+    this.constrainFailureHeight = true,
     super.key,
   });
 
@@ -29,6 +30,9 @@ final class VenueLeadActionFooter extends StatelessWidget {
   /// Dispatches a form submission attempt.
   final VoidCallback onSubmit;
 
+  /// Whether failure copy should flex within the legacy dialog footer.
+  final bool constrainFailureHeight;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -45,21 +49,10 @@ final class VenueLeadActionFooter extends StatelessWidget {
           )
         else ...[
           if (hasSubmissionFailure) ...[
-            Flexible(
-              child: SingleChildScrollView(
-                child: Semantics(
-                  key: const Key('venueLeadSubmissionFailure'),
-                  container: true,
-                  liveRegion: true,
-                  child: Text(
-                    l10n.venueLeadSubmissionFailure,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            if (constrainFailureHeight)
+              Flexible(child: _failureMessage(context))
+            else
+              _failureMessage(context),
             const SizedBox(height: 12),
           ],
           if (isSubmitting) ...[
@@ -84,4 +77,16 @@ final class VenueLeadActionFooter extends StatelessWidget {
       ],
     );
   }
+
+  Widget _failureMessage(BuildContext context) => SingleChildScrollView(
+    child: Semantics(
+      key: const Key('venueLeadSubmissionFailure'),
+      container: true,
+      liveRegion: true,
+      child: Text(
+        context.l10n.venueLeadSubmissionFailure,
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
+      ),
+    ),
+  );
 }

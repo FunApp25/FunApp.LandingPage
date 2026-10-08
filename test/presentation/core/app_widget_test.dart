@@ -1,6 +1,11 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
+import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
+import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
+import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
@@ -9,10 +14,16 @@ import 'package:fun_app_landing_page/presentation/core/utils/document_language.d
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 void main() {
   testWidgets('renders the English branded landing page', (tester) async {
-    await _pumpApp(tester, const Locale('en'));
+    await _pumpApp(
+      tester,
+      const Locale('en'),
+      createVenueLeadFormBloc: () =>
+          VenueLeadFormBloc(const _ImmediateVenueLeadRepository()),
+    );
 
     expect(find.byType(LandingPage), findsOneWidget);
     expect(find.byType(FunAppLogo), findsNWidgets(2));
@@ -25,7 +36,7 @@ void main() {
     expect(app.debugShowCheckedModeBanner, isFalse);
     expect(app.locale, isNull);
     expect(app.localeListResolutionCallback, isNotNull);
-    expect(app.routes?.containsKey(PrivacyNoticePage.routeName), isTrue);
+    expect(app.onGenerateRoute, isNotNull);
     expect(
       app.localizationsDelegates,
       AppLocalizations.localizationsDelegates,
@@ -128,6 +139,29 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('direct Venue route opens and returns through app routing', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        VenuePage.routeName;
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    await _pumpApp(
+      tester,
+      const Locale('en'),
+      createVenueLeadFormBloc: () =>
+          VenueLeadFormBloc(const _ImmediateVenueLeadRepository()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(VenuePage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('unknown initial fragment falls back to landing', (
     tester,
   ) async {
@@ -163,12 +197,29 @@ void main() {
   });
 }
 
-Future<void> _pumpApp(WidgetTester tester, Locale locale) async {
+Future<void> _pumpApp(
+  WidgetTester tester,
+  Locale locale, {
+  VenueLeadFormBlocFactory? createVenueLeadFormBloc,
+}) async {
   tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
   addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
 
-  await tester.pumpWidget(const FunAppLandingPageApp());
+  await tester.pumpWidget(
+    FunAppLandingPageApp(
+      createVenueLeadFormBloc: createVenueLeadFormBloc,
+    ),
+  );
   await tester.pump();
+}
+
+final class _ImmediateVenueLeadRepository
+    implements VenueLeadRepositoryInterface {
+  const _ImmediateVenueLeadRepository();
+
+  @override
+  Future<Either<AppFailure, Unit>> submitVenueLead(VenueLead lead) async =>
+      right(unit);
 }
 
 void _expectLocalizedTitle(WidgetTester tester, String expectedTitle) {

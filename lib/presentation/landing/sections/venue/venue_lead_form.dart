@@ -17,6 +17,7 @@ final class VenueLeadForm extends StatefulWidget {
   const VenueLeadForm({
     required this.state,
     required this.onPrivacyNoticeSelected,
+    this.showIntroduction = true,
     super.key,
   });
 
@@ -25,6 +26,9 @@ final class VenueLeadForm extends StatefulWidget {
 
   /// Opens the hosted Privacy Notice in a separate browser context.
   final VoidCallback onPrivacyNoticeSelected;
+
+  /// Whether to render the legacy dialog-specific title and supporting copy.
+  final bool showIntroduction;
 
   @override
   State<VenueLeadForm> createState() => _VenueLeadFormState();
@@ -96,20 +100,22 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
       key: const Key('venueLeadForm'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Semantics(
-          header: true,
-          child: Text(
-            l10n.venueLeadDialogTitle,
-            key: const Key('venueLeadDialogTitle'),
-            style: LandingTextStyles.sectionHeading,
+        if (widget.showIntroduction) ...[
+          Semantics(
+            header: true,
+            child: Text(
+              l10n.venueLeadDialogTitle,
+              key: const Key('venueLeadDialogTitle'),
+              style: LandingTextStyles.sectionHeading,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          l10n.venueLeadDialogBody,
-          style: LandingTextStyles.sectionBody,
-        ),
-        const SizedBox(height: 32),
+          const SizedBox(height: 12),
+          Text(
+            l10n.venueLeadDialogBody,
+            style: LandingTextStyles.sectionBody,
+          ),
+          const SizedBox(height: 32),
+        ],
         Container(
           key: const Key('venueLeadVenueDetailsGroup'),
           padding: const EdgeInsets.all(20),

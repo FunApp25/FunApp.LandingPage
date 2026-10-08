@@ -76,6 +76,22 @@
   "@landingInterestedUserComingSoonBody": {
     "description": "Supporting text in the presentation-only prospective-user dialog."
   },
+  "venuePageEyebrow": "Life is tough for people. Life is tough for venues. Fun App is arriving to help.",
+  "@venuePageEyebrow": {
+    "description": "Eyebrow above the dedicated Venue sign-up page introduction."
+  },
+  "venuePageHeading": "Thank you for your interest",
+  "@venuePageHeading": {
+    "description": "Main heading on the dedicated Venue sign-up page."
+  },
+  "venuePageIntroFirst": "Fun App is arriving to help, launching in the UK in Feb ’27 and rolling out to the USA in July.",
+  "@venuePageIntroFirst": {
+    "description": "First introductory paragraph on the dedicated Venue sign-up page."
+  },
+  "venuePageIntroSecond": "Tell us who you are, what you’re doing and Fun App will be thrilled to tell you how it is going to change the world – and welcome your venue to an exciting new future.",
+  "@venuePageIntroSecond": {
+    "description": "Second introductory paragraph on the dedicated Venue sign-up page."
+  },
   "venueLeadDialogTitle": "Tell us about your venue",
   "@venueLeadDialogTitle": {
     "description": "Title of the functional venue-interest dialog."
