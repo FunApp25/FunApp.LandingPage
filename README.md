@@ -35,9 +35,10 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   HubSpot mapping behind that boundary; Flutter does not send HubSpot fields or
   identifiers. The Venue CTA navigates to the dedicated `/#/venues` page,
   whose responsive Figma-aligned shell contains the localized form backed by a
-  fresh `VenueLeadFormBloc`; failures preserve the draft for retry and the
-  established temporary success content remains in place pending its dedicated
-  design pass. The
+  fresh `VenueLeadFormBloc`. A confirmed submission replaces the form with the
+  responsive full-page success presentation on the same route; refresh and
+  re-entry create a fresh form lifecycle. Failures preserve the draft for
+  retry. The success email is intentionally presentation-only. The
   form shows the approved informational privacy acknowledgement immediately
   before Send, provides an optional presentation-local checkbox, and links to
   the hosted Privacy Notice without adding a submitted consent field. The

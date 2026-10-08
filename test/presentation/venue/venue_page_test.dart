@@ -302,6 +302,7 @@ void main() {
     );
     await _tapVenuePageSubmit(tester);
     expect(find.text('Required field'), findsNWidgets(6));
+    expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
     expect(
       tester.getSize(find.byKey(const Key('venueLeadVenueNameField'))).height,
       greaterThan(48),
@@ -332,6 +333,8 @@ void main() {
 
       await _tapVenuePageSubmit(tester);
       expect(repository.submittedLeads, hasLength(1));
+      expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
+      expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
       expect(
         tester
             .widget<FilledButton>(
@@ -354,6 +357,7 @@ void main() {
         find.byKey(const Key('venueLeadSubmissionFailure')),
         findsOneWidget,
       );
+      expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
       expect(
         tester
             .widget<TextField>(find.byKey(const Key('venueLeadVenueNameField')))
@@ -370,36 +374,40 @@ void main() {
       expect(repository.submittedLeads[1], repository.submittedLeads[0]);
       repository.completeNext(right(unit));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('venueLeadSuccess')), findsOneWidget);
+      expect(find.byKey(const Key('venueSuccessContent')), findsOneWidget);
+      expect(repository.submittedLeads, hasLength(2));
+      expect(
+        ModalRoute.of(tester.element(find.byType(VenuePage)))?.settings.name,
+        VenuePage.routeName,
+      );
     },
   );
 
-  testWidgets('Venue shared navigation returns to a rendered landing anchor', (
-    tester,
-  ) async {
-    await _pumpApp(tester);
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed(VenuePage.routeName);
-    await tester.pumpAndSettle();
+  testWidgets(
+    'Venue shared navigation remains functional after confirmed success',
+    (tester) async {
+      await _pumpDirectVenuePage(tester);
+      await _submitSuccessfulVenuePage(tester);
+      expect(find.byKey(const Key('venueSuccessContent')), findsOneWidget);
 
-    await tester.tap(
-      find.byKey(const Key('landingHeaderNavigationItem1')),
-    );
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('landingHeaderNavigationItem1')),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.byType(VenuePage), findsNothing);
-    expect(find.byType(LandingPage), findsOneWidget);
-    expect(find.byType(MembershipSection), findsOneWidget);
-    final scrollable = tester.widget<SingleChildScrollView>(
-      find.byKey(const Key('landingPageScrollView')),
-    );
-    expect(scrollable.controller?.offset, greaterThan(0));
-    expect(
-      ModalRoute.of(tester.element(find.byType(LandingPage)))?.settings.name,
-      '/',
-    );
-  });
+      expect(find.byType(VenuePage), findsNothing);
+      expect(find.byType(LandingPage), findsOneWidget);
+      expect(find.byType(MembershipSection), findsOneWidget);
+      final scrollable = tester.widget<SingleChildScrollView>(
+        find.byKey(const Key('landingPageScrollView')),
+      );
+      expect(scrollable.controller?.offset, greaterThan(0));
+      expect(
+        ModalRoute.of(tester.element(find.byType(LandingPage)))?.settings.name,
+        '/',
+      );
+    },
+  );
 
   testWidgets('Venue footer navigation returns to the landing route', (
     tester,
@@ -438,32 +446,133 @@ void main() {
     expect(find.byType(LandingPage), findsOneWidget);
   });
 
-  testWidgets('routed form preserves the current temporary success behavior', (
+  testWidgets(
+    'confirmed success replaces the form with the complete Figma experience',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpDirectVenuePage(tester);
+      await _submitSuccessfulVenuePage(tester);
+
+      expect(find.byType(LandingHeader), findsOneWidget);
+      expect(find.byType(LandingFooter), findsOneWidget);
+      expect(find.byKey(const Key('venueSuccessContent')), findsOneWidget);
+      expect(find.text('THE FUN APP TEAM'), findsOneWidget);
+      expect(find.byKey(const Key('venueLeadForm')), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(Checkbox), findsNothing);
+      expect(find.byKey(const Key('venueLeadSubmitButton')), findsNothing);
+      expect(
+        find.byKey(const Key('venueLeadSuccessCloseButton')),
+        findsNothing,
+      );
+      expect(find.text('Form Submitted'), findsNothing);
+      expect(find.text('Close'), findsNothing);
+
+      final heading = tester.widget<Text>(
+        find.byKey(const Key('venueSuccessHeading')),
+      );
+      final headingSpan = heading.textSpan! as TextSpan;
+      final emphasisSpan = headingSpan.children!.single as TextSpan;
+      expect(
+        headingSpan.toPlainText(),
+        'Thank you for reaching out, we’ll be in touch shortly',
+      );
+      expect(headingSpan.style?.color, AppColors.warmCharcoal);
+      expect(headingSpan.style?.fontStyle, isNot(FontStyle.italic));
+      expect(emphasisSpan.style?.color, AppColors.warmOrange);
+      expect(emphasisSpan.style?.fontStyle, FontStyle.italic);
+
+      final headingSemantics = tester
+          .getSemantics(
+            find.byKey(const Key('venueSuccessHeadingSemantics')),
+          )
+          .getSemanticsData();
+      expect(headingSemantics.flagsCollection.isHeader, isTrue);
+      expect(
+        headingSemantics.label,
+        'Thank you for reaching out, we’ll be in touch shortly',
+      );
+      expect(
+        tester
+            .widget<Focus>(
+              find.byKey(const Key('venueSuccessHeadingFocus')),
+            )
+            .focusNode
+            ?.hasFocus,
+        isTrue,
+      );
+
+      expect(
+        svgAssetName(tester, const Key('venueSuccessEnvelope')),
+        AppAssets.footerEnvelope,
+      );
+      final email = tester.widget<Text>(
+        find.byKey(const Key('venueSuccessEmailText')),
+      );
+      expect(email.data, LandingFooter.contactEmail);
+      expect(email.style?.color, AppColors.blueMain);
+      expect(email.style?.decoration, TextDecoration.underline);
+      expect(
+        tester
+            .getSemantics(
+              find.byKey(const Key('venueSuccessEmailSemantics')),
+            )
+            .getSemanticsData()
+            .flagsCollection
+            .isLink,
+        isFalse,
+      );
+      semantics.dispose();
+    },
+  );
+
+  testWidgets('stale successful completion keeps the edited form visible', (
+    tester,
+  ) async {
+    final repository = _ControlledVenueLeadRepository();
+    await _pumpDirectVenuePage(tester, repository: repository);
+    await _fillRequiredVenuePageFields(tester);
+    await _tapVenuePageSubmit(tester);
+
+    await tester.enterText(
+      find.byKey(const Key('venueLeadVenueNameField')),
+      'Edited Venue',
+    );
+    repository.completeNext(right(unit));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
+    expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
+    expect(find.byKey(const Key('venueLeadSubmissionFailure')), findsNothing);
+    expect(repository.submittedLeads, hasLength(1));
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('venueLeadVenueNameField')))
+          .controller
+          ?.text,
+      'Edited Venue',
+    );
+  });
+
+  testWidgets('Back and re-entry create a fresh Venue form lifecycle', (
     tester,
   ) async {
     await _pumpDirectVenuePage(tester);
+    await _submitSuccessfulVenuePage(tester);
+    expect(find.byKey(const Key('venueSuccessContent')), findsOneWidget);
 
-    for (final entry in <(Key, String)>[
-      (const Key('venueLeadVenueNameField'), 'Test Venue'),
-      (const Key('venueLeadWebsiteField'), 'venue.example.com'),
-      (const Key('venueLeadFirstNameField'), 'Test'),
-      (const Key('venueLeadLastNameField'), 'Person'),
-      (const Key('venueLeadRoleField'), 'Manager'),
-      (const Key('venueLeadEmailField'), 'test@venue.example.com'),
-    ]) {
-      await tester.enterText(find.byKey(entry.$1), entry.$2);
-    }
-    final submit = find.byKey(const Key('venueLeadSubmitButton'));
-    await tester.ensureVisible(submit);
-    await tester.tap(submit);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
+
+    final cta = find.byKey(const Key('venueCardCta'));
+    await tester.ensureVisible(cta);
+    await tester.tap(cta);
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('venueLeadSuccess')), findsOneWidget);
-    expect(find.byKey(const Key('venueLeadSubmitButton')), findsNothing);
-    expect(
-      find.byKey(const Key('venueLeadSuccessCloseButton')),
-      findsOneWidget,
-    );
+    expect(find.byType(VenuePage), findsOneWidget);
+    expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
+    expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
   });
 
   testWidgets('Venue shell follows mobile and desktop Figma geometry', (
@@ -521,6 +630,60 @@ void main() {
     }
   });
 
+  testWidgets('Venue success follows mobile and desktop Figma geometry', (
+    tester,
+  ) async {
+    for (final size in const [Size(390, 994), Size(1440, 1000)]) {
+      setTestSurface(tester, size);
+      await _pumpDirectVenuePage(tester);
+      await _submitSuccessfulVenuePage(tester);
+
+      final wrapper = tester.widget<Padding>(
+        find.byKey(const Key('venuePageOuterWrapper')),
+      );
+      final cardPadding = tester.widget<Padding>(
+        find.byKey(const Key('venueSuccessCardPadding')),
+      );
+      final cardRect = tester.getRect(find.byKey(const Key('venuePageCard')));
+      final textGroupSize = tester.getSize(
+        find.byKey(const Key('venueSuccessTextGroup')),
+      );
+
+      expect(cardRect.width, size.width - (size.width < 600 ? 32 : 80));
+      if (size.width < 600) {
+        expect(wrapper.padding, const EdgeInsets.all(16));
+        expect(
+          cardPadding.padding,
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 80),
+        );
+        expect(cardRect.width, 358);
+        expect(cardRect.height, greaterThanOrEqualTo(332));
+        expect(textGroupSize.width, 326);
+        expect(
+          svgAssetName(tester, const Key('venueSuccessEyebrowGlyph')),
+          AppAssets.venuePageEyebrowMobile,
+        );
+      } else {
+        expect(
+          wrapper.padding,
+          const EdgeInsets.fromLTRB(40, 20, 40, 40),
+        );
+        expect(
+          cardPadding.padding,
+          const EdgeInsets.symmetric(horizontal: 40, vertical: 128),
+        );
+        expect(cardRect.width, 1360);
+        expect(cardRect.height, greaterThanOrEqualTo(478));
+        expect(textGroupSize.width, 600);
+        expect(
+          svgAssetName(tester, const Key('venueSuccessEyebrowGlyph')),
+          AppAssets.heroEyebrowGlyph,
+        );
+      }
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   for (final width in const [320.0, 390.0, 599.0, 600.0, 768.0, 1440.0]) {
     testWidgets('Venue page remains overflow-safe at ${width}px', (
       tester,
@@ -533,6 +696,25 @@ void main() {
         tester.getSize(find.byKey(const Key('venuePageCard'))).width,
         lessThanOrEqualTo(width),
       );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Venue success remains overflow-safe at ${width}px', (
+      tester,
+    ) async {
+      setTestSurface(tester, Size(width, 1000));
+      await _pumpDirectVenuePage(tester);
+      await _submitSuccessfulVenuePage(tester);
+
+      expect(find.byKey(const Key('venueSuccessContent')), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const Key('venuePageCard'))).width,
+        lessThanOrEqualTo(width),
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('venueSuccessEmailText')),
+      );
+      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
   }
@@ -555,6 +737,38 @@ void main() {
       expect(
         tester.getRect(find.byKey(const Key('venueLeadSubmitButton'))).right,
         lessThanOrEqualTo(width),
+      );
+      await _submitSuccessfulVenuePage(tester);
+      await tester.ensureVisible(
+        find.byKey(const Key('venueSuccessEmailText')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('venueSuccessHeading')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('refreshed success copy falls back to English by locale', (
+    tester,
+  ) async {
+    addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+
+    for (final locale in const [Locale('es'), Locale('cy'), Locale('be')]) {
+      tester.binding.platformDispatcher.localesTestValue = [locale];
+      await _pumpDirectVenuePage(tester);
+      await _submitSuccessfulVenuePage(tester);
+
+      final context = tester.element(
+        find.byKey(const Key('venueSuccessContent')),
+      );
+      expect(Localizations.localeOf(context), locale);
+      expect(find.text('THE FUN APP TEAM'), findsOneWidget);
+      final heading = tester.widget<Text>(
+        find.byKey(const Key('venueSuccessHeading')),
+      );
+      expect(
+        heading.textSpan?.toPlainText(),
+        'Thank you for reaching out, we’ll be in touch shortly',
       );
       expect(tester.takeException(), isNull);
     }
@@ -612,10 +826,27 @@ Future<void> _fillRequiredVenuePageFields(WidgetTester tester) async {
 
 Future<void> _tapVenuePageSubmit(WidgetTester tester) async {
   final submit = find.byKey(const Key('venueLeadSubmitButton'));
-  await tester.ensureVisible(submit);
+  final scrollView = tester.widget<SingleChildScrollView>(
+    find.byKey(const Key('venuePageScrollView')),
+  );
+  final controller = scrollView.controller!;
+  final surfaceHeight =
+      tester.view.physicalSize.height / tester.view.devicePixelRatio;
+  final centeredOffset =
+      controller.offset + tester.getCenter(submit).dy - (surfaceHeight / 2);
+  controller.jumpTo(
+    centeredOffset.clamp(0, controller.position.maxScrollExtent).toDouble(),
+  );
+  await tester.pump();
   await tester.pumpAndSettle();
   await tester.tap(submit);
   await tester.pump();
+}
+
+Future<void> _submitSuccessfulVenuePage(WidgetTester tester) async {
+  await _fillRequiredVenuePageFields(tester);
+  await _tapVenuePageSubmit(tester);
+  await tester.pumpAndSettle();
 }
 
 final class _ImmediateVenueLeadRepository

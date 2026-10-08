@@ -274,6 +274,18 @@
   "@venueLeadSuccessSignOff": {
     "description": "Sign-off of the venue-interest submission confirmation."
   },
+  "venueSuccessEyebrow": "The Fun App team",
+  "@venueSuccessEyebrow": {
+    "description": "Eyebrow above the full-page Venue submission confirmation. Refreshed Figma copy intentionally falls back to English until approved translations are supplied."
+  },
+  "venueSuccessHeadingLeading": "Thank you for reaching out,",
+  "@venueSuccessHeadingLeading": {
+    "description": "Regular charcoal leading clause of the full-page Venue submission confirmation heading. Refreshed Figma copy intentionally falls back to English until approved translations are supplied."
+  },
+  "venueSuccessHeadingEmphasis": "we’ll be in touch shortly",
+  "@venueSuccessHeadingEmphasis": {
+    "description": "Italic orange final clause of the full-page Venue submission confirmation heading. Refreshed Figma copy intentionally falls back to English until approved translations are supplied."
+  },
   "venueLeadPrivacyDisclosure": "By submitting this form, you acknowledge that Fun App will use the information you provide to respond to your enquiry. Please see Fun App's Privacy Notice for information about how it collects and processes personal data.",
   "@venueLeadPrivacyDisclosure": {
     "description": "Approved English privacy acknowledgement shown immediately before the venue form submit control. This legal/product copy remains English until approved translations are supplied."

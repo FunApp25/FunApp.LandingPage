@@ -402,15 +402,17 @@ capabilities as implemented.
   remain `ValueFailure` values rather than becoming operational failures.
 - Blank optional input represents absence. Non-blank optional and required
   input is preserved when constructing the established domain value objects.
-- A successful or failed submission preserves the complete form draft. The
-  Venue page temporarily shows the established "Form Submitted", "Thank you
-  for reaching out, we'll be in touch shortly.", and "The Fun App team."
-  content with a Close action instead of Send. The approved full-page success
-  design remains deferred. Operational failure keeps the form open
-  and editable for retry, with a concise retry-later message above Send.
+- A successful or failed submission preserves the complete form draft in the
+  application state. A confirmed successful submission replaces the routed
+  form with the responsive Figma success presentation while keeping `/venues`
+  as the route. The success state is neither persisted nor reconstructed from
+  URL data, so refresh and each later Venue route lifecycle start with a fresh
+  BLoC and empty form. Its underlined `info@funapp.world` treatment is static
+  presentation rather than an inferred email interaction. Operational failure
+  keeps the form open and editable for retry, with a concise retry-later
+  message above Send.
   While submission is pending, Send is visibly disabled and an indeterminate
-  linear progress indicator appears immediately above it. Each later Venue
-  route lifecycle starts with a fresh BLoC and empty draft.
+  linear progress indicator appears immediately above it.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
