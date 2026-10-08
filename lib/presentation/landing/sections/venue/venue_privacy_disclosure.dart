@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_acknowledgement_checkbox.dart';
 
 /// Approved informational disclosure shown before venue submission.
 final class VenuePrivacyDisclosure extends StatefulWidget {
@@ -10,6 +12,7 @@ final class VenuePrivacyDisclosure extends StatefulWidget {
     required this.statement,
     required this.privacyNoticeLabel,
     required this.onPrivacyNoticeSelected,
+    this.showAcknowledgementCheckbox = false,
     super.key,
   });
 
@@ -21,6 +24,9 @@ final class VenuePrivacyDisclosure extends StatefulWidget {
 
   /// Opens the hosted Privacy Notice; null disables the link.
   final VoidCallback? onPrivacyNoticeSelected;
+
+  /// Whether to show the routed-page-only presentation acknowledgement.
+  final bool showAcknowledgementCheckbox;
 
   @override
   State<VenuePrivacyDisclosure> createState() => _VenuePrivacyDisclosureState();
@@ -66,18 +72,32 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
     final afterLink = statement.substring(
       linkStart + privacyNoticeLabel.length,
     );
-    final bodyStyle = Theme.of(context).textTheme.bodyMedium;
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    final bodyStyle = widget.showAcknowledgementCheckbox
+        ? AppTextStyles.bodyFontStyle(
+            fontSize: mobile ? 12 : 14,
+            fontWeight: FontWeight.w400,
+            height: mobile ? 20 / 12 : 22 / 14,
+            color: AppColors.bodyGray,
+          )
+        : Theme.of(context).textTheme.bodyMedium;
     final linkStyle = bodyStyle?.copyWith(
-      color: AppColors.energeticPlum,
-      fontWeight: FontWeight.w700,
+      color: widget.showAcknowledgementCheckbox
+          ? AppColors.bodyGray
+          : AppColors.energeticPlum,
+      fontWeight: widget.showAcknowledgementCheckbox
+          ? FontWeight.w400
+          : FontWeight.w700,
       decoration: TextDecoration.underline,
-      decorationColor: AppColors.energeticPlum,
+      decorationColor: widget.showAcknowledgementCheckbox
+          ? AppColors.bodyGray
+          : AppColors.energeticPlum,
       backgroundColor: _isFocused
           ? AppColors.energeticPlum.withValues(alpha: 0.12)
           : null,
     );
 
-    return Focus(
+    final linkedStatement = Focus(
       key: const Key('venuePrivacyNoticeLinkFocus'),
       canRequestFocus: widget.onPrivacyNoticeSelected != null,
       includeSemantics: false,
@@ -102,7 +122,10 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
           TextSpan(
             style: bodyStyle,
             children: [
-              TextSpan(text: beforeLink),
+              TextSpan(
+                text: beforeLink,
+                semanticsLabel: widget.showAcknowledgementCheckbox ? '' : null,
+              ),
               TextSpan(
                 text: privacyNoticeLabel,
                 style: linkStyle,
@@ -113,11 +136,32 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
                     ? SystemMouseCursors.basic
                     : SystemMouseCursors.click,
               ),
-              TextSpan(text: afterLink),
+              TextSpan(
+                text: afterLink,
+                semanticsLabel: widget.showAcknowledgementCheckbox ? '' : null,
+              ),
             ],
           ),
         ),
       ),
     );
+
+    if (widget.showAcknowledgementCheckbox) {
+      return Padding(
+        key: const Key('venuePrivacyAcknowledgementRow'),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            VenuePrivacyAcknowledgementCheckbox(
+              semanticLabel: statement,
+            ),
+            Expanded(child: linkedStatement),
+          ],
+        ),
+      );
+    } else {
+      return linkedStatement;
+    }
   }
 }

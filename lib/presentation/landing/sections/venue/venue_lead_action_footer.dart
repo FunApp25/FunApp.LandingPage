@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
 /// Action and submission status kept visible below the scrolling venue form.
 final class VenueLeadActionFooter extends StatelessWidget {
@@ -12,6 +16,7 @@ final class VenueLeadActionFooter extends StatelessWidget {
     required this.onClose,
     required this.onSubmit,
     this.constrainFailureHeight = true,
+    this.alignWithVenuePageDesign = false,
     super.key,
   });
 
@@ -32,6 +37,9 @@ final class VenueLeadActionFooter extends StatelessWidget {
 
   /// Whether failure copy should flex within the legacy dialog footer.
   final bool constrainFailureHeight;
+
+  /// Whether to use the approved routed Venue-page Send treatment.
+  final bool alignWithVenuePageDesign;
 
   @override
   Widget build(BuildContext context) {
@@ -68,11 +76,90 @@ final class VenueLeadActionFooter extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          FilledButton(
-            key: const Key('venueLeadSubmitButton'),
-            onPressed: isSubmitting ? null : onSubmit,
-            child: Text(l10n.venueLeadSubmit),
-          ),
+          if (alignWithVenuePageDesign)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final expands = constraints.maxWidth < 760;
+                return Align(
+                  child: SizedBox(
+                    width: expands ? double.infinity : null,
+                    height: 48,
+                    child: FilledButton(
+                      key: const Key('venueLeadSubmitButton'),
+                      onPressed: isSubmitting ? null : onSubmit,
+                      style: ButtonStyle(
+                        minimumSize: WidgetStatePropertyAll(
+                          Size(expands ? 0 : 144, 48),
+                        ),
+                        padding: const WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                        ),
+                        backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                          (states) {
+                            if (states.contains(WidgetState.disabled)) {
+                              return AppColors.warmOrange.withValues(
+                                alpha: 0.45,
+                              );
+                            } else {
+                              return AppColors.warmOrange;
+                            }
+                          },
+                        ),
+                        foregroundColor: const WidgetStatePropertyAll(
+                          AppColors.lightForeground,
+                        ),
+                        overlayColor: WidgetStateProperty.resolveWith<Color?>((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.focused)) {
+                            return AppColors.energeticPlum.withValues(
+                              alpha: 0.16,
+                            );
+                          } else if (states.contains(WidgetState.hovered)) {
+                            return AppColors.lightForeground.withValues(
+                              alpha: 0.08,
+                            );
+                          } else {
+                            return null;
+                          }
+                        }),
+                        shape: const WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(AppSizes.pillRadius),
+                            ),
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.venueLeadSubmit,
+                            style: LandingTextStyles.heroCta.copyWith(
+                              color: AppColors.lightForeground,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SvgPicture.asset(
+                            AppAssets.venueSendArrowUpRight,
+                            key: const Key('venueLeadSubmitArrow'),
+                            excludeFromSemantics: true,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            )
+          else
+            FilledButton(
+              key: const Key('venueLeadSubmitButton'),
+              onPressed: isSubmitting ? null : onSubmit,
+              child: Text(l10n.venueLeadSubmit),
+            ),
         ],
       ],
     );

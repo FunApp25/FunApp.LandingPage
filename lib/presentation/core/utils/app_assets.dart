@@ -114,6 +114,13 @@ abstract final class AppAssets {
   static const String venuePageEyebrowMobile =
       '$_landingVenuesPath/venue_page_eyebrow_mobile.svg';
 
+  /// Exact 20×20 CaretDown artwork used by the Venue chain selector.
+  static const String venueCaretDown = '$_landingVenuesPath/caret_down.svg';
+
+  /// Exact ArrowUpRight artwork used by the Venue Send action.
+  static const String venueSendArrowUpRight =
+      '$_landingVenuesPath/send_arrow_up_right.svg';
+
   /// Exact decorative glyph used by the welcome-statement eyebrow.
   static const String welcomeGlyph = '$_landingWelcomePath/welcome_glyph.svg';
 

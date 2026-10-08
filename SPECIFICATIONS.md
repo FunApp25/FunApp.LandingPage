@@ -10,8 +10,9 @@ first-party venue-interest boundary; its Cloudflare Worker maps to HubSpot
 outside the browser. The venue CTA now navigates to the dedicated `/venues`
 hash route, whose localized form preserves the established application and
 data workflow. That form shows the approved informational
-privacy acknowledgement and links to the hosted Privacy Notice; it does not
-submit a consent field. Prospective-user fields, flows, analytics, marketing
+privacy acknowledgement with a presentation-local checkbox and links to the
+hosted Privacy Notice; it does not submit a consent field. Prospective-user
+fields, flows, analytics, marketing
 consent behavior, and other business behavior remain unspecified.
 
 ## 2. Decision model
@@ -55,8 +56,9 @@ Current implementation is evidence of repository state, not automatically a perm
 - The landing footer opens the hosted Privacy Notice in a new browser tab. The venue form shows
   the approved English privacy acknowledgement immediately before submission,
   with an inline link that opens the same page in a new tab, preserving the
-  current form draft. This disclosure is informational: no
-  consent checkbox or submitted consent field is required for the current MVP.
+  current form draft. Its checkbox is presentation-local, optional, and
+  non-persistent. This disclosure remains informational: no submitted consent
+  field is required for the current MVP.
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
 - Flutter production posts Venue enquiries to the same-origin, unauthenticated
@@ -475,8 +477,9 @@ capabilities as implemented.
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.
 - The current venue privacy acknowledgement is approved informational copy,
-  not a consent field. It adds no checkbox, BLoC state, domain value, DTO
-  property, repository property, HubSpot field, or `legalConsentOptions` value.
+  not a consent field. Its optional checkbox state lives only in the routed
+  presentation and adds no BLoC state, domain value, DTO property, repository
+  property, HubSpot field, or `legalConsentOptions` value.
 - Approved venue-type choices and any future provider-side chain-value changes.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count

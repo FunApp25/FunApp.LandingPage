@@ -126,15 +126,15 @@
       }
     }
   },
-  "venueLeadVenueNameLabel": "Venue name",
+  "venueLeadVenueNameLabel": "Venue’s Name",
   "@venueLeadVenueNameLabel": {
     "description": "Venue name field label."
   },
-  "venueLeadVenueTypeLabel": "Venue type",
+  "venueLeadVenueTypeLabel": "Type of Venue",
   "@venueLeadVenueTypeLabel": {
     "description": "Venue type field label."
   },
-  "venueLeadChainStatusLabel": "Independent / part of a chain",
+  "venueLeadChainStatusLabel": "Independent or Part of Chain",
   "@venueLeadChainStatusLabel": {
     "description": "Venue independent or chain status field label."
   },
@@ -150,19 +150,23 @@
   "@venueLeadVenueCountLabel": {
     "description": "Venue count field label."
   },
-  "venueLeadVenueCapacityLabel": "Venue capacity",
+  "venueLeadVenueCountPageLabel": "If chain, number of venues",
+  "@venueLeadVenueCountPageLabel": {
+    "description": "Conditional venue count label on the routed Venue page."
+  },
+  "venueLeadVenueCapacityLabel": "Venue Capacity",
   "@venueLeadVenueCapacityLabel": {
     "description": "Venue capacity field label."
   },
-  "venueLeadWebsiteLabel": "Website",
+  "venueLeadWebsiteLabel": "Web Address",
   "@venueLeadWebsiteLabel": {
     "description": "Venue website field label."
   },
-  "venueLeadFirstNameLabel": "First name",
+  "venueLeadFirstNameLabel": "First Name",
   "@venueLeadFirstNameLabel": {
     "description": "Venue contact first-name field label."
   },
-  "venueLeadLastNameLabel": "Last name",
+  "venueLeadLastNameLabel": "Last Name",
   "@venueLeadLastNameLabel": {
     "description": "Venue contact last-name field label."
   },
@@ -174,9 +178,53 @@
   "@venueLeadEmailLabel": {
     "description": "Venue contact email field label."
   },
-  "venueLeadPhoneNumberLabel": "Phone number",
+  "venueLeadPhoneNumberLabel": "Phone Number",
   "@venueLeadPhoneNumberLabel": {
     "description": "Venue contact phone-number field label."
+  },
+  "venueLeadVenueNamePlaceholder": "Your Venue’s Name",
+  "@venueLeadVenueNamePlaceholder": {
+    "description": "Placeholder for the venue name field."
+  },
+  "venueLeadVenueTypePlaceholder": "Pub, restaurant, etc",
+  "@venueLeadVenueTypePlaceholder": {
+    "description": "Placeholder for the venue type field."
+  },
+  "venueLeadChainStatusPlaceholder": "Independent or Part of Chain",
+  "@venueLeadChainStatusPlaceholder": {
+    "description": "Placeholder for the optional chain-status control."
+  },
+  "venueLeadVenueCountPlaceholder": "0",
+  "@venueLeadVenueCountPlaceholder": {
+    "description": "Placeholder for the conditional venue count field."
+  },
+  "venueLeadVenueCapacityPlaceholder": "Venue Capacity",
+  "@venueLeadVenueCapacityPlaceholder": {
+    "description": "Placeholder for the venue capacity field."
+  },
+  "venueLeadWebsitePlaceholder": "example.com",
+  "@venueLeadWebsitePlaceholder": {
+    "description": "Placeholder for the venue website field."
+  },
+  "venueLeadFirstNamePlaceholder": "Your First Name",
+  "@venueLeadFirstNamePlaceholder": {
+    "description": "Placeholder for the venue contact first-name field."
+  },
+  "venueLeadLastNamePlaceholder": "Your Last Name",
+  "@venueLeadLastNamePlaceholder": {
+    "description": "Placeholder for the venue contact last-name field."
+  },
+  "venueLeadRolePlaceholder": "Your Role",
+  "@venueLeadRolePlaceholder": {
+    "description": "Placeholder for the venue contact role field."
+  },
+  "venueLeadEmailPlaceholder": "example@gmail.com",
+  "@venueLeadEmailPlaceholder": {
+    "description": "Placeholder for the venue contact email field."
+  },
+  "venueLeadPhoneNumberPlaceholder": "+44 1234 123456",
+  "@venueLeadPhoneNumberPlaceholder": {
+    "description": "Placeholder for the venue contact phone-number field."
   },
   "venueLeadValidationRequired": "Required field",
   "@venueLeadValidationRequired": {

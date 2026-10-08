@@ -48,8 +48,16 @@ final class VenuePageFormRegion extends StatelessWidget {
                     state: state,
                     onPrivacyNoticeSelected: onPrivacyNoticeSelected,
                     showIntroduction: false,
+                    alignWithVenuePageDesign: true,
                   ),
-                const SizedBox(height: 24),
+                if (submissionSucceeded)
+                  const SizedBox(height: 24)
+                else
+                  LayoutBuilder(
+                    builder: (context, constraints) => SizedBox(
+                      height: constraints.maxWidth < 600 ? 40 : 64,
+                    ),
+                  ),
                 VenueLeadActionFooter(
                   isSubmitting: state.isSubmitting,
                   submissionSucceeded: submissionSucceeded,
@@ -59,6 +67,7 @@ final class VenuePageFormRegion extends StatelessWidget {
                     const VenueLeadFormEvent.submitted(),
                   ),
                   constrainFailureHeight: false,
+                  alignWithVenuePageDesign: true,
                 ),
               ],
             ),

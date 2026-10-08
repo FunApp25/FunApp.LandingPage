@@ -39,8 +39,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   established temporary success content remains in place pending its dedicated
   design pass. The
   form shows the approved informational privacy acknowledgement immediately
-  before Send and links to the hosted Privacy Notice without adding a consent
-  checkbox or submitted field. The Privacy Notice is also discoverable in the
+  before Send, provides an optional presentation-local checkbox, and links to
+  the hosted Privacy Notice without adding a submitted consent field. The
+  Privacy Notice is also discoverable in the
   footer at [https://funapp.world/#/privacy](https://funapp.world/#/privacy).
   Its approved English legal copy lives in
   `assets/legal/privacy_notice.md`. The
