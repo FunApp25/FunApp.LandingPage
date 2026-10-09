@@ -66,8 +66,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Runtime font fetching is disabled in the common bootstrap. When adding a
   family, weight, or style, add its correctly named official font file and OFL
   license asset, then keep the bootstrap license registration in sync.
-- Flutter localization supports English, Spanish, Welsh, and Belarusian, with
-  English as the source and fallback language.
+- Flutter localization supports complete application-UI catalogs for English,
+  Spanish, Welsh, and Belarusian, with English as the source and unsupported-
+  locale fallback language. The canonical Privacy Notice legal document
+  remains the approved English source pending separately approved legal
+  translations.
 - Dart analysis follows the main Fun App Flutter project's
   `very_good_analysis` policy.
 - GitHub Pages builds Flutter through Puro and deploys `build/web` to
@@ -143,6 +146,11 @@ puro flutter build web -t lib/main_prod.dart
 Localization source files live under `lib/l10n/` using Flutter ARB generation
 configured by `l10n.yaml`. English (`en`) is the source/default language;
 Spanish (`es`), Welsh (`cy`), and Belarusian (`be`) are also supported.
+
+Product terminology keeps `Fun App`, `Here & Now`, `Founding Friend`,
+`Safe Guard`, and `Footprint` unchanged. Generic terms such as Membership,
+Venue, and Waitlist are localized. Country option labels use Unicode CLDR
+translations while their stored integration values remain unchanged.
 
 Regenerate localization output after changing an ARB file:
 

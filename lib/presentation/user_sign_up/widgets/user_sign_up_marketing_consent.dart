@@ -102,11 +102,11 @@ final class _UserSignUpMarketingConsentState
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: SizedBox.square(
-                      dimension: 16,
+                      dimension: 20,
                       child: widget.value
                           ? const Icon(
                               Icons.check,
-                              size: 12,
+                              size: 14,
                               color: AppColors.lightForeground,
                             )
                           : null,

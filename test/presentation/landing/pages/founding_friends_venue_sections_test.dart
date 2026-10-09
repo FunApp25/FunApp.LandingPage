@@ -55,7 +55,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      foundingHeading: 'I want to become a Founding Friend',
+      foundingHeading: 'Quiero ser Founding Friend',
       foundingCta: 'Hazte Founding Friend',
       venueIntro: 'Gestiono un espacio',
       venueCard: 'Gestiono un espacio...',
@@ -63,7 +63,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      foundingHeading: 'I want to become a Founding Friend',
+      foundingHeading: 'Rydw i eisiau bod yn Founding Friend',
       foundingCta: 'Dewch yn Founding Friend',
       venueIntro: 'Rwy’n Rhedeg Lleoliad',
       venueCard: 'Rwy’n Rhedeg Lleoliad...',
@@ -71,7 +71,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      foundingHeading: 'I want to become a Founding Friend',
+      foundingHeading: 'Я хачу стаць Founding Friend',
       foundingCta: 'Станьце Founding Friend',
       venueIntro: 'Я кірую пляцоўкай',
       venueCard: 'Я кірую пляцоўкай...',

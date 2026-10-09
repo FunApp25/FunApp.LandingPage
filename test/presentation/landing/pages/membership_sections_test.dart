@@ -124,26 +124,35 @@ void main() {
     (
       locale: Locale('es'),
       size: Size(390, 844),
-      heading: 'Fun App Membership',
-      freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
-      lifetimeCta: 'Welcome To Lifetime Membership',
-      offer: _foundingOffer,
+      heading: 'Membresía de Fun App',
+      freeTier: 'MEMBRESÍA GRATUITA (AÚN NO DISPONIBLE)',
+      lifetimeCta: 'Bienvenido a la membresía de por vida',
+      offer:
+          'A las primeras 100.000 personas usuarias del Reino Unido durante '
+          'los seis primeros meses desde el lanzamiento de Fun App queremos '
+          'mimarlas… Disfruta gratis de la membresía Here & Now.',
     ),
     (
       locale: Locale('cy'),
       size: Size(900, 800),
-      heading: 'Fun App Membership',
-      freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
-      lifetimeCta: 'Welcome To Lifetime Membership',
-      offer: _foundingOffer,
+      heading: 'Aelodaeth Fun App',
+      freeTier: 'AELODAETH AM DDIM (DDIM AR AGOR ETO)',
+      lifetimeCta: 'Croeso i Aelodaeth Oes',
+      offer:
+          'I’r 100,000 o ddefnyddwyr cyntaf yn y DU yn ystod chwe mis cyntaf '
+          'lansiad Fun App, hoffem eich sbwylio… Mwynhewch aelodaeth Here & '
+          'Now am ddim gennym ni.',
     ),
     (
       locale: Locale('be'),
       size: Size(1440, 900),
-      heading: 'Fun App Membership',
-      freeTier: 'FREE MEMBERSHIP (NOT YET OPEN)',
-      lifetimeCta: 'Welcome To Lifetime Membership',
-      offer: _foundingOffer,
+      heading: 'Членства ў Fun App',
+      freeTier: 'БЯСПЛАТНАЕ ЧЛЕНСТВА (ЯШЧЭ НЕ АДКРЫТА)',
+      lifetimeCta: 'Сардэчна запрашаем у пажыццёвае членства',
+      offer:
+          'Мы хочам парадаваць першых 100 000 карыстальнікаў у '
+          'Вялікабрытаніі на працягу першых шасці месяцаў пасля запуску '
+          'Fun App… Карыстайцеся членствам Here & Now за наш кошт.',
     ),
   ]) {
     testWidgets('renders responsive ${example.locale.languageCode} content', (

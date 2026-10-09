@@ -255,21 +255,21 @@ void main() {
       ),
       (
         locale: Locale('es'),
-        previous: 'Previous Founding Friend benefit',
-        next: 'Next Founding Friend benefit',
-        position: 'Founding Friend benefit 1 of 3',
+        previous: 'Ventaja anterior de Founding Friend',
+        next: 'Siguiente ventaja de Founding Friend',
+        position: 'Ventaja de Founding Friend 1 de 3',
       ),
       (
         locale: Locale('cy'),
-        previous: 'Previous Founding Friend benefit',
-        next: 'Next Founding Friend benefit',
-        position: 'Founding Friend benefit 1 of 3',
+        previous: 'Mantais Founding Friend flaenorol',
+        next: 'Mantais Founding Friend nesaf',
+        position: 'Mantais Founding Friend 1 o 3',
       ),
       (
         locale: Locale('be'),
-        previous: 'Previous Founding Friend benefit',
-        next: 'Next Founding Friend benefit',
-        position: 'Founding Friend benefit 1 of 3',
+        previous: 'Папярэдняя перавага Founding Friend',
+        next: 'Наступная перавага Founding Friend',
+        position: 'Перавага Founding Friend 1 з 3',
       ),
     ]) {
       for (final size in const [Size(320, 568), Size(390, 844)]) {

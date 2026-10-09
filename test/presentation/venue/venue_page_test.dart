@@ -748,31 +748,53 @@ void main() {
     }
   });
 
-  testWidgets('refreshed success copy falls back to English by locale', (
-    tester,
-  ) async {
-    addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+  testWidgets(
+    'success copy is localized in every supported non-English locale',
+    (
+      tester,
+    ) async {
+      addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
 
-    for (final locale in const [Locale('es'), Locale('cy'), Locale('be')]) {
-      tester.binding.platformDispatcher.localesTestValue = [locale];
-      await _pumpDirectVenuePage(tester);
-      await _submitSuccessfulVenuePage(tester);
+      for (final example in const [
+        (
+          locale: Locale('es'),
+          eyebrow: 'EL EQUIPO DE FUN APP',
+          heading:
+              'Gracias por ponerte en contacto, nos pondremos en contacto '
+              'pronto',
+        ),
+        (
+          locale: Locale('cy'),
+          eyebrow: 'TÎM FUN APP',
+          heading: 'Diolch am gysylltu â ni, byddwn mewn cysylltiad yn fuan',
+        ),
+        (
+          locale: Locale('be'),
+          eyebrow: 'КАМАНДА FUN APP',
+          heading: 'Дзякуй, што звярнуліся да нас, мы хутка звяжамся з вамі',
+        ),
+      ]) {
+        final locale = example.locale;
+        tester.binding.platformDispatcher.localesTestValue = [locale];
+        await _pumpDirectVenuePage(tester);
+        await _submitSuccessfulVenuePage(tester);
 
-      final context = tester.element(
-        find.byKey(const Key('venueSuccessContent')),
-      );
-      expect(Localizations.localeOf(context), locale);
-      expect(find.text('THE FUN APP TEAM'), findsOneWidget);
-      final heading = tester.widget<Text>(
-        find.byKey(const Key('venueSuccessHeading')),
-      );
-      expect(
-        heading.textSpan?.toPlainText(),
-        'Thank you for reaching out, we’ll be in touch shortly',
-      );
-      expect(tester.takeException(), isNull);
-    }
-  });
+        final context = tester.element(
+          find.byKey(const Key('venueSuccessContent')),
+        );
+        expect(Localizations.localeOf(context), locale);
+        expect(find.text(example.eyebrow), findsOneWidget);
+        final heading = tester.widget<Text>(
+          find.byKey(const Key('venueSuccessHeading')),
+        );
+        expect(
+          heading.textSpan?.toPlainText(),
+          example.heading,
+        );
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
 }
 
 Future<void> _pumpApp(

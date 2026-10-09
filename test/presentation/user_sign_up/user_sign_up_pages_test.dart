@@ -35,7 +35,7 @@ void main() {
   const foundingFriendMarketing =
       "Yes, I'd like to receive emails from Fun App about the upcoming app, "
       'including launch updates, exciting news and exclusive Founding Friend '
-      'communications.';
+      'communication';
 
   testWidgets('approved landing CTAs navigate to only their intended forms', (
     tester,
@@ -136,17 +136,17 @@ void main() {
       findsOneWidget,
     );
     expect(find.text(hereAndNowIntroductionBody), findsOneWidget);
-    expect(find.text('Your first name*'), findsOneWidget);
-    expect(find.text('Your last name*'), findsOneWidget);
+    expect(find.text('First Name*'), findsOneWidget);
+    expect(find.text('Last Name*'), findsOneWidget);
     expect(find.text('Email*'), findsOneWidget);
     expect(find.text('Age*'), findsOneWidget);
-    expect(find.text('Gender'), findsWidgets);
+    expect(find.text('Gender'), findsOneWidget);
     expect(
-      find.text("As a Here & Now member, I'd like to use Fun App for:"),
+      find.text("As a Here & Now member, I'd like to use Fun App for"),
       findsOneWidget,
     );
     expect(find.text(hereAndNowMarketing), findsOneWidget);
-    expect(find.text('Join the Here & Now waitlist'), findsOneWidget);
+    expect(find.text('Join Here & Now Waitlist'), findsOneWidget);
     expect(find.text('Country*'), findsNothing);
     expect(find.byKey(const Key('nameFieldsRow-hereAndNow')), findsOneWidget);
     expect(
@@ -178,6 +178,32 @@ void main() {
     );
     expect(submit.onPressed, isNull);
     expect(find.byType(UserSignUpSuccess), findsNothing);
+    _expectHint(
+      tester,
+      const Key('firstNameField-hereAndNow'),
+      'Your First Name',
+    );
+    _expectHint(
+      tester,
+      const Key('lastNameField-hereAndNow'),
+      'Your Last Name',
+    );
+    _expectHint(
+      tester,
+      const Key('emailField-hereAndNow'),
+      'example@gmail.com',
+    );
+    _expectHint(tester, const Key('ageField-hereAndNow'), 'Your Age');
+    _expectHint(
+      tester,
+      const Key('genderField-hereAndNow'),
+      'Select Your Gender',
+    );
+    _expectHint(
+      tester,
+      const Key('usageReasonField-hereAndNow'),
+      'Enter Your Message',
+    );
     final usageReason = tester.widget<EditableText>(
       find.descendant(
         of: find.byKey(const Key('usageReasonField-hereAndNow')),
@@ -206,13 +232,13 @@ void main() {
       expect(find.text('Email*'), findsOneWidget);
       expect(find.text('Age*'), findsOneWidget);
       expect(find.text('Country*'), findsOneWidget);
-      expect(find.text('Gender'), findsWidgets);
+      expect(find.text('Gender'), findsOneWidget);
       expect(
-        find.text("As a Founding Friend, I'd like to use Fun App for:"),
+        find.text("As a Founding Friend, I'd like to use Fun App for"),
         findsOneWidget,
       );
       expect(find.text(foundingFriendMarketing), findsOneWidget);
-      expect(find.text('Payment Details'), findsOneWidget);
+      expect(find.text('Change the World'), findsOneWidget);
       expect(
         find.byKey(const Key('nameFieldsRow-foundingFriend')),
         findsOneWidget,
@@ -250,6 +276,11 @@ void main() {
       );
       expect(submit.onPressed, isNull);
       expect(find.byType(UserSignUpSuccess), findsNothing);
+      _expectHint(
+        tester,
+        const Key('countryField-foundingFriend'),
+        'Select Your Country',
+      );
       expect(
         find.textContaining('Thank you', findRichText: true),
         findsOneWidget,
@@ -417,7 +448,7 @@ void main() {
     expect(
       find.text(
         'Fun App will be launching soon and we look forward to welcoming you '
-        'as an early member.',
+        'as an early member',
       ),
       findsOneWidget,
     );
@@ -502,50 +533,57 @@ void main() {
   testWidgets('both forms remain bounded at required responsive widths', (
     tester,
   ) async {
-    for (final width in const [320.0, 390.0, 599.0, 600.0, 768.0, 1440.0]) {
-      for (final page in const <Widget>[
-        HereAndNowPage(),
-        FoundingFriendPage(),
-      ]) {
-        setTestSurface(tester, Size(width, 1200));
-        await _pumpPage(tester, page, textScaleFactor: 2);
+    for (final locale in AppLocalizations.supportedLocales) {
+      for (final width in const [320.0, 390.0, 599.0, 600.0, 768.0, 1440.0]) {
+        for (final page in const <Widget>[
+          HereAndNowPage(),
+          FoundingFriendPage(),
+        ]) {
+          setTestSurface(tester, Size(width, 1200));
+          await _pumpPage(
+            tester,
+            page,
+            locale: locale,
+            textScaleFactor: 2,
+          );
 
-        final semanticId = page is HereAndNowPage
-            ? 'hereAndNow'
-            : 'foundingFriend';
-        final card = tester.getRect(
-          find.byKey(Key('userSignUpCard-$semanticId')),
-        );
-        expect(card.left, greaterThanOrEqualTo(0));
-        expect(card.right, lessThanOrEqualTo(width));
-        if (width == 1440) {
-          expect(
-            find.byKey(Key('nameFieldsRow-$semanticId')),
-            findsOneWidget,
+          final semanticId = page is HereAndNowPage
+              ? 'hereAndNow'
+              : 'foundingFriend';
+          final card = tester.getRect(
+            find.byKey(Key('userSignUpCard-$semanticId')),
           );
-          expect(
-            find.byKey(Key('contactFieldsRow-$semanticId')),
-            findsOneWidget,
-          );
-          expect(
-            find.byKey(Key('demographicFieldsRow-$semanticId')),
-            findsOneWidget,
-          );
-        } else {
-          expect(
-            find.byKey(Key('nameFieldsColumn-$semanticId')),
-            findsOneWidget,
-          );
-          expect(
-            find.byKey(Key('contactFieldsColumn-$semanticId')),
-            findsOneWidget,
-          );
-          expect(
-            find.byKey(Key('demographicFieldsColumn-$semanticId')),
-            findsOneWidget,
-          );
+          expect(card.left, greaterThanOrEqualTo(0));
+          expect(card.right, lessThanOrEqualTo(width));
+          if (width == 1440) {
+            expect(
+              find.byKey(Key('nameFieldsRow-$semanticId')),
+              findsOneWidget,
+            );
+            expect(
+              find.byKey(Key('contactFieldsRow-$semanticId')),
+              findsOneWidget,
+            );
+            expect(
+              find.byKey(Key('demographicFieldsRow-$semanticId')),
+              findsOneWidget,
+            );
+          } else {
+            expect(
+              find.byKey(Key('nameFieldsColumn-$semanticId')),
+              findsOneWidget,
+            );
+            expect(
+              find.byKey(Key('contactFieldsColumn-$semanticId')),
+              findsOneWidget,
+            );
+            expect(
+              find.byKey(Key('demographicFieldsColumn-$semanticId')),
+              findsOneWidget,
+            );
+          }
+          expect(tester.takeException(), isNull);
         }
-        expect(tester.takeException(), isNull);
       }
     }
   });
@@ -570,6 +608,12 @@ void main() {
           .label,
       contains('Gender (optional)'),
     );
+    expect(
+      tester.getSize(
+        find.byKey(const Key('marketingConsentVisual-foundingFriend')),
+      ),
+      const Size.square(20),
+    );
     semantics.dispose();
   });
 }
@@ -577,10 +621,12 @@ void main() {
 Future<void> _pumpPage(
   WidgetTester tester,
   Widget page, {
+  Locale locale = const Locale('en'),
   double textScaleFactor = 1,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
+      locale: locale,
       theme: appTheme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -594,6 +640,13 @@ Future<void> _pumpPage(
     ),
   );
   await tester.pump();
+}
+
+void _expectHint(WidgetTester tester, Key key, String expected) {
+  expect(
+    find.descendant(of: find.byKey(key), matching: find.text(expected)),
+    findsOneWidget,
+  );
 }
 
 Future<void> _tapSubmit(WidgetTester tester, String semanticId) async {

@@ -231,10 +231,16 @@ final class _UserSignUpIntroduction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final introduction = switch (experience) {
+    final heading = switch (experience) {
       UserSignUpExperience.hereAndNow => l10n.userSignUpHereAndNowIntroduction,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendIntroduction,
+    };
+    final body = switch (experience) {
+      UserSignUpExperience.hereAndNow =>
+        l10n.userSignUpHereAndNowIntroductionBody,
+      UserSignUpExperience.foundingFriend =>
+        l10n.userSignUpFoundingFriendIntroductionBody,
     };
     final emphasis = switch (experience) {
       UserSignUpExperience.hereAndNow =>
@@ -242,11 +248,6 @@ final class _UserSignUpIntroduction extends StatelessWidget {
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendHeadingEmphasis,
     };
-    final bodyStart = introduction.indexOf('. ');
-    final heading = bodyStart == -1
-        ? introduction
-        : introduction.substring(0, bodyStart);
-    final body = bodyStart == -1 ? '' : introduction.substring(bodyStart + 2);
     final leading = heading.endsWith(emphasis)
         ? heading.substring(0, heading.length - emphasis.length)
         : heading;

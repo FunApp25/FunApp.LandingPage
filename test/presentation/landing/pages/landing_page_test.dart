@@ -797,7 +797,7 @@ void main() {
         await pumpLandingApp(tester, locale: const Locale('be'));
 
         expect(
-          find.text('СЯБРЫ-ЗАСНАВАЛЬНІКІ'),
+          find.text('FOUNDING FRIENDS'),
           size.width < LandingHeader.mobileUxBreakpoint
               ? findsOneWidget
               : findsNWidgets(2),

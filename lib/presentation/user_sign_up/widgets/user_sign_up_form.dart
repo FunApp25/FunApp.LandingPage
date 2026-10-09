@@ -133,6 +133,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
                 key: Key('firstNameField-$_semanticId'),
                 controller: _firstNameController,
                 label: firstNameLabel,
+                placeholder: l10n.userSignUpFirstNamePlaceholder,
                 required: true,
                 keyboardType: TextInputType.name,
                 autofillHints: const [AutofillHints.givenName],
@@ -142,6 +143,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
                 key: Key('lastNameField-$_semanticId'),
                 controller: _lastNameController,
                 label: lastNameLabel,
+                placeholder: l10n.userSignUpLastNamePlaceholder,
                 required: true,
                 keyboardType: TextInputType.name,
                 autofillHints: const [AutofillHints.familyName],
@@ -152,6 +154,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
                 key: Key('emailField-$_semanticId'),
                 controller: _emailController,
                 label: l10n.userSignUpEmailLabel,
+                placeholder: l10n.userSignUpEmailPlaceholder,
                 required: true,
                 keyboardType: TextInputType.emailAddress,
                 autofillHints: const [AutofillHints.email],
@@ -161,6 +164,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
                 key: Key('ageField-$_semanticId'),
                 controller: _ageController,
                 label: l10n.userSignUpAgeLabel,
+                placeholder: l10n.userSignUpAgePlaceholder,
                 required: true,
                 keyboardType: TextInputType.number,
                 inputFormatters: const [_AsciiDigitsOnlyFormatter()],
@@ -222,6 +226,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
             key: Key('usageReasonField-$_semanticId'),
             controller: _usageReasonController,
             label: usageReasonLabel,
+            placeholder: l10n.userSignUpUsageReasonPlaceholder,
             minLines: 5,
             maxLines: 7,
             textInputAction: TextInputAction.newline,
@@ -245,6 +250,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
     required Key key,
     required TextEditingController controller,
     required String label,
+    required String placeholder,
     bool required = false,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
@@ -270,7 +276,10 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
             key: key,
             controller: controller,
             style: _inputStyle,
-            decoration: _fieldDecoration(multiline: multiline),
+            decoration: _fieldDecoration(
+              placeholder: placeholder,
+              multiline: multiline,
+            ),
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
             autofillHints: autofillHints,
@@ -397,7 +406,10 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
     }
   }
 
-  InputDecoration _fieldDecoration({bool multiline = false}) {
+  InputDecoration _fieldDecoration({
+    String? placeholder,
+    bool multiline = false,
+  }) {
     final radius = multiline ? 16.0 : AppSizes.pillRadius;
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(radius),
@@ -411,6 +423,8 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
     return InputDecoration(
       filled: true,
       fillColor: AppColors.lightForeground,
+      hintText: placeholder,
+      hintStyle: _inputStyle,
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       border: border,

@@ -48,7 +48,10 @@ Current implementation is evidence of repository state, not automatically a perm
   starting point.
 - The Flutter Web host scaffold uses the Fun App symbol for favicon and PWA icon artwork.
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
-- Flutter generated localization supports English, Spanish, Welsh, and Belarusian; English is the source and fallback language.
+- Flutter generated localization supports complete application-UI catalogs for
+  English, Spanish, Welsh, and Belarusian; English is the source and the
+  fallback for unsupported locales. The canonical Privacy Notice legal prose
+  remains English until separately approved legal translations are supplied.
 - GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
 - GitHub Pages builds Flutter through Puro and publishes `build/web` from the repository root at base href `/`.
 - The approved English Fun App Ltd Privacy Notice is hosted at
@@ -353,6 +356,11 @@ capabilities as implemented.
 - No language selector or persisted manual locale choice exists yet.
 - User-facing Flutter copy must come from generated localizations rather than hardcoded presentation strings. Approved new English source copy may use the established English fallback in other supported locales when translation completion is explicitly deferred and tracked.
 - Locale-specific product and marketing copy remains subject to product and translation review as content expands.
+- `Fun App`, `Here & Now`, `Founding Friend`, `Safe Guard`, and `Footprint` are
+  protected product names across locales. Membership, Venue, and Waitlist are
+  generic terms and use natural locale-specific equivalents. Country controls
+  localize their display labels from Unicode CLDR while preserving the existing
+  HubSpot-compatible stored values.
 
 ## 8. User input and future backend direction
 

@@ -62,19 +62,19 @@ void main() {
     (
       locale: Locale('es'),
       size: Size(390, 844),
-      heading: 'What does Founding Friend mean?',
+      heading: '¿Qué significa ser Founding Friend?',
       firstTitle: 'Reconocimiento para siempre',
     ),
     (
       locale: Locale('cy'),
       size: Size(900, 800),
-      heading: 'What does Founding Friend mean?',
+      heading: 'Beth mae Founding Friend yn ei olygu?',
       firstTitle: 'Cydnabyddiaeth am Byth',
     ),
     (
       locale: Locale('be'),
       size: Size(1440, 900),
-      heading: 'What does Founding Friend mean?',
+      heading: 'Што азначае Founding Friend?',
       firstTitle: 'Прызнанне назаўсёды',
     ),
   ]) {
