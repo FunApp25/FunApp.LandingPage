@@ -1,16 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_dialog.dart';
 
 import '../landing_test_helpers.dart';
 
 void main() {
   testWidgets(
-    'Contact opens and closes the localized coming-soon dialog',
+    'coming-soon component opens and closes with localized copy',
     (
       tester,
     ) async {
@@ -20,18 +22,7 @@ void main() {
 
       final landingPageContext = tester.element(find.byType(LandingPage));
       final l10n = AppLocalizations.of(landingPageContext);
-      final contactCta = find.byKey(const Key('landingHeaderContactCta'));
-
-      expect(contactCta, findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byType(VenueSection),
-          matching: find.byType(InkWell),
-        ),
-        findsOneWidget,
-      );
-
-      await tester.tap(contactCta);
+      unawaited(showInterestedUserComingSoonDialog(landingPageContext));
       await tester.pumpAndSettle();
 
       expect(find.byType(LandingDialog), findsOneWidget);
@@ -54,7 +45,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LandingDialog), findsNothing);
-      expect(contactCta, findsOneWidget);
       expect(tester.takeException(), isNull);
       semantics.dispose();
     },
@@ -67,8 +57,11 @@ void main() {
       setTestSurface(tester, size);
       await pumpLandingApp(tester);
 
-      final contactCta = find.byKey(const Key('landingHeaderContactCta'));
-      await tester.tap(contactCta);
+      unawaited(
+        showInterestedUserComingSoonDialog(
+          tester.element(find.byType(LandingPage)),
+        ),
+      );
       await tester.pumpAndSettle();
 
       final dialogRect = tester.getRect(
@@ -97,7 +90,11 @@ void main() {
     final l10n = AppLocalizations.of(
       tester.element(find.byType(LandingPage)),
     );
-    await tester.tap(find.byKey(const Key('landingHeaderContactCta')));
+    unawaited(
+      showInterestedUserComingSoonDialog(
+        tester.element(find.byType(LandingPage)),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(
@@ -118,14 +115,11 @@ void main() {
     );
     await pumpLandingApp(tester, locale: const Locale('be'));
 
-    final contactCta = find.byKey(const Key('landingHeaderContactCta'));
-    final ctaText = find.descendant(
-      of: contactCta,
-      matching: find.byType(Text),
+    unawaited(
+      showInterestedUserComingSoonDialog(
+        tester.element(find.byType(LandingPage)),
+      ),
     );
-    final ctaFocus = Focus.of(tester.element(ctaText.first))..requestFocus();
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsNothing);
     expect(tester.takeException(), isNull);
@@ -141,9 +135,12 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.byType(LandingDialog), findsNothing);
-    expect(ctaFocus.hasPrimaryFocus, isTrue);
 
-    await tester.tap(contactCta);
+    unawaited(
+      showInterestedUserComingSoonDialog(
+        tester.element(find.byType(LandingPage)),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(LandingDialog), findsOneWidget);
     await tester.tap(find.byKey(const Key('landingDialogCloseButton')));

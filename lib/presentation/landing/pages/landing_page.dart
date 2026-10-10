@@ -17,9 +17,8 @@ import 'package:fun_app_landing_page/presentation/landing/sections/problem/probl
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_stats_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
-import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
-import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
@@ -63,7 +62,6 @@ final class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
-    widget.landingRouteController?.addListener(_handleRouteNavigationRequest);
     final initialSection = widget.initialSection;
     if (initialSection != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -76,36 +74,8 @@ final class _LandingPageState extends State<LandingPage> {
 
   @override
   void dispose() {
-    widget.landingRouteController?.removeListener(
-      _handleRouteNavigationRequest,
-    );
     _scrollController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(LandingPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.landingRouteController != widget.landingRouteController) {
-      oldWidget.landingRouteController?.removeListener(
-        _handleRouteNavigationRequest,
-      );
-      widget.landingRouteController?.addListener(
-        _handleRouteNavigationRequest,
-      );
-    }
-  }
-
-  void _handleRouteNavigationRequest() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
-      if (mounted && isCurrentRoute) {
-        final target = widget.landingRouteController?.takePendingTarget();
-        if (target != null) {
-          _scrollTo(_sectionKeyFor(target));
-        }
-      }
-    });
   }
 
   void _scrollTo(GlobalKey sectionKey, {bool retryAfterLayout = true}) {
@@ -184,10 +154,6 @@ final class _LandingPageState extends State<LandingPage> {
     }
   }
 
-  void _showInterestedUserComingSoonDialog() {
-    unawaited(showInterestedUserComingSoonDialog(context));
-  }
-
   void _openVenuePage() {
     Navigator.of(context).pushNamed(VenuePage.routeName);
   }
@@ -208,8 +174,9 @@ final class _LandingPageState extends State<LandingPage> {
   };
 
   void _openPrivacyNotice() {
-    final uri = privacyNoticeUrlFor(Uri.base);
-    (widget.onPrivacyNoticeLaunch ?? launchExternalLinkInNewTab)(uri);
+    if (ModalRoute.of(context)?.settings.name != PrivacyNoticePage.routeName) {
+      Navigator.of(context).pushNamed(PrivacyNoticePage.routeName);
+    }
   }
 
   @override
@@ -223,7 +190,7 @@ final class _LandingPageState extends State<LandingPage> {
             onMembershipSelected: () => _scrollTo(_membershipKey),
             onFoundingFriendsSelected: () => _scrollTo(_foundingFriendsKey),
             onVenuesSelected: () => _scrollTo(_venueKey),
-            onContactSelected: _showInterestedUserComingSoonDialog,
+            onContactSelected: _openHereAndNowPage,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -239,6 +206,7 @@ final class _LandingPageState extends State<LandingPage> {
                   const ConnectionExperienceSection(),
                   MembershipSection(
                     key: _membershipKey,
+                    onFreeCtaPressed: _openHereAndNowPage,
                     onHereAndNowCtaPressed: _openHereAndNowPage,
                     onLifetimeCtaPressed: _openFoundingFriendPage,
                   ),

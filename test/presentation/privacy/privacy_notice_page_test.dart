@@ -103,6 +103,10 @@ void main() {
     expect(find.text('Last updated: 15 September 2026'), findsNWidgets(2));
     expect(find.byKey(const Key('privacyNoticeScrollView')), findsOneWidget);
     expect(
+      find.byKey(const Key('legalDocumentCard-privacy')),
+      findsOneWidget,
+    );
+    expect(
       tester
           .widget<Title>(
             find.descendant(

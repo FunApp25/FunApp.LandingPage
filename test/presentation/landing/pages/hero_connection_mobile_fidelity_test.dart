@@ -21,6 +21,9 @@ void main() {
     final artworkRect = tester.getRect(
       find.byKey(const Key('heroPeopleImage')),
     );
+    final artworkFrameRect = tester.getRect(
+      find.byKey(const Key('heroArtworkFrame')),
+    );
     final contentRect = tester.getRect(
       find.byKey(const Key('heroContentBounds')),
     );
@@ -47,13 +50,18 @@ void main() {
       cardClip.borderRadius,
       const BorderRadius.all(Radius.circular(AppSizes.cardRadius)),
     );
-    expect(artworkRect.size, const Size(432, 439));
-    expect(artworkRect.top - cardRect.top, closeTo(-115, 0.01));
+    expect(artworkFrameRect.size, const Size(432, 439));
+    expect(artworkFrameRect.top - cardRect.top, closeTo(-115, 0.01));
+    expect(
+      artworkRect.size,
+      const Size(432, 439) * 1.1586254835128784,
+    );
+    expect(artworkRect.bottom, closeTo(artworkFrameRect.bottom, 0.01));
     expect(artworkRect.center.dx, closeTo(cardRect.center.dx, 0.01));
     expect(contentRect.left - cardRect.left, 16);
     expect(cardRect.right - contentRect.right, 16);
     expect(contentRect.width, 326);
-    expect(contentRect.top - artworkRect.bottom, closeTo(48, 0.01));
+    expect(contentRect.top - artworkFrameRect.bottom, closeTo(48, 0.01));
     expect(cardRect.bottom - contentRect.bottom, 48);
     expect(headline.textAlign, TextAlign.center);
     expect(headline.textSpan?.style?.fontSize, 36);

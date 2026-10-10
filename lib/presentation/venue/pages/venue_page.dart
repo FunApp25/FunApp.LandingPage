@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
@@ -10,8 +8,9 @@ import 'package:fun_app_landing_page/presentation/landing/navigation/landing_rou
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
-import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_form_region.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_introduction.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_success_content.dart';
@@ -82,16 +81,14 @@ final class _VenuePageViewState extends State<_VenuePageView> {
     if (controller != null) {
       controller.openLandingSection(context, target);
     } else {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/',
-        (route) => false,
-        arguments: target,
-      );
+      Navigator.of(context).pushNamed('/', arguments: target);
     }
   }
 
-  void _showInterestedUserComingSoonDialog(BuildContext context) {
-    unawaited(showInterestedUserComingSoonDialog(context));
+  void _openRoute(BuildContext context, String routeName) {
+    if (ModalRoute.of(context)?.settings.name != routeName) {
+      Navigator.of(context).pushNamed(routeName);
+    }
   }
 
   void _openPrivacyNotice() {
@@ -154,7 +151,7 @@ final class _VenuePageViewState extends State<_VenuePageView> {
                         LandingSectionTarget.venues,
                       ),
                       onContactSelected: () =>
-                          _showInterestedUserComingSoonDialog(context),
+                          _openRoute(context, HereAndNowPage.routeName),
                     ),
                     Expanded(
                       child: SingleChildScrollView(
@@ -189,7 +186,8 @@ final class _VenuePageViewState extends State<_VenuePageView> {
                                 context,
                                 LandingSectionTarget.venues,
                               ),
-                              onPrivacyNoticeSelected: _openPrivacyNotice,
+                              onPrivacyNoticeSelected: () =>
+                                  _openRoute(context, LegalRoutes.privacy),
                             ),
                           ],
                         ),

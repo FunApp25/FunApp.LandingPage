@@ -11,10 +11,14 @@ import 'package:fun_app_landing_page/presentation/landing/sections/membership/me
 final class MembershipSection extends StatelessWidget {
   /// Creates the membership section.
   const MembershipSection({
+    this.onFreeCtaPressed,
     this.onHereAndNowCtaPressed,
     this.onLifetimeCtaPressed,
     super.key,
   });
+
+  /// Opens the approved Here & Now destination from Free Membership.
+  final VoidCallback? onFreeCtaPressed;
 
   /// Opens the approved Here & Now waitlist destination.
   final VoidCallback? onHereAndNowCtaPressed;
@@ -101,7 +105,7 @@ final class MembershipSection extends StatelessWidget {
         ],
         ctaLabel: context.l10n.landingMembershipFreeCta,
         badgeLabel: null,
-        onCtaPressed: null,
+        onCtaPressed: onFreeCtaPressed,
       ),
       (
         semanticId: 'hereNow',

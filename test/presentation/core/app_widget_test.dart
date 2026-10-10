@@ -13,6 +13,7 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
@@ -118,7 +119,7 @@ void main() {
     ).pushNamed('/unknown-fragment');
     await tester.pumpAndSettle();
 
-    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byType(LandingPage), findsWidgets);
     expect(find.byKey(const Key('landingPageScrollView')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -239,6 +240,56 @@ void main() {
     expect(find.byType(LandingPage), findsOneWidget);
     expect(find.byType(PrivacyNoticePage), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sequential routed navigation preserves every back entry', (
+    tester,
+  ) async {
+    await _pumpApp(tester, const Locale('en'));
+    Navigator.of(
+      tester.element(find.byType(LandingPage)),
+    ).pushNamed(HereAndNowPage.routeName);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('headerLogoLink')));
+    await tester.pumpAndSettle();
+    Navigator.of(
+      tester.element(find.byType(LandingPage)),
+    ).pushNamed(FoundingFriendPage.routeName);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(HereAndNowPage), findsOneWidget);
+  });
+
+  testWidgets('legal route sequence supports consecutive back operations', (
+    tester,
+  ) async {
+    await _pumpApp(tester, const Locale('en'));
+    Navigator.of(
+      tester.element(find.byType(LandingPage)),
+    ).pushNamed(LegalPlaceholderPage.termsRouteName);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    Navigator.of(
+      tester.element(find.byType(LegalPlaceholderPage)),
+    ).pushNamed(LegalPlaceholderPage.cookiesRouteName);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('legalPlaceholderPage-terms')),
+      findsOneWidget,
+    );
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
   });
 
   testWidgets('maps each resolved locale to the host document language', (

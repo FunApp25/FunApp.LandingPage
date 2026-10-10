@@ -15,6 +15,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_sec
 import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 
 import '../../landing_test_helpers.dart';
 
@@ -58,7 +59,11 @@ void main() {
           example.mobile ? findsOneWidget : findsNothing,
         );
         if (!example.mobile) {
-          expect(find.byKey(Key(example.establishedKey)), findsOneWidget);
+          expect(
+            find.byKey(Key(example.establishedKey)),
+            findsOneWidget,
+            reason: 'Unexpected header composition at ${example.width}px.',
+          );
         }
         expect(tester.takeException(), isNull);
       }
@@ -94,7 +99,7 @@ void main() {
     expect(tester.getSize(logo).width, closeTo(89, 0.5));
     expect(tester.getSize(logo).height, 29);
     expect(tester.getRect(logo).left, 16);
-    expect(find.text('Contact Us'), findsOneWidget);
+    expect(find.text('Secure your place in the queue'), findsOneWidget);
     expect(contact, findsOneWidget);
     expect(tester.getSize(menuButton), const Size.square(44));
     expect(tester.getSize(menuVisual), const Size.square(38));
@@ -111,28 +116,28 @@ void main() {
   for (final example in const [
     (
       locale: Locale('en'),
-      contact: 'Contact Us',
+      contact: 'Secure your place in the queue',
       open: 'Open navigation menu',
       close: 'Close navigation menu',
       firstNavigation: 'OUR BELIEF',
     ),
     (
       locale: Locale('es'),
-      contact: 'Contáctanos',
+      contact: 'Asegura tu lugar en la cola',
       open: 'Abrir menú de navegación',
       close: 'Cerrar menú de navegación',
       firstNavigation: 'NUESTRA CREENCIA',
     ),
     (
       locale: Locale('cy'),
-      contact: 'Cysylltwch â Ni',
+      contact: 'Sicrhewch eich lle yn y ciw',
       open: 'Agor y ddewislen lywio',
       close: "Cau'r ddewislen lywio",
       firstNavigation: 'EIN CRED',
     ),
     (
       locale: Locale('be'),
-      contact: 'Звязацца з намі',
+      contact: 'Забраніруйце месца ў чарзе',
       open: 'Адкрыць меню навігацыі',
       close: 'Закрыць меню навігацыі',
       firstNavigation: 'НАША ВЕРА',
@@ -234,7 +239,7 @@ void main() {
       );
       expect(tester.getSize(topArea).height, 70);
       expect(tester.getRect(bottomContact).left, 16);
-      expect(tester.getSize(bottomContact), const Size(358, 38));
+      expect(tester.getSize(bottomContact), const Size(358, 60));
       expect(
         tester.getRect(menu).bottom - tester.getRect(bottomContact).bottom,
         16,
@@ -274,7 +279,7 @@ void main() {
     },
   );
 
-  testWidgets('menu keeps page scroll fixed and Contact Us opens Coming Soon', (
+  testWidgets('menu keeps page scroll fixed and queue CTA opens Here & Now', (
     tester,
   ) async {
     setTestSurface(tester, const Size(390, 844));
@@ -305,11 +310,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('landingMobileMenuContactCta')));
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('interestedUserComingSoonDialogContent')),
-      findsOneWidget,
-    );
-    await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
+    expect(find.byType(HereAndNowPage), findsOneWidget);
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     await tester.drag(
       find.byKey(const Key('landingPageScrollView')),

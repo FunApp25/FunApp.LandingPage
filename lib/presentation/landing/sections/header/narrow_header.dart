@@ -21,10 +21,10 @@ final class NarrowHeader extends StatelessWidget {
   /// Header navigation items in display order.
   final List<HeaderNavigationItemData> navigationItems;
 
-  /// Localized Contact Us label.
+  /// Localized queue-sign-up label.
   final String contactLabel;
 
-  /// Opens the interested-user Coming Soon dialog.
+  /// Opens the Here & Now queue-sign-up route.
   final VoidCallback? onContactSelected;
 
   @override

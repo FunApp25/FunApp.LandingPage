@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:ui' show CheckedState;
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,7 +89,7 @@ void main() {
 
     final disclosure = find.byType(VenuePrivacyDisclosure);
     await tester.ensureVisible(disclosure);
-    tester.semantics.tap(find.semantics.byLabel('Privacy Notice'));
+    _tapVenuePrivacyNotice(tester);
     await tester.pump();
     expect(launched, hasLength(1));
     expect(launched.single.fragment, '/privacy');
@@ -233,7 +234,7 @@ void main() {
 
     await tester.tap(checkbox);
     await tester.pump();
-    tester.semantics.tap(find.semantics.byLabel('Privacy Notice'));
+    _tapVenuePrivacyNotice(tester);
     await tester.pump();
     expect(launched, hasLength(1));
     expect(launched.single.fragment, '/privacy');
@@ -852,6 +853,34 @@ Future<void> _fillRequiredVenuePageFields(WidgetTester tester) async {
     await tester.enterText(find.byKey(entry.$1), entry.$2);
   }
   await tester.pump();
+}
+
+void _tapVenuePrivacyNotice(WidgetTester tester) {
+  final text = tester.widget<Text>(
+    find.descendant(
+      of: find.byKey(const Key('venuePrivacyDisclosure')),
+      matching: find.byType(Text),
+    ),
+  );
+  final recognizer = _tapRecognizerIn(text.textSpan!);
+  expect(recognizer, isNotNull);
+  recognizer!.onTap!();
+}
+
+TapGestureRecognizer? _tapRecognizerIn(InlineSpan span) {
+  if (span is TextSpan) {
+    if (span.recognizer case final TapGestureRecognizer recognizer) {
+      return recognizer;
+    } else {
+      for (final child in span.children ?? const <InlineSpan>[]) {
+        final recognizer = _tapRecognizerIn(child);
+        if (recognizer != null) {
+          return recognizer;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 Future<void> _tapVenuePageSubmit(WidgetTester tester) async {

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_content.dart';
@@ -15,30 +13,25 @@ final class MobileHero extends StatelessWidget {
   final double availableWidth;
 
   static const _figmaCardWidth = 358.0;
-  static const _largestMobileCardWidth = 567.0;
   static const _figmaArtworkWidth = 432.0;
   static const _figmaArtworkHeight = 439.0;
   static const _figmaArtworkTop = -115.0;
-  static const _figmaArtworkOverscan = 37.0;
-  static const _largestViewportOverscan = 16.0;
+  // Figma node 2269:1504 uses a CROP image fill whose horizontal scale is
+  // 1.1586254835. The exported local PNG retains the transparent source-canvas
+  // inset on its right edge, so applying the same uniform crop scale keeps
+  // faces undistorted while letting the card own the visible clipping.
+  static const _figmaImageCropScale = 1.1586254835128784;
   static const _artworkToContentClearance = 48.0;
   static const _contentBottomInset = 48.0;
 
   @override
   Widget build(BuildContext context) {
-    final widerViewportProgress =
-        ((availableWidth - _figmaCardWidth) /
-                (_largestMobileCardWidth - _figmaCardWidth))
-            .clamp(0.0, 1.0);
-    final artworkOverscan = lerpDouble(
-      _figmaArtworkOverscan,
-      _largestViewportOverscan,
-      widerViewportProgress,
-    )!;
-    final artworkWidth = availableWidth + (artworkOverscan * 2);
-    final artworkHeight =
-        artworkWidth * (_figmaArtworkHeight / _figmaArtworkWidth);
-    final artworkTop = _figmaArtworkTop * (artworkWidth / _figmaArtworkWidth);
+    final geometryScale = availableWidth / _figmaCardWidth;
+    final artworkWidth = _figmaArtworkWidth * geometryScale;
+    final artworkHeight = _figmaArtworkHeight * geometryScale;
+    final artworkTop = _figmaArtworkTop * geometryScale;
+    final paintedArtworkWidth = artworkWidth * _figmaImageCropScale;
+    final paintedArtworkHeight = artworkHeight * _figmaImageCropScale;
     final contentTop = artworkTop + artworkHeight + _artworkToContentClearance;
 
     return Stack(
@@ -71,7 +64,17 @@ final class MobileHero extends StatelessWidget {
           left: (availableWidth - artworkWidth) / 2,
           width: artworkWidth,
           height: artworkHeight,
-          child: const HeroImage(assetPath: AppAssets.heroPeopleMobile),
+          child: OverflowBox(
+            alignment: Alignment.bottomCenter,
+            minWidth: paintedArtworkWidth,
+            maxWidth: paintedArtworkWidth,
+            minHeight: paintedArtworkHeight,
+            maxHeight: paintedArtworkHeight,
+            child: const SizedBox.expand(
+              key: Key('heroArtworkPaintBounds'),
+              child: HeroImage(assetPath: AppAssets.heroPeopleMobile),
+            ),
+          ),
         ),
       ],
     );

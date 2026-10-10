@@ -23,7 +23,7 @@ final class LandingMobileMenu extends StatefulWidget {
   /// Localized landing destinations in display order.
   final List<HeaderNavigationItemData> navigationItems;
 
-  /// Localized Contact Us label.
+  /// Localized queue-sign-up label.
   final String contactLabel;
 
   /// Localized close-button semantic label.
@@ -35,7 +35,7 @@ final class LandingMobileMenu extends StatefulWidget {
   /// Dismisses the modal with a selected destination.
   final ValueChanged<int> onItemSelected;
 
-  /// Closes the menu before the shared Coming Soon dialog opens.
+  /// Closes the menu before the Here & Now route opens.
   final VoidCallback onContactSelected;
 
   @override

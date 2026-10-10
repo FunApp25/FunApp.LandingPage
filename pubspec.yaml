@@ -52,7 +52,7 @@ flutter:
     - assets/landing/welcome/
     - assets/fonts/manrope/
     - assets/fonts/instrument_serif/
-    - assets/legal/privacy_notice.md
+    - assets/legal/
   generate: true
   uses-material-design: true
 

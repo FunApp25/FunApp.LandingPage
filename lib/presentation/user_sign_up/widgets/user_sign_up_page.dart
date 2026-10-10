@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
@@ -8,9 +6,8 @@ import 'package:fun_app_landing_page/presentation/landing/navigation/landing_rou
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
-import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
@@ -22,7 +19,6 @@ final class UserSignUpPage extends StatefulWidget {
     required this.experience,
     this.onSubmit,
     this.showConfirmedSuccess = false,
-    this.onPrivacyNoticeLaunch,
     this.landingRouteController,
     super.key,
   });
@@ -35,9 +31,6 @@ final class UserSignUpPage extends StatefulWidget {
 
   /// Injected confirmed-success state for Here & Now previews/tests only.
   final bool showConfirmedSuccess;
-
-  /// Optional browser-launch override for presentation tests.
-  final ValueChanged<Uri>? onPrivacyNoticeLaunch;
 
   /// Coordinates navigation back to an existing landing route.
   final LandingRouteController? landingRouteController;
@@ -63,21 +56,14 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
     if (controller != null) {
       controller.openLandingSection(context, target);
     } else {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/',
-        (route) => false,
-        arguments: target,
-      );
+      Navigator.of(context).pushNamed('/', arguments: target);
     }
   }
 
-  void _showInterestedUserComingSoonDialog(BuildContext context) {
-    unawaited(showInterestedUserComingSoonDialog(context));
-  }
-
-  void _openPrivacyNotice() {
-    final uri = privacyNoticeUrlFor(Uri.base);
-    (widget.onPrivacyNoticeLaunch ?? launchExternalLinkInNewTab)(uri);
+  void _openRoute(BuildContext context, String routeName) {
+    if (ModalRoute.of(context)?.settings.name != routeName) {
+      Navigator.of(context).pushNamed(routeName);
+    }
   }
 
   @override
@@ -113,8 +99,7 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
                 context,
                 LandingSectionTarget.venues,
               ),
-              onContactSelected: () =>
-                  _showInterestedUserComingSoonDialog(context),
+              onContactSelected: () => _openRoute(context, '/here-and-now'),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -149,7 +134,8 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
                         context,
                         LandingSectionTarget.venues,
                       ),
-                      onPrivacyNoticeSelected: _openPrivacyNotice,
+                      onPrivacyNoticeSelected: () =>
+                          _openRoute(context, LegalRoutes.privacy),
                     ),
                   ],
                 ),

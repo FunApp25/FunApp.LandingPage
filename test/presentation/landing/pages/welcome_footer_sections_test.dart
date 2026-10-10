@@ -417,7 +417,7 @@ void main() {
   );
 
   testWidgets(
-    'footer Privacy Notice requests a new tab without app navigation',
+    'footer Privacy Notice navigates in the current app tab',
     (
       tester,
     ) async {
@@ -434,10 +434,8 @@ void main() {
       interactiveLink.onTap!();
       await tester.pumpAndSettle();
 
-      expect(launched, hasLength(1));
-      expect(launched.single.fragment, '/privacy');
-      expect(launched.single.path, '/');
-      expect(find.byType(PrivacyNoticePage), findsNothing);
+      expect(launched, isEmpty);
+      expect(find.byType(PrivacyNoticePage), findsOneWidget);
       expect(find.byType(LandingFooter), findsOneWidget);
       expect(tester.takeException(), isNull);
       semantics.dispose();

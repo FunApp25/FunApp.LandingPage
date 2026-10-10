@@ -25,6 +25,8 @@ import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_s
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_navigation_item.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -78,7 +80,10 @@ void main() {
       expect(find.text(label), findsNWidgets(2));
     }
     expect(find.text('MEMBERSHIP'), findsNWidgets(2));
-    for (final label in ['Contact Us', 'A FRIENDLIER WAY TO CONNECT']) {
+    for (final label in [
+      'Secure your place in the queue',
+      'A FRIENDLIER WAY TO CONNECT',
+    ]) {
       expect(find.text(label), findsOneWidget);
     }
     expect(find.text('Join the Waitlist'), findsNothing);
@@ -107,7 +112,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      contact: 'Contáctanos',
+      contact: 'Asegura tu lugar en la cola',
       eyebrow: 'UNA FORMA MÁS AMABLE DE CONECTAR',
       headline:
           'Fun App nació de la convicción de que crear conexiones debería ser '
@@ -115,7 +120,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      contact: 'Cysylltwch â Ni',
+      contact: 'Sicrhewch eich lle yn y ciw',
       eyebrow: 'FFORDD FWY CYFEILLGAR O GYSYLLTU',
       headline:
           'Dechreuodd Fun App o’r gred y dylai creu cysylltiadau fod '
@@ -123,7 +128,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      contact: 'Звязацца з намі',
+      contact: 'Забраніруйце месца ў чарзе',
       eyebrow: 'БОЛЬШ ПРЫЯЗНЫ СПОСАБ ЗНАЁМІЦЦА',
       headline:
           'Fun App пачаўся з веры ў тое, што наладжваць сувязі павінна быць '
@@ -460,7 +465,7 @@ void main() {
     await mouse.removePointer();
   });
 
-  testWidgets('navigation is accessible and Contact Us opens Coming Soon', (
+  testWidgets('navigation is accessible and queue CTA opens Here & Now', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -497,9 +502,9 @@ void main() {
     );
 
     final contact = tester
-        .getSemantics(find.text('Contact Us'))
+        .getSemantics(find.text('Secure your place in the queue'))
         .getSemanticsData();
-    expect(contact.label, 'Contact Us');
+    expect(contact.label, 'Secure your place in the queue');
     expect(contact.flagsCollection.isButton, isTrue);
     expect(contact.flagsCollection.isLink, isFalse);
     expect(
@@ -511,12 +516,31 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('landingHeaderContactCta')));
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('interestedUserComingSoonDialogContent')),
-      findsOneWidget,
-    );
+    expect(find.byType(HereAndNowPage), findsOneWidget);
     expect(find.byKey(const Key('venueLeadForm')), findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('membership CTAs open their approved sign-up routes', (
+    tester,
+  ) async {
+    await pumpLandingApp(tester);
+
+    for (final id in const ['free', 'hereNow']) {
+      final cta = find.byKey(Key('membershipCta-$id'));
+      await tester.ensureVisible(cta);
+      await tester.tap(cta);
+      await tester.pumpAndSettle();
+      expect(find.byType(HereAndNowPage), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+    }
+
+    final lifetime = find.byKey(const Key('membershipCta-lifetime'));
+    await tester.ensureVisible(lifetime);
+    await tester.tap(lifetime);
+    await tester.pumpAndSettle();
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
   });
 
   testWidgets('active landing sections fit at two times text scale', (
@@ -574,7 +598,7 @@ void main() {
         reason: 'No layout exception is expected at $size.',
       );
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
-      expect(find.text('Contact Us'), findsOneWidget);
+      expect(find.text('Secure your place in the queue'), findsOneWidget);
 
       final heroTop = tester.getTopLeft(find.byType(HeroSection)).dy;
       final heroCardTop = tester
@@ -807,7 +831,7 @@ void main() {
               ? findsOneWidget
               : findsNWidgets(2),
         );
-        expect(find.text('Звязацца з намі'), findsOneWidget);
+        expect(find.text('Забраніруйце месца ў чарзе'), findsOneWidget);
         expect(tester.takeException(), isNull);
         expect(
           size.width < LandingHeader.mobileUxBreakpoint
@@ -875,15 +899,18 @@ void main() {
         expect(heroClip.clipBehavior, isNot(Clip.none));
         if (example.layout == 'Mobile') {
           final expectedArtworkWidth = switch (example.size.width) {
-            390 => 432.0,
-            320 => 362.0,
+            390 => 432.0 * 1.1586254835128784,
+            320 => (432.0 * 288 / 358) * 1.1586254835128784,
             _ => throw UnsupportedError('Unexpected mobile test width.'),
           };
 
           expect(artworkRect.width, closeTo(expectedArtworkWidth, 0.01));
           expect(artworkRect.width, greaterThan(cardRect.width));
           expect(artworkRect.center.dx, closeTo(cardRect.center.dx, 0.01));
-          expect(contentRect.top - artworkRect.bottom, closeTo(48, 0.1));
+          final frameRect = tester.getRect(
+            find.byKey(const Key('heroArtworkFrame')),
+          );
+          expect(contentRect.top - frameRect.bottom, closeTo(48, 0.1));
         } else {
           expect(artworkRect.right, greaterThan(cardRect.right));
           expect(

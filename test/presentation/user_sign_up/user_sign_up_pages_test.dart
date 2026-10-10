@@ -81,9 +81,11 @@ void main() {
     await tester.ensureVisible(freeCta);
     await tester.tap(freeCta);
     await tester.pumpAndSettle();
-    expect(find.byType(LandingPage), findsOneWidget);
-    expect(find.byType(HereAndNowPage), findsNothing);
+    expect(find.byType(HereAndNowPage), findsOneWidget);
     expect(find.byType(FoundingFriendPage), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
 
     final foundingFriendCta = find.byKey(const Key('foundingFriendsCta'));
     await tester.ensureVisible(foundingFriendCta);
@@ -124,7 +126,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sign-up footer logo returns to root without a duplicate route', (
+  testWidgets('sign-up footer logo preserves the prior route in history', (
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
@@ -145,7 +147,7 @@ void main() {
     expect(find.byKey(const Key('heroCard')), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

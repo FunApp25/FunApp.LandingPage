@@ -24,9 +24,9 @@
   "@landingHeaderForVenues": {
     "description": "Venues visual navigation label in the landing-page header."
   },
-  "landingHeaderContactUs": "Contact Us",
-  "@landingHeaderContactUs": {
-    "description": "Visual contact call to action whose destination is not yet defined."
+  "landingHeaderQueueCta": "Secure your place in the queue",
+  "@landingHeaderQueueCta": {
+    "description": "Header call to action that opens the Here and Now sign-up route."
   },
   "landingOpenNavigationMenu": "Open navigation menu",
   "@landingOpenNavigationMenu": {
@@ -83,6 +83,14 @@
   "privacyNoticeLoadError": "The Privacy Notice could not be loaded. Please try again.",
   "@privacyNoticeLoadError": {
     "description": "Error shown when the canonical Privacy Notice asset cannot be loaded."
+  },
+  "legalDocumentLoadError": "The document could not be loaded. Please try again.",
+  "@legalDocumentLoadError": {
+    "description": "Error shown when a legal Markdown asset cannot be loaded."
+  },
+  "cookiePolicyPrivacyExcerptStatus": "Approved Privacy Policy excerpt — standalone Cookie Policy approval remains pending.",
+  "@cookiePolicyPrivacyExcerptStatus": {
+    "description": "Status explaining that the Cookie Policy route reuses approved Privacy Notice text while a standalone policy remains unapproved."
   },
   "landingInterestedUserComingSoonTitle": "Coming soon",
   "@landingInterestedUserComingSoonTitle": {

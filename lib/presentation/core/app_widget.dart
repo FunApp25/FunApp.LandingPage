@@ -35,12 +35,6 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
   final _landingRouteController = LandingRouteController();
 
   @override
-  void dispose() {
-    _landingRouteController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     Route<void> generateRoute(RouteSettings settings) {
       if (settings.name == PrivacyNoticePage.routeName) {
@@ -48,7 +42,6 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
           settings: settings,
           builder: (_) => PrivacyNoticePage(
             landingRouteController: _landingRouteController,
-            onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
           ),
         );
       } else if (settings.name case final name?
@@ -58,7 +51,6 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
           builder: (_) => LegalPlaceholderPage(
             kind: _legalPlaceholderRoutes[name]!,
             landingRouteController: _landingRouteController,
-            onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
           ),
         );
       } else if (settings.name == VenuePage.routeName) {

@@ -41,7 +41,7 @@ final class LandingHeader extends StatefulWidget {
   /// Scrolls to the venue section.
   final VoidCallback onVenuesSelected;
 
-  /// Opens the existing interested-user Coming Soon dialog.
+  /// Opens the Here & Now queue-sign-up route.
   final VoidCallback? onContactSelected;
 
   // The complete desktop row needs this width in every supported locale.
@@ -201,14 +201,14 @@ final class _LandingHeaderState extends State<LandingHeader> {
       child: usesMobileUx
           ? MobileHeader(
               onLogoSelected: widget.onLogoSelected,
-              contactLabel: context.l10n.landingHeaderContactUs,
+              contactLabel: context.l10n.landingHeaderQueueCta,
               onContactSelected: widget.onContactSelected,
               menuSemanticLabel: context.l10n.landingOpenNavigationMenu,
               isMenuExpanded: _isMenuOpen,
               menuFocusNode: _menuFocusNode,
               onMenuPressed: () => _openMobileMenu(
                 navigationItems,
-                context.l10n.landingHeaderContactUs,
+                context.l10n.landingHeaderQueueCta,
                 context.l10n.landingCloseNavigationMenu,
               ),
             )
@@ -255,7 +255,7 @@ final class _LandingHeaderState extends State<LandingHeader> {
                                     onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
-                                        context.l10n.landingHeaderContactUs,
+                                        context.l10n.landingHeaderQueueCta,
                                     onContactSelected: widget.onContactSelected,
                                   )
                                 : usesIntermediateComposition
@@ -263,14 +263,14 @@ final class _LandingHeaderState extends State<LandingHeader> {
                                     onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
-                                        context.l10n.landingHeaderContactUs,
+                                        context.l10n.landingHeaderQueueCta,
                                     onContactSelected: widget.onContactSelected,
                                   )
                                 : NarrowHeader(
                                     onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
-                                        context.l10n.landingHeaderContactUs,
+                                        context.l10n.landingHeaderQueueCta,
                                     onContactSelected: widget.onContactSelected,
                                   ),
                           );

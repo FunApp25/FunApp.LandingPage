@@ -7,7 +7,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
-import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 
 /// Landing-page footer from Figma node `2262:1347`.
 final class LandingFooter extends StatelessWidget {
@@ -37,7 +37,7 @@ final class LandingFooter extends StatelessWidget {
   /// Scrolls to the venue section.
   final VoidCallback onVenuesSelected;
 
-  /// Opens the hosted Privacy Notice in a separate tab.
+  /// Opens the Privacy Notice in the current app tab.
   final VoidCallback onPrivacyNoticeSelected;
 
   /// Visible contact address opened through the user's configured mail client.
@@ -78,23 +78,22 @@ final class LandingFooter extends StatelessWidget {
       (
         semanticKey: const Key('footerTermsLink'),
         label: context.l10n.landingFooterTermsOfUse,
-        onSelected: () => openLegalRoute(LegalPlaceholderPage.termsRouteName),
+        onSelected: () => openLegalRoute(LegalRoutes.terms),
       ),
       (
         semanticKey: const Key('footerRefundsLink'),
         label: context.l10n.landingFooterRefundCancellationPolicy,
-        onSelected: () => openLegalRoute(LegalPlaceholderPage.refundsRouteName),
+        onSelected: () => openLegalRoute(LegalRoutes.refunds),
       ),
       (
         semanticKey: const Key('footerCookiePolicyLink'),
         label: context.l10n.landingFooterCookiePolicy,
-        onSelected: () => openLegalRoute(LegalPlaceholderPage.cookiesRouteName),
+        onSelected: () => openLegalRoute(LegalRoutes.cookies),
       ),
       (
         semanticKey: const Key('footerCookieBannerLink'),
         label: context.l10n.landingFooterCookieBanner,
-        onSelected: () =>
-            openLegalRoute(LegalPlaceholderPage.cookieBannerRouteName),
+        onSelected: () => openLegalRoute(LegalRoutes.cookieBanner),
       ),
     ];
     final isMobile = MediaQuery.sizeOf(context).width < 600;

@@ -1,62 +1,69 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
-import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
-import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
-import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
-import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
-import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
+import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 
-/// Review-only destinations for legal content that has not been approved.
+/// Review state for the public legal-document routes.
 enum LegalPlaceholderKind {
-  /// Terms of Use placeholder.
+  /// Terms of Use review document.
   terms,
 
-  /// Refund & Cancellation Policy placeholder.
+  /// Refund & Cancellation Policy review document.
   refunds,
 
-  /// Cookie Policy placeholder.
+  /// Cookie information taken from the approved Privacy Notice.
   cookies,
 
-  /// Nonfunctional cookie-preferences placeholder.
+  /// Review-only cookie-banner information with no consent controls.
   cookieBanner,
 }
 
-/// Shared page shell for unfinished legal and cookie-preference destinations.
+/// Branded Markdown page for review-only and cookie-information documents.
 final class LegalPlaceholderPage extends StatelessWidget {
-  /// Creates one explicitly non-authoritative placeholder page.
+  /// Creates one legal-document route.
   const LegalPlaceholderPage({
     required this.kind,
-    this.onPrivacyNoticeLaunch,
+    this.markdownData,
     this.landingRouteController,
     super.key,
   });
 
   /// Review-only Terms of Use route.
-  static const termsRouteName = '/terms';
+  static const String termsRouteName = LegalRoutes.terms;
 
   /// Review-only Refund & Cancellation Policy route.
-  static const refundsRouteName = '/refunds';
+  static const String refundsRouteName = LegalRoutes.refunds;
 
-  /// Review-only Cookie Policy route.
-  static const cookiesRouteName = '/cookies';
+  /// Cookie Policy route.
+  static const String cookiesRouteName = LegalRoutes.cookies;
 
-  /// Review-only nonfunctional cookie-preferences route.
-  static const cookieBannerRouteName = '/cookie-banner';
+  /// Review-only cookie-banner route.
+  static const String cookieBannerRouteName = LegalRoutes.cookieBanner;
 
-  /// Determines the localized title and status body.
+  /// Determines the document source and localized title/status.
   final LegalPlaceholderKind kind;
 
-  /// Optional browser-launch override for the approved Privacy Notice.
-  final ValueChanged<Uri>? onPrivacyNoticeLaunch;
+  /// Optional already-loaded Markdown used by deterministic tests.
+  final String? markdownData;
 
-  /// Coordinates navigation back to an existing landing route.
+  /// Coordinates navigation to landing-page anchors.
   final LandingRouteController? landingRouteController;
+
+  static final Future<String> _terms = rootBundle.loadString(
+    'assets/legal/terms_of_use.md',
+  );
+  static final Future<String> _refunds = rootBundle.loadString(
+    'assets/legal/refund_cancellation_policy.md',
+  );
+  static final Future<String> _cookieBanner = rootBundle.loadString(
+    'assets/legal/cookie_banner.md',
+  );
+  static final Future<String> _cookies = rootBundle
+      .loadString(PrivacyNoticePage.assetPath)
+      .then(extractCookiePolicyMarkdown);
 
   @override
   Widget build(BuildContext context) {
@@ -68,185 +75,46 @@ final class LegalPlaceholderPage extends StatelessWidget {
       LegalPlaceholderKind.cookies => l10n.landingFooterCookiePolicy,
       LegalPlaceholderKind.cookieBanner => l10n.landingFooterCookieBanner,
     };
-    final body = kind == LegalPlaceholderKind.cookieBanner
-        ? l10n.cookieBannerPlaceholderBody
-        : l10n.legalPlaceholderReviewOnlyBody;
+    final future = switch (kind) {
+      LegalPlaceholderKind.terms => _terms,
+      LegalPlaceholderKind.refunds => _refunds,
+      LegalPlaceholderKind.cookies => _cookies,
+      LegalPlaceholderKind.cookieBanner => _cookieBanner,
+    };
+    final status = kind == LegalPlaceholderKind.cookies
+        ? l10n.cookiePolicyPrivacyExcerptStatus
+        : l10n.legalPlaceholderDraftStatus;
 
-    void openLandingSection(LandingSectionTarget target) {
-      final controller = landingRouteController;
-      if (controller != null) {
-        controller.openLandingSection(context, target);
-      } else {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/',
-          (route) => false,
-          arguments: target,
-        );
-      }
-    }
-
-    void openPrivacyNotice() {
-      final uri = privacyNoticeUrlFor(Uri.base);
-      (onPrivacyNoticeLaunch ?? launchExternalLinkInNewTab)(uri);
-    }
-
-    return Title(
-      title: '$title | ${l10n.brandName}',
-      color: AppColors.primary,
-      child: Scaffold(
-        key: Key('legalPlaceholderPage-${kind.name}'),
-        backgroundColor: AppColors.lightForeground,
-        body: SafeArea(
-          child: Column(
-            children: [
-              LandingHeader(
-                onLogoSelected: () =>
-                    openLandingSection(LandingSectionTarget.ourBelief),
-                onOurBeliefSelected: () =>
-                    openLandingSection(LandingSectionTarget.ourBelief),
-                onMembershipSelected: () =>
-                    openLandingSection(LandingSectionTarget.membership),
-                onFoundingFriendsSelected: () =>
-                    openLandingSection(LandingSectionTarget.foundingFriends),
-                onVenuesSelected: () =>
-                    openLandingSection(LandingSectionTarget.venues),
-                onContactSelected: () {
-                  unawaited(showInterestedUserComingSoonDialog(context));
-                },
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  key: Key('legalPlaceholderScrollView-${kind.name}'),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _LegalPlaceholderContent(
-                        kind: kind,
-                        title: title,
-                        status: l10n.legalPlaceholderDraftStatus,
-                        body: body,
-                        releaseBlocker: l10n.legalPlaceholderReleaseBlocker,
-                      ),
-                      LandingFooter(
-                        onLogoSelected: () =>
-                            openLandingSection(LandingSectionTarget.ourBelief),
-                        onOurBeliefSelected: () =>
-                            openLandingSection(LandingSectionTarget.ourBelief),
-                        onMembershipSelected: () =>
-                            openLandingSection(LandingSectionTarget.membership),
-                        onFoundingFriendsSelected: () => openLandingSection(
-                          LandingSectionTarget.foundingFriends,
-                        ),
-                        onVenuesSelected: () =>
-                            openLandingSection(LandingSectionTarget.venues),
-                        onPrivacyNoticeSelected: openPrivacyNotice,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return LegalDocumentPage(
+      documentId: kind.name,
+      title: title,
+      markdownData: markdownData,
+      markdownFuture: future,
+      status: status,
+      statusKey: Key('legalPlaceholderStatus-${kind.name}'),
+      showLocalizedHeading: true,
+      headingKey: Key('legalPlaceholderHeading-${kind.name}'),
+      pageKey: Key('legalPlaceholderPage-${kind.name}'),
+      scrollKey: Key('legalPlaceholderScrollView-${kind.name}'),
+      contentKey: Key('legalPlaceholderContent-${kind.name}'),
+      markdownKey: Key('legalDocumentMarkdown-${kind.name}'),
+      landingRouteController: landingRouteController,
     );
   }
 }
 
-final class _LegalPlaceholderContent extends StatelessWidget {
-  const _LegalPlaceholderContent({
-    required this.kind,
-    required this.title,
-    required this.status,
-    required this.body,
-    required this.releaseBlocker,
-  });
+/// Extracts the approved cookie section from the canonical Privacy Notice.
+String extractCookiePolicyMarkdown(String privacyNoticeMarkdown) {
+  const startHeading = '## 10. Cookies and similar technologies';
+  const endHeading = '## 11. Your data protection rights';
+  final start = privacyNoticeMarkdown.indexOf(startHeading);
+  final end = privacyNoticeMarkdown.indexOf(endHeading, start + 1);
 
-  final LegalPlaceholderKind kind;
-  final String title;
-  final String status;
-  final String body;
-  final String releaseBlocker;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final isNarrow = constraints.maxWidth < 600;
-      final pageGutter = AppSizes.pageGutterFor(constraints.maxWidth);
-      final bodyStyle = AppTextStyles.bodyFontStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w400,
-        height: 28 / 18,
-        color: AppColors.bodyGray,
-      );
-
-      return Padding(
-        padding: EdgeInsets.fromLTRB(
-          pageGutter,
-          isNarrow ? 40 : 64,
-          pageGutter,
-          isNarrow ? 64 : 96,
-        ),
-        child: Center(
-          child: ConstrainedBox(
-            key: Key('legalPlaceholderContent-${kind.name}'),
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    title,
-                    key: Key('legalPlaceholderHeading-${kind.name}'),
-                    style: AppTextStyles.headlineFontStyle(
-                      fontSize: isNarrow ? 36 : 48,
-                      fontWeight: FontWeight.w400,
-                      height: 1.15,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.beigeAccent,
-                    borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          status,
-                          key: Key('legalPlaceholderStatus-${kind.name}'),
-                          style: bodyStyle.copyWith(
-                            color: AppColors.warmOrange,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(body, style: bodyStyle),
-                        const SizedBox(height: 16),
-                        Text(
-                          releaseBlocker,
-                          key: Key(
-                            'legalPlaceholderReleaseBlocker-${kind.name}',
-                          ),
-                          style: bodyStyle.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
+  if (start >= 0 && end > start) {
+    return privacyNoticeMarkdown.substring(start, end).trim();
+  } else {
+    throw const FormatException(
+      'The canonical Privacy Notice cookie section could not be found.',
+    );
+  }
 }

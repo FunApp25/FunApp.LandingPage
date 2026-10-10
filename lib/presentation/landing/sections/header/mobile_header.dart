@@ -21,10 +21,10 @@ final class MobileHeader extends StatelessWidget {
   /// Returns to the top of the landing page.
   final VoidCallback onLogoSelected;
 
-  /// Localized Contact Us label.
+  /// Localized queue-sign-up label.
   final String contactLabel;
 
-  /// Opens the interested-user Coming Soon dialog.
+  /// Opens the Here & Now queue-sign-up route.
   final VoidCallback? onContactSelected;
 
   /// Localized menu-button semantic label.

@@ -18,10 +18,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Membership cards and the Founding Friend explanation. The header remains
   fixed above the scrolling page, repeated header/footer navigation moves to
   the corresponding page sections, and the independently expandable FAQ
-  supports its complete item surface. Contact and unrelated product CTAs
-  remain intentionally unwired; pricing is static marketing UI rather than
-  subscription functionality. The Limited Offer queue CTA and Here & Now
-  membership CTA navigate to `/#/here-and-now`; the Founding Friend CTA
+  supports its complete item surface. The header queue CTA, Free Membership,
+  Limited Offer queue CTA, and Here & Now membership CTA navigate to
+  `/#/here-and-now`; the Founding Friend CTA
   navigates to `/#/founding-friend`. Both destinations use responsive branded
   UI-only forms with local validation and optional, unchecked marketing
   consent. Their production actions are disabled until the approved
@@ -51,20 +50,21 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   form shows the approved informational privacy acknowledgement immediately
   before Send, provides an optional presentation-local checkbox, and links to
   the hosted Privacy Notice without adding a submitted consent field. The
-  Privacy Notice is also discoverable in the
-  footer at [https://funapp.world/#/privacy](https://funapp.world/#/privacy).
+  Privacy Notice is also discoverable through same-tab footer navigation at
+  [https://funapp.world/#/privacy](https://funapp.world/#/privacy). The Venue
+  form's inline Privacy Notice link remains a new-tab link so a draft is
+  preserved.
   Its approved English legal copy lives in
-  `assets/legal/privacy_notice.md`. Terms, refunds/cancellations, Cookie Policy,
-  and Cookie Banner footer controls currently open localized review-only
-  placeholder routes. Those placeholders contain no approved legal terms and
-  no cookie-consent behavior. Before production deployment they must be
-  replaced with approved content or removed/publicly gated, and a real
-  cookie-consent solution remains unresolved. The
+  `assets/legal/privacy_notice.md`. Every footer legal control opens the shared
+  branded Markdown page shell. Terms, refunds/cancellations, and Cookie Banner
+  use explicit English review-only documents with no invented legal or consent
+  behavior. Cookie Policy renders the self-contained cookie section directly
+  from the approved Privacy Notice; approval of a standalone Cookie Policy and
+  a real cookie-consent solution remain unresolved. Review-only documents must
+  be replaced with approved content or removed before production. The
   Membership section is rendered between Connection and Limited Offer; its
   header and mobile-menu anchor is active. The Lifetime pricing control opens
-  the existing Founding Friend form; the Free pricing control remains
-  presentation-only pending an approved destination. No payment behavior is
-  implemented.
+  the existing Founding Friend form. No payment behavior is implemented.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -181,9 +181,10 @@ https://funapp.world/#/privacy
 ```
 
 During local development, append `#/privacy` to the root URL printed by
-`puro flutter run -d chrome -t lib/main_dev.dart`. The build bundles the
-Markdown asset declared in `pubspec.yaml`; `flutter_markdown_plus` renders the
-document, and the web link adapter handles only the approved `mailto:` contact
+`puro flutter run -d chrome -t lib/main_dev.dart`. The build bundles the legal
+Markdown asset directory declared in `pubspec.yaml`;
+`flutter_markdown_plus` renders every document through the shared branded
+shell, and the web link adapter handles only the approved `mailto:` contact
 links.
 
 Freezed and Injectable sources are generated locally and remain uncommitted.

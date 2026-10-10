@@ -58,13 +58,16 @@ Current implementation is evidence of repository state, not automatically a perm
   `https://funapp.world/#/privacy`. Its canonical website source is
   `assets/legal/privacy_notice.md`; the hash route supports direct access,
   refresh, and browser history without requiring a GitHub Pages rewrite.
-- Terms of Use, Refund & Cancellation Policy, Cookie Policy, and Cookie Banner
-  footer controls expose localized review-only placeholder routes. These
-  routes are not approved legal documents, do not save cookie preferences, and
-  do not control cookies. They are a release blocker: replace them with
-  approved content or remove/publicly gate the unresolved routes and links
-  before production deployment.
-- The landing footer opens the hosted Privacy Notice in a new browser tab. The venue form shows
+- All footer legal controls expose hash routes through one branded Markdown
+  shell. Terms of Use, Refund & Cancellation Policy, and Cookie Banner use
+  explicit English review-only documents. They are not approved legal
+  documents, do not save cookie preferences, and do not control cookies; they
+  must be replaced with approved content or removed before production. Cookie
+  Policy reuses the self-contained cookie section from the canonical approved
+  Privacy Notice without maintaining duplicate legal copy. Approval of a
+  standalone Cookie Policy remains open.
+- The landing and shared routed-page footers open the hosted Privacy Notice in
+  the current app tab. The venue form shows
   the approved English privacy acknowledgement immediately before submission,
   with an inline link that opens the same page in a new tab, preserving the
   current form draft. Its checkbox is presentation-local, optional, and
@@ -126,6 +129,9 @@ The repository is an active Flutter Web project:
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
 - `assets/legal/privacy_notice.md` is the canonical website representation of
   the currently approved English Privacy Notice.
+- `assets/legal/` also contains explicitly review-only Markdown documents for
+  unresolved legal routes; the Cookie Policy route reads its copy from the
+  canonical Privacy Notice instead of a second document.
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
 - `cloudflare/venue-interest-worker/` contains the isolated TypeScript
@@ -233,10 +239,9 @@ FAQ, and Footer. The Header remains fixed outside the primary scrolling
 content. Membership presents static Free, Here & Now, and Founding Friend
 pricing cards. Those cards and the Founding Friend descriptions are approved
 marketing presentation only; subscription, payment, cancellation, entitlement,
-badge, and other business behavior is not implemented. The Here & Now card
-opens the approved `/here-and-now` UI; the Lifetime control opens the existing
-`/founding-friend` UI, while the Free control remains presentation-only pending
-an approved destination. Pricing cards use three, two,
+badge, and other business behavior is not implemented. The Here & Now card and
+Free control open the approved `/here-and-now` UI; the Lifetime control opens
+the existing `/founding-friend` UI. Pricing cards use three, two,
 or one column based on usable card width, and Founding Friend benefit cards
 similarly reflow from the desktop intro-plus-three-card composition without
 forcing desktop heights onto narrow single-column layouts.
@@ -244,8 +249,9 @@ forcing desktop heights onto narrow single-column layouts.
 Header and footer section navigation scrolls within the single landing page
 while the header remains fixed above the scrolling content. The header and
 footer expose the same four active anchor destinations. Below a 600px
-outer viewport width, the fixed header uses a compact logo, Contact Us, and
-burger composition. The burger opens a full-screen, presentation-local menu
+outer viewport width, the fixed header uses a compact logo, the localized
+"Secure your place in the queue" action, and burger composition. The burger
+opens a full-screen, presentation-local menu
 with the same four header anchor destinations; selecting one closes the menu
 before reusing the existing anchor navigation. At 600px and above, the
 established wide, intermediate, and narrow constraint-driven header variants
@@ -261,21 +267,23 @@ enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
-become immediate when reduced motion is requested. Contact Us in the header
-and mobile menu opens a localized, presentation-only Coming soon dialog.
-The Limited Offer queue CTA and Here & Now membership CTA navigate to
-`/here-and-now`. The Founding Friends prospective-user CTA navigates to
-`/founding-friend`. Those routes collect no information in production because
-their submission/payment controls are disabled until integration; Contact Us
-and unrelated product controls preserve their existing behavior. The venue CTA
+become immediate when reduced motion is requested. The localized header and
+mobile-menu queue action navigates to `/here-and-now`.
+The Limited Offer queue CTA, Free Membership CTA, and Here & Now membership
+CTA navigate to `/here-and-now`. The Founding Friends prospective-user CTA
+navigates to `/founding-friend`. Those routes collect no information in
+production because
+their submission/payment controls are disabled until integration. The venue CTA
 navigates to the dedicated `/venues` page. A fresh
 `VenueLeadFormBloc` owns each Venue route lifecycle and submits through the
 established environment-selected venue repository/data-source graph. Shared
 header and footer navigation returns to `/` with a render-derived landing
 section target rather than trying to scroll keys that are absent on `/venues`.
-The shared header and footer logos return to the landing-page root, reusing an
-existing landing route when one is present. Direct hash routes initialize only
-the requested route rather than fabricating a prior landing-page history entry.
+The shared header and footer logos push a landing-page root entry with the
+requested rendered anchor. One Flutter route is retained for each sequential
+in-app hash navigation so repeated browser Back operations do not collapse
+earlier history. Direct hash routes initialize only the requested route rather
+than fabricating a prior landing-page history entry.
 
 Below a 600px outer viewport width, Research statistics use a horizontal,
 page-snapping carousel with one primary card, a trailing adjacent-card peek,
@@ -657,8 +665,9 @@ The project tracks Flutter stable through Puro rather than establishing a perman
   without browser-side HubSpot configuration.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
-- The production artifact includes the canonical Privacy Notice Markdown asset,
-  and its `/#/privacy` route requires no Pages rewrite or `404.html` fallback.
+- The production artifact includes the legal Markdown asset directory,
+  including the canonical Privacy Notice and explicit review-only documents;
+  their hash routes require no Pages rewrite or `404.html` fallback.
 - The archived Astro project is not built or deployed.
 
 ### Provisional

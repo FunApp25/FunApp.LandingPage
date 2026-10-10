@@ -21,10 +21,10 @@ final class HorizontalHeader extends StatelessWidget {
   /// Header navigation items in display order.
   final List<HeaderNavigationItemData> navigationItems;
 
-  /// Localized Contact Us label.
+  /// Localized queue-sign-up label.
   final String contactLabel;
 
-  /// Opens the interested-user Coming Soon dialog.
+  /// Opens the Here & Now queue-sign-up route.
   final VoidCallback? onContactSelected;
 
   @override
@@ -40,11 +40,14 @@ final class HorizontalHeader extends StatelessWidget {
             const Spacer(),
             HeaderNavigationRow(items: navigationItems, itemSpacing: 16),
             const SizedBox(width: 44),
-            LandingCtaButton(
-              key: const Key('landingHeaderContactCta'),
-              label: contactLabel,
-              size: LandingCtaSize.compact,
-              onPressed: onContactSelected,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: LandingCtaButton(
+                key: const Key('landingHeaderContactCta'),
+                label: contactLabel,
+                size: LandingCtaSize.compact,
+                onPressed: onContactSelected,
+              ),
             ),
           ],
         );
@@ -62,11 +65,14 @@ final class HorizontalHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 20),
-            LandingCtaButton(
-              key: const Key('landingHeaderContactCta'),
-              label: contactLabel,
-              size: LandingCtaSize.compact,
-              onPressed: onContactSelected,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: LandingCtaButton(
+                key: const Key('landingHeaderContactCta'),
+                label: contactLabel,
+                size: LandingCtaSize.compact,
+                onPressed: onContactSelected,
+              ),
             ),
           ],
         );
