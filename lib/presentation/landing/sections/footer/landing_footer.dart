@@ -12,6 +12,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile
 final class LandingFooter extends StatelessWidget {
   /// Creates the landing footer.
   const LandingFooter({
+    required this.onLogoSelected,
     required this.onOurBeliefSelected,
     required this.onMembershipSelected,
     required this.onFoundingFriendsSelected,
@@ -19,6 +20,9 @@ final class LandingFooter extends StatelessWidget {
     required this.onPrivacyNoticeSelected,
     super.key,
   });
+
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
 
   /// Scrolls to the hero section.
   final VoidCallback onOurBeliefSelected;
@@ -35,7 +39,7 @@ final class LandingFooter extends StatelessWidget {
   /// Opens the hosted Privacy Notice in a separate tab.
   final VoidCallback onPrivacyNoticeSelected;
 
-  /// Visible contact address whose interaction remains intentionally deferred.
+  /// Visible contact address opened through the user's configured mail client.
   static const contactEmail = 'info@funapp.world';
 
   @override
@@ -72,12 +76,14 @@ final class LandingFooter extends StatelessWidget {
       child: isMobile
           ? MobileFooter(
               items: navigationItems,
+              onLogoSelected: onLogoSelected,
               email: contactEmail,
               legalLabels: legalLabels,
               onPrivacyNoticeSelected: onPrivacyNoticeSelected,
             )
           : _DesktopFooter(
               navigationItems: navigationItems,
+              onLogoSelected: onLogoSelected,
               legalLabels: legalLabels,
               onPrivacyNoticeSelected: onPrivacyNoticeSelected,
             ),
@@ -88,11 +94,13 @@ final class LandingFooter extends StatelessWidget {
 final class _DesktopFooter extends StatelessWidget {
   const _DesktopFooter({
     required this.navigationItems,
+    required this.onLogoSelected,
     required this.legalLabels,
     required this.onPrivacyNoticeSelected,
   });
 
   final List<FooterNavigationItemData> navigationItems;
+  final VoidCallback onLogoSelected;
   final List<String> legalLabels;
   final VoidCallback onPrivacyNoticeSelected;
 
@@ -126,6 +134,7 @@ final class _DesktopFooter extends StatelessWidget {
               children: [
                 FooterLogoAndNavigation(
                   items: navigationItems,
+                  onLogoSelected: onLogoSelected,
                   horizontal: usesWideRows,
                 ),
                 const SizedBox(height: 72),

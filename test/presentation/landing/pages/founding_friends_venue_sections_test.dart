@@ -239,10 +239,14 @@ void main() {
             );
           }
         } else if (example.size.width < 600) {
-          expect(artworkRect.size, const Size(382, 233));
-          final overscan = (382 - cardRect.width) / 2;
-          expect(artworkRect.left - cardRect.left, -overscan);
-          expect(artworkRect.right - cardRect.right, overscan);
+          final expectedArtworkWidth = cardRect.width + 24;
+          expect(artworkRect.width, expectedArtworkWidth);
+          expect(
+            artworkRect.height,
+            closeTo(expectedArtworkWidth / (382 / 233), 0.01),
+          );
+          expect(artworkRect.left - cardRect.left, -12);
+          expect(artworkRect.right - cardRect.right, 12);
         } else {
           const expectedRatio = 673 / 410;
           expect(artworkRect.size.aspectRatio, closeTo(expectedRatio, 0.001));

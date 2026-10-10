@@ -8,11 +8,15 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 final class NarrowHeader extends StatelessWidget {
   /// Creates the narrow landing header composition.
   const NarrowHeader({
+    required this.onLogoSelected,
     required this.navigationItems,
     required this.contactLabel,
     required this.onContactSelected,
     super.key,
   });
+
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
 
   /// Header navigation items in display order.
   final List<HeaderNavigationItemData> navigationItems;
@@ -28,9 +32,9 @@ final class NarrowHeader extends StatelessWidget {
     key: const Key('landingHeaderNarrowLayout'),
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const Align(
+      Align(
         alignment: Alignment.centerLeft,
-        child: HeaderLogo(),
+        child: HeaderLogo(onSelected: onLogoSelected),
       ),
       HeaderNavigationGrid(items: navigationItems),
       const SizedBox(height: 2),

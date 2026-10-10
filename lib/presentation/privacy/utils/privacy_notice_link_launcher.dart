@@ -4,6 +4,9 @@ import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_l
 /// Opens one approved external link from the Privacy Notice.
 void launchPrivacyNoticeLink(Uri uri) => launchPrivacyNoticeLinkImpl(uri);
 
+/// Opens an approved contact link in the current browser context.
+void launchContactLink(Uri uri) => launchContactLinkImpl(uri);
+
 /// Builds the hash route on the current origin for local and production runs.
 Uri privacyNoticeUrlFor(Uri base) => Uri(
   scheme: base.scheme,

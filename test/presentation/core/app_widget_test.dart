@@ -123,48 +123,62 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('direct privacy route opens and returns through app routing', (
-    tester,
-  ) async {
-    tester.binding.platformDispatcher.defaultRouteNameTestValue =
-        PrivacyNoticePage.routeName;
-    addTearDown(
-      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
-    );
-    await _pumpApp(tester, const Locale('en'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(PrivacyNoticePage), findsOneWidget);
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.byType(LandingPage), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('direct Venue route opens and returns through app routing', (
-    tester,
-  ) async {
-    tester.binding.platformDispatcher.defaultRouteNameTestValue =
-        VenuePage.routeName;
-    addTearDown(
-      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
-    );
-    await _pumpApp(
+  testWidgets(
+    'direct privacy route has no invented history and logo opens root',
+    (
       tester,
-      const Locale('en'),
-      createVenueLeadFormBloc: () =>
-          VenueLeadFormBloc(const _ImmediateVenueLeadRepository()),
-    );
-    await tester.pumpAndSettle();
+    ) async {
+      tester.binding.platformDispatcher.defaultRouteNameTestValue =
+          PrivacyNoticePage.routeName;
+      addTearDown(
+        tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+      );
+      await _pumpApp(tester, const Locale('en'));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(VenuePage), findsOneWidget);
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.byType(LandingPage), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+      expect(find.byType(PrivacyNoticePage), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(PrivacyNoticePage), findsOneWidget);
+      expect(find.byType(LandingPage), findsNothing);
+      await tester.tap(find.byKey(const Key('headerLogoLink')));
+      await tester.pumpAndSettle();
+      expect(find.byType(LandingPage), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('direct Here & Now route opens and returns through routing', (
+  testWidgets(
+    'direct Venue route has no invented history and logo opens root',
+    (
+      tester,
+    ) async {
+      tester.binding.platformDispatcher.defaultRouteNameTestValue =
+          VenuePage.routeName;
+      addTearDown(
+        tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+      );
+      await _pumpApp(
+        tester,
+        const Locale('en'),
+        createVenueLeadFormBloc: () =>
+            VenueLeadFormBloc(const _ImmediateVenueLeadRepository()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(VenuePage), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(VenuePage), findsOneWidget);
+      expect(find.byType(LandingPage), findsNothing);
+      await tester.tap(find.byKey(const Key('headerLogoLink')));
+      await tester.pumpAndSettle();
+      expect(find.byType(LandingPage), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('direct Here & Now has no invented history and logo opens root', (
     tester,
   ) async {
     tester.binding.platformDispatcher.defaultRouteNameTestValue =
@@ -178,12 +192,16 @@ void main() {
     expect(find.byType(HereAndNowPage), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
+    expect(find.byType(HereAndNowPage), findsOneWidget);
+    expect(find.byType(LandingPage), findsNothing);
+    await tester.tap(find.byKey(const Key('headerLogoLink')));
+    await tester.pumpAndSettle();
     expect(find.byType(LandingPage), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    'direct Founding Friend route opens and returns through routing',
+    'direct Founding Friend has no invented history and logo opens root',
     (
       tester,
     ) async {
@@ -197,6 +215,10 @@ void main() {
 
       expect(find.byType(FoundingFriendPage), findsOneWidget);
       await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(FoundingFriendPage), findsOneWidget);
+      expect(find.byType(LandingPage), findsNothing);
+      await tester.tap(find.byKey(const Key('headerLogoLink')));
       await tester.pumpAndSettle();
       expect(find.byType(LandingPage), findsOneWidget);
       expect(tester.takeException(), isNull);

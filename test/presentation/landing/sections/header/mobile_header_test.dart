@@ -542,6 +542,7 @@ Future<void> _pumpHeader(
         body: Column(
           children: [
             LandingHeader(
+              onLogoSelected: () {},
               onOurBeliefSelected: onOurBeliefSelected ?? () {},
               onMembershipSelected: () {},
               onFoundingFriendsSelected: () {},

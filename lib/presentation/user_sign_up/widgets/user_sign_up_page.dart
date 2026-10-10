@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
@@ -22,6 +23,7 @@ final class UserSignUpPage extends StatefulWidget {
     this.onSubmit,
     this.showConfirmedSuccess = false,
     this.onPrivacyNoticeLaunch,
+    this.landingRouteController,
     super.key,
   });
 
@@ -36,6 +38,9 @@ final class UserSignUpPage extends StatefulWidget {
 
   /// Optional browser-launch override for presentation tests.
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
+
+  /// Coordinates navigation back to an existing landing route.
+  final LandingRouteController? landingRouteController;
 
   @override
   State<UserSignUpPage> createState() => _UserSignUpPageState();
@@ -54,11 +59,16 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
     BuildContext context,
     LandingSectionTarget target,
   ) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/',
-      (route) => false,
-      arguments: target,
-    );
+    final controller = widget.landingRouteController;
+    if (controller != null) {
+      controller.openLandingSection(context, target);
+    } else {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/',
+        (route) => false,
+        arguments: target,
+      );
+    }
   }
 
   void _showInterestedUserComingSoonDialog(BuildContext context) {
@@ -83,6 +93,10 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
         child: Column(
           children: [
             LandingHeader(
+              onLogoSelected: () => _openLandingSection(
+                context,
+                LandingSectionTarget.ourBelief,
+              ),
               onOurBeliefSelected: () => _openLandingSection(
                 context,
                 LandingSectionTarget.ourBelief,
@@ -115,6 +129,10 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
                       showConfirmedSuccess: showsConfirmedSuccess,
                     ),
                     LandingFooter(
+                      onLogoSelected: () => _openLandingSection(
+                        context,
+                        LandingSectionTarget.ourBelief,
+                      ),
                       onOurBeliefSelected: () => _openLandingSection(
                         context,
                         LandingSectionTarget.ourBelief,

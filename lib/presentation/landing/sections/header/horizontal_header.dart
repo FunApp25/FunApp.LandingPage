@@ -8,11 +8,15 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 final class HorizontalHeader extends StatelessWidget {
   /// Creates the wide landing header composition.
   const HorizontalHeader({
+    required this.onLogoSelected,
     required this.navigationItems,
     required this.contactLabel,
     required this.onContactSelected,
     super.key,
   });
+
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
 
   /// Header navigation items in display order.
   final List<HeaderNavigationItemData> navigationItems;
@@ -32,7 +36,7 @@ final class HorizontalHeader extends StatelessWidget {
         return Row(
           key: const Key('landingHeaderHorizontalLayout'),
           children: [
-            const HeaderLogo(),
+            HeaderLogo(onSelected: onLogoSelected),
             const Spacer(),
             HeaderNavigationRow(items: navigationItems, itemSpacing: 16),
             const SizedBox(width: 44),
@@ -48,7 +52,7 @@ final class HorizontalHeader extends StatelessWidget {
         return Row(
           key: const Key('landingHeaderHorizontalLayout'),
           children: [
-            const HeaderLogo(),
+            HeaderLogo(onSelected: onLogoSelected),
             const SizedBox(width: 20),
             Expanded(
               child: HeaderNavigationRow(

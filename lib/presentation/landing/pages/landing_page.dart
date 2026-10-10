@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/faq/faq_section.dart';
@@ -29,6 +30,7 @@ final class LandingPage extends StatefulWidget {
   const LandingPage({
     this.initialSection,
     this.onPrivacyNoticeLaunch,
+    this.landingRouteController,
     super.key,
   });
 
@@ -37,6 +39,9 @@ final class LandingPage extends StatefulWidget {
 
   /// Overrides the browser launcher for presentation tests.
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
+
+  /// Coordinates anchor requests when another app route returns here.
+  final LandingRouteController? landingRouteController;
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -58,6 +63,7 @@ final class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
+    widget.landingRouteController?.addListener(_handleRouteNavigationRequest);
     final initialSection = widget.initialSection;
     if (initialSection != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -70,8 +76,36 @@ final class _LandingPageState extends State<LandingPage> {
 
   @override
   void dispose() {
+    widget.landingRouteController?.removeListener(
+      _handleRouteNavigationRequest,
+    );
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(LandingPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.landingRouteController != widget.landingRouteController) {
+      oldWidget.landingRouteController?.removeListener(
+        _handleRouteNavigationRequest,
+      );
+      widget.landingRouteController?.addListener(
+        _handleRouteNavigationRequest,
+      );
+    }
+  }
+
+  void _handleRouteNavigationRequest() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+      if (mounted && isCurrentRoute) {
+        final target = widget.landingRouteController?.takePendingTarget();
+        if (target != null) {
+          _scrollTo(_sectionKeyFor(target));
+        }
+      }
+    });
   }
 
   void _scrollTo(GlobalKey sectionKey, {bool retryAfterLayout = true}) {
@@ -184,6 +218,7 @@ final class _LandingPageState extends State<LandingPage> {
       child: Column(
         children: [
           LandingHeader(
+            onLogoSelected: () => _scrollTo(_heroKey),
             onOurBeliefSelected: () => _scrollTo(_heroKey),
             onMembershipSelected: () => _scrollTo(_membershipKey),
             onFoundingFriendsSelected: () => _scrollTo(_foundingFriendsKey),
@@ -205,6 +240,7 @@ final class _LandingPageState extends State<LandingPage> {
                   MembershipSection(
                     key: _membershipKey,
                     onHereAndNowCtaPressed: _openHereAndNowPage,
+                    onLifetimeCtaPressed: _openFoundingFriendPage,
                   ),
                   FoundingOfferSection(
                     onCtaPressed: _openHereAndNowPage,
@@ -221,6 +257,7 @@ final class _LandingPageState extends State<LandingPage> {
                   const WelcomeStatementSection(),
                   const FaqSection(),
                   LandingFooter(
+                    onLogoSelected: () => _scrollTo(_heroKey),
                     onOurBeliefSelected: () => _scrollTo(_heroKey),
                     onMembershipSelected: () => _scrollTo(_membershipKey),
                     onFoundingFriendsSelected: () =>

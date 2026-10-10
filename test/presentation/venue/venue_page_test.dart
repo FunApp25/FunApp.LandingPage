@@ -520,7 +520,7 @@ void main() {
             .getSemanticsData()
             .flagsCollection
             .isLink,
-        isFalse,
+        isTrue,
       );
       semantics.dispose();
     },

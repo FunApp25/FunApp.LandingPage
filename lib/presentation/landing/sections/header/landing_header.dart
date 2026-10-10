@@ -16,6 +16,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/header/narrow
 final class LandingHeader extends StatefulWidget {
   /// Creates the landing-page header.
   const LandingHeader({
+    required this.onLogoSelected,
     required this.onOurBeliefSelected,
     required this.onMembershipSelected,
     required this.onFoundingFriendsSelected,
@@ -23,6 +24,9 @@ final class LandingHeader extends StatefulWidget {
     this.onContactSelected,
     super.key,
   });
+
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
 
   /// Scrolls to the hero section.
   final VoidCallback onOurBeliefSelected;
@@ -168,18 +172,12 @@ final class _LandingHeaderState extends State<LandingHeader> {
     final outerWidth = MediaQuery.sizeOf(context).width;
     final usesMobileUx = outerWidth < LandingHeader.mobileUxBreakpoint;
 
-    return DecoratedBox(
+    return ColoredBox(
       key: const Key('landingHeaderBoundary'),
-      decoration: BoxDecoration(
-        color: AppColors.lightForeground,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.warmCharcoal.withValues(alpha: 0.16),
-          ),
-        ),
-      ),
+      color: AppColors.lightForeground,
       child: usesMobileUx
           ? MobileHeader(
+              onLogoSelected: widget.onLogoSelected,
               contactLabel: context.l10n.landingHeaderContactUs,
               onContactSelected: widget.onContactSelected,
               menuSemanticLabel: context.l10n.landingOpenNavigationMenu,
@@ -231,6 +229,7 @@ final class _LandingHeaderState extends State<LandingHeader> {
                             ),
                             child: usesHorizontalComposition
                                 ? HorizontalHeader(
+                                    onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
                                         context.l10n.landingHeaderContactUs,
@@ -238,12 +237,14 @@ final class _LandingHeaderState extends State<LandingHeader> {
                                   )
                                 : usesIntermediateComposition
                                 ? IntermediateHeader(
+                                    onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
                                         context.l10n.landingHeaderContactUs,
                                     onContactSelected: widget.onContactSelected,
                                   )
                                 : NarrowHeader(
+                                    onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
                                         context.l10n.landingHeaderContactUs,

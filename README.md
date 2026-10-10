@@ -46,7 +46,8 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   fresh `VenueLeadFormBloc`. A confirmed submission replaces the form with the
   responsive full-page success presentation on the same route; refresh and
   re-entry create a fresh form lifecycle. Failures preserve the draft for
-  retry. The success email is intentionally presentation-only. The
+  retry. The success email and shared footer email open
+  `mailto:info@funapp.world`. The
   form shows the approved informational privacy acknowledgement immediately
   before Send, provides an optional presentation-local checkbox, and links to
   the hosted Privacy Notice without adding a submitted consent field. The
@@ -55,9 +56,10 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Its approved English legal copy lives in
   `assets/legal/privacy_notice.md`. The
   Membership section is rendered between Connection and Limited Offer; its
-  header and mobile-menu anchor is active. Free and Lifetime pricing controls
-  retain their presentation-only behavior pending approved business and
-  payment behavior.
+  header and mobile-menu anchor is active. The Lifetime pricing control opens
+  the existing Founding Friend form; the Free pricing control remains
+  presentation-only pending an approved destination. No payment behavior is
+  implemented.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.

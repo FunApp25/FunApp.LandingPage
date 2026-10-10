@@ -4,7 +4,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_card_design.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
-/// Presentation-only CTA at the base of a membership card.
+/// CTA at the base of a membership card.
 final class MembershipCardAction extends StatelessWidget {
   /// Creates the membership card action presentation.
   const MembershipCardAction({
@@ -21,7 +21,7 @@ final class MembershipCardAction extends StatelessWidget {
   /// Visual tokens for this membership tier.
   final MembershipCardDesign design;
 
-  /// Localized presentation-only CTA label.
+  /// Localized CTA label.
   final String label;
 
   /// Approved action, or null to preserve the established no-op behavior.

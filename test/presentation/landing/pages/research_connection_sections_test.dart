@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
@@ -52,6 +53,10 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
     expect(opened, [Uri.parse('https://friendship-project.co.uk/')]);
+    final text = tester.widget<Text>(find.text('The Great Friendship Project'));
+    expect(text.style?.color, AppColors.warmOrange);
+    expect(text.style?.decoration, TextDecoration.underline);
+    expect(text.style?.decorationColor, AppColors.warmOrange);
     semantics.dispose();
   });
 

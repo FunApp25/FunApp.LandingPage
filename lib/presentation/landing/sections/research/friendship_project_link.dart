@@ -50,9 +50,10 @@ final class _FriendshipProjectLinkState extends State<FriendshipProjectLink> {
           child: Text(
             'The Great Friendship Project',
             style: widget.style.copyWith(
-              color: AppColors.energeticPlum,
+              color: AppColors.warmOrange,
               fontWeight: FontWeight.w700,
               decoration: TextDecoration.underline,
+              decorationColor: AppColors.warmOrange,
             ),
           ),
         ),

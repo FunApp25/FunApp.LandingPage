@@ -70,7 +70,7 @@ final class MobileHero extends StatelessWidget {
           left: (availableWidth - artworkWidth) / 2,
           width: artworkWidth,
           height: artworkHeight,
-          child: const HeroImage(),
+          child: const HeroImage(fit: BoxFit.cover),
         ),
       ],
     );

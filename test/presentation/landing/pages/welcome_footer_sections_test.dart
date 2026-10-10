@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
@@ -131,6 +132,74 @@ void main() {
     );
     expect(envelopeSvg, contains('M14.0264 2.90039'));
     expect(envelopeSvg, isNot(contains('figma.com')));
+  });
+
+  testWidgets('footer email launches the approved mailto URI from keyboard', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final launched = <Uri>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FooterEmail(
+            email: LandingFooter.contactEmail,
+            onOpen: launched.add,
+          ),
+        ),
+      ),
+    );
+
+    final link = find.byKey(const Key('footerEmailSemantics'));
+    final data = tester.getSemantics(link).getSemanticsData();
+    expect(data.label, LandingFooter.contactEmail);
+    expect(data.flagsCollection.isLink, isTrue);
+    expect(data.hasAction(SemanticsAction.tap), isTrue);
+
+    Focus.of(
+      tester.element(find.byKey(const Key('footerEmailText'))),
+    ).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+
+    expect(launched, [Uri.parse('mailto:info@funapp.world')]);
+    expect(
+      FooterEmail.mailtoUriFor(LandingFooter.contactEmail).toString(),
+      'mailto:info@funapp.world',
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('header and footer logos return to the landing top by keyboard', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await pumpLandingApp(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('footerLogoLink')));
+    await tester.pumpAndSettle();
+    Focus.of(
+      tester.element(find.byKey(const Key('footerLogoAsset'))),
+    ).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    final headerBottom = tester
+        .getRect(find.byKey(const Key('landingHeaderBoundary')))
+        .bottom;
+    expect(
+      tester.getRect(find.byKey(const Key('heroCard'))).top,
+      closeTo(headerBottom, 0.01),
+    );
+    for (final key in const [Key('headerLogoLink'), Key('footerLogoLink')]) {
+      final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
+      expect(data.label, 'Fun App');
+      expect(data.flagsCollection.isLink, isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
+    }
+    semantics.dispose();
   });
 
   testWidgets('adapts statement and footer wrapping by constraints', (
@@ -398,7 +467,7 @@ void main() {
     }
   });
 
-  testWidgets('exposes navigation controls and keeps email static', (
+  testWidgets('exposes navigation controls and actionable logo and email', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -423,16 +492,18 @@ void main() {
       isTrue,
     );
     final logo = tester
-        .getSemantics(find.byKey(const Key('footerLogoAsset')))
+        .getSemantics(find.byKey(const Key('footerLogoLink')))
         .getSemanticsData();
     expect(logo.label, 'Fun App');
-    expect(logo.flagsCollection.isImage, isTrue);
+    expect(logo.flagsCollection.isLink, isTrue);
+    expect(logo.hasAction(SemanticsAction.tap), isTrue);
     final email = tester
         .getSemantics(find.byKey(const Key('footerEmailSemantics')))
         .getSemanticsData();
     expect(email.label, LandingFooter.contactEmail);
-    expect(email.flagsCollection.isLink, isFalse);
+    expect(email.flagsCollection.isLink, isTrue);
     expect(email.flagsCollection.isButton, isFalse);
+    expect(email.hasAction(SemanticsAction.tap), isTrue);
     expect(
       tester
           .widget<SvgPicture>(find.byKey(const Key('footerEnvelope')))

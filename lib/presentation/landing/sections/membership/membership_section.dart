@@ -10,10 +10,17 @@ import 'package:fun_app_landing_page/presentation/landing/sections/membership/me
 /// Membership introduction and pricing cards from Figma node `2243:2233`.
 final class MembershipSection extends StatelessWidget {
   /// Creates the membership section.
-  const MembershipSection({this.onHereAndNowCtaPressed, super.key});
+  const MembershipSection({
+    this.onHereAndNowCtaPressed,
+    this.onLifetimeCtaPressed,
+    super.key,
+  });
 
   /// Opens the approved Here & Now waitlist destination.
   final VoidCallback? onHereAndNowCtaPressed;
+
+  /// Opens the approved Founding Friend destination.
+  final VoidCallback? onLifetimeCtaPressed;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -149,7 +156,7 @@ final class MembershipSection extends StatelessWidget {
         ],
         ctaLabel: context.l10n.landingMembershipLifetimeCta,
         badgeLabel: context.l10n.landingMembershipLifetimeBadge,
-        onCtaPressed: null,
+        onCtaPressed: onLifetimeCtaPressed,
       ),
     ];
   }

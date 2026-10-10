@@ -3,6 +3,7 @@ import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
+import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
@@ -11,7 +12,7 @@ import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_no
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 /// Root widget for the Fun App landing-page application.
-final class FunAppLandingPageApp extends StatelessWidget {
+final class FunAppLandingPageApp extends StatefulWidget {
   /// Creates the root landing-page application widget.
   const FunAppLandingPageApp({
     this.onPrivacyNoticeLaunch,
@@ -26,39 +27,51 @@ final class FunAppLandingPageApp extends StatelessWidget {
   final VenueLeadFormBlocFactory? createVenueLeadFormBloc;
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    onGenerateTitle: (context) {
-      synchronizeDocumentLanguage(Localizations.localeOf(context));
-      return context.l10n.appTitle;
-    },
-    theme: appTheme,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    localeListResolutionCallback: _resolveLocaleList,
-    onGenerateRoute: (settings) {
+  State<FunAppLandingPageApp> createState() => _FunAppLandingPageAppState();
+}
+
+final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
+  final _landingRouteController = LandingRouteController();
+
+  @override
+  void dispose() {
+    _landingRouteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Route<void> generateRoute(RouteSettings settings) {
       if (settings.name == PrivacyNoticePage.routeName) {
         return MaterialPageRoute<void>(
           settings: settings,
-          builder: (_) => const PrivacyNoticePage(),
+          builder: (_) => PrivacyNoticePage(
+            landingRouteController: _landingRouteController,
+            onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
+          ),
         );
       } else if (settings.name == VenuePage.routeName) {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => VenuePage(
-            createBloc: createVenueLeadFormBloc,
-            onPrivacyNoticeLaunch: onPrivacyNoticeLaunch,
+            createBloc: widget.createVenueLeadFormBloc,
+            onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
+            landingRouteController: _landingRouteController,
           ),
         );
       } else if (settings.name == HereAndNowPage.routeName) {
         return MaterialPageRoute<void>(
           settings: settings,
-          builder: (_) => const HereAndNowPage(),
+          builder: (_) => HereAndNowPage(
+            landingRouteController: _landingRouteController,
+          ),
         );
       } else if (settings.name == FoundingFriendPage.routeName) {
         return MaterialPageRoute<void>(
           settings: settings,
-          builder: (_) => const FoundingFriendPage(),
+          builder: (_) => FoundingFriendPage(
+            landingRouteController: _landingRouteController,
+          ),
         );
       } else {
         final initialSection =
@@ -72,12 +85,29 @@ final class FunAppLandingPageApp extends StatelessWidget {
           ),
           builder: (_) => LandingPage(
             initialSection: initialSection,
-            onPrivacyNoticeLaunch: onPrivacyNoticeLaunch,
+            onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
+            landingRouteController: _landingRouteController,
           ),
         );
       }
-    },
-  );
+    }
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      onGenerateTitle: (context) {
+        synchronizeDocumentLanguage(Localizations.localeOf(context));
+        return context.l10n.appTitle;
+      },
+      theme: appTheme,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localeListResolutionCallback: _resolveLocaleList,
+      onGenerateInitialRoutes: (initialRouteName) => [
+        generateRoute(RouteSettings(name: initialRouteName)),
+      ],
+      onGenerateRoute: generateRoute,
+    );
+  }
 }
 
 Locale _resolveLocaleList(

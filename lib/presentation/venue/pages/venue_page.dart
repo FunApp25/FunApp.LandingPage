@@ -6,6 +6,7 @@ import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venu
 import 'package:fun_app_landing_page/core/injection/injection.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
@@ -25,6 +26,7 @@ final class VenuePage extends StatelessWidget {
   const VenuePage({
     this.createBloc,
     this.onPrivacyNoticeLaunch,
+    this.landingRouteController,
     super.key,
   });
 
@@ -37,17 +39,27 @@ final class VenuePage extends StatelessWidget {
   /// Optional browser-launch override for presentation tests.
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
 
+  /// Coordinates navigation back to an existing landing route.
+  final LandingRouteController? landingRouteController;
+
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => (createBloc ?? getIt.call<VenueLeadFormBloc>)(),
-    child: _VenuePageView(onPrivacyNoticeLaunch: onPrivacyNoticeLaunch),
+    child: _VenuePageView(
+      onPrivacyNoticeLaunch: onPrivacyNoticeLaunch,
+      landingRouteController: landingRouteController,
+    ),
   );
 }
 
 final class _VenuePageView extends StatefulWidget {
-  const _VenuePageView({this.onPrivacyNoticeLaunch});
+  const _VenuePageView({
+    this.onPrivacyNoticeLaunch,
+    this.landingRouteController,
+  });
 
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
+  final LandingRouteController? landingRouteController;
 
   @override
   State<_VenuePageView> createState() => _VenuePageViewState();
@@ -66,11 +78,16 @@ final class _VenuePageViewState extends State<_VenuePageView> {
     BuildContext context,
     LandingSectionTarget target,
   ) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/',
-      (route) => false,
-      arguments: target,
-    );
+    final controller = widget.landingRouteController;
+    if (controller != null) {
+      controller.openLandingSection(context, target);
+    } else {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/',
+        (route) => false,
+        arguments: target,
+      );
+    }
   }
 
   void _showInterestedUserComingSoonDialog(BuildContext context) {
@@ -116,6 +133,10 @@ final class _VenuePageViewState extends State<_VenuePageView> {
                 child: Column(
                   children: [
                     LandingHeader(
+                      onLogoSelected: () => _openLandingSection(
+                        context,
+                        LandingSectionTarget.ourBelief,
+                      ),
                       onOurBeliefSelected: () => _openLandingSection(
                         context,
                         LandingSectionTarget.ourBelief,
@@ -147,6 +168,10 @@ final class _VenuePageViewState extends State<_VenuePageView> {
                               onPrivacyNoticeSelected: _openPrivacyNotice,
                             ),
                             LandingFooter(
+                              onLogoSelected: () => _openLandingSection(
+                                context,
+                                LandingSectionTarget.ourBelief,
+                              ),
                               onOurBeliefSelected: () => _openLandingSection(
                                 context,
                                 LandingSectionTarget.ourBelief,

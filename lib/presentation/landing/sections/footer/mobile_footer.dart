@@ -11,6 +11,7 @@ final class MobileFooter extends StatelessWidget {
   /// Creates the mobile footer composition.
   const MobileFooter({
     required this.items,
+    required this.onLogoSelected,
     required this.email,
     required this.legalLabels,
     required this.onPrivacyNoticeSelected,
@@ -20,7 +21,10 @@ final class MobileFooter extends StatelessWidget {
   /// Footer navigation items in display order.
   final List<FooterNavigationItemData> items;
 
-  /// Static contact address.
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
+
+  /// Contact address opened through the user's configured mail client.
   final String email;
 
   /// Legal labels in the Figma display order.
@@ -42,6 +46,7 @@ final class MobileFooter extends StatelessWidget {
       children: [
         FooterLogoAndNavigation(
           items: items,
+          onLogoSelected: onLogoSelected,
           navigationSpacing: 20,
           navigationRunSpacing: 20,
         ),

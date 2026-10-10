@@ -10,6 +10,7 @@ final class FooterLogoAndNavigation extends StatelessWidget {
   /// Creates the footer logo and navigation composition.
   const FooterLogoAndNavigation({
     required this.items,
+    required this.onLogoSelected,
     this.navigationSpacing = 16,
     this.navigationRunSpacing = 8,
     this.horizontal = false,
@@ -18,6 +19,9 @@ final class FooterLogoAndNavigation extends StatelessWidget {
 
   /// Footer navigation items in display order.
   final List<FooterNavigationItemData> items;
+
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
 
   /// Horizontal space between footer navigation controls.
   final double navigationSpacing;
@@ -30,13 +34,24 @@ final class FooterLogoAndNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logo = FunAppLogo(
-      width: AppSizes.footerWordmarkWidth,
-      height: AppSizes.footerWordmarkHeight,
-      variant: FunAppLogoVariant.landingV2,
-      semanticLabel: context.l10n.brandName,
-      excludeFromSemantics: false,
-      svgKey: const Key('footerLogoAsset'),
+    final logo = Semantics(
+      key: const Key('footerLogoLink'),
+      label: context.l10n.brandName,
+      link: true,
+      onTap: onLogoSelected,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onLogoSelected,
+        mouseCursor: SystemMouseCursors.click,
+        borderRadius: BorderRadius.circular(4),
+        child: FunAppLogo(
+          width: AppSizes.footerWordmarkWidth,
+          height: AppSizes.footerWordmarkHeight,
+          variant: FunAppLogoVariant.landingV2,
+          semanticLabel: context.l10n.brandName,
+          svgKey: const Key('footerLogoAsset'),
+        ),
+      ),
     );
     final navigation = Wrap(
       key: const Key('footerNavigationWrap'),

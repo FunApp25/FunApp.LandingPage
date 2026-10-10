@@ -64,6 +64,22 @@ void main() {
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
+    final lifetimeCta = find.byKey(const Key('membershipCta-lifetime'));
+    await tester.ensureVisible(lifetimeCta);
+    await tester.tap(lifetimeCta);
+    await tester.pumpAndSettle();
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    final freeCta = find.byKey(const Key('membershipCta-free'));
+    await tester.ensureVisible(freeCta);
+    await tester.tap(freeCta);
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
+    expect(find.byType(HereAndNowPage), findsNothing);
+    expect(find.byType(FoundingFriendPage), findsNothing);
+
     final foundingFriendCta = find.byKey(const Key('foundingFriendsCta'));
     await tester.ensureVisible(foundingFriendCta);
     await tester.tap(foundingFriendCta);
@@ -103,7 +119,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sign-up shared footer returns to a landing section', (
+  testWidgets('sign-up footer logo returns to root without a duplicate route', (
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
@@ -114,14 +130,17 @@ void main() {
     ).pushNamed(FoundingFriendPage.routeName);
     await tester.pumpAndSettle();
 
-    final footerMembership = find.byKey(const Key('footerNavigationItem1'));
-    await tester.ensureVisible(footerMembership);
-    await tester.tap(footerMembership);
+    final footerLogo = find.byKey(const Key('footerLogoLink'));
+    await tester.ensureVisible(footerLogo);
+    await tester.tap(footerLogo);
     await tester.pumpAndSettle();
 
     expect(find.byType(FoundingFriendPage), findsNothing);
     expect(find.byType(LandingPage), findsOneWidget);
-    expect(find.byKey(const Key('membershipBackground')), findsOneWidget);
+    expect(find.byKey(const Key('heroCard')), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingPage), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

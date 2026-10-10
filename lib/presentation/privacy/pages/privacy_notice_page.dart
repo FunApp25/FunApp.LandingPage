@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -5,19 +7,36 @@ import 'package:fun_app_landing_page/presentation/core/extensions/build_context_
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
+import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
+import 'package:fun_app_landing_page/presentation/landing/shared/widgets/interested_user_coming_soon_dialog.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 import 'package:markdown/markdown.dart' as markdown;
 
 /// Hosts the approved Fun App Ltd Privacy Notice as a dedicated web page.
 final class PrivacyNoticePage extends StatelessWidget {
   /// Creates the Privacy Notice page.
-  const PrivacyNoticePage({this.markdownData, this.onLinkLaunch, super.key});
+  const PrivacyNoticePage({
+    this.markdownData,
+    this.onLinkLaunch,
+    this.onPrivacyNoticeLaunch,
+    this.landingRouteController,
+    super.key,
+  });
 
   /// Optional already-loaded canonical content used by deterministic tests.
   final String? markdownData;
 
   /// Optional link-launch override used by deterministic tests.
   final ValueChanged<Uri>? onLinkLaunch;
+
+  /// Optional browser-launch override for the shared footer.
+  final ValueChanged<Uri>? onPrivacyNoticeLaunch;
+
+  /// Coordinates navigation back to an existing landing route.
+  final LandingRouteController? landingRouteController;
 
   /// Flutter route represented by the GitHub-Pages-safe hash URL.
   static const routeName = '/privacy';
@@ -34,6 +53,20 @@ final class PrivacyNoticePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
+    void openLandingSection(LandingSectionTarget target) {
+      final controller = landingRouteController;
+      if (controller != null) {
+        controller.openLandingSection(context, target);
+      } else {
+        Navigator.of(context).pushNamed('/', arguments: target);
+      }
+    }
+
+    void openPrivacyNotice() {
+      final uri = privacyNoticeUrlFor(Uri.base);
+      (onPrivacyNoticeLaunch ?? launchExternalLinkInNewTab)(uri);
+    }
+
     return Title(
       title: '${l10n.privacyNoticeNavigationLabel} | ${l10n.brandName}',
       color: AppColors.primary,
@@ -41,42 +74,89 @@ final class PrivacyNoticePage extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: [
+              LandingHeader(
+                onLogoSelected: () => openLandingSection(
+                  LandingSectionTarget.ourBelief,
+                ),
+                onOurBeliefSelected: () => openLandingSection(
+                  LandingSectionTarget.ourBelief,
+                ),
+                onMembershipSelected: () => openLandingSection(
+                  LandingSectionTarget.membership,
+                ),
+                onFoundingFriendsSelected: () => openLandingSection(
+                  LandingSectionTarget.foundingFriends,
+                ),
+                onVenuesSelected: () => openLandingSection(
+                  LandingSectionTarget.venues,
+                ),
+                onContactSelected: () {
+                  unawaited(showInterestedUserComingSoonDialog(context));
+                },
+              ),
               Expanded(
-                child: markdownData == null
-                    ? FutureBuilder<String>(
-                        future: _privacyNotice,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return _PrivacyNoticeDocument(
-                              markdownData: snapshot.requireData,
-                              onLinkLaunch: onLinkLaunch,
-                            );
-                          } else if (snapshot.hasError) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(
-                                  AppSizes.minimumPageGutter,
+                child: SingleChildScrollView(
+                  key: const Key('privacyNoticeScrollView'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (markdownData == null)
+                        FutureBuilder<String>(
+                          future: _privacyNotice,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              return _PrivacyNoticeDocument(
+                                markdownData: snapshot.requireData,
+                                onLinkLaunch: onLinkLaunch,
+                              );
+                            } else if (snapshot.hasError) {
+                              return Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(
+                                    AppSizes.minimumPageGutter,
+                                  ),
+                                  child: Text(
+                                    l10n.privacyNoticeLoadError,
+                                    key: const Key('privacyNoticeLoadError'),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
-                                child: Text(
-                                  l10n.privacyNoticeLoadError,
-                                  key: const Key('privacyNoticeLoadError'),
-                                  textAlign: TextAlign.center,
+                              );
+                            } else {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  key: Key('privacyNoticeLoading'),
                                 ),
-                              ),
-                            );
-                          } else {
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                key: Key('privacyNoticeLoading'),
-                              ),
-                            );
-                          }
-                        },
-                      )
-                    : _PrivacyNoticeDocument(
-                        markdownData: markdownData!,
-                        onLinkLaunch: onLinkLaunch,
+                              );
+                            }
+                          },
+                        )
+                      else
+                        _PrivacyNoticeDocument(
+                          markdownData: markdownData!,
+                          onLinkLaunch: onLinkLaunch,
+                        ),
+                      LandingFooter(
+                        onLogoSelected: () => openLandingSection(
+                          LandingSectionTarget.ourBelief,
+                        ),
+                        onOurBeliefSelected: () => openLandingSection(
+                          LandingSectionTarget.ourBelief,
+                        ),
+                        onMembershipSelected: () => openLandingSection(
+                          LandingSectionTarget.membership,
+                        ),
+                        onFoundingFriendsSelected: () => openLandingSection(
+                          LandingSectionTarget.foundingFriends,
+                        ),
+                        onVenuesSelected: () => openLandingSection(
+                          LandingSectionTarget.venues,
+                        ),
+                        onPrivacyNoticeSelected: openPrivacyNotice,
                       ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -146,8 +226,7 @@ final class _PrivacyNoticeDocument extends StatelessWidget {
             listBullet: bodyStyle,
             listBulletPadding: const EdgeInsets.only(right: 8),
           );
-      return SingleChildScrollView(
-        key: const Key('privacyNoticeScrollView'),
+      return Padding(
         padding: EdgeInsets.fromLTRB(
           pageGutter,
           isNarrow ? 40 : 64,

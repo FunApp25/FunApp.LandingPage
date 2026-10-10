@@ -484,12 +484,17 @@ void main() {
       }
     }
 
-    final headerBoundary = tester.widget<DecoratedBox>(
+    final headerBoundary = tester.widget<ColoredBox>(
       find.byKey(const Key('landingHeaderBoundary')),
     );
-    final headerDecoration = headerBoundary.decoration as BoxDecoration;
-    final headerBorder = headerDecoration.border! as Border;
-    expect(headerBorder.bottom.color.a, greaterThan(0));
+    expect(headerBoundary.color, AppColors.lightForeground);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('landingHeaderBoundary')),
+        matching: find.byType(Divider),
+      ),
+      findsNothing,
+    );
 
     final contact = tester
         .getSemantics(find.text('Contact Us'))
@@ -609,7 +614,7 @@ void main() {
       }
       expect(
         tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
-        BoxFit.contain,
+        size.width < 600 ? BoxFit.cover : BoxFit.contain,
       );
 
       if (size.width < 1360) {
@@ -924,7 +929,7 @@ void main() {
         );
         expect(
           tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
-          BoxFit.contain,
+          example.layout == 'Mobile' ? BoxFit.cover : BoxFit.contain,
         );
         expect(tester.takeException(), isNull);
       }

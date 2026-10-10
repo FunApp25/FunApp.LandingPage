@@ -116,7 +116,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('privacy page exposes heading semantics without return control', (
+  testWidgets('privacy page exposes heading and shared logo navigation', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -133,7 +133,12 @@ void main() {
     expect(heading.label, 'Fun App Ltd - Privacy Policy');
     expect(heading.flagsCollection.isHeader, isTrue);
 
-    expect(find.byKey(const Key('privacyNoticeReturnLink')), findsNothing);
+    for (final key in const [Key('headerLogoLink'), Key('footerLogoLink')]) {
+      final logo = tester.getSemantics(find.byKey(key)).getSemanticsData();
+      expect(logo.label, 'Fun App');
+      expect(logo.flagsCollection.isLink, isTrue);
+      expect(logo.hasAction(SemanticsAction.tap), isTrue);
+    }
     expect(find.byIcon(Icons.arrow_back), findsNothing);
     semantics.dispose();
   });

@@ -226,8 +226,9 @@ content. Membership presents static Free, Here & Now, and Founding Friend
 pricing cards. Those cards and the Founding Friend descriptions are approved
 marketing presentation only; subscription, payment, cancellation, entitlement,
 badge, and other business behavior is not implemented. The Here & Now card
-opens the approved `/here-and-now` UI; the Free and Lifetime controls preserve
-their existing presentation-only behavior. Pricing cards use three, two,
+opens the approved `/here-and-now` UI; the Lifetime control opens the existing
+`/founding-friend` UI, while the Free control remains presentation-only pending
+an approved destination. Pricing cards use three, two,
 or one column based on usable card width, and Founding Friend benefit cards
 similarly reflow from the desktop intro-plus-three-card composition without
 forcing desktop heights onto narrow single-column layouts.
@@ -264,6 +265,9 @@ navigates to the dedicated `/venues` page. A fresh
 established environment-selected venue repository/data-source graph. Shared
 header and footer navigation returns to `/` with a render-derived landing
 section target rather than trying to scroll keys that are absent on `/venues`.
+The shared header and footer logos return to the landing-page root, reusing an
+existing landing route when one is present. Direct hash routes initialize only
+the requested route rather than fabricating a prior landing-page history entry.
 
 Below a 600px outer viewport width, Research statistics use a horizontal,
 page-snapping carousel with one primary card, a trailing adjacent-card peek,
@@ -271,8 +275,9 @@ previous/next controls, and four decorative page indicators. The carousel is
 clamped and non-looping pending explicit contrary design direction. At 600px
 and above, the established responsive Research grids remain in use.
 The Great Friendship Project attribution links to
-`https://friendship-project.co.uk/` in a new tab. Other source names in that
-line use bold text emphasis without link styling.
+`https://friendship-project.co.uk/` in a new tab and uses the established warm
+orange link treatment. Other source names in that line use bold text emphasis
+without link styling.
 The mobile Research scroll accent reveals the initial carousel viewport and
 navigation once as a single group rather than staggering offscreen cards;
 reduced motion renders that group immediately and makes programmatic page
@@ -310,9 +315,10 @@ above, Hero and Connection use their established wider compositions.
 
 Below a 600px outer viewport width, Footer uses the approved centered 16px/80px
 mobile composition: the four anchor controls wrap beneath the logo, a divider
-separates them from the static email presentation, and the five Figma legal
-labels wrap beneath it. At 1200px and above, logo/navigation and email/legal
-content form the two approved desktop rows around the full-width divider;
+separates them from the `mailto:info@funapp.world` contact link, and the five
+Figma legal labels wrap beneath it. At 1200px and above, logo/navigation and
+email/legal content form the two approved desktop rows around the full-width
+divider;
 intermediate widths stack those groups without fixed heights or horizontal
 overflow. Privacy Policy opens the authoritative hosted Privacy Notice. Terms
 of Use, Refund & Cancellation Policy, Cookie Policy, and Cookie Banner remain
@@ -446,8 +452,9 @@ capabilities as implemented.
   form with the responsive Figma success presentation while keeping `/venues`
   as the route. The success state is neither persisted nor reconstructed from
   URL data, so refresh and each later Venue route lifecycle start with a fresh
-  BLoC and empty form. Its underlined `info@funapp.world` treatment is static
-  presentation rather than an inferred email interaction. Operational failure
+  BLoC and empty form. Its underlined `info@funapp.world` treatment uses the
+  same approved `mailto:info@funapp.world` behavior as the shared footer.
+  Operational failure
   keeps the form open and editable for retry, with a concise retry-later
   message above Send.
   While submission is pending, Send is visibly disabled and an indeterminate
