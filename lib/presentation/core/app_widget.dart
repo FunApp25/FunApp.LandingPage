@@ -6,6 +6,7 @@ import 'package:fun_app_landing_page/presentation/core/utils/document_language.d
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
@@ -46,6 +47,16 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => PrivacyNoticePage(
+            landingRouteController: _landingRouteController,
+            onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
+          ),
+        );
+      } else if (settings.name case final name?
+          when _legalPlaceholderRoutes.containsKey(name)) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => LegalPlaceholderPage(
+            kind: _legalPlaceholderRoutes[name]!,
             landingRouteController: _landingRouteController,
             onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
           ),
@@ -109,6 +120,13 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
     );
   }
 }
+
+const _legalPlaceholderRoutes = <String, LegalPlaceholderKind>{
+  LegalPlaceholderPage.termsRouteName: LegalPlaceholderKind.terms,
+  LegalPlaceholderPage.refundsRouteName: LegalPlaceholderKind.refunds,
+  LegalPlaceholderPage.cookiesRouteName: LegalPlaceholderKind.cookies,
+  LegalPlaceholderPage.cookieBannerRouteName: LegalPlaceholderKind.cookieBanner,
+};
 
 Locale _resolveLocaleList(
   List<Locale>? preferredLocales,

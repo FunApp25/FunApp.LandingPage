@@ -10,6 +10,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/header/interm
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_mobile_menu.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/mobile_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/narrow_header.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 
 /// Adaptive landing header from desktop node `2190:1568` and mobile node
 /// `2269:1100`.
@@ -102,11 +103,15 @@ final class _LandingHeaderState extends State<LandingHeader> {
       setState(() => _isMenuOpen = true);
       _restoreMenuFocus = true;
       final navigator = Navigator.of(context, rootNavigator: true);
+      final transitionDuration = LandingMotion.duration(
+        disableAnimations: MediaQuery.disableAnimationsOf(context),
+        normalDuration: LandingMotion.standardDuration,
+      );
       late final RawDialogRoute<int> route;
       route = RawDialogRoute<int>(
         barrierDismissible: false,
         barrierColor: AppColors.lightForeground,
-        transitionDuration: Duration.zero,
+        transitionDuration: transitionDuration,
         requestFocus: true,
         traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
         fullscreenDialog: true,
@@ -119,6 +124,24 @@ final class _LandingHeaderState extends State<LandingHeader> {
               onItemSelected: navigator.pop,
               onContactSelected: () => navigator.pop(-1),
             ),
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: LandingMotion.standardCurve,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(
+            opacity: curvedAnimation,
+            alwaysIncludeSemantics: true,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, -0.015),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
       );
       _menuNavigator = navigator;
       _menuRoute = route;

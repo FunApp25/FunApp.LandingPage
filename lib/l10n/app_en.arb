@@ -64,6 +64,22 @@
   "@landingFooterCookieBanner": {
     "description": "Presentation-only footer label; no cookie-consent behavior exists yet."
   },
+  "legalPlaceholderDraftStatus": "Draft placeholder — content awaiting approval.",
+  "@legalPlaceholderDraftStatus": {
+    "description": "Prominent status shown on unfinished legal-document review pages."
+  },
+  "legalPlaceholderReviewOnlyBody": "This page is for interface review only and does not contain an approved legal document.",
+  "@legalPlaceholderReviewOnlyBody": {
+    "description": "Trust notice shared by unfinished legal-document review pages."
+  },
+  "legalPlaceholderReleaseBlocker": "This placeholder must be replaced or removed before production deployment.",
+  "@legalPlaceholderReleaseBlocker": {
+    "description": "Release warning shown on every legal placeholder page."
+  },
+  "cookieBannerPlaceholderBody": "Cookie preferences are not yet available. This review-only page does not save consent or control cookies.",
+  "@cookieBannerPlaceholderBody": {
+    "description": "Nonfunctional status shown on the Cookie Banner review page."
+  },
   "privacyNoticeLoadError": "The Privacy Notice could not be loaded. Please try again.",
   "@privacyNoticeLoadError": {
     "description": "Error shown when the canonical Privacy Notice asset cannot be loaded."

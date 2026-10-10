@@ -42,6 +42,10 @@ abstract final class AppAssets {
   /// Masked photograph used by the landing-page hero.
   static const String heroPeople = '$_landingHeroPath/hero_people.png';
 
+  /// Exact mobile composition from Figma image layer `2269:1504`.
+  static const String heroPeopleMobile =
+      '$_landingHeroPath/hero_people_mobile.png';
+
   /// Five diagonal ovals reused by the problem-section eyebrow.
   static const String fiveDiagonalOvals =
       '$_brandingShapePath/five_diagonal_ovals.svg';

@@ -614,7 +614,7 @@ void main() {
       }
       expect(
         tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
-        size.width < 600 ? BoxFit.cover : BoxFit.contain,
+        BoxFit.contain,
       );
 
       if (size.width < 1360) {
@@ -929,7 +929,7 @@ void main() {
         );
         expect(
           tester.widget<Image>(find.byKey(const Key('heroPeopleImage'))).fit,
-          example.layout == 'Mobile' ? BoxFit.cover : BoxFit.contain,
+          BoxFit.contain,
         );
         expect(tester.takeException(), isNull);
       }

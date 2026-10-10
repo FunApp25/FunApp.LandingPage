@@ -382,7 +382,7 @@ void main() {
   });
 
   testWidgets(
-    'shows all five legal labels without fabricating unresolved controls',
+    'shows five functional legal controls in the approved order',
     (
       tester,
     ) async {
@@ -402,13 +402,16 @@ void main() {
           findsOneWidget,
         );
       }
-      for (var index = 1; index < 5; index++) {
-        final data = tester
-            .getSemantics(find.byKey(Key('footerLegalLabel$index')))
-            .getSemanticsData();
-        expect(data.flagsCollection.isLink, isFalse);
-        expect(data.flagsCollection.isButton, isFalse);
-        expect(data.hasAction(SemanticsAction.tap), isFalse);
+      for (final key in const [
+        Key('footerPrivacyNoticeLink'),
+        Key('footerTermsLink'),
+        Key('footerRefundsLink'),
+        Key('footerCookiePolicyLink'),
+        Key('footerCookieBannerLink'),
+      ]) {
+        final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
+        expect(data.flagsCollection.isLink, isTrue);
+        expect(data.hasAction(SemanticsAction.tap), isTrue);
       }
     },
   );

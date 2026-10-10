@@ -13,6 +13,10 @@ import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interfac
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_checkbox.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
@@ -98,6 +102,10 @@ void main() {
     await _pumpDirectVenuePage(tester);
 
     expect(find.byType(TextField), findsNWidgets(9));
+    expect(find.byType(BrandedFormTextField), findsNWidgets(9));
+    expect(find.byType(BrandedFormDropdown<String>), findsOneWidget);
+    expect(find.byType(BrandedFormCheckbox), findsOneWidget);
+    expect(find.byType(BrandedFormActionButton), findsOneWidget);
     expect(find.byKey(const Key('venueLeadVenueCountField')), findsNothing);
     expect(find.byKey(const Key('venueLeadTwoColumnLayout')), findsOneWidget);
     for (var row = 1; row <= 6; row++) {

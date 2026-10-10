@@ -6,7 +6,7 @@ import 'package:fun_app_landing_page/domain/core/value_objects/value_object.dart
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_chain_status_control.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_form_messages.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_disclosure.dart';
@@ -627,89 +627,20 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     TextInputAction textInputAction = TextInputAction.next,
-  }) {
-    final fieldBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppSizes.pillRadius),
-      borderSide: BorderSide.none,
-    );
-    final errorBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppSizes.pillRadius),
-      borderSide: const BorderSide(color: AppColors.cherryRed, width: 2),
-    );
-    final inputStyle = AppTextStyles.bodyFontStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w400,
-      height: 1.5,
-      color: AppColors.bodyGray,
-    );
-
-    return Semantics(
-      label: semanticLabel,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            required ? '$label*' : label,
-            style: AppTextStyles.bodyFontStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              height: 16 / 12,
-              color: error == null
-                  ? AppColors.warmCharcoal
-                  : AppColors.cherryRed,
-            ),
-          ),
-          const SizedBox(height: 4),
-          TextField(
-            key: key,
-            controller: controller,
-            focusNode: focusNode,
-            style: inputStyle,
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: inputStyle,
-              errorText: error,
-              errorMaxLines: 3,
-              errorStyle: AppTextStyles.bodyFontStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                height: 16 / 12,
-                color: AppColors.cherryRed,
-              ),
-              filled: true,
-              fillColor: AppColors.lightForeground,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              border: fieldBorder,
-              enabledBorder: fieldBorder,
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.pillRadius),
-                borderSide: const BorderSide(
-                  color: AppColors.warmOrange,
-                  width: 2,
-                ),
-              ),
-              errorBorder: errorBorder,
-              focusedErrorBorder: errorBorder,
-            ),
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            textInputAction: textInputAction,
-            autofillHints: null,
-            onChanged: onChanged,
-            onSubmitted: (_) {
-              if (textInputAction == TextInputAction.next) {
-                FocusScope.of(context).nextFocus();
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  }) => BrandedFormTextField(
+    fieldKey: key,
+    controller: controller,
+    label: label,
+    semanticLabel: semanticLabel,
+    hint: hint,
+    errorText: error,
+    required: required,
+    focusNode: focusNode,
+    keyboardType: keyboardType,
+    inputFormatters: inputFormatters,
+    textInputAction: textInputAction,
+    onChanged: onChanged,
+  );
 
   Widget _legacyField({
     required Key key,

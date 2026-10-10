@@ -7,6 +7,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
 
 /// Landing-page footer from Figma node `2262:1347`.
 final class LandingFooter extends StatelessWidget {
@@ -62,12 +63,39 @@ final class LandingFooter extends StatelessWidget {
         onSelected: onVenuesSelected,
       ),
     ];
-    final legalLabels = [
-      context.l10n.landingFooterPrivacyPolicy,
-      context.l10n.landingFooterTermsOfUse,
-      context.l10n.landingFooterRefundCancellationPolicy,
-      context.l10n.landingFooterCookiePolicy,
-      context.l10n.landingFooterCookieBanner,
+    void openLegalRoute(String routeName) {
+      if (ModalRoute.of(context)?.settings.name != routeName) {
+        Navigator.of(context).pushNamed(routeName);
+      }
+    }
+
+    final legalItems = <FooterLegalItemData>[
+      (
+        semanticKey: const Key('footerPrivacyNoticeLink'),
+        label: context.l10n.landingFooterPrivacyPolicy,
+        onSelected: onPrivacyNoticeSelected,
+      ),
+      (
+        semanticKey: const Key('footerTermsLink'),
+        label: context.l10n.landingFooterTermsOfUse,
+        onSelected: () => openLegalRoute(LegalPlaceholderPage.termsRouteName),
+      ),
+      (
+        semanticKey: const Key('footerRefundsLink'),
+        label: context.l10n.landingFooterRefundCancellationPolicy,
+        onSelected: () => openLegalRoute(LegalPlaceholderPage.refundsRouteName),
+      ),
+      (
+        semanticKey: const Key('footerCookiePolicyLink'),
+        label: context.l10n.landingFooterCookiePolicy,
+        onSelected: () => openLegalRoute(LegalPlaceholderPage.cookiesRouteName),
+      ),
+      (
+        semanticKey: const Key('footerCookieBannerLink'),
+        label: context.l10n.landingFooterCookieBanner,
+        onSelected: () =>
+            openLegalRoute(LegalPlaceholderPage.cookieBannerRouteName),
+      ),
     ];
     final isMobile = MediaQuery.sizeOf(context).width < 600;
 
@@ -78,14 +106,12 @@ final class LandingFooter extends StatelessWidget {
               items: navigationItems,
               onLogoSelected: onLogoSelected,
               email: contactEmail,
-              legalLabels: legalLabels,
-              onPrivacyNoticeSelected: onPrivacyNoticeSelected,
+              legalItems: legalItems,
             )
           : _DesktopFooter(
               navigationItems: navigationItems,
               onLogoSelected: onLogoSelected,
-              legalLabels: legalLabels,
-              onPrivacyNoticeSelected: onPrivacyNoticeSelected,
+              legalItems: legalItems,
             ),
     );
   }
@@ -95,14 +121,12 @@ final class _DesktopFooter extends StatelessWidget {
   const _DesktopFooter({
     required this.navigationItems,
     required this.onLogoSelected,
-    required this.legalLabels,
-    required this.onPrivacyNoticeSelected,
+    required this.legalItems,
   });
 
   final List<FooterNavigationItemData> navigationItems;
   final VoidCallback onLogoSelected;
-  final List<String> legalLabels;
-  final VoidCallback onPrivacyNoticeSelected;
+  final List<FooterLegalItemData> legalItems;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -154,8 +178,7 @@ final class _DesktopFooter extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: FooterLegalItems(
-                            labels: legalLabels,
-                            onPrivacyNoticeSelected: onPrivacyNoticeSelected,
+                            items: legalItems,
                           ),
                         ),
                       ),
@@ -168,8 +191,7 @@ final class _DesktopFooter extends StatelessWidget {
                       const FooterEmail(email: LandingFooter.contactEmail),
                       const SizedBox(height: 32),
                       FooterLegalItems(
-                        labels: legalLabels,
-                        onPrivacyNoticeSelected: onPrivacyNoticeSelected,
+                        items: legalItems,
                         spacing: 20,
                       ),
                     ],

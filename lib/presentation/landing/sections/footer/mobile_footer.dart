@@ -13,8 +13,7 @@ final class MobileFooter extends StatelessWidget {
     required this.items,
     required this.onLogoSelected,
     required this.email,
-    required this.legalLabels,
-    required this.onPrivacyNoticeSelected,
+    required this.legalItems,
     super.key,
   });
 
@@ -27,11 +26,8 @@ final class MobileFooter extends StatelessWidget {
   /// Contact address opened through the user's configured mail client.
   final String email;
 
-  /// Legal labels in the Figma display order.
-  final List<String> legalLabels;
-
-  /// Opens the hosted Privacy Notice in a separate tab.
-  final VoidCallback onPrivacyNoticeSelected;
+  /// Legal controls in the Figma display order.
+  final List<FooterLegalItemData> legalItems;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -63,8 +59,7 @@ final class MobileFooter extends StatelessWidget {
         FooterEmail(email: email),
         const SizedBox(height: 32),
         FooterLegalItems(
-          labels: legalLabels,
-          onPrivacyNoticeSelected: onPrivacyNoticeSelected,
+          items: legalItems,
           spacing: 20,
         ),
       ],

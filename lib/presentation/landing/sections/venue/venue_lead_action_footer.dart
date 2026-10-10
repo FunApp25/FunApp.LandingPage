@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
 
 /// Action and submission status kept visible below the scrolling venue form.
 final class VenueLeadActionFooter extends StatelessWidget {
@@ -77,82 +74,14 @@ final class VenueLeadActionFooter extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           if (alignWithVenuePageDesign)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final expands = constraints.maxWidth < 760;
-                return Align(
-                  child: SizedBox(
-                    width: expands ? double.infinity : null,
-                    height: 48,
-                    child: FilledButton(
-                      key: const Key('venueLeadSubmitButton'),
-                      onPressed: isSubmitting ? null : onSubmit,
-                      style: ButtonStyle(
-                        minimumSize: WidgetStatePropertyAll(
-                          Size(expands ? 0 : 144, 48),
-                        ),
-                        padding: const WidgetStatePropertyAll(
-                          EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                        ),
-                        backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                          (states) {
-                            if (states.contains(WidgetState.disabled)) {
-                              return AppColors.warmOrange.withValues(
-                                alpha: 0.45,
-                              );
-                            } else {
-                              return AppColors.warmOrange;
-                            }
-                          },
-                        ),
-                        foregroundColor: const WidgetStatePropertyAll(
-                          AppColors.lightForeground,
-                        ),
-                        overlayColor: WidgetStateProperty.resolveWith<Color?>((
-                          states,
-                        ) {
-                          if (states.contains(WidgetState.focused)) {
-                            return AppColors.energeticPlum.withValues(
-                              alpha: 0.16,
-                            );
-                          } else if (states.contains(WidgetState.hovered)) {
-                            return AppColors.lightForeground.withValues(
-                              alpha: 0.08,
-                            );
-                          } else {
-                            return null;
-                          }
-                        }),
-                        shape: const WidgetStatePropertyAll(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(AppSizes.pillRadius),
-                            ),
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n.venueLeadSubmit,
-                            style: LandingTextStyles.heroCta.copyWith(
-                              color: AppColors.lightForeground,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SvgPicture.asset(
-                            AppAssets.venueSendArrowUpRight,
-                            key: const Key('venueLeadSubmitArrow'),
-                            excludeFromSemantics: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+            BrandedFormActionButton(
+              buttonKey: const Key('venueLeadSubmitButton'),
+              arrowKey: const Key('venueLeadSubmitArrow'),
+              label: l10n.venueLeadSubmit,
+              onPressed: isSubmitting ? null : onSubmit,
+              disabledBackgroundColor: AppColors.warmOrange.withValues(
+                alpha: 0.45,
+              ),
             )
           else
             FilledButton(

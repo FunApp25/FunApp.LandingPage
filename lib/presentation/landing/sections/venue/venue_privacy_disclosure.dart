@@ -147,18 +147,10 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
     );
 
     if (widget.showAcknowledgementCheckbox) {
-      return Padding(
+      return VenuePrivacyAcknowledgementCheckbox(
         key: const Key('venuePrivacyAcknowledgementRow'),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            VenuePrivacyAcknowledgementCheckbox(
-              semanticLabel: statement,
-            ),
-            Expanded(child: linkedStatement),
-          ],
-        ),
+        semanticLabel: statement,
+        label: linkedStatement,
       );
     } else {
       return linkedStatement;

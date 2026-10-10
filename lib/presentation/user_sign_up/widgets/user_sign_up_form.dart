@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/email_address.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
-import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_row.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
 
@@ -265,36 +263,21 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
         ? context.l10n.userSignUpRequiredFieldSemantics(label)
         : context.l10n.userSignUpOptionalFieldSemantics(label);
 
-    return Semantics(
-      label: semanticLabel,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _fieldLabel(label, required: required),
-          const SizedBox(height: 4),
-          TextFormField(
-            key: key,
-            controller: controller,
-            style: _inputStyle,
-            decoration: _fieldDecoration(
-              placeholder: placeholder,
-              multiline: multiline,
-            ),
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            autofillHints: autofillHints,
-            validator: validator,
-            minLines: minLines,
-            maxLines: maxLines,
-            textInputAction: textInputAction,
-            onFieldSubmitted: (_) {
-              if (textInputAction == TextInputAction.next) {
-                FocusScope.of(context).nextFocus();
-              }
-            },
-          ),
-        ],
-      ),
+    return BrandedFormTextField(
+      fieldKey: key,
+      controller: controller,
+      label: label,
+      semanticLabel: semanticLabel,
+      hint: placeholder,
+      required: required,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      autofillHints: autofillHints,
+      validator: validator,
+      minLines: minLines,
+      maxLines: maxLines,
+      textInputAction: textInputAction,
+      multiline: multiline,
     );
   }
 
@@ -312,67 +295,18 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
         ? context.l10n.userSignUpRequiredFieldSemantics(label)
         : context.l10n.userSignUpOptionalFieldSemantics(label);
 
-    return Semantics(
-      label: semanticLabel,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _fieldLabel(label, required: required),
-          const SizedBox(height: 4),
-          DropdownButtonFormField<String>(
-            key: key,
-            initialValue: value,
-            isExpanded: true,
-            menuMaxHeight: 360,
-            style: _inputStyle,
-            decoration: _fieldDecoration(),
-            hint: Text(
-              placeholder,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: _inputStyle,
-            ),
-            icon: SvgPicture.asset(
-              AppAssets.venueCaretDown,
-              width: 20,
-              height: 20,
-              excludeFromSemantics: true,
-            ),
-            items: [
-              for (final option in options)
-                DropdownMenuItem<String>(
-                  value: option.value,
-                  child: Text(
-                    option.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
-            validator: validator,
-            onChanged: onChanged,
-          ),
-        ],
-      ),
+    return BrandedFormDropdown<String>(
+      fieldKey: key,
+      label: label,
+      semanticLabel: semanticLabel,
+      placeholder: placeholder,
+      required: required,
+      value: value,
+      options: options,
+      validator: validator,
+      onChanged: onChanged,
     );
   }
-
-  Widget _fieldLabel(String label, {required bool required}) => Text(
-    required ? '$label*' : label,
-    style: AppTextStyles.bodyFontStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w500,
-      height: 16 / 12,
-      color: AppColors.warmCharcoal,
-    ),
-  );
-
-  TextStyle get _inputStyle => AppTextStyles.bodyFontStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    height: 1.5,
-    color: AppColors.bodyGray,
-  );
 
   Widget _fieldPair({
     required Key rowKey,
@@ -380,139 +314,19 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
     required Widget leading,
     required Widget? trailing,
     required bool usesDesktopGrid,
-  }) {
-    if (usesDesktopGrid) {
-      return Row(
-        key: rowKey,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: leading),
-          const SizedBox(width: 16),
-          Expanded(child: trailing ?? const SizedBox.shrink()),
-        ],
-      );
-    } else {
-      return Column(
-        key: columnKey,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          leading,
-          if (trailing != null) ...[
-            const SizedBox(height: 16),
-            trailing,
-          ],
-        ],
-      );
-    }
-  }
+  }) => BrandedFormRow(
+    rowKey: rowKey,
+    columnKey: columnKey,
+    leading: leading,
+    trailing: trailing,
+    horizontal: usesDesktopGrid,
+  );
 
-  InputDecoration _fieldDecoration({
-    String? placeholder,
-    bool multiline = false,
-  }) {
-    final radius = multiline ? 16.0 : AppSizes.pillRadius;
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(radius),
-      borderSide: BorderSide.none,
-    );
-    final errorBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(radius),
-      borderSide: const BorderSide(color: AppColors.cherryRed, width: 2),
-    );
-
-    return InputDecoration(
-      filled: true,
-      fillColor: AppColors.lightForeground,
-      hintText: placeholder,
-      hintStyle: _inputStyle,
-      isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      border: border,
-      enabledBorder: border,
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(radius),
-        borderSide: const BorderSide(color: AppColors.warmOrange, width: 2),
-      ),
-      errorBorder: errorBorder,
-      focusedErrorBorder: errorBorder,
-      errorMaxLines: 3,
-      errorStyle: AppTextStyles.bodyFontStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        height: 16 / 12,
-        color: AppColors.cherryRed,
-      ),
-    );
-  }
-
-  Widget _submitButton(String label) => LayoutBuilder(
-    builder: (context, constraints) {
-      final expands = constraints.maxWidth < 760;
-      final desktopWidth = widget.experience == UserSignUpExperience.hereAndNow
-          ? 291.0
-          : null;
-      return Align(
-        child: SizedBox(
-          width: expands ? double.infinity : desktopWidth,
-          height: 48,
-          child: FilledButton(
-            key: Key('userSignUpSubmit-$_semanticId'),
-            onPressed: widget.onSubmit == null ? null : _submit,
-            style: ButtonStyle(
-              minimumSize: WidgetStatePropertyAll(
-                Size(expands ? 0 : 144, 48),
-              ),
-              padding: const WidgetStatePropertyAll(
-                EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-              ),
-              backgroundColor: const WidgetStatePropertyAll(
-                AppColors.warmOrange,
-              ),
-              foregroundColor: const WidgetStatePropertyAll(
-                AppColors.lightForeground,
-              ),
-              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                if (states.contains(WidgetState.focused)) {
-                  return AppColors.energeticPlum.withValues(alpha: 0.16);
-                } else if (states.contains(WidgetState.hovered)) {
-                  return AppColors.lightForeground.withValues(alpha: 0.08);
-                } else {
-                  return null;
-                }
-              }),
-              shape: const WidgetStatePropertyAll(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(AppSizes.pillRadius),
-                  ),
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: LandingTextStyles.heroCta.copyWith(
-                      color: AppColors.lightForeground,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SvgPicture.asset(
-                  AppAssets.venueSendArrowUpRight,
-                  key: Key('userSignUpSubmitArrow-$_semanticId'),
-                  excludeFromSemantics: true,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
+  Widget _submitButton(String label) => BrandedFormActionButton(
+    buttonKey: Key('userSignUpSubmit-$_semanticId'),
+    arrowKey: Key('userSignUpSubmitArrow-$_semanticId'),
+    label: label,
+    onPressed: widget.onSubmit == null ? null : _submit,
   );
 
   String? _requiredValidator(String? value) {

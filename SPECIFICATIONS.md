@@ -58,6 +58,12 @@ Current implementation is evidence of repository state, not automatically a perm
   `https://funapp.world/#/privacy`. Its canonical website source is
   `assets/legal/privacy_notice.md`; the hash route supports direct access,
   refresh, and browser history without requiring a GitHub Pages rewrite.
+- Terms of Use, Refund & Cancellation Policy, Cookie Policy, and Cookie Banner
+  footer controls expose localized review-only placeholder routes. These
+  routes are not approved legal documents, do not save cookie preferences, and
+  do not control cookies. They are a release blocker: replace them with
+  approved content or remove/publicly gate the unresolved routes and links
+  before production deployment.
 - The landing footer opens the hosted Privacy Notice in a new browser tab. The venue form shows
   the approved English privacy acknowledgement immediately before submission,
   with an inline link that opens the same page in a new tab, preserving the
@@ -107,6 +113,8 @@ Current implementation is evidence of repository state, not automatically a perm
 - Any future submitted marketing-consent contract, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
+- Approved Terms of Use, Refund & Cancellation Policy, and Cookie Policy copy,
+  plus the production cookie-consent/preferences solution.
 
 ## 5. Repository shape
 

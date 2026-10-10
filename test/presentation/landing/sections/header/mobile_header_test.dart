@@ -10,9 +10,11 @@ import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dar
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_friends/founding_friends_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_mobile_menu.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/header/mobile_menu_control.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 
 import '../../landing_test_helpers.dart';
 
@@ -366,6 +368,39 @@ void main() {
 
     expect(find.byKey(const Key('landingMobileMenu')), findsNothing);
     expect(_controlFocusNode(tester, opener).hasFocus, isTrue);
+  });
+
+  testWidgets('menu uses restrained motion and ignores rapid duplicate opens', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await _pumpHeader(tester);
+    final opener = find.byKey(const Key('landingMobileMenuButton'));
+    final control = tester.widget<MobileMenuControl>(opener);
+
+    control.onPressed();
+    control.onPressed();
+    await tester.pump();
+
+    final menu = find.byKey(const Key('landingMobileMenu'));
+    expect(menu, findsOneWidget);
+    final route = ModalRoute.of(tester.element(menu));
+    expect(route?.transitionDuration, LandingMotion.standardDuration);
+    expect(
+      find.ancestor(of: menu, matching: find.byType(FadeTransition)),
+      findsWidgets,
+    );
+    expect(
+      find.ancestor(of: menu, matching: find.byType(SlideTransition)),
+      findsWidgets,
+    );
+
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(menu, findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const Key('landingMobileMenuCloseButton')));
+    await tester.pumpAndSettle();
+    expect(menu, findsNothing);
   });
 
   testWidgets('resizing across 600 dismisses without stale focus restoration', (

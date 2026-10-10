@@ -54,7 +54,12 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Privacy Notice is also discoverable in the
   footer at [https://funapp.world/#/privacy](https://funapp.world/#/privacy).
   Its approved English legal copy lives in
-  `assets/legal/privacy_notice.md`. The
+  `assets/legal/privacy_notice.md`. Terms, refunds/cancellations, Cookie Policy,
+  and Cookie Banner footer controls currently open localized review-only
+  placeholder routes. Those placeholders contain no approved legal terms and
+  no cookie-consent behavior. Before production deployment they must be
+  replaced with approved content or removed/publicly gated, and a real
+  cookie-consent solution remains unresolved. The
   Membership section is rendered between Connection and Limited Offer; its
   header and mobile-menu anchor is active. The Lifetime pricing control opens
   the existing Founding Friend form; the Free pricing control remains

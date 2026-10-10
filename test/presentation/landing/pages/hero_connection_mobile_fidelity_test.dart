@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/section_eyebrow.dart';
@@ -26,6 +29,9 @@ void main() {
     );
     final supporting = tester.widget<Text>(
       find.byKey(const Key('heroSupportingText')),
+    );
+    final artwork = tester.widget<Image>(
+      find.byKey(const Key('heroPeopleImage')),
     );
     final cardClip = tester.widget<ClipRRect>(
       find.byKey(const Key('heroCard')),
@@ -56,8 +62,23 @@ void main() {
     expect(supporting.style?.fontSize, 16);
     expect(supporting.style?.height, closeTo(24 / 16, 0.0001));
     expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
+    expect((artwork.image as AssetImage).assetName, AppAssets.heroPeopleMobile);
+    expect(File(AppAssets.heroPeopleMobile).lengthSync(), greaterThan(0));
     expect(find.byKey(const Key('landingHeroWaitlistCta')), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('desktop Hero retains its established source artwork', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(1440, 900));
+    await pumpLandingSection(tester, section: const HeroSection());
+
+    final artwork = tester.widget<Image>(
+      find.byKey(const Key('heroPeopleImage')),
+    );
+    expect((artwork.image as AssetImage).assetName, AppAssets.heroPeople);
+    expect(File(AppAssets.heroPeople).lengthSync(), greaterThan(0));
   });
 
   testWidgets('matches the 390px mobile Connection composition', (

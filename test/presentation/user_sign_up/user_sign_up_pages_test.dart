@@ -2,11 +2,16 @@ import 'dart:ui' show CheckedState;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_checkbox.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
@@ -634,6 +639,74 @@ void main() {
       const Size.square(20),
     );
     semantics.dispose();
+  });
+
+  testWidgets('forms use shared branded controls with exact selector styling', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(1440, 1200));
+    await _pumpPage(tester, const FoundingFriendPage());
+
+    expect(find.byType(BrandedFormTextField), findsNWidgets(5));
+    expect(find.byType(BrandedFormDropdown<String>), findsNWidgets(2));
+    expect(find.byType(BrandedFormCheckbox), findsOneWidget);
+    expect(find.byType(BrandedFormActionButton), findsOneWidget);
+
+    final genderFinder = find.byKey(
+      const Key('genderField-foundingFriend'),
+    );
+    expect(
+      BrandedFormDropdown.popupBorderRadius,
+      const BorderRadius.all(Radius.circular(16)),
+    );
+    expect(BrandedFormDropdown.popupMaxHeight, 360);
+    final caret = tester.widget<SvgPicture>(
+      find.descendant(of: genderFinder, matching: find.byType(SvgPicture)),
+    );
+    expect(caret.width, 14);
+    expect(caret.height, 8);
+
+    final checkbox = find.byType(BrandedFormCheckbox);
+    final checkboxInk = find.descendant(
+      of: checkbox,
+      matching: find.byType(InkWell),
+    );
+    expect(checkboxInk, findsOneWidget);
+    expect(tester.getSize(checkboxInk), const Size.square(44));
+    expect(
+      tester.widget<InkWell>(checkboxInk).hoverColor,
+      AppColors.warmOrange.withValues(alpha: 0.06),
+    );
+  });
+
+  testWidgets('Here & Now action is content-driven and narrow-safe', (
+    tester,
+  ) async {
+    for (final width in const [1440.0, 390.0, 320.0]) {
+      setTestSurface(tester, Size(width, 1200));
+      await _pumpPage(tester, const HereAndNowPage());
+
+      final submit = find.byKey(const Key('userSignUpSubmit-hereAndNow'));
+      final label = find.descendant(
+        of: submit,
+        matching: find.text('Join Here & Now Waitlist'),
+      );
+      final buttonSize = tester.getSize(submit);
+      final text = tester.widget<Text>(label);
+
+      if (width == 1440) {
+        // Tests intentionally use deterministic fallback-font metrics. The
+        // content still sizes the action rather than filling the 1016px form.
+        expect(buttonSize.width, lessThan(600));
+        expect(buttonSize.width, greaterThan(240));
+      } else {
+        expect(buttonSize.width, width - 64);
+      }
+      expect(buttonSize.height, greaterThanOrEqualTo(48));
+      expect(text.maxLines, isNull);
+      expect(text.style?.fontSize, greaterThanOrEqualTo(14));
+      expect(tester.takeException(), isNull);
+    }
   });
 }
 

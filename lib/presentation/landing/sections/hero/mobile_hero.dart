@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_content.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_image.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
@@ -70,7 +71,7 @@ final class MobileHero extends StatelessWidget {
           left: (availableWidth - artworkWidth) / 2,
           width: artworkWidth,
           height: artworkHeight,
-          child: const HeroImage(fit: BoxFit.cover),
+          child: const HeroImage(assetPath: AppAssets.heroPeopleMobile),
         ),
       ],
     );
