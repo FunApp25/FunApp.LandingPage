@@ -16,61 +16,39 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      PURO_ENV_NAME: fun-app-landing
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install Puro
-        env:
-          PURO_VERSION: 1.5.0
-        run: |
-          set -euo pipefail
-
-          curl --fail --silent --show-error --location \
-            --retry 4 \
-            --retry-all-errors \
-            --retry-delay 3 \
-            https://puro.dev/install.sh \
-            -o /tmp/install-puro.sh
-
-          bash /tmp/install-puro.sh
-
-          test -x "$HOME/.puro/bin/puro"
-
-      - name: Add Puro to PATH
-        run: echo "$HOME/.puro/bin" >> "$GITHUB_PATH"
-
-      - name: Set up Flutter SDK with Puro
-        run: |
-          puro create "$PURO_ENV_NAME" stable
-          puro --env="$PURO_ENV_NAME" --version
-          puro --env="$PURO_ENV_NAME" flutter --version
-          puro --env="$PURO_ENV_NAME" dart --version
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
 
       - name: Install dependencies
-        run: puro --env="$PURO_ENV_NAME" flutter pub get
+        run: flutter pub get
 
       - name: Check formatting
         run: >-
-          puro --env="$PURO_ENV_NAME" dart format
+          dart format
           --output=none
           --set-exit-if-changed
           lib test tool
 
       - name: Generate localizations
-        run: puro --env="$PURO_ENV_NAME" flutter gen-l10n
+        run: flutter gen-l10n
 
       - name: Generate Dart sources
-        run: puro --env="$PURO_ENV_NAME" flutter pub run build_runner build
+        run: flutter pub run build_runner build
 
       - name: Analyze
-        run: puro --env="$PURO_ENV_NAME" flutter analyze
+        run: flutter analyze
 
       - name: Test with coverage
-        run: puro --env="$PURO_ENV_NAME" flutter test --coverage
+        run: flutter test --coverage
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
@@ -103,10 +81,10 @@ jobs:
 
       - name: Build production site
         run: >-
-          puro --env="$PURO_ENV_NAME" flutter build web
+          flutter build web
           -t lib/main_prod.dart
 
       - name: Prepare production artifact
         run: >-
-          puro --env="$PURO_ENV_NAME" dart run
+          dart run
           tool/prepare_intermediate_release_artifact.dart

@@ -99,75 +99,78 @@ final class BrandedFormDropdown<T> extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          DropdownButtonFormField<T>(
-            key: fieldKey,
-            initialValue: value,
-            isExpanded: true,
-            menuMaxHeight: popupMaxHeight,
-            borderRadius: popupBorderRadius,
-            dropdownColor: AppColors.lightForeground,
-            style: inputStyle,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColors.lightForeground,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              border: border,
-              enabledBorder: border,
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSizes.pillRadius),
-                borderSide: const BorderSide(
-                  color: AppColors.warmOrange,
-                  width: 2,
-                ),
-              ),
-              errorBorder: errorBorder,
-              focusedErrorBorder: errorBorder,
-              errorMaxLines: 3,
-              errorStyle: AppTextStyles.bodyFontStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                height: 16 / 12,
-                color: AppColors.cherryRed,
-              ),
-            ),
-            hint: Text(
-              placeholder,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          KeyedSubtree(
+            key: ValueKey<Object?>(value),
+            child: DropdownButtonFormField<T>(
+              key: fieldKey,
+              initialValue: value,
+              isExpanded: true,
+              menuMaxHeight: popupMaxHeight,
+              borderRadius: popupBorderRadius,
+              dropdownColor: AppColors.lightForeground,
               style: inputStyle,
-            ),
-            icon: SizedBox.square(
-              dimension: 20,
-              child: Center(
-                child: SvgPicture.asset(
-                  AppAssets.venueCaretDown,
-                  key:
-                      caretKey ??
-                      ValueKey<String>('brandedDropdownCaret-$fieldKey'),
-                  width: 14,
-                  height: 8,
-                  excludeFromSemantics: true,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.lightForeground,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
                 ),
-              ),
-            ),
-            items: [
-              for (final option in options)
-                DropdownMenuItem<T>(
-                  key: optionKeys[option.value],
-                  value: option.value,
-                  child: Text(
-                    option.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                border: border,
+                enabledBorder: border,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.pillRadius),
+                  borderSide: const BorderSide(
+                    color: AppColors.warmOrange,
+                    width: 2,
                   ),
                 ),
-            ],
-            validator: validator,
-            onChanged: onChanged,
+                errorBorder: errorBorder,
+                focusedErrorBorder: errorBorder,
+                errorMaxLines: 3,
+                errorStyle: AppTextStyles.bodyFontStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  height: 16 / 12,
+                  color: AppColors.cherryRed,
+                ),
+              ),
+              hint: Text(
+                placeholder,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: inputStyle,
+              ),
+              icon: SizedBox.square(
+                dimension: 20,
+                child: Center(
+                  child: SvgPicture.asset(
+                    AppAssets.venueCaretDown,
+                    key:
+                        caretKey ??
+                        ValueKey<String>('brandedDropdownCaret-$fieldKey'),
+                    width: 14,
+                    height: 8,
+                    excludeFromSemantics: true,
+                  ),
+                ),
+              ),
+              items: [
+                for (final option in options)
+                  DropdownMenuItem<T>(
+                    key: optionKeys[option.value],
+                    value: option.value,
+                    child: Text(
+                      option.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              validator: validator,
+              onChanged: onChanged,
+            ),
           ),
         ],
       ),

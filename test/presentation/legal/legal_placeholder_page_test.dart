@@ -210,7 +210,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('footer Privacy navigation stays in the current route stack', (
+  testWidgets('footer Privacy navigation avoids duplicate route entries', (
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
@@ -235,6 +235,23 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.byType(PrivacyNoticePage), findsOneWidget);
+
+    final router = tester.element(find.byType(PrivacyNoticePage)).router;
+    expect(router.stackData, hasLength(3));
+    final privacyFooter = find.descendant(
+      of: find.byKey(const Key('privacyNoticePage')),
+      matching: find.byKey(const Key('footerPrivacyNoticeLink')),
+    );
+    await tester.ensureVisible(privacyFooter);
+    await tester.tap(privacyFooter);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(privacyFooter);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.byType(PrivacyNoticePage), findsOneWidget);
+    expect(router.stackData, hasLength(3));
   });
 
   testWidgets('legal layout is localized and bounded at target widths', (

@@ -87,6 +87,12 @@ final class LegalDocumentPage extends StatelessWidget {
       unawaited(context.router.push(LandingRoute(initialSection: target)));
     }
 
+    void openPrivacyNotice() {
+      if (context.router.current.name != PrivacyNoticeRoute.name) {
+        unawaited(context.router.push(PrivacyNoticeRoute()));
+      }
+    }
+
     return Title(
       title: '$title | ${context.l10n.brandName}',
       color: AppColors.primary,
@@ -142,8 +148,7 @@ final class LegalDocumentPage extends StatelessWidget {
                     ),
                     onVenuesSelected: () =>
                         openLandingSection(LandingSectionTarget.venues),
-                    onPrivacyNoticeSelected: () =>
-                        unawaited(context.router.push(PrivacyNoticeRoute())),
+                    onPrivacyNoticeSelected: openPrivacyNotice,
                   ),
                 ),
               ),
