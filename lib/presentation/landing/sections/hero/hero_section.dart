@@ -28,18 +28,8 @@ final class HeroSection extends StatelessWidget {
         final pageGutter = usesMobileComposition
             ? AppSizes.mobileLandingPageGutter
             : AppSizes.pageGutterFor(availableWidth);
-        final topSpacing = switch (availableWidth) {
-          >= 1200 => 24.0,
-          >= 600 => 20.0,
-          _ => 0.0,
-        };
-
         return Padding(
-          padding: EdgeInsets.only(
-            left: pageGutter,
-            top: topSpacing,
-            right: pageGutter,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: pageGutter),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(

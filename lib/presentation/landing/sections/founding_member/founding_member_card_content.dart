@@ -1,4 +1,4 @@
-/// Localized presentation data for one Founding Member benefit card.
+/// Localized presentation data for one Founding Friend benefit card.
 typedef FoundingMemberCardContent = ({
   String semanticId,
   String iconAsset,

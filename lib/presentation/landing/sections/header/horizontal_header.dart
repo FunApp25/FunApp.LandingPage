@@ -8,19 +8,23 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 final class HorizontalHeader extends StatelessWidget {
   /// Creates the wide landing header composition.
   const HorizontalHeader({
+    required this.onLogoSelected,
     required this.navigationItems,
     required this.contactLabel,
     required this.onContactSelected,
     super.key,
   });
 
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
+
   /// Header navigation items in display order.
   final List<HeaderNavigationItemData> navigationItems;
 
-  /// Localized Contact Us label.
+  /// Localized queue-sign-up label.
   final String contactLabel;
 
-  /// Opens the interested-user Coming Soon dialog.
+  /// Opens the Here & Now queue-sign-up route.
   final VoidCallback? onContactSelected;
 
   @override
@@ -32,15 +36,18 @@ final class HorizontalHeader extends StatelessWidget {
         return Row(
           key: const Key('landingHeaderHorizontalLayout'),
           children: [
-            const HeaderLogo(),
+            HeaderLogo(onSelected: onLogoSelected),
             const Spacer(),
             HeaderNavigationRow(items: navigationItems, itemSpacing: 16),
             const SizedBox(width: 44),
-            LandingCtaButton(
-              key: const Key('landingHeaderContactCta'),
-              label: contactLabel,
-              size: LandingCtaSize.compact,
-              onPressed: onContactSelected,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: LandingCtaButton(
+                key: const Key('landingHeaderContactCta'),
+                label: contactLabel,
+                size: LandingCtaSize.compact,
+                onPressed: onContactSelected,
+              ),
             ),
           ],
         );
@@ -48,7 +55,7 @@ final class HorizontalHeader extends StatelessWidget {
         return Row(
           key: const Key('landingHeaderHorizontalLayout'),
           children: [
-            const HeaderLogo(),
+            HeaderLogo(onSelected: onLogoSelected),
             const SizedBox(width: 20),
             Expanded(
               child: HeaderNavigationRow(
@@ -58,11 +65,14 @@ final class HorizontalHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 20),
-            LandingCtaButton(
-              key: const Key('landingHeaderContactCta'),
-              label: contactLabel,
-              size: LandingCtaSize.compact,
-              onPressed: onContactSelected,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: LandingCtaButton(
+                key: const Key('landingHeaderContactCta'),
+                label: contactLabel,
+                size: LandingCtaSize.compact,
+                onPressed: onContactSelected,
+              ),
             ),
           ],
         );

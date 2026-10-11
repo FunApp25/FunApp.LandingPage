@@ -10,21 +10,30 @@ import 'package:fun_app_landing_page/presentation/landing/sections/header/interm
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_mobile_menu.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/mobile_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/narrow_header.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 
 /// Adaptive landing header from desktop node `2190:1568` and mobile node
 /// `2269:1100`.
 final class LandingHeader extends StatefulWidget {
   /// Creates the landing-page header.
   const LandingHeader({
+    required this.onLogoSelected,
     required this.onOurBeliefSelected,
+    required this.onMembershipSelected,
     required this.onFoundingFriendsSelected,
     required this.onVenuesSelected,
     this.onContactSelected,
     super.key,
   });
 
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
+
   /// Scrolls to the hero section.
   final VoidCallback onOurBeliefSelected;
+
+  /// Scrolls to the Membership section.
+  final VoidCallback onMembershipSelected;
 
   /// Scrolls to the Founding Friends section.
   final VoidCallback onFoundingFriendsSelected;
@@ -32,7 +41,7 @@ final class LandingHeader extends StatefulWidget {
   /// Scrolls to the venue section.
   final VoidCallback onVenuesSelected;
 
-  /// Opens the existing interested-user Coming Soon dialog.
+  /// Opens the Here & Now queue-sign-up route.
   final VoidCallback? onContactSelected;
 
   // The complete desktop row needs this width in every supported locale.
@@ -94,11 +103,15 @@ final class _LandingHeaderState extends State<LandingHeader> {
       setState(() => _isMenuOpen = true);
       _restoreMenuFocus = true;
       final navigator = Navigator.of(context, rootNavigator: true);
+      final transitionDuration = LandingMotion.duration(
+        disableAnimations: MediaQuery.disableAnimationsOf(context),
+        normalDuration: LandingMotion.standardDuration,
+      );
       late final RawDialogRoute<int> route;
       route = RawDialogRoute<int>(
         barrierDismissible: false,
         barrierColor: AppColors.lightForeground,
-        transitionDuration: Duration.zero,
+        transitionDuration: transitionDuration,
         requestFocus: true,
         traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
         fullscreenDialog: true,
@@ -111,6 +124,24 @@ final class _LandingHeaderState extends State<LandingHeader> {
               onItemSelected: navigator.pop,
               onContactSelected: () => navigator.pop(-1),
             ),
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: LandingMotion.standardCurve,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(
+            opacity: curvedAnimation,
+            alwaysIncludeSemantics: true,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, -0.015),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
       );
       _menuNavigator = navigator;
       _menuRoute = route;
@@ -149,6 +180,10 @@ final class _LandingHeaderState extends State<LandingHeader> {
         onSelected: widget.onOurBeliefSelected,
       ),
       (
+        label: context.l10n.landingHeaderMembership,
+        onSelected: widget.onMembershipSelected,
+      ),
+      (
         label: context.l10n.landingHeaderFoundingFriends,
         onSelected: widget.onFoundingFriendsSelected,
       ),
@@ -160,26 +195,20 @@ final class _LandingHeaderState extends State<LandingHeader> {
     final outerWidth = MediaQuery.sizeOf(context).width;
     final usesMobileUx = outerWidth < LandingHeader.mobileUxBreakpoint;
 
-    return DecoratedBox(
+    return ColoredBox(
       key: const Key('landingHeaderBoundary'),
-      decoration: BoxDecoration(
-        color: AppColors.lightForeground,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.warmCharcoal.withValues(alpha: 0.16),
-          ),
-        ),
-      ),
+      color: AppColors.lightForeground,
       child: usesMobileUx
           ? MobileHeader(
-              contactLabel: context.l10n.landingHeaderContactUs,
+              onLogoSelected: widget.onLogoSelected,
+              contactLabel: context.l10n.landingHeaderQueueCta,
               onContactSelected: widget.onContactSelected,
               menuSemanticLabel: context.l10n.landingOpenNavigationMenu,
               isMenuExpanded: _isMenuOpen,
               menuFocusNode: _menuFocusNode,
               onMenuPressed: () => _openMobileMenu(
                 navigationItems,
-                context.l10n.landingHeaderContactUs,
+                context.l10n.landingHeaderQueueCta,
                 context.l10n.landingCloseNavigationMenu,
               ),
             )
@@ -223,22 +252,25 @@ final class _LandingHeaderState extends State<LandingHeader> {
                             ),
                             child: usesHorizontalComposition
                                 ? HorizontalHeader(
+                                    onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
-                                        context.l10n.landingHeaderContactUs,
+                                        context.l10n.landingHeaderQueueCta,
                                     onContactSelected: widget.onContactSelected,
                                   )
                                 : usesIntermediateComposition
                                 ? IntermediateHeader(
+                                    onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
-                                        context.l10n.landingHeaderContactUs,
+                                        context.l10n.landingHeaderQueueCta,
                                     onContactSelected: widget.onContactSelected,
                                   )
                                 : NarrowHeader(
+                                    onLogoSelected: widget.onLogoSelected,
                                     navigationItems: navigationItems,
                                     contactLabel:
-                                        context.l10n.landingHeaderContactUs,
+                                        context.l10n.landingHeaderQueueCta,
                                     onContactSelected: widget.onContactSelected,
                                   ),
                           );

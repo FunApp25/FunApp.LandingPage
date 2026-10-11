@@ -47,7 +47,9 @@ final class MembershipBenefitRow extends StatelessWidget {
           ),
         ),
       ),
-      const SizedBox(width: 12),
+      SizedBox(
+        width: index == 0 && design != MembershipCardDesign.hereNow ? 9 : 12,
+      ),
       Expanded(
         child: Text(
           benefit.label,

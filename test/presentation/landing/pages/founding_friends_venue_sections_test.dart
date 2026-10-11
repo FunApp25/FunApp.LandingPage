@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,13 +9,16 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_frie
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_cta_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_promotional_card.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 
 import '../landing_test_helpers.dart';
 
 const _foundingFriendsBodyFirst =
-    'Thank you for being an early bird and joining Fun App as a Founding '
-    'Friend. You can keep this status forever, helping change the way the '
-    'world makes friends.';
+    'Thank you for your interest in joining Fun App as a Founding Friend. '
+    'Founding Friends are besties. You can keep this status forever, helping '
+    'change the way the world makes friends. Or, you might choose to resell '
+    'your Founding Friend status through Fun App in future years. Resale '
+    'prices will be determined by buyers and sellers.';
 const _foundingFriendsBodySecond =
     'Welcome aboard, this is going to be an exciting journey.';
 const _venueIntroductionFirst =
@@ -28,7 +33,7 @@ void main() {
   ) async {
     await pumpLandingApp(tester);
 
-    expect(find.text('Founding Friends are Besties'), findsOneWidget);
+    expect(find.text('I want to become a Founding Friend'), findsOneWidget);
     expect(find.text(_foundingFriendsBodyFirst), findsOneWidget);
     expect(find.text(_foundingFriendsBodySecond), findsOneWidget);
     expect(find.text('Become a Founding Friend'), findsOneWidget);
@@ -50,7 +55,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      foundingHeading: 'Los Founding Friends son los mejores amigos',
+      foundingHeading: 'Quiero ser Founding Friend',
       foundingCta: 'Hazte Founding Friend',
       venueIntro: 'Gestiono un espacio',
       venueCard: 'Gestiono un espacio...',
@@ -58,7 +63,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      foundingHeading: 'Founding Friends yw’r Ffrindiau Gorau',
+      foundingHeading: 'Rydw i eisiau bod yn Founding Friend',
       foundingCta: 'Dewch yn Founding Friend',
       venueIntro: 'Rwy’n Rhedeg Lleoliad',
       venueCard: 'Rwy’n Rhedeg Lleoliad...',
@@ -66,7 +71,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      foundingHeading: 'Founding Friends — найлепшыя сябры',
+      foundingHeading: 'Я хачу стаць Founding Friend',
       foundingCta: 'Станьце Founding Friend',
       venueIntro: 'Я кірую пляцоўкай',
       venueCard: 'Я кірую пляцоўкай...',
@@ -206,11 +211,13 @@ void main() {
           expect(artworkRect.size, const Size(673, 410));
           expect(
             wideLayout.constraints.minHeight,
-            prefix == 'foundingFriends' ? 534 : 444,
+            prefix == 'foundingFriends' ? 612 : 444,
           );
           if (prefix == 'foundingFriends') {
             expect(contentRect.left - cardRect.left, 128);
+            expect(contentRect.width, 520);
             expect(artworkRect.left - cardRect.left, 716);
+            expect(artworkRect.top - cardRect.top, 101);
             expect(
               tester
                   .widget<FittedBox>(
@@ -232,10 +239,14 @@ void main() {
             );
           }
         } else if (example.size.width < 600) {
-          expect(artworkRect.size, const Size(382, 233));
-          final overscan = (382 - cardRect.width) / 2;
-          expect(artworkRect.left - cardRect.left, -overscan);
-          expect(artworkRect.right - cardRect.right, overscan);
+          final expectedArtworkWidth = cardRect.width + 24;
+          expect(artworkRect.width, expectedArtworkWidth);
+          expect(
+            artworkRect.height,
+            closeTo(expectedArtworkWidth / (382 / 233), 0.01),
+          );
+          expect(artworkRect.left - cardRect.left, -12);
+          expect(artworkRect.right - cardRect.right, 12);
         } else {
           const expectedRatio = 673 / 410;
           expect(artworkRect.size.aspectRatio, closeTo(expectedRatio, 0.001));
@@ -328,7 +339,6 @@ void main() {
       find.byKey(const Key('foundingFriendsBody1')),
     );
     expect(foundingSecondBody.top - foundingFirstBody.bottom, 12);
-
     final venueIntro = tester.getRect(
       find.byKey(const Key('venueIntroductionBounds')),
     );
@@ -413,7 +423,7 @@ void main() {
     expectHeaderSemantics(
       tester,
       const Key('foundingFriendsHeadingSemantics'),
-      'Founding Friends are Besties',
+      'I want to become a Founding Friend',
     );
     expectHeaderSemantics(
       tester,
@@ -450,7 +460,7 @@ void main() {
     expect(
       foundingCardText,
       orderedEquals([
-        'Founding Friends are Besties',
+        'I want to become a Founding Friend',
         _foundingFriendsBodyFirst,
         _foundingFriendsBodySecond,
         'Become a Founding Friend',
@@ -458,6 +468,7 @@ void main() {
     );
 
     for (final key in const [
+      Key('foundingOfferCtaArrow'),
       Key('foundingFriendsCtaArrow'),
       Key('venueCardCtaArrow'),
     ]) {
@@ -492,7 +503,37 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byType(LandingCtaButton), findsNWidgets(3));
+    expect(find.byType(LandingCtaButton), findsNWidgets(4));
+    semantics.dispose();
+  });
+
+  testWidgets('keeps the Founding Friend CTA operable and route-only', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    setTestSurface(tester, const Size(390, 844));
+    await pumpLandingApp(tester);
+
+    final cta = find.byKey(const Key('foundingFriendsCta'));
+    await tester.ensureVisible(cta);
+    await tester.pumpAndSettle();
+
+    final ctaSemantics = tester
+        .getSemantics(find.bySemanticsLabel('Become a Founding Friend'))
+        .getSemanticsData();
+    expect(ctaSemantics.flagsCollection.isButton, isTrue);
+    expect(ctaSemantics.label, 'Become a Founding Friend');
+    expect(ctaSemantics.hasAction(SemanticsAction.tap), isTrue);
+
+    await tester.tap(cta);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
+    expect(
+      find.byKey(const Key('userSignUpForm-foundingFriend')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
     semantics.dispose();
   });
 }
@@ -510,7 +551,7 @@ Future<void> _pumpPromotionalCard(
             width: width,
             child: const LandingPromotionalCard(
               variant: LandingPromotionalCardVariant.foundingFriends,
-              heading: 'Founding Friends are Besties',
+              heading: 'I want to become a Founding Friend',
               bodyParagraphs: [
                 _foundingFriendsBodyFirst,
                 _foundingFriendsBodySecond,

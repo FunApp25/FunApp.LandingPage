@@ -17,11 +17,14 @@ import '../landing_test_helpers.dart';
 const _freeAnswerFirst =
     'Yes. The core Fun App experience is free because finding someone to grab '
     'coffee with should not require a financial strategy.';
+const _freeAnswerSecond =
+    'However, join early and get Here & Now membership free for six months '
+    'from Fun App launch.';
 
 void main() {
   const englishQuestions = [
     'Is Fun App free?',
-    'Is a Founding Friend subscription really lifetime?',
+    'Is a Lifetime subscription really lifetime?',
     'Can I change my mind and cancel my subscription?',
     'What photo should I use?',
     'What should I put in my bio?',
@@ -72,6 +75,13 @@ void main() {
 
     expect(items.map((item) => item.question), orderedEquals(englishQuestions));
     expect(
+      items.first.paragraphs.map((paragraph) => paragraph.text),
+      orderedEquals(const [
+        _freeAnswerFirst,
+        _freeAnswerSecond,
+      ]),
+    );
+    expect(
       items[6].paragraphs[1].emphasizedTerms,
       [l10n.landingFaqSharedIntentTerm],
     );
@@ -88,10 +98,8 @@ void main() {
 
     expect(
       find.text(
-        'We offer an optional subscription for extra features, higher limits, '
-        'and additional storage. Nice to have, not required to enjoy using the '
-        'app. However, join early as a Founding Friend and the subscription is '
-        'included for free.',
+        'However, join early and get Here & Now membership free for six months '
+        'from Fun App launch.',
       ),
       findsOneWidget,
     );
@@ -397,7 +405,7 @@ void main() {
           'to grab coffee with should not require a financial strategy.',
         ),
       );
-      final minimumInset = example.size.width < 600 ? 0.0 : 20.0;
+      const minimumInset = 0.0;
       expect(
         questionRect.left - surfaceRect.left,
         greaterThanOrEqualTo(minimumInset),

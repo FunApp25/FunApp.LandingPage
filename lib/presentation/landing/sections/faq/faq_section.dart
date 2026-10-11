@@ -106,13 +106,7 @@ final class _FaqSectionState extends State<FaqSection> {
                   >= 600 => 28.0,
                   _ => 24.0,
                 };
-          final itemHorizontalPadding = usesMobileFidelity
-              ? 0.0
-              : switch (availableWidth) {
-                  >= 1200 => 24.0,
-                  >= 600 => 22.0,
-                  _ => 18.0,
-                };
+          const itemHorizontalPadding = 0.0;
 
           return Padding(
             padding: EdgeInsets.symmetric(
@@ -178,6 +172,7 @@ final class _FaqSectionState extends State<FaqSection> {
                           questionLineHeight: questionLineHeight,
                           verticalPadding: itemVerticalPadding,
                           horizontalPadding: itemHorizontalPadding,
+                          alignIconToTop: usesMobileFidelity,
                           onToggle: () => _toggle(index),
                         ),
                     ],

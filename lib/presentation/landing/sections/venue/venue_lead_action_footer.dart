@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
 
 /// Action and submission status kept visible below the scrolling venue form.
 final class VenueLeadActionFooter extends StatelessWidget {
@@ -11,6 +12,8 @@ final class VenueLeadActionFooter extends StatelessWidget {
     required this.hasSubmissionFailure,
     required this.onClose,
     required this.onSubmit,
+    this.constrainFailureHeight = true,
+    this.alignWithVenuePageDesign = false,
     super.key,
   });
 
@@ -29,6 +32,12 @@ final class VenueLeadActionFooter extends StatelessWidget {
   /// Dispatches a form submission attempt.
   final VoidCallback onSubmit;
 
+  /// Whether failure copy should flex within the legacy dialog footer.
+  final bool constrainFailureHeight;
+
+  /// Whether to use the approved routed Venue-page Send treatment.
+  final bool alignWithVenuePageDesign;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -45,21 +54,10 @@ final class VenueLeadActionFooter extends StatelessWidget {
           )
         else ...[
           if (hasSubmissionFailure) ...[
-            Flexible(
-              child: SingleChildScrollView(
-                child: Semantics(
-                  key: const Key('venueLeadSubmissionFailure'),
-                  container: true,
-                  liveRegion: true,
-                  child: Text(
-                    l10n.venueLeadSubmissionFailure,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            if (constrainFailureHeight)
+              Flexible(child: _failureMessage(context))
+            else
+              _failureMessage(context),
             const SizedBox(height: 12),
           ],
           if (isSubmitting) ...[
@@ -75,13 +73,36 @@ final class VenueLeadActionFooter extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          FilledButton(
-            key: const Key('venueLeadSubmitButton'),
-            onPressed: isSubmitting ? null : onSubmit,
-            child: Text(l10n.venueLeadSubmit),
-          ),
+          if (alignWithVenuePageDesign)
+            BrandedFormActionButton(
+              buttonKey: const Key('venueLeadSubmitButton'),
+              arrowKey: const Key('venueLeadSubmitArrow'),
+              label: l10n.venueLeadSubmit,
+              onPressed: isSubmitting ? null : onSubmit,
+              disabledBackgroundColor: AppColors.warmOrange.withValues(
+                alpha: 0.45,
+              ),
+            )
+          else
+            FilledButton(
+              key: const Key('venueLeadSubmitButton'),
+              onPressed: isSubmitting ? null : onSubmit,
+              child: Text(l10n.venueLeadSubmit),
+            ),
         ],
       ],
     );
   }
+
+  Widget _failureMessage(BuildContext context) => SingleChildScrollView(
+    child: Semantics(
+      key: const Key('venueLeadSubmissionFailure'),
+      container: true,
+      liveRegion: true,
+      child: Text(
+        context.l10n.venueLeadSubmissionFailure,
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
+      ),
+    ),
+  );
 }

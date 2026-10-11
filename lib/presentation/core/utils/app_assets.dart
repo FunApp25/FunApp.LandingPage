@@ -42,6 +42,10 @@ abstract final class AppAssets {
   /// Masked photograph used by the landing-page hero.
   static const String heroPeople = '$_landingHeroPath/hero_people.png';
 
+  /// Exact mobile composition from Figma image layer `2269:1504`.
+  static const String heroPeopleMobile =
+      '$_landingHeroPath/hero_people_mobile.png';
+
   /// Five diagonal ovals reused by the problem-section eyebrow.
   static const String fiveDiagonalOvals =
       '$_brandingShapePath/five_diagonal_ovals.svg';
@@ -99,7 +103,7 @@ abstract final class AppAssets {
   static const String foundingMemberRocket =
       '$_landingFoundingMemberPath/rocket_launch.svg';
 
-  /// Chat icon used by the A Direct Voice benefit card.
+  /// Chat icon used by the Lifetime Here & Now Membership benefit card.
   static const String foundingMemberChat =
       '$_landingFoundingMemberPath/chat_teardrop_text.svg';
 
@@ -109,6 +113,17 @@ abstract final class AppAssets {
 
   /// Masked photograph used by the venue promotional card.
   static const String venueGroup = '$_landingVenuesPath/venue_group.png';
+
+  /// Exact 18×16 Shape 07 wrapper used by the mobile Venue-page eyebrow.
+  static const String venuePageEyebrowMobile =
+      '$_landingVenuesPath/venue_page_eyebrow_mobile.svg';
+
+  /// Exact 20×20 CaretDown artwork used by the Venue chain selector.
+  static const String venueCaretDown = '$_landingVenuesPath/caret_down.svg';
+
+  /// Exact ArrowUpRight artwork used by the Venue Send action.
+  static const String venueSendArrowUpRight =
+      '$_landingVenuesPath/send_arrow_up_right.svg';
 
   /// Exact decorative glyph used by the welcome-statement eyebrow.
   static const String welcomeGlyph = '$_landingWelcomePath/welcome_glyph.svg';

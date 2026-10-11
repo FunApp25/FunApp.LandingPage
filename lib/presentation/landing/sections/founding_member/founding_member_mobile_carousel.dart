@@ -5,7 +5,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_memb
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_mobile_carousel.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
-/// Mobile carousel of the three Founding Member benefits.
+/// Mobile carousel of the three Founding Friend benefits.
 final class FoundingMemberMobileCarousel extends StatelessWidget {
   /// Creates the mobile carousel from localized benefit-card data.
   const FoundingMemberMobileCarousel({required this.cards, super.key});
@@ -18,7 +18,7 @@ final class FoundingMemberMobileCarousel extends StatelessWidget {
   static const _textGap = 8.0;
   static const _minimumContentSeparation = 12.0;
 
-  /// Localized Founding Member cards in display order.
+  /// Localized Founding Friend cards in display order.
   final List<FoundingMemberCardContent> cards;
 
   @override

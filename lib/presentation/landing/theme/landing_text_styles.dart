@@ -16,6 +16,19 @@ abstract final class LandingTextStyles {
     color: AppColors.textPrimary,
   );
 
+  /// Underlined legal-label treatment from the landing footer.
+  static final TextStyle footerLegal =
+      AppTextStyles.bodyFontStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        height: 20 / 12,
+        letterSpacing: 0.96,
+        color: AppColors.bodyGray,
+      ).copyWith(
+        decoration: TextDecoration.underline,
+        decorationColor: AppColors.bodyGray,
+      );
+
   /// Navigation label style from the full-screen mobile landing menu.
   static final TextStyle mobileMenuNavigation = AppTextStyles.bodyFontStyle(
     fontSize: 18,
@@ -148,9 +161,9 @@ abstract final class LandingTextStyles {
 
   /// Percentage treatment used by research statistic cards.
   static final TextStyle statValue = AppTextStyles.bodyFontStyle(
-    fontSize: 64,
+    fontSize: 80,
     fontWeight: FontWeight.w600,
-    height: 72 / 64,
+    height: 88 / 80,
     color: AppColors.textPrimary,
     fontFeatures: const [
       FontFeature.liningFigures(),
@@ -235,7 +248,7 @@ abstract final class LandingTextStyles {
     color: AppColors.textPrimary.withValues(alpha: 0.6),
   );
 
-  /// Founding Member benefit-card title.
+  /// Founding Friend benefit-card title.
   static final TextStyle foundingMemberCardTitle =
       AppTextStyles.headlineFontStyle(
         fontSize: 32,

@@ -20,9 +20,9 @@ final class MembershipCard extends StatelessWidget {
     required this.description,
     required this.benefits,
     required this.ctaLabel,
-    required this.footnote,
     required this.usesCoordinatedHeight,
     this.badgeLabel,
+    this.onCtaPressed,
     super.key,
   });
 
@@ -50,17 +50,17 @@ final class MembershipCard extends StatelessWidget {
   /// Localized tier benefits in display order.
   final List<MembershipBenefit> benefits;
 
-  /// Localized visual-only CTA label.
+  /// Localized CTA label.
   final String ctaLabel;
-
-  /// Localized note beneath the visual CTA.
-  final String footnote;
 
   /// Localized optional badge above the Lifetime card.
   final String? badgeLabel;
 
   /// Whether the card participates in a coordinated multi-column row.
   final bool usesCoordinatedHeight;
+
+  /// Optional approved action for this membership tier.
+  final VoidCallback? onCtaPressed;
 
   MembershipCardDesign get _design => switch (variant) {
     MembershipCardVariant.free => MembershipCardDesign.free,
@@ -120,7 +120,7 @@ final class MembershipCard extends StatelessWidget {
                       semanticId: semanticId,
                       design: design,
                       label: ctaLabel,
-                      footnote: footnote,
+                      onPressed: onCtaPressed,
                     ),
                   ],
                 ),

@@ -4,9 +4,9 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_memb
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_card_row.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_layout.dart';
 
-/// Responsive grid of Founding Member benefit cards.
+/// Responsive grid of Founding Friend benefit cards.
 final class FoundingMemberCardGrid extends StatelessWidget {
-  /// Creates the Founding Member benefit-card grid.
+  /// Creates the Founding Friend benefit-card grid.
   const FoundingMemberCardGrid({required this.cards, super.key});
 
   /// Benefit cards in display order.

@@ -11,7 +11,7 @@ final class FoundingFriendsSection extends StatelessWidget {
   /// Creates the Founding Friends section.
   const FoundingFriendsSection({this.onCtaPressed, super.key});
 
-  /// Opens the presentation owned by the Founding Friends CTA.
+  /// Opens the approved Founding Friend form destination.
   final VoidCallback? onCtaPressed;
 
   @override
@@ -77,7 +77,7 @@ final class FoundingFriendsSection extends StatelessWidget {
                   ctaLabel: context.l10n.landingFoundingFriendsCta,
                   imageSemanticLabel:
                       context.l10n.landingFoundingFriendsImageDescription,
-                  onCtaPressed: onCtaPressed,
+                  onCtaPressed: onCtaPressed ?? _handleDeferredCta,
                 ),
               ),
             ),
@@ -86,4 +86,6 @@ final class FoundingFriendsSection extends StatelessWidget {
       },
     ),
   );
+
+  static void _handleDeferredCta() {}
 }

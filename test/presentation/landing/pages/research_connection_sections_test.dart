@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/problem/problem_statement_section.dart';
@@ -19,11 +20,17 @@ const _fourthStatDescription =
     'of all young people find it difficult to move from screen to making '
     'friends IRL';
 const _connectionBody =
-    'What if the existing introductions app culture — where users are largely '
-    'viewed as an asset to generate profit for the connection platforms — was '
-    'replaced with a warm, welcoming and respectful environment where users '
-    'meet others IRL, free of charge, in thousands of venues of all shapes, '
-    'sizes and types around the country?';
+    'You might be feeling lonely, you might have a jam-packed social life. '
+    'Either way, making new friends, meeting new groups, joining new '
+    'activities enriches life and makes it more enjoyable. So, what if the '
+    'existing introductions app culture – where users are regarded as '
+    'revenue – was replaced with the warm, welcoming, fun and respectful new '
+    'world of introductions promised above. Where venues, clubs and groups '
+    'of all types, shapes and sizes around the country welcome you in. Where '
+    'users meet one another face-to-face, enjoy the future of socialising and '
+    'make new friends. Sound fun?';
+const _connectionClosing =
+    'Like so many others, you’re going to enjoy Fun App.';
 
 void main() {
   testWidgets('Friendship Project is an exact keyboard-accessible link', (
@@ -46,6 +53,10 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
     expect(opened, [Uri.parse('https://friendship-project.co.uk/')]);
+    final text = tester.widget<Text>(find.text('The Great Friendship Project'));
+    expect(text.style?.color, AppColors.warmOrange);
+    expect(text.style?.decoration, TextDecoration.underline);
+    expect(text.style?.decorationColor, AppColors.warmOrange);
     semantics.dispose();
   });
 
@@ -64,7 +75,7 @@ void main() {
       'epidemic across the UK and the world, especially amongst young adults.',
     );
 
-    expect(find.text('Did you know that in the UK?'), findsOneWidget);
+    expect(find.text('Did you know that in the UK'), findsOneWidget);
     for (final value in ['49%', '67%', '70%', '44%']) {
       expect(find.text(value), findsOneWidget);
     }
@@ -98,6 +109,8 @@ void main() {
       FontWeight.w700,
     );
     expect(LandingTextStyles.statsAttributionSource.decoration, isNull);
+    expect(LandingTextStyles.statValue.fontSize, 80);
+    expect(LandingTextStyles.statValue.height, 88 / 80);
 
     expect(find.text('A DIFFERENT WAY TO CONNECT'), findsOneWidget);
     expect(
@@ -105,6 +118,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text(_connectionBody), findsOneWidget);
+    expect(find.text(_connectionClosing), findsOneWidget);
   });
 
   for (final example in const [
@@ -338,6 +352,39 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('places research attribution after cards in both compositions', (
+    tester,
+  ) async {
+    for (final size in const [Size(390, 844), Size(1440, 900)]) {
+      setTestSurface(tester, size);
+      await pumpLandingSection(
+        tester,
+        section: const ResearchStatsSection(),
+      );
+      await tester.pumpAndSettle();
+
+      final cardsBottom = size.width < 600
+          ? tester
+                .getBottomLeft(
+                  find.byKey(const Key('researchMobileCarouselBounds')),
+                )
+                .dy
+          : tester
+                .getBottomLeft(find.byKey(const Key('researchStatsColumns4')))
+                .dy;
+      final attributionTop = tester
+          .getTopLeft(find.byKey(const Key('researchStatsAttribution')))
+          .dy;
+
+      expect(attributionTop, greaterThan(cardsBottom));
+      expect(
+        attributionTop - cardsBottom,
+        size.width < 600 ? 40 : 16,
+      );
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   testWidgets('keeps the established Problem statement treatment at 600px', (
     tester,
   ) async {
@@ -379,7 +426,7 @@ void main() {
     expectHeaderSemantics(
       tester,
       const Key('researchStatsHeadingSemantics'),
-      'Did you know that in the UK?',
+      'Did you know that in the UK',
     );
     expectHeaderSemantics(
       tester,
