@@ -4,54 +4,95 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
-/// Static contact-email presentation in the landing footer.
+/// Shared contact-email link from the landing design.
 final class FooterEmail extends StatelessWidget {
-  /// Creates the static footer email presentation.
-  const FooterEmail({required this.email, super.key});
+  /// Creates the footer email link.
+  const FooterEmail({
+    required this.email,
+    this.onOpen,
+    this.semanticKey = const Key('footerEmailSemantics'),
+    this.envelopeKey = const Key('footerEnvelope'),
+    this.textKey = const Key('footerEmailText'),
+    super.key,
+  });
 
   /// Visible and semantic contact address.
   final String email;
 
-  @override
-  Widget build(BuildContext context) => Semantics(
-    key: const Key('footerEmailSemantics'),
-    label: email,
-    excludeSemantics: true,
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.yellowAccent,
-            borderRadius: BorderRadius.all(
-              Radius.circular(AppSizes.pillRadius),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: SvgPicture.asset(
-              AppAssets.footerEnvelope,
-              key: const Key('footerEnvelope'),
-              width: 16,
-              height: 16,
-              colorFilter: const ColorFilter.mode(
-                AppColors.blueMain,
-                BlendMode.srcIn,
-              ),
-              excludeFromSemantics: true,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Text(
-            email,
-            key: const Key('footerEmailText'),
-            style: LandingTextStyles.footerEmail,
-          ),
-        ),
-      ],
-    ),
+  /// Optional launch override for deterministic tests.
+  final ValueChanged<Uri>? onOpen;
+
+  /// Key for the combined email-link semantics.
+  final Key semanticKey;
+
+  /// Key for the decorative envelope asset.
+  final Key envelopeKey;
+
+  /// Key for the visible email text.
+  final Key textKey;
+
+  /// Builds the approved email-client URI for [email].
+  static Uri mailtoUriFor(String email) => Uri(
+    scheme: 'mailto',
+    path: email,
   );
+
+  @override
+  Widget build(BuildContext context) {
+    final uri = mailtoUriFor(email);
+    void open() => (onOpen ?? launchContactLink)(uri);
+
+    return Semantics(
+      key: semanticKey,
+      label: email,
+      link: true,
+      onTap: open,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: open,
+          mouseCursor: SystemMouseCursors.click,
+          borderRadius: BorderRadius.circular(4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: AppColors.yellowAccent,
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(AppSizes.pillRadius),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: SvgPicture.asset(
+                    AppAssets.footerEnvelope,
+                    key: envelopeKey,
+                    width: 16,
+                    height: 16,
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.blueMain,
+                      BlendMode.srcIn,
+                    ),
+                    excludeFromSemantics: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Text(
+                  email,
+                  key: textKey,
+                  style: LandingTextStyles.footerEmail,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

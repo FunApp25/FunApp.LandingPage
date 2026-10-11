@@ -3,31 +3,31 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 
-/// Accessible footer link to the hosted Privacy Notice page.
-final class FooterPrivacyNoticeLink extends StatefulWidget {
-  /// Creates the footer Privacy Notice link.
-  const FooterPrivacyNoticeLink({
+/// Accessible footer link for an established or review-only legal route.
+final class FooterLegalLink extends StatefulWidget {
+  /// Creates a footer legal link.
+  const FooterLegalLink({
+    required this.semanticKey,
     required this.label,
     required this.onSelected,
     super.key,
   });
 
-  /// Localized visible and semantic label.
+  /// Stable key for the exposed link semantics.
+  final Key semanticKey;
+
+  /// Localized visible and accessible label.
   final String label;
 
-  /// Opens the hosted Privacy Notice in a separate tab.
+  /// Opens the established or explicitly review-only destination.
   final VoidCallback onSelected;
 
   @override
-  State<FooterPrivacyNoticeLink> createState() =>
-      _FooterPrivacyNoticeLinkState();
+  State<FooterLegalLink> createState() => _FooterLegalLinkState();
 }
 
-final class _FooterPrivacyNoticeLinkState
-    extends State<FooterPrivacyNoticeLink> {
-  static const _minimumTargetHeight = 44.0;
-  static const _horizontalPadding = 12.0;
-  static const _radius = BorderRadius.all(Radius.circular(10));
+final class _FooterLegalLinkState extends State<FooterLegalLink> {
+  static const _radius = BorderRadius.all(Radius.circular(4));
 
   bool _isFocused = false;
   bool _isHovered = false;
@@ -47,7 +47,7 @@ final class _FooterPrivacyNoticeLinkState
     );
 
     return Semantics(
-      key: const Key('footerPrivacyNoticeLink'),
+      key: widget.semanticKey,
       label: widget.label,
       link: true,
       onTap: widget.onSelected,
@@ -80,26 +80,10 @@ final class _FooterPrivacyNoticeLinkState
                 splashColor: Colors.transparent,
                 highlightColor: Colors.transparent,
                 borderRadius: _radius,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: _minimumTargetHeight,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: _horizontalPadding,
-                    ),
-                    child: Center(
-                      widthFactor: 1,
-                      child: Text(
-                        widget.label,
-                        textAlign: TextAlign.center,
-                        style: LandingTextStyles.headerNavigation.copyWith(
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
+                child: Text(
+                  widget.label,
+                  textAlign: TextAlign.center,
+                  style: LandingTextStyles.footerLegal,
                 ),
               ),
             ),

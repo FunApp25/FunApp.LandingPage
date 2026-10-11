@@ -8,6 +8,7 @@ import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing
 final class MobileHeader extends StatelessWidget {
   /// Creates the compact mobile landing header.
   const MobileHeader({
+    required this.onLogoSelected,
     required this.contactLabel,
     required this.onContactSelected,
     required this.menuSemanticLabel,
@@ -17,10 +18,13 @@ final class MobileHeader extends StatelessWidget {
     super.key,
   });
 
-  /// Localized Contact Us label.
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
+
+  /// Localized queue-sign-up label.
   final String contactLabel;
 
-  /// Opens the interested-user Coming Soon dialog.
+  /// Opens the Here & Now queue-sign-up route.
   final VoidCallback? onContactSelected;
 
   /// Localized menu-button semantic label.
@@ -51,7 +55,7 @@ final class MobileHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              const HeaderLogo(),
+              HeaderLogo(onSelected: onLogoSelected),
               const SizedBox(width: 8),
               Expanded(
                 child: Align(

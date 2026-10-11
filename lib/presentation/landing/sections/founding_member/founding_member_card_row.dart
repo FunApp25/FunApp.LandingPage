@@ -3,9 +3,9 @@ import 'package:fun_app_landing_page/presentation/landing/sections/founding_memb
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_card_item.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_member/founding_member_layout.dart';
 
-/// Equal-height row of Founding Member benefit cards.
+/// Equal-height row of Founding Friend benefit cards.
 final class FoundingMemberCardRow extends StatelessWidget {
-  /// Creates a Founding Member benefit-card row.
+  /// Creates a Founding Friend benefit-card row.
   const FoundingMemberCardRow({required this.cards, super.key});
 
   /// Benefit cards in this row.

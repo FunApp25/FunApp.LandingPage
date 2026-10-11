@@ -25,6 +25,8 @@ import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_s
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_navigation_item.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -41,13 +43,13 @@ void main() {
       ProblemStatementSection,
       ResearchStatsSection,
       ConnectionExperienceSection,
+      MembershipSection,
       FoundingOfferSection,
       FoundingMemberSection,
       FoundingFriendsSection,
       VenueSection,
       WelcomeStatementSection,
       FaqSection,
-      LandingFooter,
     ];
 
     expect(find.byType(LandingHeader), findsOneWidget);
@@ -55,8 +57,6 @@ void main() {
     for (final type in expectedSectionTypes) {
       expect(find.byType(type), findsOneWidget);
     }
-    expect(find.byType(MembershipSection), findsNothing);
-
     final sections = tester.widget<Column>(
       find.byKey(const Key('landingPageSections')),
     );
@@ -64,6 +64,7 @@ void main() {
       sections.children.map((widget) => widget.runtimeType),
       orderedEquals(expectedSectionTypes),
     );
+    expect(find.byType(LandingFooter), findsOneWidget);
   });
 
   testWidgets('renders the authoritative English header and hero copy', (
@@ -78,8 +79,11 @@ void main() {
     ]) {
       expect(find.text(label), findsNWidgets(2));
     }
-    expect(find.text('MEMBERSHIP'), findsNothing);
-    for (final label in ['Contact Us', 'A FRIENDLIER WAY TO CONNECT']) {
+    expect(find.text('MEMBERSHIP'), findsNWidgets(2));
+    for (final label in [
+      'Join the queue',
+      'A FRIENDLIER WAY TO CONNECT',
+    ]) {
       expect(find.text(label), findsOneWidget);
     }
     expect(find.text('Join the Waitlist'), findsNothing);
@@ -96,10 +100,10 @@ void main() {
     expect(
       find.text(
         'Fun App is going to work differently… very differently! A warm, '
-        'welcoming and respectful environment where users can meet others '
+        'welcoming, fun and respectful environment where users can meet others '
         'online or IRL, free of charge, in thousands of venues of all shapes, '
-        'sizes and types around the country. But, let us explain why change '
-        'is needed.',
+        'sizes and types around the country. Let us explain why change is '
+        'needed.',
       ),
       findsOneWidget,
     );
@@ -108,7 +112,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      contact: 'Contáctanos',
+      contact: 'Únete a la cola',
       eyebrow: 'UNA FORMA MÁS AMABLE DE CONECTAR',
       headline:
           'Fun App nació de la convicción de que crear conexiones debería ser '
@@ -116,7 +120,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      contact: 'Cysylltwch â Ni',
+      contact: "Ymuno â'r ciw",
       eyebrow: 'FFORDD FWY CYFEILLGAR O GYSYLLTU',
       headline:
           'Dechreuodd Fun App o’r gred y dylai creu cysylltiadau fod '
@@ -124,7 +128,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      contact: 'Звязацца з намі',
+      contact: 'Стаць у чаргу',
       eyebrow: 'БОЛЬШ ПРЫЯЗНЫ СПОСАБ ЗНАЁМІЦЦА',
       headline:
           'Fun App пачаўся з веры ў тое, што наладжваць сувязі павінна быць '
@@ -219,25 +223,35 @@ void main() {
   testWidgets('maps header and footer navigation to anchored sections', (
     tester,
   ) async {
-    const targets = <Type>[
+    const headerTargets = <Type>[
       HeroSection,
+      MembershipSection,
+      FoundingFriendsSection,
+      VenueSection,
+    ];
+    const footerTargets = <Type>[
+      HeroSection,
+      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
 
-    for (var index = 0; index < targets.length; index++) {
+    for (var index = 0; index < headerTargets.length; index++) {
       await pumpLandingApp(tester);
       await _moveToPageEnd(tester);
       await tester.tap(
         find.byKey(Key('landingHeaderNavigationItem$index')),
       );
       await tester.pumpAndSettle();
-      _expectTargetBelowHeader(tester, targets[index]);
+      _expectTargetBelowHeader(tester, headerTargets[index]);
+    }
 
+    for (var index = 0; index < footerTargets.length; index++) {
+      await pumpLandingApp(tester);
       await _moveToPageEnd(tester);
       await tester.tap(find.byKey(Key('footerNavigationItem$index')));
       await tester.pumpAndSettle();
-      _expectTargetBelowHeader(tester, targets[index]);
+      _expectTargetBelowHeader(tester, footerTargets[index]);
     }
   });
 
@@ -247,6 +261,7 @@ void main() {
     setTestSurface(tester, const Size(390, 844));
     const targets = <Type>[
       HeroSection,
+      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
@@ -298,7 +313,7 @@ void main() {
     await pumpLandingApp(tester);
 
     final venueNavigation = find.byKey(
-      const Key('landingHeaderNavigationItem2'),
+      const Key('landingHeaderNavigationItem3'),
     );
     await tester.tap(venueNavigation);
     await tester.pump();
@@ -323,7 +338,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    _expectTargetBelowHeader(tester, FoundingFriendsSection);
+    _expectTargetBelowHeader(tester, MembershipSection);
   });
 
   testWidgets('navigation items support Enter and Space activation', (
@@ -450,18 +465,18 @@ void main() {
     await mouse.removePointer();
   });
 
-  testWidgets('navigation is accessible and Contact Us opens Coming Soon', (
+  testWidgets('navigation is accessible and queue CTA opens Here & Now', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     await pumpLandingApp(tester);
 
-    for (final prefix in [
-      'landingHeaderNavigationItem',
-      'footerNavigationItem',
+    for (final entry in const [
+      (prefix: 'landingHeaderNavigationItem', count: 4),
+      (prefix: 'footerNavigationItem', count: 4),
     ]) {
-      for (var index = 0; index < 3; index++) {
-        final itemFinder = find.byKey(Key('$prefix$index'));
+      for (var index = 0; index < entry.count; index++) {
+        final itemFinder = find.byKey(Key('${entry.prefix}$index'));
         final itemSemantics = tester
             .getSemantics(itemFinder)
             .getSemanticsData();
@@ -474,17 +489,22 @@ void main() {
       }
     }
 
-    final headerBoundary = tester.widget<DecoratedBox>(
+    final headerBoundary = tester.widget<ColoredBox>(
       find.byKey(const Key('landingHeaderBoundary')),
     );
-    final headerDecoration = headerBoundary.decoration as BoxDecoration;
-    final headerBorder = headerDecoration.border! as Border;
-    expect(headerBorder.bottom.color.a, greaterThan(0));
+    expect(headerBoundary.color, AppColors.lightForeground);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('landingHeaderBoundary')),
+        matching: find.byType(Divider),
+      ),
+      findsNothing,
+    );
 
     final contact = tester
-        .getSemantics(find.text('Contact Us'))
+        .getSemantics(find.text('Join the queue'))
         .getSemanticsData();
-    expect(contact.label, 'Contact Us');
+    expect(contact.label, 'Join the queue');
     expect(contact.flagsCollection.isButton, isTrue);
     expect(contact.flagsCollection.isLink, isFalse);
     expect(
@@ -496,12 +516,31 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('landingHeaderContactCta')));
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('interestedUserComingSoonDialogContent')),
-      findsOneWidget,
-    );
+    expect(find.byType(HereAndNowPage), findsOneWidget);
     expect(find.byKey(const Key('venueLeadForm')), findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('membership CTAs open their approved sign-up routes', (
+    tester,
+  ) async {
+    await pumpLandingApp(tester);
+
+    for (final id in const ['free', 'hereNow']) {
+      final cta = find.byKey(Key('membershipCta-$id'));
+      await tester.ensureVisible(cta);
+      await tester.tap(cta);
+      await tester.pumpAndSettle();
+      expect(find.byType(HereAndNowPage), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+    }
+
+    final lifetime = find.byKey(const Key('membershipCta-lifetime'));
+    await tester.ensureVisible(lifetime);
+    await tester.tap(lifetime);
+    await tester.pumpAndSettle();
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
   });
 
   testWidgets('active landing sections fit at two times text scale', (
@@ -559,7 +598,7 @@ void main() {
         reason: 'No layout exception is expected at $size.',
       );
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
-      expect(find.text('Contact Us'), findsOneWidget);
+      expect(find.text('Join the queue'), findsOneWidget);
 
       final heroTop = tester.getTopLeft(find.byType(HeroSection)).dy;
       final heroCardTop = tester
@@ -567,12 +606,7 @@ void main() {
             find.byKey(const Key('heroCard')),
           )
           .dy;
-      final expectedHeroGap = switch (size.width) {
-        >= 1200 => 24.0,
-        >= 600 => 20.0,
-        _ => 0.0,
-      };
-      expect(heroCardTop - heroTop, expectedHeroGap);
+      expect(heroCardTop - heroTop, 0);
 
       final headline = tester.widget<Text>(
         find.byKey(const Key('heroHeadlineText')),
@@ -640,15 +674,15 @@ void main() {
         );
       }
 
-      final navigationPrefixes = [
+      final navigationGroups = [
         if (size.width >= LandingHeader.mobileUxBreakpoint)
-          'landingHeaderNavigationItem',
-        'footerNavigationItem',
+          (prefix: 'landingHeaderNavigationItem', count: 4),
+        (prefix: 'footerNavigationItem', count: 4),
       ];
-      for (final prefix in navigationPrefixes) {
-        for (var index = 0; index < 3; index++) {
+      for (final group in navigationGroups) {
+        for (var index = 0; index < group.count; index++) {
           expect(
-            tester.getSize(find.byKey(Key('$prefix$index'))).height,
+            tester.getSize(find.byKey(Key('${group.prefix}$index'))).height,
             greaterThanOrEqualTo(44),
           );
         }
@@ -656,8 +690,9 @@ void main() {
 
       for (final target in const [
         (index: 0, type: HeroSection),
-        (index: 1, type: FoundingFriendsSection),
-        (index: 2, type: VenueSection),
+        (index: 1, type: MembershipSection),
+        (index: 2, type: FoundingFriendsSection),
+        (index: 3, type: VenueSection),
       ]) {
         await _moveToPageEnd(tester);
         if (size.width < LandingHeader.mobileUxBreakpoint) {
@@ -755,7 +790,7 @@ void main() {
           findsNothing,
         );
       } else if (size.width < 1080) {
-        expect(headerHeight, lessThanOrEqualTo(104));
+        expect(headerHeight, lessThanOrEqualTo(108));
       }
 
       for (final finder in [
@@ -791,12 +826,12 @@ void main() {
         await pumpLandingApp(tester, locale: const Locale('be'));
 
         expect(
-          find.text('СЯБРЫ-ЗАСНАВАЛЬНІКІ'),
+          find.text('FOUNDING FRIENDS'),
           size.width < LandingHeader.mobileUxBreakpoint
               ? findsOneWidget
               : findsNWidgets(2),
         );
-        expect(find.text('Звязацца з намі'), findsOneWidget);
+        expect(find.text('Стаць у чаргу'), findsOneWidget);
         expect(tester.takeException(), isNull);
         expect(
           size.width < LandingHeader.mobileUxBreakpoint
@@ -864,15 +899,18 @@ void main() {
         expect(heroClip.clipBehavior, isNot(Clip.none));
         if (example.layout == 'Mobile') {
           final expectedArtworkWidth = switch (example.size.width) {
-            390 => 432.0,
-            320 => 362.0,
+            390 => 432.0 * 1.1586254835128784,
+            320 => (432.0 * 288 / 358) * 1.1586254835128784,
             _ => throw UnsupportedError('Unexpected mobile test width.'),
           };
 
           expect(artworkRect.width, closeTo(expectedArtworkWidth, 0.01));
           expect(artworkRect.width, greaterThan(cardRect.width));
           expect(artworkRect.center.dx, closeTo(cardRect.center.dx, 0.01));
-          expect(contentRect.top - artworkRect.bottom, closeTo(48, 0.1));
+          final frameRect = tester.getRect(
+            find.byKey(const Key('heroArtworkFrame')),
+          );
+          expect(contentRect.top - frameRect.bottom, closeTo(48, 0.1));
         } else {
           expect(artworkRect.right, greaterThan(cardRect.right));
           expect(

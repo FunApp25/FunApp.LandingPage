@@ -52,9 +52,9 @@ final class MembershipCardItem extends StatelessWidget {
           description: card.description,
           benefits: card.benefits,
           ctaLabel: card.ctaLabel,
-          footnote: card.footnote,
           badgeLabel: card.badgeLabel,
           usesCoordinatedHeight: usesCoordinatedHeight,
+          onCtaPressed: card.onCtaPressed,
         ),
       ),
     );

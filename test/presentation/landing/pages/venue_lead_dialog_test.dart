@@ -15,12 +15,13 @@ import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
-import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_chain_status_control.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_lead_dialog.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_privacy_disclosure.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/landing_dialog.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
+import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 import '../landing_test_helpers.dart';
 
@@ -37,7 +38,7 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets('venue and Founding Friends CTAs open distinct flows', (
+  testWidgets('Founding Friend and Venue CTAs open only their routes', (
     tester,
   ) async {
     getIt.registerFactory<VenueLeadFormBloc>(
@@ -45,19 +46,16 @@ void main() {
     );
     await pumpLandingApp(tester);
 
-    final context = tester.element(find.byType(LandingPage));
-    final l10n = AppLocalizations.of(context);
     final foundingCta = find.byKey(const Key('foundingFriendsCta'));
     await tester.ensureVisible(foundingCta);
     await tester.tap(foundingCta);
     await tester.pumpAndSettle();
 
-    expect(
-      find.text(l10n.landingInterestedUserComingSoonTitle),
-      findsOneWidget,
-    );
-    expect(find.byKey(const Key('venueLeadForm')), findsNothing);
-    await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
+    expect(find.byType(FoundingFriendPage), findsOneWidget);
+    expect(find.byType(LandingDialog), findsNothing);
+    expect(repository.submittedLeads, isEmpty);
+
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
     final venueCta = find.byKey(const Key('venueCardCta'));
@@ -66,10 +64,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
-    expect(
-      find.text(l10n.landingInterestedUserComingSoonTitle),
-      findsNothing,
-    );
+    expect(find.byType(VenuePage), findsOneWidget);
+    expect(find.byType(LandingDialog), findsNothing);
     expect(find.byType(TextField), findsNWidgets(9));
     expect(
       find.byKey(const Key('venueLeadChainStatusControl')),
@@ -201,7 +197,7 @@ void main() {
     tester.semantics.tap(find.semantics.byLabel('Privacy Notice'));
     await tester.pump();
 
-    expect(find.byType(LandingDialog), findsOneWidget);
+    expect(find.byType(VenuePage), findsOneWidget);
     expect(find.byType(PrivacyNoticePage), findsNothing);
     expect(createdBlocs, hasLength(1));
     expect(createdBlocs.single.isClosed, isFalse);

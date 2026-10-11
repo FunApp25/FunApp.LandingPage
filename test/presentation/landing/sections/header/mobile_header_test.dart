@@ -10,8 +10,12 @@ import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dar
 import 'package:fun_app_landing_page/presentation/landing/sections/founding_friends/founding_friends_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_mobile_menu.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/header/mobile_menu_control.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/membership/membership_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
+import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 
 import '../../landing_test_helpers.dart';
 
@@ -55,7 +59,11 @@ void main() {
           example.mobile ? findsOneWidget : findsNothing,
         );
         if (!example.mobile) {
-          expect(find.byKey(Key(example.establishedKey)), findsOneWidget);
+          expect(
+            find.byKey(Key(example.establishedKey)),
+            findsOneWidget,
+            reason: 'Unexpected header composition at ${example.width}px.',
+          );
         }
         expect(tester.takeException(), isNull);
       }
@@ -91,7 +99,7 @@ void main() {
     expect(tester.getSize(logo).width, closeTo(89, 0.5));
     expect(tester.getSize(logo).height, 29);
     expect(tester.getRect(logo).left, 16);
-    expect(find.text('Contact Us'), findsOneWidget);
+    expect(find.text('Join the queue'), findsOneWidget);
     expect(contact, findsOneWidget);
     expect(tester.getSize(menuButton), const Size.square(44));
     expect(tester.getSize(menuVisual), const Size.square(38));
@@ -108,28 +116,28 @@ void main() {
   for (final example in const [
     (
       locale: Locale('en'),
-      contact: 'Contact Us',
+      contact: 'Join the queue',
       open: 'Open navigation menu',
       close: 'Close navigation menu',
       firstNavigation: 'OUR BELIEF',
     ),
     (
       locale: Locale('es'),
-      contact: 'Contáctanos',
+      contact: 'Únete a la cola',
       open: 'Abrir menú de navegación',
       close: 'Cerrar menú de navegación',
       firstNavigation: 'NUESTRA CREENCIA',
     ),
     (
       locale: Locale('cy'),
-      contact: 'Cysylltwch â Ni',
+      contact: "Ymuno â'r ciw",
       open: 'Agor y ddewislen lywio',
       close: "Cau'r ddewislen lywio",
       firstNavigation: 'EIN CRED',
     ),
     (
       locale: Locale('be'),
-      contact: 'Звязацца з намі',
+      contact: 'Стаць у чаргу',
       open: 'Адкрыць меню навігацыі',
       close: 'Закрыць меню навігацыі',
       firstNavigation: 'НАША ВЕРА',
@@ -230,13 +238,21 @@ void main() {
         const Key('landingMobileMenuContactCta'),
       );
       expect(tester.getSize(topArea).height, 70);
-      expect(tester.getRect(bottomContact).left, 16);
-      expect(tester.getSize(bottomContact), const Size(358, 38));
+      final contactRect = tester.getRect(bottomContact);
+      expect(contactRect.center.dx, 195);
+      expect(contactRect.left, greaterThanOrEqualTo(16));
+      expect(contactRect.right, lessThanOrEqualTo(374));
+      expect(contactRect.height, greaterThanOrEqualTo(44));
+      expect(contactRect.width, lessThan(358));
       expect(
         tester.getRect(menu).bottom - tester.getRect(bottomContact).bottom,
         16,
       );
-      for (var index = 0; index < 3; index++) {
+      expect(
+        find.descendant(of: menu, matching: find.text('MEMBERSHIP')),
+        findsOneWidget,
+      );
+      for (var index = 0; index < 4; index++) {
         final item = find.byKey(Key('landingMobileMenuNavigationItem$index'));
         expect(_semanticButtonState(tester, item), isTrue);
         expect(tester.getSize(item).height, greaterThanOrEqualTo(44));
@@ -267,7 +283,7 @@ void main() {
     },
   );
 
-  testWidgets('menu keeps page scroll fixed and Contact Us opens Coming Soon', (
+  testWidgets('menu keeps page scroll fixed and queue CTA opens Here & Now', (
     tester,
   ) async {
     setTestSurface(tester, const Size(390, 844));
@@ -298,11 +314,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('landingMobileMenuContactCta')));
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('interestedUserComingSoonDialogContent')),
-      findsOneWidget,
-    );
-    await tester.tap(find.byKey(const Key('landingDialogCloseButton')));
+    expect(find.byType(HereAndNowPage), findsOneWidget);
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     await tester.drag(
       find.byKey(const Key('landingPageScrollView')),
@@ -363,6 +376,39 @@ void main() {
     expect(_controlFocusNode(tester, opener).hasFocus, isTrue);
   });
 
+  testWidgets('menu uses restrained motion and ignores rapid duplicate opens', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 844));
+    await _pumpHeader(tester);
+    final opener = find.byKey(const Key('landingMobileMenuButton'));
+    final control = tester.widget<MobileMenuControl>(opener);
+
+    control.onPressed();
+    control.onPressed();
+    await tester.pump();
+
+    final menu = find.byKey(const Key('landingMobileMenu'));
+    expect(menu, findsOneWidget);
+    final route = ModalRoute.of(tester.element(menu));
+    expect(route?.transitionDuration, LandingMotion.standardDuration);
+    expect(
+      find.ancestor(of: menu, matching: find.byType(FadeTransition)),
+      findsWidgets,
+    );
+    expect(
+      find.ancestor(of: menu, matching: find.byType(SlideTransition)),
+      findsWidgets,
+    );
+
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(menu, findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const Key('landingMobileMenuCloseButton')));
+    await tester.pumpAndSettle();
+    expect(menu, findsNothing);
+  });
+
   testWidgets('resizing across 600 dismisses without stale focus restoration', (
     tester,
   ) async {
@@ -401,6 +447,7 @@ void main() {
     setTestSurface(tester, const Size(390, 844));
     const targets = <Type>[
       HeroSection,
+      MembershipSection,
       FoundingFriendsSection,
       VenueSection,
     ];
@@ -445,7 +492,7 @@ void main() {
 
     expect(find.byKey(const Key('landingMobileMenu')), findsNothing);
     expect(controller.position.isScrollingNotifier.value, isFalse);
-    _expectTargetBelowHeader(tester, FoundingFriendsSection);
+    _expectTargetBelowHeader(tester, MembershipSection);
   });
 }
 
@@ -536,7 +583,9 @@ Future<void> _pumpHeader(
         body: Column(
           children: [
             LandingHeader(
+              onLogoSelected: () {},
               onOurBeliefSelected: onOurBeliefSelected ?? () {},
+              onMembershipSelected: () {},
               onFoundingFriendsSelected: () {},
               onVenuesSelected: () {},
             ),

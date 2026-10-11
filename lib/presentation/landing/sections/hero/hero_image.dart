@@ -5,7 +5,17 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 /// Semantic hero artwork shared by both hero compositions.
 final class HeroImage extends StatelessWidget {
   /// Creates the landing hero artwork.
-  const HeroImage({super.key});
+  const HeroImage({
+    this.assetPath = AppAssets.heroPeople,
+    this.fit = BoxFit.contain,
+    super.key,
+  });
+
+  /// Exact responsive artwork asset.
+  final String assetPath;
+
+  /// How the source artwork fills its responsive frame.
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -14,11 +24,11 @@ final class HeroImage extends StatelessWidget {
     image: true,
     excludeSemantics: true,
     child: Image.asset(
-      AppAssets.heroPeople,
+      assetPath,
       key: const Key('heroPeopleImage'),
       width: double.infinity,
       height: double.infinity,
-      fit: BoxFit.contain,
+      fit: fit,
     ),
   );
 }

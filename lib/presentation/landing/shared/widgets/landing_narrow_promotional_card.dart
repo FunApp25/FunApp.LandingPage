@@ -29,8 +29,12 @@ final class LandingNarrowPromotionalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final usesMobileFidelity = MediaQuery.sizeOf(context).width < 600;
     final horizontalPadding = usesMobileFidelity ? 16.0 : 48.0;
+    final mobileArtworkWidth = availableWidth + 24;
     final artworkSize = usesMobileFidelity
-        ? const Size(382, 233)
+        ? Size(
+            mobileArtworkWidth,
+            mobileArtworkWidth / (382 / 233),
+          )
         : Size(
             (availableWidth - 32).clamp(0.0, 360.0),
             (availableWidth - 32).clamp(0.0, 360.0) /

@@ -7,11 +7,17 @@ This repository owns the public Fun App website and landing page. The site shoul
 The landing page is expected eventually to collect information from interested
 users. Flutter production submits Venue enquiries to the deployed same-origin
 first-party venue-interest boundary; its Cloudflare Worker maps to HubSpot
-outside the browser. The venue CTA now opens its
-functional localized form. That form now shows the approved informational
-privacy acknowledgement and links to the hosted Privacy Notice; it does not
-submit a consent field. Prospective-user fields, flows, analytics, marketing
-consent behavior, and other business behavior remain unspecified.
+outside the browser. The venue CTA now navigates to the dedicated `/venues`
+hash route, whose localized form preserves the established application and
+data workflow. That form shows the approved informational
+privacy acknowledgement with a presentation-local checkbox and links to the
+hosted Privacy Notice; it does not submit a consent field. The Here & Now and
+Founding Friend prospective-user field surfaces are preserved UI-only preview
+experiences at `/here-and-now` and `/founding-friend`. Intermediate production
+gates those routes and shows a localized Coming soon dialog from every existing
+entry point. The forms validate locally in explicitly configured preview builds
+but cannot submit until their Cloudflare-backed HubSpot workflow,
+age-eligibility policy, and consent semantics are approved and implemented.
 
 ## 2. Decision model
 
@@ -34,7 +40,7 @@ Current implementation is evidence of repository state, not automatically a perm
 - The current Ready-for-Dev design in Figma file
   `J326dKMVr5dHcC92xLkfbm`, frame `2190:1567` (`Landing Page - V1`), is fully
   represented in Flutter, including the current three-tier Membership design
-  and Founding Member explanation section. Its static and responsive
+  and Founding Friend explanation section. Its static and responsive
   presentation is stable, and its current restrained motion pass is complete
   before business, domain, application, or data implementation.
 - Fun App logos and decorative shapes are established under `assets/branding/`; active presentation paths are centralized through the project asset helper.
@@ -44,18 +50,36 @@ Current implementation is evidence of repository state, not automatically a perm
   starting point.
 - The Flutter Web host scaffold uses the Fun App symbol for favicon and PWA icon artwork.
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
-- Flutter generated localization supports English, Spanish, Welsh, and Belarusian; English is the source and fallback language.
+- Flutter generated localization supports complete application-UI catalogs for
+  English, Spanish, Welsh, and Belarusian; English is the source and the
+  fallback for unsupported locales. The canonical Privacy Notice legal prose
+  remains English until separately approved legal translations are supplied.
 - GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
 - GitHub Pages builds Flutter through Puro and publishes `build/web` from the repository root at base href `/`.
 - The approved English Fun App Ltd Privacy Notice is hosted at
   `https://funapp.world/#/privacy`. Its canonical website source is
   `assets/legal/privacy_notice.md`; the hash route supports direct access,
   refresh, and browser history without requiring a GitHub Pages rewrite.
-- The landing footer opens the hosted Privacy Notice in a new browser tab. The venue form shows
+- Intermediate production footers expose only Privacy Policy. Terms of Use,
+  Refund & Cancellation Policy, Cookie Policy, and Cookie Banner are hidden and
+  their direct routes redirect to `/`. Explicit preview builds retain those
+  routes through one branded Markdown shell. Terms, refunds, and Cookie Banner
+  remain English review-only documents that do not save preferences or control
+  cookies. Cookie Policy reuses the self-contained cookie section from the
+  canonical approved Privacy Notice without duplicate legal copy. Approval of
+  a standalone Cookie Policy remains open.
+- Landing, form, success, Privacy, and legal-document pages use one reusable
+  viewport-aware scrolling shell. When content is short, the shared footer
+  rests at the bottom of the available viewport; longer or text-scaled content
+  expands into normal scrolling without a fixed overlay, artificial spacer
+  section, or clipping.
+- The landing and shared routed-page footers open the hosted Privacy Notice in
+  the current app tab. The venue form shows
   the approved English privacy acknowledgement immediately before submission,
   with an inline link that opens the same page in a new tab, preserving the
-  current form draft. This disclosure is informational: no
-  consent checkbox or submitted consent field is required for the current MVP.
+  current form draft. Its checkbox is presentation-local, optional, and
+  non-persistent. This disclosure remains informational: no submitted consent
+  field is required for the current MVP.
 - `web/CNAME` is the active repository declaration for `funapp.world`; the external GitHub Pages custom-domain setting remains authoritative.
 - `web/robots.txt` owns the active crawler policy.
 - Flutter production posts Venue enquiries to the same-origin, unauthenticated
@@ -71,6 +95,13 @@ Current implementation is evidence of repository state, not automatically a perm
   Environment for runtime bindings and Cloudflare authentication. GitHub Pages
   remains the web origin for every other path.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
+- The Here & Now and Founding Friend forms are responsive presentation-only
+  routes preserved behind the compile-time
+  `FUN_APP_ENABLE_UNFINISHED_PREVIEW=true` setting. The setting defaults to
+  false for both entrypoints. Intermediate production entry points open a
+  reusable localized Coming soon dialog, and protected routes redirect to `/`
+  before form widgets render. Preview form actions remain disabled and perform
+  no network, persistence, payment, or membership-status operation.
 
 ### Open
 
@@ -83,6 +114,8 @@ Current implementation is evidence of repository state, not automatically a perm
 - Public Fun App product and brand communication.
 - Responsive Flutter Web presentation.
 - Deliberate public-web, accessibility, and SEO behavior throughout implementation and release work.
+- Approved UI-only Here & Now waitlist and Founding Friend sign-up fields,
+  copy, validation, and route navigation.
 
 ### Provisional
 
@@ -91,10 +124,11 @@ Current implementation is evidence of repository state, not automatically a perm
 
 ### Open
 
-- The interested-person form fields and validation rules.
 - Any future submitted marketing-consent contract, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
+- Approved Terms of Use, Refund & Cancellation Policy, and Cookie Policy copy,
+  plus the production cookie-consent/preferences solution.
 
 ## 5. Repository shape
 
@@ -106,6 +140,9 @@ The repository is an active Flutter Web project:
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
 - `assets/legal/privacy_notice.md` is the canonical website representation of
   the currently approved English Privacy Notice.
+- `assets/legal/` also contains explicitly review-only Markdown documents for
+  unresolved legal routes; the Cookie Policy route reads its copy from the
+  canonical Privacy Notice instead of a second document.
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
 - `cloudflare/venue-interest-worker/` contains the isolated TypeScript
@@ -164,8 +201,9 @@ Do not introduce layers, folders, abstractions, or dependencies before active co
 The active presentation foundation centralizes established Fun App color,
 typography, sizing, and Material 3 theme values. The complete section topology,
 desktop typography, and broad desktop color rhythm follow Figma `Landing Page -
-V1`. Responsive adaptations are constraint-driven because Figma supplies no
-tablet or phone frames. Research statistics use four, two, or one column as
+V1`. Responsive adaptations are constraint-driven where Figma does not supply
+a targeted mobile frame; the current FAQ and Footer use their approved 390px
+mobile frames. Research statistics use four, two, or one column as
 available width decreases; desktop card minimum heights do not automatically
 apply to single-column phone cards. Major section, statement, and FAQ type roles
 scale down deliberately on narrower viewports while preserving the desktop
@@ -206,48 +244,64 @@ compositions remain in use; CTA constraints must remain overflow-safe across
 the 599px/600px boundary.
 
 The current landing-page order is Header, Hero, Problem Statement, Research
-Statistics, Different Way to Connect, Limited-time Founding Friend offer,
-Founding Member explanation, Founding Friends, Venue, Welcome Statement, FAQ,
-and Footer. The Header remains fixed outside the primary scrolling content.
-Membership presents static Free, Here & Now, and Lifetime pricing cards, but is
-temporarily hidden from the MVP composition; its implementation, localization,
-assets, and focused tests remain available for restoration. Those cards and the
-Founding Member descriptions are approved marketing presentation only;
-subscription, payment, cancellation, entitlement, badge, and other business
-behavior is not implemented. Pricing cards use three, two, or one column based
-on usable card width, and Founding Member benefit cards similarly reflow from
-the desktop intro-plus-three-card composition without forcing desktop heights
-onto narrow single-column layouts.
+Statistics, Different Way to Connect, Membership, Limited-time Founding Friend
+offer, Founding Friend explanation, Founding Friends, Venue, Welcome Statement,
+FAQ, and Footer. The Header remains fixed outside the primary scrolling
+content. Membership presents static Free, Here & Now, and Founding Friend
+pricing cards. Those cards and the Founding Friend descriptions are approved
+marketing presentation only; subscription, payment, cancellation, entitlement,
+badge, and other business behavior is not implemented. The pricing controls
+retain their approved appearance; production opens Coming soon while explicit
+preview builds restore their `/here-and-now` and `/founding-friend` routes.
+Pricing cards use three, two,
+or one column based on usable card width, and Founding Friend benefit cards
+similarly reflow from the desktop intro-plus-three-card composition without
+forcing desktop heights onto narrow single-column layouts.
 
 Header and footer section navigation scrolls within the single landing page
-while the header remains fixed above the scrolling content. Below a 600px
-outer viewport width, the fixed header uses a compact logo, Contact Us, and
-burger composition. The burger opens a full-screen, presentation-local menu
-with the same three active anchor destinations; selecting one closes the menu
+while the header remains fixed above the scrolling content. The header and
+footer expose the same four active anchor destinations. Below a 600px
+outer viewport width, the fixed header uses a compact logo, the localized
+"Join the queue" action, and burger composition. The CTA remains a single-line,
+content-sized control with a minimum 44px target and overflow-safe constraints.
+The burger
+opens a full-screen, presentation-local menu
+with the same four header anchor destinations; selecting one closes the menu
 before reusing the existing anchor navigation. At 600px and above, the
 established wide, intermediate, and narrow constraint-driven header variants
 remain in use; larger text can select the intermediate composition when the
 single-row header no longer fits. Internal navigation controls provide at least
 a 44px effective target and an explicit keyboard-focus outline; hover and focus
-treatments cover the complete padded control surface. The active MVP mapping is Our Belief to
-Hero, Founding Friends to Founding Friends, and For Venues to Venue. Membership
-navigation is temporarily hidden with its rendered section. Anchor positions
-derive from the rendered sections. Navigation duration scales with the current
-viewport-normalized distance and uses `easeInOutCubic`; a higher bounded duration gives long jumps
+treatments cover the complete padded control surface. The active header mapping
+is Our Belief to Hero, Membership to Membership, Founding Friends to Founding
+Friends, and For Venues to Venue. Anchor positions derive from the rendered
+sections. Navigation duration scales with the current viewport-normalized
+distance and uses `easeInOutCubic`; a higher bounded duration gives long jumps
 enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
-become immediate when reduced motion is requested. Contact Us in the header
-and mobile menu opens the same localized, presentation-only Coming soon dialog
-as Founding Friends. Waitlist, product, email, and other marketing CTA
-destinations remain open and intentionally unwired.
-The Founding Friends prospective-user CTA currently opens a localized,
-presentation-only Coming soon dialog. It collects no information and performs
-no business operation; the interested-person contract remains unresolved. The
-venue CTA opens a localized functional form in the reusable landing dialog. A
-fresh `VenueLeadFormBloc` owns each dialog session and submits through the
-established environment-selected venue repository/data-source graph.
+become immediate when reduced motion is requested. In intermediate production,
+the localized header/mobile-menu queue action, Limited Offer queue CTA, Free
+Membership CTA, Here & Now membership CTA, Lifetime Membership CTA, and
+Founding Friends prospective-user CTA open one localized Coming soon dialog
+without changing routes. Explicit preview builds restore the established
+`/here-and-now` and `/founding-friend` mappings. Those preserved routes collect
+no information because their submission/payment controls are disabled until
+integration. The venue CTA
+navigates to the dedicated `/venues` page. A fresh
+`VenueLeadFormBloc` owns each Venue route lifecycle and submits through the
+established environment-selected venue repository/data-source graph. Shared
+header and footer navigation returns to `/` with a render-derived landing
+section target rather than trying to scroll keys that are absent on `/venues`.
+The shared header and footer logos push a landing-page root entry with the
+requested rendered anchor. Routing uses `auto_route`, generated typed route
+classes, and `MaterialApp.router`; the landing-section target is a typed route
+argument. Router-managed in-app pushes preserve sequential history for repeated
+browser Back and Forward operations without custom browser-history
+manipulation. Direct hash routes initialize only the requested route rather
+than fabricating a prior landing-page history entry. Unknown routes redirect to
+the landing page.
 
 Below a 600px outer viewport width, Research statistics use a horizontal,
 page-snapping carousel with one primary card, a trailing adjacent-card peek,
@@ -255,8 +309,9 @@ previous/next controls, and four decorative page indicators. The carousel is
 clamped and non-looping pending explicit contrary design direction. At 600px
 and above, the established responsive Research grids remain in use.
 The Great Friendship Project attribution links to
-`https://friendship-project.co.uk/` in a new tab. Other source names in that
-line use bold text emphasis without link styling.
+`https://friendship-project.co.uk/` in a new tab and uses the established warm
+orange link treatment. Other source names in that line use bold text emphasis
+without link styling.
 The mobile Research scroll accent reveals the initial carousel viewport and
 navigation once as a single group rather than staggering offscreen cards;
 reduced motion renders that group immediately and makes programmatic page
@@ -266,41 +321,43 @@ localized or scaled text needs more room, every carousel page shares the
 tallest required height so text is not clipped or truncated to preserve the
 design minimum.
 
-Below a 600px outer viewport width, the three Founding Member benefits use the
+Below a 600px outer viewport width, the three Founding Friend benefits use the
 shared horizontal, page-snapping carousel with three decorative page indicators
-derived from the real content count. Figma node `2270:2640` currently shows four
-indicators despite containing only three cards; implementation follows the three
-cards pending design clarification. The carousel is clamped and non-looping. At
-600px and above, the established Founding Member cards and grids remain in use.
-Founding Member has no scroll-entry reveal, and reduced motion makes its
+derived from the real content count, matching the three indicators now present
+in Figma node `2270:2640`. The carousel is clamped and non-looping. At
+600px and above, the established Founding Friend cards and grids remain in use.
+Founding Friend has no scroll-entry reveal, and reduced motion makes its
 programmatic carousel page changes immediate while preserving direct swipe.
 
 Below a 600px outer viewport width, Problem, Membership, Limited Offer, Welcome,
 and FAQ opt into the approved mobile 16px page bounds and section-specific
 Figma rhythm and type roles. Membership remains a one-column, naturally sized
-pricing-card stack with its approved reveal unchanged. FAQ retains its existing
-independent expansion, semantics, focus, and motion behavior while using its
+pricing-card stack with its approved reveal unchanged. Its Founding Friend
+supporting line follows the distinct approved mobile copy. FAQ retains its
+existing independent expansion, semantics, focus, and motion behavior while using its
 mobile-specific spacing and type. Marketing copy remains shared across
 responsive layouts unless product or design explicitly changes it.
 
 Below a 600px outer viewport width, Hero uses a dedicated centered-overflow
 composition with one artwork instance clipped by the Hero card and centered
 copy beneath a reserved artwork region. Its height remains content-aware for
-localization, and Hero remains static. Connection uses centered copy, 16px
-horizontal bounds, 80px vertical section padding, and a near-square
-`BoxFit.cover` image crop. The repository Connection copy remains shared across
-responsive layouts pending content approval. At 600px and above, the
-established Hero and Connection compositions remain unchanged.
+localization, and Hero remains static. Connection uses leading-aligned copy,
+16px horizontal bounds, 80px vertical section padding, and a near-square
+`BoxFit.cover` image crop. The approved Connection copy remains shared across
+responsive layouts and preserves its two-paragraph structure. At 600px and
+above, Hero and Connection use their established wider compositions.
 
-Below a 600px outer viewport width, Footer uses a centered 16px/80px mobile
-composition: the established anchor navigation wraps naturally beneath the
-logo, a divider separates it from the static email presentation, and all
-existing anchor behavior remains unchanged. The approved Privacy Notice is
-available through a visible localized footer link. Other Figma legal-policy
-controls remain blocked until authoritative destinations and localized copy
-exist; inert legal-looking controls must not be rendered. At 600px and above,
-the established Footer composition remains unchanged apart from the approved
-Privacy Notice link.
+Below a 600px outer viewport width, Footer uses the approved centered 16px/80px
+mobile composition: the four anchor controls wrap beneath the logo and a divider
+separates them from the `mailto:info@funapp.world` contact link. At 1200px and
+above, logo/navigation and
+email/legal content form the two approved desktop rows around the full-width
+divider;
+intermediate widths stack those groups without fixed heights or horizontal
+overflow. Privacy Policy opens the authoritative hosted Privacy Notice and is
+the only legal control visible in intermediate production. Explicit preview
+builds also show Terms of Use, Refund & Cancellation Policy, Cookie Policy, and
+Cookie Banner for review; their presence establishes no consent behavior.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
@@ -337,12 +394,42 @@ capabilities as implemented.
 - Locale negotiation follows the browser or platform locale. The application does not force a locale.
 - The host document language follows Flutter's resolved application locale; the static web shell defaults to English before Flutter starts.
 - No language selector or persisted manual locale choice exists yet.
-- User-facing Flutter copy must come from generated localizations rather than hardcoded presentation strings. New source copy and its supported translations belong in the same implementation scope.
+- User-facing Flutter copy must come from generated localizations rather than hardcoded presentation strings. Approved new English source copy may use the established English fallback in other supported locales when translation completion is explicitly deferred and tracked.
 - Locale-specific product and marketing copy remains subject to product and translation review as content expands.
+- `Fun App`, `Here & Now`, `Founding Friend`, `Safe Guard`, and `Footprint` are
+  protected product names across locales. Membership, Venue, and Waitlist are
+  generic terms and use natural locale-specific equivalents. Country controls
+  localize their display labels from Unicode CLDR while preserving the existing
+  HubSpot-compatible stored values.
 
 ## 8. User input and future backend direction
 
 ### Established
+
+- The Here & Now UI requires first name, last name, email, and integer age;
+  gender and usage reason are optional. The Founding Friend UI adds required
+  country while keeping gender and usage reason optional. Both forms expose a
+  separate optional marketing-consent checkbox that starts unchecked and does
+  not block local validation.
+- Presentation validation rejects blank required names, structurally invalid
+  email, non-integer age input, and a missing Founding Friend country. It does
+  not invent an age threshold. This validation is usability only and does not
+  authorize production collection without matching backend validation.
+- Current live HubSpot contact properties are `firstname`, `lastname`,
+  `email`, `age`, `gender`, `country`, `usage_reason`, and
+  `marketing_consent`. Gender stores `Man`, `Woman`, `Non-binary`, or
+  `Prefer not to answer`. The Founding Friend country control uses the complete
+  live `country` property label/value set captured in the English localization
+  source rather than a shortened list.
+- Future integration references portal `149114580`, Here & Now form
+  `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
+  `39f027d9-e786-4768-b532-54ed44e1f718`. These documented identifiers do not
+  appear in Flutter submission code, and no browser-to-HubSpot path exists.
+- Production supplies no submit callback to either user form. A small
+  presentation draft and injected callback exist only for isolated UI tests and
+  previews. The approved Here & Now success copy is reachable only through an
+  explicitly injected confirmed-success state; no Founding Friend success copy
+  or payment state exists.
 
 - The prospective-venue lead contract is provider-neutral and lives in
   `domain`. It uses `dartz` `Either` for validation results and `Option` for
@@ -368,13 +455,11 @@ capabilities as implemented.
   digits only while domain validation still enforces positive integers.
   The conditional venue count expands and collapses with reduced-motion support,
   and its visible label is "Number of venues" in English.
-  The venue information group reuses the established beige surface and card
-  radius; text inputs use the same rounded radius. The dialog keeps its action
-  footer pinned below the independently scrolling form body. Scroll-position
-  fades soften the top edge after scrolling and the bottom edge while more
-  content remains beneath the pinned footer.
-- Generated Freezed and Injectable source is regenerated locally and in CI and
-  remains uncommitted.
+  The venue information group and text inputs retain their established styling
+  while the routed page shell is aligned separately. Detailed form-control
+  restyling remains deferred to the dedicated Venue form pass.
+- Generated Auto Route, Freezed, and Injectable source is regenerated locally
+  and in CI and remains uncommitted.
 - `VenueInterestRequest` is a data-layer first-party request model. It emits
   only `venueName`, `venueType`, `chainStatus`, `venueCount`,
   `venueCapacity`, `website`, `firstName`, `lastName`, `role`, `email`, and
@@ -396,16 +481,18 @@ capabilities as implemented.
   remain `ValueFailure` values rather than becoming operational failures.
 - Blank optional input represents absence. Non-blank optional and required
   input is preserved when constructing the established domain value objects.
-- A successful or failed submission preserves the complete form draft. The
-  venue dialog shows "Form Submitted", "Thank you for reaching out, we'll be
-  in touch shortly.", and "The Fun App team." with a Close action instead of
-  Send, without immediately closing. Operational failure keeps the form open
-  and editable for retry, with a concise retry-later message above Send.
+- A successful or failed submission preserves the complete form draft in the
+  application state. A confirmed successful submission replaces the routed
+  form with the responsive Figma success presentation while keeping `/venues`
+  as the route. The success state is neither persisted nor reconstructed from
+  URL data, so refresh and each later Venue route lifecycle start with a fresh
+  BLoC and empty form. Its underlined `info@funapp.world` treatment uses the
+  same approved `mailto:info@funapp.world` behavior as the shared footer.
+  Operational failure
+  keeps the form open and editable for retry, with a concise retry-later
+  message above Send.
   While submission is pending, Send is visibly disabled and an indeterminate
-  linear progress indicator appears immediately above it in the pinned footer.
-  The success content has vertical space from the pinned dialog chrome and
-  starts at the top of its own scroll position after submission.
-  Each later dialog opening starts with a fresh BLoC and empty draft.
+  linear progress indicator appears immediately above it.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
@@ -461,25 +548,32 @@ capabilities as implemented.
 
 ### Provisional
 
-- The landing page is expected to collect interested-user information in the future; likely examples include name and email.
-- The eventual backend may be the same Microsoft/Azure-backed backend used by the main Fun App product.
+- The user forms will eventually submit through a Fun App-owned Cloudflare
+  boundary following the established Venue integration pattern.
 - Flutter should remain decoupled from backend implementation through interfaces, repositories, data sources, DTO/boundary mapping, and configuration.
 
 ### Open
 
-- The prospective-user input model and its required/optional fields.
 - An approved consent/privacy field contract and any corresponding HubSpot
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.
 - The current venue privacy acknowledgement is approved informational copy,
-  not a consent field. It adds no checkbox, BLoC state, domain value, DTO
-  property, repository property, HubSpot field, or `legalConsentOptions` value.
+  not a consent field. Its optional checkbox state lives only in the routed
+  presentation and adds no BLoC state, domain value, DTO property, repository
+  property, HubSpot field, or `legalConsentOptions` value.
 - Approved venue-type choices and any future provider-side chain-value changes.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count
   cross-field invariant.
 - Prospective-user API endpoints and DTOs, and venue-lead retention/deletion
   requirements.
+- The minimum/maximum age eligibility policy and corresponding backend rule.
+- Whether approved display labels should differ from the confirmed HubSpot
+  gender values, and any explicit reversible mapping if they do.
+- Ongoing synchronization of the HubSpot country option source before
+  integration and release.
+- The Founding Friend payment provider, checkout ordering, payment status, and
+  success behavior.
 - Timing and authorized deployment of the Cloudflare Worker, its narrow route,
   and the later Flutter data-source switch to the first-party endpoint.
 
@@ -528,7 +622,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses the stable hash URL `https://funapp.world/#/privacy`; because the route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The intermediate public routes are `/`, `/venues`, and `/privacy`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Protected user-form and draft-legal hashes redirect to `/` in production and exist only in an explicitly configured preview artifact. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -557,8 +651,10 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web -t lib/main_dev.dart
-puro flutter build web -t lib/main_prod.dart --dart-define-from-file=.env
+puro flutter build web -t lib/main_prod.dart
+puro dart run tool/prepare_intermediate_release_artifact.dart
+puro flutter build web -t lib/main_dev.dart \
+  --dart-define=FUN_APP_ENABLE_UNFINISHED_PREVIEW=true
 ```
 
 The active widget test suite covers the landing surface and its durable responsive and interaction contracts. Verification should grow with implemented behavior rather than speculative tooling.
@@ -586,11 +682,19 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 - The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
   environment from Flutter stable, generates localizations and Dart sources,
   analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`
-  without browser-side HubSpot configuration.
+  without browser-side HubSpot configuration or the unfinished-preview define.
+  It then removes the three review-only legal Markdown files from `build/web`.
+  The production artifact therefore uses the default gated feature set and
+  does not publish those draft source documents as static assets.
+- Only pushes to `main` and manual dispatches run the Pages deployment. The
+  `dev` branch has no separate deployment workflow or Pages environment.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
-- The production artifact includes the canonical Privacy Notice Markdown asset,
-  and its `/#/privacy` route requires no Pages rewrite or `404.html` fallback.
+- Preview builds include the legal Markdown asset directory. Production
+  artifact preparation preserves the canonical Privacy Notice but removes the
+  three review-only Markdown files; protected hashes redirect without a Pages
+  rewrite or `404.html` fallback. Client-side routing remains neither backend
+  authorization nor a security boundary.
 - The archived Astro project is not built or deployed.
 
 ### Provisional
@@ -599,8 +703,7 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 
 ### Open
 
-- Routing and any required 404/deep-link strategy for future non-hash paths or
-  additional routes beyond the established Privacy Notice hash route.
+- Routing and any required 404/deep-link strategy for future non-hash paths.
 - Future Azure hosting or topology.
 - Release automation beyond current needs.
 

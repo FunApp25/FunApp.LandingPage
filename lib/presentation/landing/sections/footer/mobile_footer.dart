@@ -2,32 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_legal_items.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
-import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_privacy_notice_link.dart';
 
-/// Mobile footer composition from Figma node `2270:3307`.
+/// Mobile footer composition from Figma node `2270:3308`.
 final class MobileFooter extends StatelessWidget {
   /// Creates the mobile footer composition.
   const MobileFooter({
     required this.items,
+    required this.onLogoSelected,
     required this.email,
-    required this.privacyNoticeLabel,
-    required this.onPrivacyNoticeSelected,
+    required this.legalItems,
     super.key,
   });
 
   /// Footer navigation items in display order.
   final List<FooterNavigationItemData> items;
 
-  /// Static contact address.
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
+
+  /// Contact address opened through the user's configured mail client.
   final String email;
 
-  /// Localized label for the hosted Privacy Notice.
-  final String privacyNoticeLabel;
-
-  /// Opens the hosted Privacy Notice in a separate tab.
-  final VoidCallback onPrivacyNoticeSelected;
+  /// Legal controls in the Figma display order.
+  final List<FooterLegalItemData> legalItems;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -42,6 +42,7 @@ final class MobileFooter extends StatelessWidget {
       children: [
         FooterLogoAndNavigation(
           items: items,
+          onLogoSelected: onLogoSelected,
           navigationSpacing: 20,
           navigationRunSpacing: 20,
         ),
@@ -57,9 +58,9 @@ final class MobileFooter extends StatelessWidget {
         const SizedBox(height: 60),
         FooterEmail(email: email),
         const SizedBox(height: 32),
-        FooterPrivacyNoticeLink(
-          label: privacyNoticeLabel,
-          onSelected: onPrivacyNoticeSelected,
+        FooterLegalItems(
+          items: legalItems,
+          spacing: 20,
         ),
       ],
     ),

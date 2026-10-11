@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
 
 /// Optional two-choice presentation for the existing string-valued field.
 final class VenueChainStatusControl extends StatefulWidget {
@@ -11,6 +12,8 @@ final class VenueChainStatusControl extends StatefulWidget {
     required this.chainLabel,
     required this.selectedValue,
     required this.onSelected,
+    this.placeholder,
+    this.alignWithVenuePageDesign = false,
     super.key,
   });
 
@@ -29,6 +32,12 @@ final class VenueChainStatusControl extends StatefulWidget {
   /// Dispatches the stable existing field value, including empty on deselect.
   final ValueChanged<String> onSelected;
 
+  /// Localized unselected prompt for the routed-page presentation.
+  final String? placeholder;
+
+  /// Whether to use the approved routed-page dropdown treatment.
+  final bool alignWithVenuePageDesign;
+
   /// Provider-neutral value sent through the existing BLoC event.
   static const independentValue = 'Independent';
 
@@ -46,6 +55,48 @@ final class _VenueChainStatusControlState
 
   @override
   Widget build(BuildContext context) {
+    if (widget.alignWithVenuePageDesign) {
+      return _buildFigmaControl(context);
+    } else {
+      return _buildLegacyControl(context);
+    }
+  }
+
+  Widget _buildFigmaControl(BuildContext context) =>
+      BrandedFormDropdown<String>(
+        key: const Key('venueLeadChainStatusControl'),
+        fieldKey: const Key('venueLeadChainStatusMenu'),
+        caretKey: const Key('venueLeadChainStatusCaret'),
+        label: widget.label,
+        semanticLabel: widget.label,
+        placeholder: widget.placeholder ?? widget.label,
+        value: widget.selectedValue,
+        options: [
+          (
+            value: VenueChainStatusControl.independentValue,
+            label: widget.independentLabel,
+          ),
+          (
+            value: VenueChainStatusControl.chainValue,
+            label: widget.chainLabel,
+          ),
+        ],
+        optionKeys: const {
+          VenueChainStatusControl.independentValue: Key(
+            'venueChainIndependentOption',
+          ),
+          VenueChainStatusControl.chainValue: Key(
+            'venueChainPartOfChainOption',
+          ),
+        },
+        onChanged: (value) {
+          if (value != null) {
+            widget.onSelected(value == widget.selectedValue ? '' : value);
+          }
+        },
+      );
+
+  Widget _buildLegacyControl(BuildContext context) {
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return Column(

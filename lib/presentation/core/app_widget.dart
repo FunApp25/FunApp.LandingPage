@@ -1,21 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
-import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
+import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 /// Root widget for the Fun App landing-page application.
-final class FunAppLandingPageApp extends StatelessWidget {
+final class FunAppLandingPageApp extends StatefulWidget {
   /// Creates the root landing-page application widget.
-  const FunAppLandingPageApp({this.onPrivacyNoticeLaunch, super.key});
+  const FunAppLandingPageApp({
+    this.releaseConfiguration =
+        const ReleaseConfiguration.intermediateProduction(),
+    this.onPrivacyNoticeLaunch,
+    this.createVenueLeadFormBloc,
+    super.key,
+  });
+
+  /// Build-time release features available to routing and presentation.
+  final ReleaseConfiguration releaseConfiguration;
 
   /// Optional browser-launch override for presentation tests.
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
 
+  /// Optional Venue form BLoC factory override for presentation tests.
+  final VenueLeadFormBlocFactory? createVenueLeadFormBloc;
+
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  State<FunAppLandingPageApp> createState() => _FunAppLandingPageAppState();
+}
+
+final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
+  late final AppRouter _appRouter;
+
+  @override
+  void initState() {
+    super.initState();
+    _appRouter = AppRouter(
+      releaseConfiguration: widget.releaseConfiguration,
+    );
+    _appRouter.routeInfoProvider(
+      initialRouteInformation: RouteInformation(
+        uri: Uri.parse(
+          WidgetsBinding.instance.platformDispatcher.defaultRouteName,
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _appRouter.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp.router(
     debugShowCheckedModeBanner: false,
     onGenerateTitle: (context) {
       synchronizeDocumentLanguage(Localizations.localeOf(context));
@@ -25,13 +67,12 @@ final class FunAppLandingPageApp extends StatelessWidget {
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     localeListResolutionCallback: _resolveLocaleList,
-    home: LandingPage(onPrivacyNoticeLaunch: onPrivacyNoticeLaunch),
-    routes: {
-      PrivacyNoticePage.routeName: (_) => const PrivacyNoticePage(),
-    },
-    onGenerateRoute: (_) => MaterialPageRoute<void>(
-      settings: const RouteSettings(name: '/'),
-      builder: (_) => LandingPage(onPrivacyNoticeLaunch: onPrivacyNoticeLaunch),
+    routerConfig: _appRouter.config(includePrefixMatches: false),
+    builder: (context, child) => AppRouteDependencies(
+      releaseConfiguration: widget.releaseConfiguration,
+      onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
+      createVenueLeadFormBloc: widget.createVenueLeadFormBloc,
+      child: child ?? const SizedBox.shrink(),
     ),
   );
 }

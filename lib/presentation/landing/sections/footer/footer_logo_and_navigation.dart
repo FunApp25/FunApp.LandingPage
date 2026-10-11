@@ -10,13 +10,18 @@ final class FooterLogoAndNavigation extends StatelessWidget {
   /// Creates the footer logo and navigation composition.
   const FooterLogoAndNavigation({
     required this.items,
+    required this.onLogoSelected,
     this.navigationSpacing = 16,
     this.navigationRunSpacing = 8,
+    this.horizontal = false,
     super.key,
   });
 
   /// Footer navigation items in display order.
   final List<FooterNavigationItemData> items;
+
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
 
   /// Horizontal space between footer navigation controls.
   final double navigationSpacing;
@@ -24,33 +29,63 @@ final class FooterLogoAndNavigation extends StatelessWidget {
   /// Vertical space between wrapped footer navigation controls.
   final double navigationRunSpacing;
 
+  /// Whether the logo and navigation share the desktop top row.
+  final bool horizontal;
+
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      FunAppLogo(
-        width: AppSizes.footerWordmarkWidth,
-        height: AppSizes.footerWordmarkHeight,
-        variant: FunAppLogoVariant.landingV2,
-        semanticLabel: context.l10n.brandName,
-        excludeFromSemantics: false,
-        svgKey: const Key('footerLogoAsset'),
+  Widget build(BuildContext context) {
+    final logo = Semantics(
+      key: const Key('footerLogoLink'),
+      label: context.l10n.brandName,
+      link: true,
+      onTap: onLogoSelected,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onLogoSelected,
+        mouseCursor: SystemMouseCursors.click,
+        borderRadius: BorderRadius.circular(4),
+        child: FunAppLogo(
+          width: AppSizes.footerWordmarkWidth,
+          height: AppSizes.footerWordmarkHeight,
+          variant: FunAppLogoVariant.landingV2,
+          semanticLabel: context.l10n.brandName,
+          svgKey: const Key('footerLogoAsset'),
+        ),
       ),
-      const SizedBox(height: 32),
-      Wrap(
-        key: const Key('footerNavigationWrap'),
-        alignment: WrapAlignment.center,
-        spacing: navigationSpacing,
-        runSpacing: navigationRunSpacing,
+    );
+    final navigation = Wrap(
+      key: const Key('footerNavigationWrap'),
+      alignment: WrapAlignment.center,
+      spacing: navigationSpacing,
+      runSpacing: navigationRunSpacing,
+      children: [
+        for (var index = 0; index < items.length; index++)
+          LandingNavigationItem(
+            key: Key('footerNavigationItem$index'),
+            label: items[index].label,
+            onSelected: items[index].onSelected,
+          ),
+      ],
+    );
+
+    if (horizontal) {
+      return Row(
         children: [
-          for (var index = 0; index < items.length; index++)
-            LandingNavigationItem(
-              key: Key('footerNavigationItem$index'),
-              label: items[index].label,
-              onSelected: items[index].onSelected,
+          logo,
+          const SizedBox(width: 40),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: navigation,
             ),
+          ),
         ],
-      ),
-    ],
-  );
+      );
+    } else {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [logo, const SizedBox(height: 32), navigation],
+      );
+    }
+  }
 }

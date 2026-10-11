@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
@@ -103,6 +105,10 @@ void main() {
     expect(find.text('Last updated: 15 September 2026'), findsNWidgets(2));
     expect(find.byKey(const Key('privacyNoticeScrollView')), findsOneWidget);
     expect(
+      find.byKey(const Key('legalDocumentCard-privacy')),
+      findsOneWidget,
+    );
+    expect(
       tester
           .widget<Title>(
             find.descendant(
@@ -116,7 +122,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('privacy page exposes heading semantics without return control', (
+  testWidgets('privacy page exposes heading and shared logo navigation', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -133,7 +139,12 @@ void main() {
     expect(heading.label, 'Fun App Ltd - Privacy Policy');
     expect(heading.flagsCollection.isHeader, isTrue);
 
-    expect(find.byKey(const Key('privacyNoticeReturnLink')), findsNothing);
+    for (final key in const [Key('headerLogoLink'), Key('footerLogoLink')]) {
+      final logo = tester.getSemantics(find.byKey(key)).getSemanticsData();
+      expect(logo.label, 'Fun App');
+      expect(logo.flagsCollection.isLink, isTrue);
+      expect(logo.hasAction(SemanticsAction.tap), isTrue);
+    }
     expect(find.byIcon(Icons.arrow_back), findsNothing);
     semantics.dispose();
   });
@@ -352,6 +363,33 @@ void main() {
     await tester.pump();
 
     expect(tester.getTopLeft(heading).dy, lessThan(initialTop));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('long legal content scrolls without footer overlap', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 600));
+    await _pumpPrivacyPage(tester);
+
+    final content = find.byKey(const Key('legalDocumentCard-privacy'));
+    final footer = find.byType(LandingFooter);
+    final position = Scrollable.of(tester.element(content)).position;
+
+    expect(position.maxScrollExtent, greaterThan(0));
+    expect(
+      tester.getRect(content).bottom,
+      lessThanOrEqualTo(tester.getRect(footer).top),
+    );
+
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+
+    expect(tester.getRect(footer).bottom, 600);
+    expect(
+      tester.getRect(find.byKey(const Key('privacyNoticeScrollView'))).top,
+      tester.getRect(find.byType(LandingHeader)).bottom,
+    );
     expect(tester.takeException(), isNull);
   });
 

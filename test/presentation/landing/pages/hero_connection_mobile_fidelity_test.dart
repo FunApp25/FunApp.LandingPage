@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/hero/hero_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/section_eyebrow.dart';
@@ -18,6 +21,9 @@ void main() {
     final artworkRect = tester.getRect(
       find.byKey(const Key('heroPeopleImage')),
     );
+    final artworkFrameRect = tester.getRect(
+      find.byKey(const Key('heroArtworkFrame')),
+    );
     final contentRect = tester.getRect(
       find.byKey(const Key('heroContentBounds')),
     );
@@ -26,6 +32,9 @@ void main() {
     );
     final supporting = tester.widget<Text>(
       find.byKey(const Key('heroSupportingText')),
+    );
+    final artwork = tester.widget<Image>(
+      find.byKey(const Key('heroPeopleImage')),
     );
     final cardClip = tester.widget<ClipRRect>(
       find.byKey(const Key('heroCard')),
@@ -41,13 +50,18 @@ void main() {
       cardClip.borderRadius,
       const BorderRadius.all(Radius.circular(AppSizes.cardRadius)),
     );
-    expect(artworkRect.size, const Size(432, 439));
-    expect(artworkRect.top - cardRect.top, closeTo(-115, 0.01));
+    expect(artworkFrameRect.size, const Size(432, 439));
+    expect(artworkFrameRect.top - cardRect.top, closeTo(-115, 0.01));
+    expect(
+      artworkRect.size,
+      const Size(432, 439) * 1.1586254835128784,
+    );
+    expect(artworkRect.bottom, closeTo(artworkFrameRect.bottom, 0.01));
     expect(artworkRect.center.dx, closeTo(cardRect.center.dx, 0.01));
     expect(contentRect.left - cardRect.left, 16);
     expect(cardRect.right - contentRect.right, 16);
     expect(contentRect.width, 326);
-    expect(contentRect.top - artworkRect.bottom, closeTo(48, 0.01));
+    expect(contentRect.top - artworkFrameRect.bottom, closeTo(48, 0.01));
     expect(cardRect.bottom - contentRect.bottom, 48);
     expect(headline.textAlign, TextAlign.center);
     expect(headline.textSpan?.style?.fontSize, 36);
@@ -56,8 +70,23 @@ void main() {
     expect(supporting.style?.fontSize, 16);
     expect(supporting.style?.height, closeTo(24 / 16, 0.0001));
     expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
+    expect((artwork.image as AssetImage).assetName, AppAssets.heroPeopleMobile);
+    expect(File(AppAssets.heroPeopleMobile).lengthSync(), greaterThan(0));
     expect(find.byKey(const Key('landingHeroWaitlistCta')), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('desktop Hero retains its established source artwork', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(1440, 900));
+    await pumpLandingSection(tester, section: const HeroSection());
+
+    final artwork = tester.widget<Image>(
+      find.byKey(const Key('heroPeopleImage')),
+    );
+    expect((artwork.image as AssetImage).assetName, AppAssets.heroPeople);
+    expect(File(AppAssets.heroPeople).lengthSync(), greaterThan(0));
   });
 
   testWidgets('matches the 390px mobile Connection composition', (
@@ -87,6 +116,9 @@ void main() {
     final body = tester.widget<Text>(
       find.byKey(const Key('connectionBodyText')),
     );
+    final closing = tester.widget<Text>(
+      find.byKey(const Key('connectionClosingText')),
+    );
     final eyebrow = tester.widget<SectionEyebrow>(
       find.byType(SectionEyebrow),
     );
@@ -101,13 +133,19 @@ void main() {
     expect(sectionRect.right - contentRect.right, 16);
     expect(contentRect.top - sectionRect.top, 80);
     expect(contentRect.width, 358);
-    expect(eyebrow.alignment, MainAxisAlignment.center);
-    expect(heading.textAlign, TextAlign.center);
+    expect(eyebrow.alignment, MainAxisAlignment.start);
+    expect(heading.textAlign, TextAlign.start);
     expect(heading.style?.fontSize, 32);
     expect(heading.style?.height, closeTo(42 / 32, 0.0001));
-    expect(body.textAlign, TextAlign.center);
+    expect(body.textAlign, TextAlign.start);
     expect(body.style?.fontSize, 18);
     expect(body.style?.height, closeTo(28 / 18, 0.0001));
+    expect(closing.textAlign, TextAlign.start);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('connectionClosingText'))).dy -
+          tester.getBottomLeft(find.byKey(const Key('connectionBodyText'))).dy,
+      12,
+    );
     expect(imageRect.top - contentRect.bottom, 40);
     expect(imageRect.size, const Size(358, 364));
     expect(sectionRect.bottom - imageRect.bottom, 80);
@@ -155,7 +193,7 @@ void main() {
       final connectionImage = tester.getRect(
         find.byKey(const Key('connectionImageFrame')),
       );
-      expect(heroCard.top - heroSection.top, isMobile ? 0 : 20);
+      expect(heroCard.top - heroSection.top, 0);
       expect(
         connectionImage.size.aspectRatio,
         closeTo(isMobile ? 358 / 364 : 1360 / 614, 0.001),

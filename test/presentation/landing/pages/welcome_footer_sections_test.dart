@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
@@ -34,13 +35,14 @@ void main() {
     );
     for (final label in [
       'OUR BELIEF',
+      'MEMBERSHIP',
       'FOUNDING FRIENDS',
       'FOR VENUES',
     ]) {
       expect(find.text(label), findsNWidgets(2));
     }
     expect(find.text(LandingFooter.contactEmail), findsOneWidget);
-    expect(find.text('Privacy Notice'), findsOneWidget);
+    expect(find.text('Privacy Policy'), findsOneWidget);
   });
 
   for (final example in const [
@@ -132,6 +134,74 @@ void main() {
     expect(envelopeSvg, isNot(contains('figma.com')));
   });
 
+  testWidgets('footer email launches the approved mailto URI from keyboard', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final launched = <Uri>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FooterEmail(
+            email: LandingFooter.contactEmail,
+            onOpen: launched.add,
+          ),
+        ),
+      ),
+    );
+
+    final link = find.byKey(const Key('footerEmailSemantics'));
+    final data = tester.getSemantics(link).getSemanticsData();
+    expect(data.label, LandingFooter.contactEmail);
+    expect(data.flagsCollection.isLink, isTrue);
+    expect(data.hasAction(SemanticsAction.tap), isTrue);
+
+    Focus.of(
+      tester.element(find.byKey(const Key('footerEmailText'))),
+    ).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+
+    expect(launched, [Uri.parse('mailto:info@funapp.world')]);
+    expect(
+      FooterEmail.mailtoUriFor(LandingFooter.contactEmail).toString(),
+      'mailto:info@funapp.world',
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('header and footer logos return to the landing top by keyboard', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await pumpLandingApp(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('footerLogoLink')));
+    await tester.pumpAndSettle();
+    Focus.of(
+      tester.element(find.byKey(const Key('footerLogoAsset'))),
+    ).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    final headerBottom = tester
+        .getRect(find.byKey(const Key('landingHeaderBoundary')))
+        .bottom;
+    expect(
+      tester.getRect(find.byKey(const Key('heroCard'))).top,
+      closeTo(headerBottom, 0.01),
+    );
+    for (final key in const [Key('headerLogoLink'), Key('footerLogoLink')]) {
+      final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
+      expect(data.label, 'Fun App');
+      expect(data.flagsCollection.isLink, isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
+    }
+    semantics.dispose();
+  });
+
   testWidgets('adapts statement and footer wrapping by constraints', (
     tester,
   ) async {
@@ -158,11 +228,15 @@ void main() {
         lessThanOrEqualTo(example.size.width),
       );
       final itemOffsets = [
-        for (var index = 0; index < 3; index++)
+        for (var index = 0; index < 4; index++)
           tester.getTopLeft(find.byKey(Key('footerNavigationItem$index'))).dy,
       ];
-      expect(itemOffsets, hasLength(3));
-      expect(tester.takeException(), isNull);
+      expect(itemOffsets, hasLength(4));
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'Footer must fit at ${example.size}.',
+      );
     }
   });
 
@@ -273,8 +347,42 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('aligns the 1440px desktop footer rows to Figma', (tester) async {
+    setTestSurface(tester, const Size(1440, 900));
+    await pumpLandingApp(tester);
+
+    final footerRect = tester.getRect(find.byType(LandingFooter));
+    final contentRect = tester.getRect(
+      find.byKey(const Key('footerDesktopContent')),
+    );
+    final logoRect = tester.getRect(find.byKey(const Key('footerLogoAsset')));
+    final navigationRect = tester.getRect(
+      find.byKey(const Key('footerNavigationWrap')),
+    );
+    final dividerRect = tester.getRect(
+      find.byKey(const Key('footerDesktopDivider')),
+    );
+    final emailRect = tester.getRect(
+      find.byKey(const Key('footerEmailSemantics')),
+    );
+    final legalRect = tester.getRect(
+      find.byKey(const Key('footerLegalItems')),
+    );
+
+    expect(footerRect.height, greaterThanOrEqualTo(392));
+    expect(contentRect.left - footerRect.left, 40);
+    expect(contentRect.right - footerRect.right, -40);
+    expect(contentRect.top - footerRect.top, 88);
+    expect(logoRect.left, contentRect.left);
+    expect(dividerRect.width, 1360);
+    expect(dividerRect.top - navigationRect.bottom, 72);
+    expect(legalRect.top - dividerRect.bottom, 71);
+    expect(legalRect.center.dy, closeTo(emailRect.center.dy, 0.01));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
-    'shows Privacy Notice while unresolved legal controls stay absent',
+    'shows five functional legal controls in the approved order',
     (
       tester,
     ) async {
@@ -282,7 +390,8 @@ void main() {
       await pumpLandingApp(tester);
 
       final footer = find.byType(LandingFooter);
-      for (final label in [
+      for (final label in const [
+        'Privacy Policy',
         'Terms of Use',
         'Refund & Cancellation Policy',
         'Cookie Policy',
@@ -290,18 +399,25 @@ void main() {
       ]) {
         expect(
           find.descendant(of: footer, matching: find.text(label)),
-          findsNothing,
+          findsOneWidget,
         );
       }
-      expect(
-        find.descendant(of: footer, matching: find.text('Privacy Notice')),
-        findsOneWidget,
-      );
+      for (final key in const [
+        Key('footerPrivacyNoticeLink'),
+        Key('footerTermsLink'),
+        Key('footerRefundsLink'),
+        Key('footerCookiePolicyLink'),
+        Key('footerCookieBannerLink'),
+      ]) {
+        final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
+        expect(data.flagsCollection.isLink, isTrue);
+        expect(data.hasAction(SemanticsAction.tap), isTrue);
+      }
     },
   );
 
   testWidgets(
-    'footer Privacy Notice requests a new tab without app navigation',
+    'footer Privacy Notice navigates in the current app tab',
     (
       tester,
     ) async {
@@ -318,10 +434,8 @@ void main() {
       interactiveLink.onTap!();
       await tester.pumpAndSettle();
 
-      expect(launched, hasLength(1));
-      expect(launched.single.fragment, '/privacy');
-      expect(launched.single.path, '/');
-      expect(find.byType(PrivacyNoticePage), findsNothing);
+      expect(launched, isEmpty);
+      expect(find.byType(PrivacyNoticePage), findsOneWidget);
       expect(find.byType(LandingFooter), findsOneWidget);
       expect(tester.takeException(), isNull);
       semantics.dispose();
@@ -343,7 +457,7 @@ void main() {
 
         expect(find.byType(MobileFooter), findsOneWidget);
         expect(find.text(LandingFooter.contactEmail), findsOneWidget);
-        for (var index = 0; index < 3; index++) {
+        for (var index = 0; index < 4; index++) {
           expect(
             find.byKey(Key('footerNavigationItem$index')),
             findsOneWidget,
@@ -354,7 +468,7 @@ void main() {
     }
   });
 
-  testWidgets('exposes navigation controls and keeps email static', (
+  testWidgets('exposes navigation controls and actionable logo and email', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -379,23 +493,25 @@ void main() {
       isTrue,
     );
     final logo = tester
-        .getSemantics(find.byKey(const Key('footerLogoAsset')))
+        .getSemantics(find.byKey(const Key('footerLogoLink')))
         .getSemanticsData();
     expect(logo.label, 'Fun App');
-    expect(logo.flagsCollection.isImage, isTrue);
+    expect(logo.flagsCollection.isLink, isTrue);
+    expect(logo.hasAction(SemanticsAction.tap), isTrue);
     final email = tester
         .getSemantics(find.byKey(const Key('footerEmailSemantics')))
         .getSemanticsData();
     expect(email.label, LandingFooter.contactEmail);
-    expect(email.flagsCollection.isLink, isFalse);
+    expect(email.flagsCollection.isLink, isTrue);
     expect(email.flagsCollection.isButton, isFalse);
+    expect(email.hasAction(SemanticsAction.tap), isTrue);
     expect(
       tester
           .widget<SvgPicture>(find.byKey(const Key('footerEnvelope')))
           .excludeFromSemantics,
       isTrue,
     );
-    for (var index = 0; index < 3; index++) {
+    for (var index = 0; index < 4; index++) {
       final navigation = tester
           .getSemantics(find.byKey(Key('footerNavigationItem$index')))
           .getSemanticsData();
@@ -405,7 +521,7 @@ void main() {
     final privacyLink = tester
         .getSemantics(find.byKey(const Key('footerPrivacyNoticeLink')))
         .getSemanticsData();
-    expect(privacyLink.label, 'Privacy Notice');
+    expect(privacyLink.label, 'Privacy Policy');
     expect(privacyLink.flagsCollection.isLink, isTrue);
     expect(privacyLink.flagsCollection.isButton, isFalse);
     expect(privacyLink.hasAction(SemanticsAction.tap), isTrue);

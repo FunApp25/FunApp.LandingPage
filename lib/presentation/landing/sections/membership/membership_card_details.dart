@@ -66,7 +66,7 @@ final class MembershipCardDetails extends StatelessWidget {
             const SizedBox(width: 10),
             Flexible(
               child: Text(
-                tierName,
+                tierName.toUpperCase(),
                 key: Key('membershipTierName-$semanticId'),
                 textAlign: TextAlign.center,
                 style: LandingTextStyles.membershipCardEyebrow.copyWith(

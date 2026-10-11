@@ -91,6 +91,8 @@ final class LandingCtaButton extends StatelessWidget {
       final labelWidget = Text(
         label,
         textAlign: TextAlign.center,
+        maxLines: 1,
+        softWrap: false,
         style: switch (size) {
           LandingCtaSize.compact => LandingTextStyles.headerCta,
           LandingCtaSize.prominent => LandingTextStyles.heroCta,
@@ -127,19 +129,22 @@ final class LandingCtaButton extends StatelessWidget {
         ),
       };
 
-      final visual = DecoratedBox(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: const BorderRadius.all(
-            Radius.circular(AppSizes.pillRadius),
+      final visual = ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 44),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: const BorderRadius.all(
+              Radius.circular(AppSizes.pillRadius),
+            ),
           ),
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            vertical: isProminent ? 12 : 8,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: isProminent ? 12 : 8,
+            ),
+            child: Center(widthFactor: 1, child: content),
           ),
-          child: content,
         ),
       );
 

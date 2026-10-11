@@ -1,26 +1,39 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_legal_items.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
-import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_privacy_notice_link.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
 
-/// Landing-page footer from Figma node `2190:1664`.
+/// Landing-page footer from Figma node `2262:1347`.
 final class LandingFooter extends StatelessWidget {
   /// Creates the landing footer.
   const LandingFooter({
+    required this.onLogoSelected,
     required this.onOurBeliefSelected,
+    required this.onMembershipSelected,
     required this.onFoundingFriendsSelected,
     required this.onVenuesSelected,
     required this.onPrivacyNoticeSelected,
     super.key,
   });
 
+  /// Returns to the top of the landing page.
+  final VoidCallback onLogoSelected;
+
   /// Scrolls to the hero section.
   final VoidCallback onOurBeliefSelected;
+
+  /// Scrolls to the Membership section.
+  final VoidCallback onMembershipSelected;
 
   /// Scrolls to the Founding Friends section.
   final VoidCallback onFoundingFriendsSelected;
@@ -28,10 +41,10 @@ final class LandingFooter extends StatelessWidget {
   /// Scrolls to the venue section.
   final VoidCallback onVenuesSelected;
 
-  /// Opens the hosted Privacy Notice in a separate tab.
+  /// Opens the Privacy Notice in the current app tab.
   final VoidCallback onPrivacyNoticeSelected;
 
-  /// Visible contact address whose interaction remains intentionally deferred.
+  /// Visible contact address opened through the user's configured mail client.
   static const contactEmail = 'info@funapp.world';
 
   @override
@@ -42,6 +55,10 @@ final class LandingFooter extends StatelessWidget {
         onSelected: onOurBeliefSelected,
       ),
       (
+        label: context.l10n.landingHeaderMembership,
+        onSelected: onMembershipSelected,
+      ),
+      (
         label: context.l10n.landingHeaderFoundingFriends,
         onSelected: onFoundingFriendsSelected,
       ),
@@ -50,62 +67,150 @@ final class LandingFooter extends StatelessWidget {
         onSelected: onVenuesSelected,
       ),
     ];
+    void openLegalRoute(PageRouteInfo route) {
+      if (context.router.current.name != route.routeName) {
+        unawaited(context.router.push(route));
+      }
+    }
+
+    final previewEnabled =
+        AppRouteDependencies.maybeOf(
+          context,
+        )?.releaseConfiguration.unfinishedPreviewEnabled ??
+        true;
+    final legalItems = <FooterLegalItemData>[
+      (
+        semanticKey: const Key('footerPrivacyNoticeLink'),
+        label: context.l10n.landingFooterPrivacyPolicy,
+        onSelected: onPrivacyNoticeSelected,
+      ),
+      if (previewEnabled) ...[
+        (
+          semanticKey: const Key('footerTermsLink'),
+          label: context.l10n.landingFooterTermsOfUse,
+          onSelected: () => openLegalRoute(const TermsRoute()),
+        ),
+        (
+          semanticKey: const Key('footerRefundsLink'),
+          label: context.l10n.landingFooterRefundCancellationPolicy,
+          onSelected: () => openLegalRoute(const RefundsRoute()),
+        ),
+        (
+          semanticKey: const Key('footerCookiePolicyLink'),
+          label: context.l10n.landingFooterCookiePolicy,
+          onSelected: () => openLegalRoute(const CookiePolicyRoute()),
+        ),
+        (
+          semanticKey: const Key('footerCookieBannerLink'),
+          label: context.l10n.landingFooterCookieBanner,
+          onSelected: () => openLegalRoute(const CookieBannerRoute()),
+        ),
+      ],
+    ];
     final isMobile = MediaQuery.sizeOf(context).width < 600;
 
-    if (isMobile) {
-      return ColoredBox(
-        color: AppColors.beigeAccent,
-        child: MobileFooter(
-          items: navigationItems,
-          email: contactEmail,
-          privacyNoticeLabel: context.l10n.privacyNoticeNavigationLabel,
-          onPrivacyNoticeSelected: onPrivacyNoticeSelected,
-        ),
-      );
-    } else {
-      return ColoredBox(
-        color: AppColors.beigeAccent,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final availableWidth = constraints.hasBoundedWidth
-                ? constraints.maxWidth
-                : AppSizes.desktopPageWidth;
-            final pageGutter = AppSizes.pageGutterFor(availableWidth);
-            final verticalPadding = switch (availableWidth) {
-              >= 1200 => 88.0,
-              >= 600 => 64.0,
-              _ => 48.0,
-            };
+    return ColoredBox(
+      color: AppColors.beigeAccent,
+      child: isMobile
+          ? MobileFooter(
+              items: navigationItems,
+              onLogoSelected: onLogoSelected,
+              email: contactEmail,
+              legalItems: legalItems,
+            )
+          : _DesktopFooter(
+              navigationItems: navigationItems,
+              onLogoSelected: onLogoSelected,
+              legalItems: legalItems,
+            ),
+    );
+  }
+}
 
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: pageGutter,
-                vertical: verticalPadding,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppSizes.maxContentWidth,
-                  ),
-                  child: Column(
+final class _DesktopFooter extends StatelessWidget {
+  const _DesktopFooter({
+    required this.navigationItems,
+    required this.onLogoSelected,
+    required this.legalItems,
+  });
+
+  final List<FooterNavigationItemData> navigationItems;
+  final VoidCallback onLogoSelected;
+  final List<FooterLegalItemData> legalItems;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final availableWidth = constraints.hasBoundedWidth
+          ? constraints.maxWidth
+          : AppSizes.desktopPageWidth;
+      final usesWideRows =
+          availableWidth >= 1200 &&
+          Localizations.localeOf(context).languageCode == 'en' &&
+          MediaQuery.textScalerOf(context).scale(12) <= 12;
+      final pageGutter = AppSizes.pageGutterFor(availableWidth);
+      final verticalPadding = availableWidth >= 1200 ? 88.0 : 64.0;
+
+      return Padding(
+        key: const Key('footerDesktopLayout'),
+        padding: EdgeInsets.symmetric(
+          horizontal: pageGutter,
+          vertical: verticalPadding,
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            key: const Key('footerDesktopContent'),
+            constraints: const BoxConstraints(
+              maxWidth: AppSizes.maxContentWidth,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FooterLogoAndNavigation(
+                  items: navigationItems,
+                  onLogoSelected: onLogoSelected,
+                  horizontal: usesWideRows,
+                ),
+                const SizedBox(height: 72),
+                const Divider(
+                  key: Key('footerDesktopDivider'),
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0x331D1220),
+                ),
+                const SizedBox(height: 71),
+                if (usesWideRows)
+                  Row(
+                    children: [
+                      const FooterEmail(email: LandingFooter.contactEmail),
+                      const SizedBox(width: 40),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: FooterLegalItems(
+                            items: legalItems,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      FooterLogoAndNavigation(items: navigationItems),
-                      SizedBox(height: availableWidth < 600 ? 48 : 80),
-                      const FooterEmail(email: contactEmail),
-                      const SizedBox(height: 24),
-                      FooterPrivacyNoticeLink(
-                        label: context.l10n.privacyNoticeNavigationLabel,
-                        onSelected: onPrivacyNoticeSelected,
+                      const FooterEmail(email: LandingFooter.contactEmail),
+                      const SizedBox(height: 32),
+                      FooterLegalItems(
+                        items: legalItems,
+                        spacing: 20,
                       ),
                     ],
                   ),
-                ),
-              ),
-            );
-          },
+              ],
+            ),
+          ),
         ),
       );
-    }
-  }
+    },
+  );
 }

@@ -11,10 +11,22 @@ final class ConnectionBody extends StatelessWidget {
   final TextAlign textAlign;
 
   @override
-  Widget build(BuildContext context) => Text(
-    context.l10n.landingConnectionBody,
-    key: const Key('connectionBodyText'),
-    textAlign: textAlign,
-    style: LandingTextStyles.sectionBody,
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        context.l10n.landingConnectionBody,
+        key: const Key('connectionBodyText'),
+        textAlign: textAlign,
+        style: LandingTextStyles.sectionBody,
+      ),
+      const SizedBox(height: 12),
+      Text(
+        context.l10n.landingConnectionClosing,
+        key: const Key('connectionClosingText'),
+        textAlign: textAlign,
+        style: LandingTextStyles.sectionBody,
+      ),
+    ],
   );
 }

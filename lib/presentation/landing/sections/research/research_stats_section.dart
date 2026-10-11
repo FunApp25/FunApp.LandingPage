@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/research/research_attribution.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_card_grid.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_heading.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/research/research_mobile_carousel.dart';
@@ -53,6 +54,11 @@ final class ResearchStatsSection extends StatelessWidget {
                 height: 40,
               ),
               ResearchMobileCarousel(cards: cards),
+              const SizedBox(height: 40),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: ResearchAttribution(),
+              ),
             ],
           ),
         ),
@@ -94,6 +100,8 @@ final class ResearchStatsSection extends StatelessWidget {
                         },
                       ),
                       ResearchCardGrid(cards: cards),
+                      const SizedBox(height: 16),
+                      const ResearchAttribution(),
                     ],
                   ),
                 ),
