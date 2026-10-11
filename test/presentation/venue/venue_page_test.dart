@@ -7,6 +7,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
@@ -257,16 +258,49 @@ void main() {
     final repository = _ControlledVenueLeadRepository();
     setTestSurface(tester, const Size(390, 1000));
     await _pumpDirectVenuePage(tester, repository: repository);
+    final bloc = BlocProvider.of<VenueLeadFormBloc>(
+      tester.element(find.byKey(const Key('venueLeadChainStatusMenu'))),
+    );
 
     await tester.ensureVisible(
       find.byKey(const Key('venueLeadChainStatusMenu')),
     );
     await tester.tap(find.byKey(const Key('venueLeadChainStatusMenu')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('venueChainPartOfChainOption')));
+    await tester.tap(
+      find.byKey(const Key('venueChainPartOfChainOption')).last,
+    );
     await tester.pumpAndSettle();
+    expect(
+      bloc.state.lead.chainStatus.toNullable()?.getOrCrash(),
+      'Part of chain',
+    );
     expect(find.byKey(const Key('venueLeadVenueCountField')), findsOneWidget);
     expect(find.text('If chain, number of venues'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('venueLeadChainStatusMenu')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('venueChainPartOfChainOption')).last,
+    );
+    await tester.pumpAndSettle();
+    expect(bloc.state.lead.chainStatus.isNone(), isTrue);
+    expect(find.byKey(const Key('venueLeadVenueCountField')), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('venueLeadChainStatusMenu')),
+        matching: find.text('Independent or Part of Chain'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('venueLeadChainStatusMenu')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('venueChainPartOfChainOption')).last,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('venueLeadVenueCountField')), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('venueLeadVenueCountField')),
       '12',
