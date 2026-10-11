@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
+import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
@@ -511,6 +512,8 @@ void main() {
 Future<void> _pumpApp(
   WidgetTester tester,
   Locale locale, {
+  ReleaseConfiguration releaseConfiguration =
+      const ReleaseConfiguration.preview(),
   VenueLeadFormBlocFactory? createVenueLeadFormBloc,
 }) async {
   tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
@@ -518,6 +521,7 @@ Future<void> _pumpApp(
 
   await tester.pumpWidget(
     FunAppLandingPageApp(
+      releaseConfiguration: releaseConfiguration,
       createVenueLeadFormBloc: createVenueLeadFormBloc,
     ),
   );

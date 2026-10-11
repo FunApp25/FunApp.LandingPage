@@ -20,6 +20,8 @@ import 'package:fun_app_landing_page/presentation/landing/sections/research/rese
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/utils/open_user_sign_up_experience.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
 @RoutePage()
@@ -150,11 +152,11 @@ final class _LandingPageState extends State<LandingPage> {
   }
 
   void _openHereAndNowPage() {
-    unawaited(context.router.push(HereAndNowRoute()));
+    openUserSignUpExperience(context, UserSignUpExperience.hereAndNow);
   }
 
   void _openFoundingFriendPage() {
-    unawaited(context.router.push(FoundingFriendRoute()));
+    openUserSignUpExperience(context, UserSignUpExperience.foundingFriend);
   }
 
   GlobalKey _sectionKeyFor(LandingSectionTarget section) => switch (section) {

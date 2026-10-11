@@ -12,6 +12,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/landin
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/utils/open_user_sign_up_experience.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
 
@@ -87,8 +88,10 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
                 context,
                 LandingSectionTarget.venues,
               ),
-              onContactSelected: () =>
-                  unawaited(context.router.push(HereAndNowRoute())),
+              onContactSelected: () => openUserSignUpExperience(
+                context,
+                UserSignUpExperience.hereAndNow,
+              ),
             ),
             Expanded(
               child: ViewportFooterScrollView(

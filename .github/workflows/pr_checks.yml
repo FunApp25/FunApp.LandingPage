@@ -46,7 +46,7 @@ jobs:
           puro --env="$PURO_ENV_NAME" dart format
           --output=none
           --set-exit-if-changed
-          lib test
+          lib test tool
 
       - name: Generate localizations
         run: puro --env="$PURO_ENV_NAME" flutter gen-l10n
@@ -93,3 +93,8 @@ jobs:
         run: >-
           puro --env="$PURO_ENV_NAME" flutter build web
           -t lib/main_prod.dart
+
+      - name: Prepare production artifact
+        run: >-
+          puro --env="$PURO_ENV_NAME" dart run
+          tool/prepare_intermediate_release_artifact.dart

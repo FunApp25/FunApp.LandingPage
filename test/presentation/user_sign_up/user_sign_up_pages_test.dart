@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
@@ -49,7 +50,11 @@ void main() {
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
-    await tester.pumpWidget(const FunAppLandingPageApp());
+    await tester.pumpWidget(
+      const FunAppLandingPageApp(
+        releaseConfiguration: ReleaseConfiguration.preview(),
+      ),
+    );
     await tester.pump();
 
     final queueCta = find.byKey(const Key('foundingOfferCta'));
@@ -111,7 +116,11 @@ void main() {
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
-    await tester.pumpWidget(const FunAppLandingPageApp());
+    await tester.pumpWidget(
+      const FunAppLandingPageApp(
+        releaseConfiguration: ReleaseConfiguration.preview(),
+      ),
+    );
     await tester.pump();
     unawaited(
       tester.element(find.byType(LandingPage)).router.push(HereAndNowRoute()),
@@ -133,7 +142,11 @@ void main() {
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
-    await tester.pumpWidget(const FunAppLandingPageApp());
+    await tester.pumpWidget(
+      const FunAppLandingPageApp(
+        releaseConfiguration: ReleaseConfiguration.preview(),
+      ),
+    );
     await tester.pump();
     unawaited(
       tester

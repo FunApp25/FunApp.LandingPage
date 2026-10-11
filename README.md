@@ -19,12 +19,13 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   fixed above the scrolling page, repeated header/footer navigation moves to
   the corresponding page sections, and the independently expandable FAQ
   supports its complete item surface. The localized header "Join the queue"
-  CTA, Free Membership,
-  Limited Offer queue CTA, and Here & Now membership CTA navigate to
-  `/#/here-and-now`; the Founding Friend CTA
-  navigates to `/#/founding-friend`. Both destinations use responsive branded
-  UI-only forms with local validation and optional, unchecked marketing
-  consent. Their production actions are disabled until the approved
+  CTA, Free Membership, Limited Offer queue CTA, Here & Now membership CTA,
+  Lifetime Membership CTA, and Founding Friend CTA retain their approved labels
+  and styling. In the intermediate public release they open one localized
+  Coming soon dialog and do not navigate. Explicit preview builds expose
+  `/#/here-and-now` and `/#/founding-friend`; both destinations use responsive
+  branded UI-only forms with local validation and optional, unchecked marketing
+  consent. Their form actions remain disabled until the approved
   Cloudflare-backed HubSpot workflow exists, so no personal data is discarded
   or falsely reported as submitted. The Here & Now confirmation is available
   only through an injected test/development state; Founding Friend has no
@@ -56,20 +57,19 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   form's inline Privacy Notice link remains a new-tab link so a draft is
   preserved.
   Its approved English legal copy lives in
-  `assets/legal/privacy_notice.md`. Every footer legal control opens the shared
-  branded Markdown page shell. Terms, refunds/cancellations, and Cookie Banner
-  use explicit English review-only documents with no invented legal or consent
+  `assets/legal/privacy_notice.md`. Intermediate production footers show only
+  Privacy Policy. Explicit preview builds retain Terms, refunds/cancellations,
+  Cookie Policy, and Cookie Banner controls through the shared branded Markdown
+  shell for review. Those documents remain unapproved and implement no consent
   behavior. Cookie Policy renders the self-contained cookie section directly
   from the approved Privacy Notice; approval of a standalone Cookie Policy and
-  a real cookie-consent solution remain unresolved. Review-only documents must
-  be replaced with approved content or removed before production. The
+  any real cookie-consent solution remain unresolved. The
   landing, form, success, Privacy, and legal-document shells share a
   viewport-aware scrolling layout: short content keeps the footer at the
   bottom of the viewport, while longer content and scaled text remain in the
   normal scroll flow without a fixed overlay. The
   Membership section is rendered between Connection and Limited Offer; its
-  header and mobile-menu anchor is active. The Lifetime pricing control opens
-  the existing Founding Friend form. No payment behavior is implemented.
+  header and mobile-menu anchor is active. No payment behavior is implemented.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -126,6 +126,20 @@ Those machine-specific settings remain ignored.
 puro flutter run -d chrome -t lib/main_dev.dart
 ```
 
+Both entrypoints default to the intermediate public-release feature set. To
+review the preserved unfinished user forms and draft legal pages, opt in at
+compile time:
+
+```bash
+puro flutter run -d chrome -t lib/main_dev.dart \
+  --dart-define=FUN_APP_ENABLE_UNFINISHED_PREVIEW=true
+```
+
+The preview setting is embedded in the build. There is no query-parameter,
+local-storage, or other public runtime switch. A future public activation must
+first settle the documented integration, consent, payment, and approved legal
+requirements, then deliberately change the release configuration and tests.
+
 VS Code and VSCodium users can also launch either explicit Flutter entrypoint
 on Chrome in debug mode through the committed configurations:
 
@@ -151,7 +165,12 @@ Build the production entrypoint locally without runtime defines:
 
 ```bash
 puro flutter build web -t lib/main_prod.dart
+puro dart run tool/prepare_intermediate_release_artifact.dart
 ```
+
+The second command removes the three review-only legal Markdown files from the
+production artifact. The source files remain intact and are still bundled by an
+explicit preview build before that production-only preparation step.
 
 ## Localization
 
@@ -175,13 +194,15 @@ Generated localization Dart files are local build inputs and are not committed.
 ## Routing
 
 Flutter routing uses `auto_route` with generated typed route classes and
-`MaterialApp.router`. The canonical public paths are `/`, `/here-and-now`,
-`/founding-friend`, `/venues`, `/privacy`, `/terms`, `/refunds`, `/cookies`,
-and `/cookie-banner`; the deployed URLs retain Flutter Web's hash form (for
-example, `/#/privacy`). Unknown paths fall back to `/`. Direct-route loads do
-not synthesize a landing-page history entry, while in-app pushes, logo
-navigation, Back, and Forward are handled by Router 2. Landing-section targets
-are typed route arguments rather than URL fragments.
+`MaterialApp.router`. The intermediate public paths are `/`, `/venues`, and
+`/privacy`; deployed URLs retain Flutter Web's hash form (for example,
+`/#/privacy`). Direct production visits to `/here-and-now`,
+`/founding-friend`, `/terms`, `/refunds`, `/cookies`, or `/cookie-banner`
+redirect to `/` without rendering the protected page. Explicit preview builds
+restore those preserved routes. Unknown paths fall back to `/`. Direct-route
+loads do not synthesize a landing-page history entry, while in-app pushes,
+logo navigation, Back, and Forward are handled by Router 2. Landing-section
+targets are typed route arguments rather than URL fragments.
 
 Route source is declared in `lib/presentation/core/routing/app_router.dart`.
 The generated `app_router.gr.dart` file is a local build input and remains
@@ -223,7 +244,10 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web -t lib/main_dev.dart
+puro flutter build web -t lib/main_prod.dart
+puro dart run tool/prepare_intermediate_release_artifact.dart
+puro flutter build web -t lib/main_dev.dart \
+  --dart-define=FUN_APP_ENABLE_UNFINISHED_PREVIEW=true
 ```
 
 The test suite covers domain validation, venue-lead form orchestration, the
@@ -328,10 +352,13 @@ test suite with coverage, and a production compile through
 the read-only `PR Checks` workflow. These checks do not deploy anything.
 
 Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.
+The `dev` branch has no separate deployment workflow or Pages environment.
 CI installs Puro, creates the `fun-app-landing` stable environment, generates
 localizations and Dart sources, analyzes, tests, and explicitly builds
-`lib/main_prod.dart` without browser-side provider configuration. The workflow
-uploads `build/web` and deploys it to
+`lib/main_prod.dart` without the preview define or browser-side provider
+configuration. Because gating defaults off unless the explicit preview define
+is true, the compiled application is gated. The workflow then removes the three
+review-only legal Markdown assets before it uploads `build/web` and deploys to
 [https://funapp.world](https://funapp.world).
 
 The custom domain remains configured in GitHub Pages. `web/CNAME` records the

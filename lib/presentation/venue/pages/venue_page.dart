@@ -14,6 +14,8 @@ import 'package:fun_app_landing_page/presentation/landing/navigation/landing_sec
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/utils/open_user_sign_up_experience.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_form_region.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_introduction.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_success_content.dart';
@@ -143,8 +145,10 @@ final class _VenuePageViewState extends State<_VenuePageView> {
                         context,
                         LandingSectionTarget.venues,
                       ),
-                      onContactSelected: () =>
-                          unawaited(context.router.push(HereAndNowRoute())),
+                      onContactSelected: () => openUserSignUpExperience(
+                        context,
+                        UserSignUpExperience.hereAndNow,
+                      ),
                     ),
                     Expanded(
                       child: ViewportFooterScrollView(

@@ -147,4 +147,40 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LandingDialog), findsNothing);
   });
+
+  testWidgets('coming-soon dismissal restores the invoking control focus', (
+    tester,
+  ) async {
+    final triggerFocusNode = FocusNode();
+    addTearDown(triggerFocusNode.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              focusNode: triggerFocusNode,
+              onPressed: () =>
+                  unawaited(showInterestedUserComingSoonDialog(context)),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    triggerFocusNode.requestFocus();
+    await tester.pump();
+    expect(triggerFocusNode.hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingDialog), findsOneWidget);
+    expect(triggerFocusNode.hasFocus, isFalse);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(LandingDialog), findsNothing);
+    expect(triggerFocusNode.hasFocus, isTrue);
+  });
 }

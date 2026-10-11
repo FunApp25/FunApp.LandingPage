@@ -63,6 +63,11 @@ jobs:
           puro --env="$PURO_ENV_NAME" flutter build web
           -t lib/main_prod.dart
 
+      - name: Remove review-only legal assets
+        run: >-
+          puro --env="$PURO_ENV_NAME" dart run
+          tool/prepare_intermediate_release_artifact.dart
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:

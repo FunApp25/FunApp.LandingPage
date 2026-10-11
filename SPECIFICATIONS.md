@@ -12,9 +12,11 @@ hash route, whose localized form preserves the established application and
 data workflow. That form shows the approved informational
 privacy acknowledgement with a presentation-local checkbox and links to the
 hosted Privacy Notice; it does not submit a consent field. The Here & Now and
-Founding Friend prospective-user field surfaces are now approved UI-only
-experiences at `/here-and-now` and `/founding-friend`. They validate locally
-but cannot submit in production until their Cloudflare-backed HubSpot workflow,
+Founding Friend prospective-user field surfaces are preserved UI-only preview
+experiences at `/here-and-now` and `/founding-friend`. Intermediate production
+gates those routes and shows a localized Coming soon dialog from every existing
+entry point. The forms validate locally in explicitly configured preview builds
+but cannot submit until their Cloudflare-backed HubSpot workflow,
 age-eligibility policy, and consent semantics are approved and implemented.
 
 ## 2. Decision model
@@ -58,14 +60,14 @@ Current implementation is evidence of repository state, not automatically a perm
   `https://funapp.world/#/privacy`. Its canonical website source is
   `assets/legal/privacy_notice.md`; the hash route supports direct access,
   refresh, and browser history without requiring a GitHub Pages rewrite.
-- All footer legal controls expose hash routes through one branded Markdown
-  shell. Terms of Use, Refund & Cancellation Policy, and Cookie Banner use
-  explicit English review-only documents. They are not approved legal
-  documents, do not save cookie preferences, and do not control cookies; they
-  must be replaced with approved content or removed before production. Cookie
-  Policy reuses the self-contained cookie section from the canonical approved
-  Privacy Notice without maintaining duplicate legal copy. Approval of a
-  standalone Cookie Policy remains open.
+- Intermediate production footers expose only Privacy Policy. Terms of Use,
+  Refund & Cancellation Policy, Cookie Policy, and Cookie Banner are hidden and
+  their direct routes redirect to `/`. Explicit preview builds retain those
+  routes through one branded Markdown shell. Terms, refunds, and Cookie Banner
+  remain English review-only documents that do not save preferences or control
+  cookies. Cookie Policy reuses the self-contained cookie section from the
+  canonical approved Privacy Notice without duplicate legal copy. Approval of
+  a standalone Cookie Policy remains open.
 - Landing, form, success, Privacy, and legal-document pages use one reusable
   viewport-aware scrolling shell. When content is short, the shared footer
   rests at the bottom of the available viewport; longer or text-scaled content
@@ -94,8 +96,12 @@ Current implementation is evidence of repository state, not automatically a perm
   remains the web origin for every other path.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
 - The Here & Now and Founding Friend forms are responsive presentation-only
-  routes. Their production actions are disabled and perform no network,
-  persistence, success, payment, or membership-status operation.
+  routes preserved behind the compile-time
+  `FUN_APP_ENABLE_UNFINISHED_PREVIEW=true` setting. The setting defaults to
+  false for both entrypoints. Intermediate production entry points open a
+  reusable localized Coming soon dialog, and protected routes redirect to `/`
+  before form widgets render. Preview form actions remain disabled and perform
+  no network, persistence, payment, or membership-status operation.
 
 ### Open
 
@@ -244,9 +250,10 @@ FAQ, and Footer. The Header remains fixed outside the primary scrolling
 content. Membership presents static Free, Here & Now, and Founding Friend
 pricing cards. Those cards and the Founding Friend descriptions are approved
 marketing presentation only; subscription, payment, cancellation, entitlement,
-badge, and other business behavior is not implemented. The Here & Now card and
-Free control open the approved `/here-and-now` UI; the Lifetime control opens
-the existing `/founding-friend` UI. Pricing cards use three, two,
+badge, and other business behavior is not implemented. The pricing controls
+retain their approved appearance; production opens Coming soon while explicit
+preview builds restore their `/here-and-now` and `/founding-friend` routes.
+Pricing cards use three, two,
 or one column based on usable card width, and Founding Friend benefit cards
 similarly reflow from the desktop intro-plus-three-card composition without
 forcing desktop heights onto narrow single-column layouts.
@@ -274,13 +281,14 @@ enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
-become immediate when reduced motion is requested. The localized header and
-mobile-menu queue action navigates to `/here-and-now`.
-The Limited Offer queue CTA, Free Membership CTA, and Here & Now membership
-CTA navigate to `/here-and-now`. The Founding Friends prospective-user CTA
-navigates to `/founding-friend`. Those routes collect no information in
-production because
-their submission/payment controls are disabled until integration. The venue CTA
+become immediate when reduced motion is requested. In intermediate production,
+the localized header/mobile-menu queue action, Limited Offer queue CTA, Free
+Membership CTA, Here & Now membership CTA, Lifetime Membership CTA, and
+Founding Friends prospective-user CTA open one localized Coming soon dialog
+without changing routes. Explicit preview builds restore the established
+`/here-and-now` and `/founding-friend` mappings. Those preserved routes collect
+no information because their submission/payment controls are disabled until
+integration. The venue CTA
 navigates to the dedicated `/venues` page. A fresh
 `VenueLeadFormBloc` owns each Venue route lifecycle and submits through the
 established environment-selected venue repository/data-source graph. Shared
@@ -340,16 +348,16 @@ responsive layouts and preserves its two-paragraph structure. At 600px and
 above, Hero and Connection use their established wider compositions.
 
 Below a 600px outer viewport width, Footer uses the approved centered 16px/80px
-mobile composition: the four anchor controls wrap beneath the logo, a divider
-separates them from the `mailto:info@funapp.world` contact link, and the five
-Figma legal labels wrap beneath it. At 1200px and above, logo/navigation and
+mobile composition: the four anchor controls wrap beneath the logo and a divider
+separates them from the `mailto:info@funapp.world` contact link. At 1200px and
+above, logo/navigation and
 email/legal content form the two approved desktop rows around the full-width
 divider;
 intermediate widths stack those groups without fixed heights or horizontal
-overflow. Privacy Policy opens the authoritative hosted Privacy Notice. Terms
-of Use, Refund & Cancellation Policy, Cookie Policy, and Cookie Banner remain
-non-interactive presentation text until authoritative destinations or behavior
-exist; their presence does not establish policy pages or cookie consent.
+overflow. Privacy Policy opens the authoritative hosted Privacy Notice and is
+the only legal control visible in intermediate production. Explicit preview
+builds also show Terms of Use, Refund & Cancellation Policy, Cookie Policy, and
+Cookie Banner for review; their presence establishes no consent behavior.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
@@ -614,7 +622,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The canonical public routes are `/`, `/here-and-now`, `/founding-friend`, `/venues`, `/privacy`, `/terms`, `/refunds`, `/cookies`, and `/cookie-banner`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The intermediate public routes are `/`, `/venues`, and `/privacy`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Protected user-form and draft-legal hashes redirect to `/` in production and exist only in an explicitly configured preview artifact. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -643,8 +651,10 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web -t lib/main_dev.dart
-puro flutter build web -t lib/main_prod.dart --dart-define-from-file=.env
+puro flutter build web -t lib/main_prod.dart
+puro dart run tool/prepare_intermediate_release_artifact.dart
+puro flutter build web -t lib/main_dev.dart \
+  --dart-define=FUN_APP_ENABLE_UNFINISHED_PREVIEW=true
 ```
 
 The active widget test suite covers the landing surface and its durable responsive and interaction contracts. Verification should grow with implemented behavior rather than speculative tooling.
@@ -672,12 +682,19 @@ The project tracks Flutter stable through Puro rather than establishing a perman
 - The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
   environment from Flutter stable, generates localizations and Dart sources,
   analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`
-  without browser-side HubSpot configuration.
+  without browser-side HubSpot configuration or the unfinished-preview define.
+  It then removes the three review-only legal Markdown files from `build/web`.
+  The production artifact therefore uses the default gated feature set and
+  does not publish those draft source documents as static assets.
+- Only pushes to `main` and manual dispatches run the Pages deployment. The
+  `dev` branch has no separate deployment workflow or Pages environment.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
-- The production artifact includes the legal Markdown asset directory,
-  including the canonical Privacy Notice and explicit review-only documents;
-  their hash routes require no Pages rewrite or `404.html` fallback.
+- Preview builds include the legal Markdown asset directory. Production
+  artifact preparation preserves the canonical Privacy Notice but removes the
+  three review-only Markdown files; protected hashes redirect without a Pages
+  rewrite or `404.html` fallback. Client-side routing remains neither backend
+  authorization nor a security boundary.
 - The archived Astro project is not built or deployed.
 
 ### Provisional

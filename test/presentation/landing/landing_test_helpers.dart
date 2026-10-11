@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
@@ -9,6 +10,8 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 Future<void> pumpLandingApp(
   WidgetTester tester, {
   Locale locale = const Locale('en'),
+  ReleaseConfiguration releaseConfiguration =
+      const ReleaseConfiguration.preview(),
   ValueChanged<Uri>? onPrivacyNoticeLaunch,
 }) async {
   tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
@@ -16,6 +19,7 @@ Future<void> pumpLandingApp(
 
   await tester.pumpWidget(
     FunAppLandingPageApp(
+      releaseConfiguration: releaseConfiguration,
       onPrivacyNoticeLaunch: onPrivacyNoticeLaunch,
     ),
   );

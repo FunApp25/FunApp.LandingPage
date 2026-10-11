@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
@@ -44,7 +45,11 @@ void main() {
       tester,
     ) async {
       setTestSurface(tester, const Size(390, 844));
-      await tester.pumpWidget(const FunAppLandingPageApp());
+      await tester.pumpWidget(
+        const FunAppLandingPageApp(
+          releaseConfiguration: ReleaseConfiguration.preview(),
+        ),
+      );
       await tester.pump();
       unawaited(
         tester
@@ -81,7 +86,11 @@ void main() {
       addTearDown(
         tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
       );
-      await tester.pumpWidget(const FunAppLandingPageApp());
+      await tester.pumpWidget(
+        const FunAppLandingPageApp(
+          releaseConfiguration: ReleaseConfiguration.preview(),
+        ),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
@@ -205,7 +214,11 @@ void main() {
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
-    await tester.pumpWidget(const FunAppLandingPageApp());
+    await tester.pumpWidget(
+      const FunAppLandingPageApp(
+        releaseConfiguration: ReleaseConfiguration.preview(),
+      ),
+    );
     await tester.pump();
     final terms = find.byKey(const Key('footerTermsLink'));
     await tester.ensureVisible(terms);
