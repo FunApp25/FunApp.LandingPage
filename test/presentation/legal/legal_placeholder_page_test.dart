@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 
@@ -41,9 +45,13 @@ void main() {
     ) async {
       setTestSurface(tester, const Size(390, 844));
       await tester.pumpWidget(const FunAppLandingPageApp());
-      Navigator.of(
-        tester.element(find.byType(LandingPage)),
-      ).pushNamed(example.route);
+      await tester.pump();
+      unawaited(
+        tester
+            .element(find.byType(LandingPage))
+            .router
+            .push(_legalRouteFor(example.kind)),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
@@ -161,11 +169,44 @@ void main() {
     );
   });
 
+  testWidgets('short legal content keeps the footer at the viewport bottom', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(1440, 2000));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: const LegalPlaceholderPage(
+          kind: LegalPlaceholderKind.terms,
+          markdownData: '## Draft\n\nReview only.',
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final footerRect = tester.getRect(find.byType(LandingFooter));
+    final scrollView = tester.widget<SingleChildScrollView>(
+      find.byKey(const Key('legalPlaceholderScrollView-terms')),
+    );
+    expect(footerRect.bottom, 2000);
+    expect(scrollView.controller?.position.maxScrollExtent ?? 0, 0);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('footer Privacy navigation stays in the current route stack', (
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(const FunAppLandingPageApp());
+    await tester.pump();
     final terms = find.byKey(const Key('footerTermsLink'));
     await tester.ensureVisible(terms);
     await tester.tap(terms);
@@ -219,3 +260,10 @@ void main() {
     }
   });
 }
+
+PageRouteInfo<void> _legalRouteFor(LegalPlaceholderKind kind) => switch (kind) {
+  LegalPlaceholderKind.terms => const TermsRoute(),
+  LegalPlaceholderKind.refunds => const RefundsRoute(),
+  LegalPlaceholderKind.cookies => const CookiePolicyRoute(),
+  LegalPlaceholderKind.cookieBanner => const CookieBannerRoute(),
+};

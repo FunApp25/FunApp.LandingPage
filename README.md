@@ -18,7 +18,8 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Membership cards and the Founding Friend explanation. The header remains
   fixed above the scrolling page, repeated header/footer navigation moves to
   the corresponding page sections, and the independently expandable FAQ
-  supports its complete item surface. The header queue CTA, Free Membership,
+  supports its complete item surface. The localized header "Join the queue"
+  CTA, Free Membership,
   Limited Offer queue CTA, and Here & Now membership CTA navigate to
   `/#/here-and-now`; the Founding Friend CTA
   navigates to `/#/founding-friend`. Both destinations use responsive branded
@@ -62,6 +63,10 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   from the approved Privacy Notice; approval of a standalone Cookie Policy and
   a real cookie-consent solution remain unresolved. Review-only documents must
   be replaced with approved content or removed before production. The
+  landing, form, success, Privacy, and legal-document shells share a
+  viewport-aware scrolling layout: short content keeps the footer at the
+  bottom of the viewport, while longer content and scaled text remain in the
+  normal scroll flow without a fixed overlay. The
   Membership section is rendered between Connection and Limited Offer; its
   header and mobile-menu anchor is active. The Lifetime pricing control opens
   the existing Founding Friend form. No payment behavior is implemented.
@@ -167,6 +172,22 @@ puro flutter gen-l10n
 
 Generated localization Dart files are local build inputs and are not committed.
 
+## Routing
+
+Flutter routing uses `auto_route` with generated typed route classes and
+`MaterialApp.router`. The canonical public paths are `/`, `/here-and-now`,
+`/founding-friend`, `/venues`, `/privacy`, `/terms`, `/refunds`, `/cookies`,
+and `/cookie-banner`; the deployed URLs retain Flutter Web's hash form (for
+example, `/#/privacy`). Unknown paths fall back to `/`. Direct-route loads do
+not synthesize a landing-page history entry, while in-app pushes, logo
+navigation, Back, and Forward are handled by Router 2. Landing-section targets
+are typed route arguments rather than URL fragments.
+
+Route source is declared in `lib/presentation/core/routing/app_router.dart`.
+The generated `app_router.gr.dart` file is a local build input and remains
+uncommitted; regenerate it with the repository's standard `build_runner`
+command after changing route declarations or `@RoutePage` constructors.
+
 ## Privacy Notice content and preview
 
 `assets/legal/privacy_notice.md` is the canonical website representation of
@@ -187,9 +208,9 @@ Markdown asset directory declared in `pubspec.yaml`;
 shell, and the web link adapter handles only the approved `mailto:` contact
 links.
 
-Freezed and Injectable sources are generated locally and remain uncommitted.
-Regenerate all generated Dart source after changing a model or dependency
-registration:
+Auto Route, Freezed, and Injectable sources are generated locally and remain
+uncommitted. Regenerate all generated Dart source after changing a route,
+model, or dependency registration:
 
 ```bash
 puro flutter pub run build_runner build
@@ -255,6 +276,8 @@ lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
 lib/data/venue/               Venue repository, DTO, and selectable data sources
 lib/l10n/                    Localization ARB source files
+lib/presentation/core/routing/ Typed auto_route configuration and dependencies
+lib/presentation/core/widgets/ Shared viewport/footer page shell
 lib/presentation/landing/pages/ Landing-page composition and navigation owner
 lib/presentation/landing/sections/ Section-owned landing presentation widgets
 lib/presentation/landing/shared/widgets/ Cross-section landing widgets

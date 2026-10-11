@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/viewport_footer_scroll_view.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/connection/connection_experience_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/faq/faq_section.dart';
@@ -18,29 +20,18 @@ import 'package:fun_app_landing_page/presentation/landing/sections/research/rese
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/welcome/welcome_statement_section.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
-import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
-import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 
 /// Composes the complete Fun App landing page in Figma order.
+@RoutePage()
 final class LandingPage extends StatefulWidget {
   /// Creates the landing page.
   const LandingPage({
     this.initialSection,
-    this.onPrivacyNoticeLaunch,
-    this.landingRouteController,
     super.key,
   });
 
   /// Section requested by route-aware navigation from another page.
   final LandingSectionTarget? initialSection;
-
-  /// Overrides the browser launcher for presentation tests.
-  final ValueChanged<Uri>? onPrivacyNoticeLaunch;
-
-  /// Coordinates anchor requests when another app route returns here.
-  final LandingRouteController? landingRouteController;
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -155,15 +146,15 @@ final class _LandingPageState extends State<LandingPage> {
   }
 
   void _openVenuePage() {
-    Navigator.of(context).pushNamed(VenuePage.routeName);
+    unawaited(context.router.push(VenueRoute()));
   }
 
   void _openHereAndNowPage() {
-    Navigator.of(context).pushNamed(HereAndNowPage.routeName);
+    unawaited(context.router.push(HereAndNowRoute()));
   }
 
   void _openFoundingFriendPage() {
-    Navigator.of(context).pushNamed(FoundingFriendPage.routeName);
+    unawaited(context.router.push(FoundingFriendRoute()));
   }
 
   GlobalKey _sectionKeyFor(LandingSectionTarget section) => switch (section) {
@@ -174,9 +165,7 @@ final class _LandingPageState extends State<LandingPage> {
   };
 
   void _openPrivacyNotice() {
-    if (ModalRoute.of(context)?.settings.name != PrivacyNoticePage.routeName) {
-      Navigator.of(context).pushNamed(PrivacyNoticePage.routeName);
-    }
+    unawaited(context.router.push(PrivacyNoticeRoute()));
   }
 
   @override
@@ -193,10 +182,10 @@ final class _LandingPageState extends State<LandingPage> {
             onContactSelected: _openHereAndNowPage,
           ),
           Expanded(
-            child: SingleChildScrollView(
-              key: const Key('landingPageScrollView'),
+            child: ViewportFooterScrollView(
+              scrollKey: const Key('landingPageScrollView'),
               controller: _scrollController,
-              child: Column(
+              content: Column(
                 key: const Key('landingPageSections'),
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -224,16 +213,15 @@ final class _LandingPageState extends State<LandingPage> {
                   ),
                   const WelcomeStatementSection(),
                   const FaqSection(),
-                  LandingFooter(
-                    onLogoSelected: () => _scrollTo(_heroKey),
-                    onOurBeliefSelected: () => _scrollTo(_heroKey),
-                    onMembershipSelected: () => _scrollTo(_membershipKey),
-                    onFoundingFriendsSelected: () =>
-                        _scrollTo(_foundingFriendsKey),
-                    onVenuesSelected: () => _scrollTo(_venueKey),
-                    onPrivacyNoticeSelected: _openPrivacyNotice,
-                  ),
                 ],
+              ),
+              footer: LandingFooter(
+                onLogoSelected: () => _scrollTo(_heroKey),
+                onOurBeliefSelected: () => _scrollTo(_heroKey),
+                onMembershipSelected: () => _scrollTo(_membershipKey),
+                onFoundingFriendsSelected: () => _scrollTo(_foundingFriendsKey),
+                onVenuesSelected: () => _scrollTo(_venueKey),
+                onPrivacyNoticeSelected: _openPrivacyNotice,
               ),
             ),
           ),

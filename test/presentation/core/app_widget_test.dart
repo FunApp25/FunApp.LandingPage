@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +11,7 @@ import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
@@ -39,7 +43,7 @@ void main() {
     expect(app.debugShowCheckedModeBanner, isFalse);
     expect(app.locale, isNull);
     expect(app.localeListResolutionCallback, isNotNull);
-    expect(app.onGenerateRoute, isNotNull);
+    expect(app.routerConfig, isNotNull);
     expect(
       app.localizationsDelegates,
       AppLocalizations.localizationsDelegates,
@@ -114,9 +118,12 @@ void main() {
   ) async {
     await _pumpApp(tester, const Locale('en'));
 
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed('/unknown-fragment');
+    unawaited(
+      tester
+          .element(find.byType(LandingPage))
+          .router
+          .pushPath('/unknown-fragment'),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(LandingPage), findsWidgets);
@@ -138,13 +145,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PrivacyNoticePage), findsOneWidget);
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(find.byType(PrivacyNoticePage), findsOneWidget);
-      expect(find.byType(LandingPage), findsNothing);
+      final router = tester.element(find.byType(PrivacyNoticePage)).router;
+      expect(router.stack, hasLength(1));
       await tester.tap(find.byKey(const Key('headerLogoLink')));
       await tester.pumpAndSettle();
       expect(find.byType(LandingPage), findsOneWidget);
+      expect(router.stack, hasLength(2));
       expect(tester.takeException(), isNull);
     },
   );
@@ -168,13 +174,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(VenuePage), findsOneWidget);
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(find.byType(VenuePage), findsOneWidget);
-      expect(find.byType(LandingPage), findsNothing);
+      final router = tester.element(find.byType(VenuePage)).router;
+      expect(router.stack, hasLength(1));
       await tester.tap(find.byKey(const Key('headerLogoLink')));
       await tester.pumpAndSettle();
       expect(find.byType(LandingPage), findsOneWidget);
+      expect(router.stack, hasLength(2));
       expect(tester.takeException(), isNull);
     },
   );
@@ -191,13 +196,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(HereAndNowPage), findsOneWidget);
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.byType(HereAndNowPage), findsOneWidget);
-    expect(find.byType(LandingPage), findsNothing);
+    final router = tester.element(find.byType(HereAndNowPage)).router;
+    expect(router.stack, hasLength(1));
     await tester.tap(find.byKey(const Key('headerLogoLink')));
     await tester.pumpAndSettle();
     expect(find.byType(LandingPage), findsOneWidget);
+    expect(router.stack, hasLength(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -215,13 +219,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(FoundingFriendPage), findsOneWidget);
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(find.byType(FoundingFriendPage), findsOneWidget);
-      expect(find.byType(LandingPage), findsNothing);
+      final router = tester.element(find.byType(FoundingFriendPage)).router;
+      expect(router.stack, hasLength(1));
       await tester.tap(find.byKey(const Key('headerLogoLink')));
       await tester.pumpAndSettle();
       expect(find.byType(LandingPage), findsOneWidget);
+      expect(router.stack, hasLength(2));
       expect(tester.takeException(), isNull);
     },
   );
@@ -242,54 +245,248 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sequential routed navigation preserves every back entry', (
+  testWidgets('journey A supports repeated Back and Forward route updates', (
     tester,
   ) async {
     await _pumpApp(tester, const Locale('en'));
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed(HereAndNowPage.routeName);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('headerLogoLink')));
-    await tester.pumpAndSettle();
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed(FoundingFriendPage.routeName);
-    await tester.pumpAndSettle();
+    final router = tester.element(find.byType(LandingPage)).router;
+    _expectRouteState(router, [LandingRoute.name], '/');
 
-    expect(find.byType(FoundingFriendPage), findsOneWidget);
+    unawaited(
+      router.push(HereAndNowRoute()),
+    );
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name, HereAndNowRoute.name],
+      HereAndNowPage.routeName,
+    );
+
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.byType(LandingPage), findsOneWidget);
+    _expectRouteState(router, [LandingRoute.name], '/');
+
+    expect(
+      await tester.binding.handlePushRoute(HereAndNowPage.routeName),
+      isTrue,
+    );
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name, HereAndNowRoute.name],
+      HereAndNowPage.routeName,
+    );
+
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.byType(HereAndNowPage), findsOneWidget);
+    _expectRouteState(router, [LandingRoute.name], '/');
   });
 
-  testWidgets('legal route sequence supports consecutive back operations', (
+  testWidgets('journey B keeps logo navigation as a real history entry', (
     tester,
   ) async {
-    await _pumpApp(tester, const Locale('en'));
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed(LegalPlaceholderPage.termsRouteName);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    Navigator.of(
-      tester.element(find.byType(LegalPlaceholderPage)),
-    ).pushNamed(LegalPlaceholderPage.cookiesRouteName);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await _pumpApp(
+      tester,
+      const Locale('en'),
+      createVenueLeadFormBloc: () =>
+          VenueLeadFormBloc(const _ImmediateVenueLeadRepository()),
+    );
+    final router = tester.element(find.byType(LandingPage)).router;
+    _expectRouteState(router, [LandingRoute.name], '/');
+
+    unawaited(router.push(FoundingFriendRoute()));
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name, FoundingFriendRoute.name],
+      FoundingFriendPage.routeName,
+    );
+
+    await tester.tap(find.byKey(const Key('headerLogoLink')));
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name, FoundingFriendRoute.name, LandingRoute.name],
+      '/',
+    );
+
+    unawaited(router.push(VenueRoute()));
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [
+        LandingRoute.name,
+        FoundingFriendRoute.name,
+        LandingRoute.name,
+        VenueRoute.name,
+      ],
+      VenuePage.routeName,
+    );
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('legalPlaceholderPage-terms')),
-      findsOneWidget,
+    _expectRouteState(
+      router,
+      [LandingRoute.name, FoundingFriendRoute.name, LandingRoute.name],
+      '/',
     );
+
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.byType(LandingPage), findsOneWidget);
+    _expectRouteState(
+      router,
+      [LandingRoute.name, FoundingFriendRoute.name],
+      FoundingFriendPage.routeName,
+    );
+
+    expect(await tester.binding.handlePushRoute('/'), isTrue);
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name],
+      '/',
+    );
+  });
+
+  testWidgets('journey C supports consecutive legal Back and Forward', (
+    tester,
+  ) async {
+    await _pumpApp(tester, const Locale('en'));
+    final router = tester.element(find.byType(LandingPage)).router;
+    _expectRouteState(router, [LandingRoute.name], '/');
+
+    unawaited(router.push(const TermsRoute()));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    _expectRouteState(
+      router,
+      [LandingRoute.name, TermsRoute.name],
+      LegalPlaceholderPage.termsRouteName,
+    );
+
+    unawaited(router.push(const CookiePolicyRoute()));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    _expectRouteState(
+      router,
+      [LandingRoute.name, TermsRoute.name, CookiePolicyRoute.name],
+      LegalPlaceholderPage.cookiesRouteName,
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name, TermsRoute.name],
+      LegalPlaceholderPage.termsRouteName,
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    _expectRouteState(router, [LandingRoute.name], '/');
+
+    expect(
+      await tester.binding.handlePushRoute(
+        LegalPlaceholderPage.termsRouteName,
+      ),
+      isTrue,
+    );
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name, TermsRoute.name],
+      LegalPlaceholderPage.termsRouteName,
+    );
+  });
+
+  testWidgets('journey D preserves direct-load history without a root prefix', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        FoundingFriendPage.routeName;
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    await _pumpApp(tester, const Locale('en'));
+    await tester.pumpAndSettle();
+
+    final router = tester.element(find.byType(FoundingFriendPage)).router;
+    _expectRouteState(
+      router,
+      [FoundingFriendRoute.name],
+      FoundingFriendPage.routeName,
+    );
+
+    await tester.tap(find.byKey(const Key('headerLogoLink')));
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [FoundingFriendRoute.name, LandingRoute.name],
+      '/',
+    );
+
+    unawaited(router.push(PrivacyNoticeRoute()));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    _expectRouteState(
+      router,
+      [
+        FoundingFriendRoute.name,
+        LandingRoute.name,
+        PrivacyNoticeRoute.name,
+      ],
+      PrivacyNoticePage.routeName,
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [FoundingFriendRoute.name, LandingRoute.name],
+      '/',
+    );
+  });
+
+  testWidgets('journey E restores a landing section after Venue Back', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _pumpApp(
+      tester,
+      const Locale('en'),
+      createVenueLeadFormBloc: () =>
+          VenueLeadFormBloc(const _ImmediateVenueLeadRepository()),
+    );
+    final router = tester.element(find.byType(LandingPage)).router;
+    final scrollController = tester
+        .widget<SingleChildScrollView>(
+          find.byKey(const Key('landingPageScrollView')),
+        )
+        .controller!;
+
+    await tester.tap(
+      find.byKey(const Key('landingHeaderNavigationItem3')),
+    );
+    await tester.pumpAndSettle();
+    final sectionOffset = scrollController.offset;
+    expect(sectionOffset, greaterThan(0));
+    _expectRouteState(router, [LandingRoute.name], '/');
+
+    unawaited(router.push(VenueRoute()));
+    await tester.pumpAndSettle();
+    _expectRouteState(
+      router,
+      [LandingRoute.name, VenueRoute.name],
+      VenuePage.routeName,
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    _expectRouteState(router, [LandingRoute.name], '/');
+    expect(scrollController.offset, closeTo(sectionOffset, 1));
   });
 
   testWidgets('maps each resolved locale to the host document language', (
@@ -342,4 +539,13 @@ void _expectLocalizedTitle(WidgetTester tester, String expectedTitle) {
 
   expect(AppLocalizations.of(context).appTitle, expectedTitle);
   expect(app.onGenerateTitle?.call(context), expectedTitle);
+}
+
+void _expectRouteState(
+  StackRouter router,
+  List<String> routeNames,
+  String path,
+) {
+  expect(router.stackData.map((route) => route.name), routeNames);
+  expect(router.currentPath, path);
 }

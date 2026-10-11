@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
-import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
 import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
@@ -27,7 +26,6 @@ final class LegalPlaceholderPage extends StatelessWidget {
   const LegalPlaceholderPage({
     required this.kind,
     this.markdownData,
-    this.landingRouteController,
     super.key,
   });
 
@@ -48,9 +46,6 @@ final class LegalPlaceholderPage extends StatelessWidget {
 
   /// Optional already-loaded Markdown used by deterministic tests.
   final String? markdownData;
-
-  /// Coordinates navigation to landing-page anchors.
-  final LandingRouteController? landingRouteController;
 
   static final Future<String> _terms = rootBundle.loadString(
     'assets/legal/terms_of_use.md',
@@ -98,7 +93,6 @@ final class LegalPlaceholderPage extends StatelessWidget {
       scrollKey: Key('legalPlaceholderScrollView-${kind.name}'),
       contentKey: Key('legalPlaceholderContent-${kind.name}'),
       markdownKey: Key('legalDocumentMarkdown-${kind.name}'),
-      landingRouteController: landingRouteController,
     );
   }
 }

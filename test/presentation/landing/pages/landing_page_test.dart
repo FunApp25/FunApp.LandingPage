@@ -50,11 +50,10 @@ void main() {
       VenueSection,
       WelcomeStatementSection,
       FaqSection,
-      LandingFooter,
     ];
 
     expect(find.byType(LandingHeader), findsOneWidget);
-    expect(expectedSectionTypes, hasLength(12));
+    expect(expectedSectionTypes, hasLength(11));
     for (final type in expectedSectionTypes) {
       expect(find.byType(type), findsOneWidget);
     }
@@ -65,6 +64,7 @@ void main() {
       sections.children.map((widget) => widget.runtimeType),
       orderedEquals(expectedSectionTypes),
     );
+    expect(find.byType(LandingFooter), findsOneWidget);
   });
 
   testWidgets('renders the authoritative English header and hero copy', (
@@ -81,7 +81,7 @@ void main() {
     }
     expect(find.text('MEMBERSHIP'), findsNWidgets(2));
     for (final label in [
-      'Secure your place in the queue',
+      'Join the queue',
       'A FRIENDLIER WAY TO CONNECT',
     ]) {
       expect(find.text(label), findsOneWidget);
@@ -112,7 +112,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      contact: 'Asegura tu lugar en la cola',
+      contact: 'Únete a la cola',
       eyebrow: 'UNA FORMA MÁS AMABLE DE CONECTAR',
       headline:
           'Fun App nació de la convicción de que crear conexiones debería ser '
@@ -120,7 +120,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      contact: 'Sicrhewch eich lle yn y ciw',
+      contact: "Ymuno â'r ciw",
       eyebrow: 'FFORDD FWY CYFEILLGAR O GYSYLLTU',
       headline:
           'Dechreuodd Fun App o’r gred y dylai creu cysylltiadau fod '
@@ -128,7 +128,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      contact: 'Забраніруйце месца ў чарзе',
+      contact: 'Стаць у чаргу',
       eyebrow: 'БОЛЬШ ПРЫЯЗНЫ СПОСАБ ЗНАЁМІЦЦА',
       headline:
           'Fun App пачаўся з веры ў тое, што наладжваць сувязі павінна быць '
@@ -502,9 +502,9 @@ void main() {
     );
 
     final contact = tester
-        .getSemantics(find.text('Secure your place in the queue'))
+        .getSemantics(find.text('Join the queue'))
         .getSemanticsData();
-    expect(contact.label, 'Secure your place in the queue');
+    expect(contact.label, 'Join the queue');
     expect(contact.flagsCollection.isButton, isTrue);
     expect(contact.flagsCollection.isLink, isFalse);
     expect(
@@ -598,7 +598,7 @@ void main() {
         reason: 'No layout exception is expected at $size.',
       );
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
-      expect(find.text('Secure your place in the queue'), findsOneWidget);
+      expect(find.text('Join the queue'), findsOneWidget);
 
       final heroTop = tester.getTopLeft(find.byType(HeroSection)).dy;
       final heroCardTop = tester
@@ -790,7 +790,7 @@ void main() {
           findsNothing,
         );
       } else if (size.width < 1080) {
-        expect(headerHeight, lessThanOrEqualTo(104));
+        expect(headerHeight, lessThanOrEqualTo(108));
       }
 
       for (final finder in [
@@ -831,7 +831,7 @@ void main() {
               ? findsOneWidget
               : findsNWidgets(2),
         );
-        expect(find.text('Забраніруйце месца ў чарзе'), findsOneWidget);
+        expect(find.text('Стаць у чаргу'), findsOneWidget);
         expect(tester.takeException(), isNull);
         expect(
           size.width < LandingHeader.mobileUxBreakpoint

@@ -66,6 +66,11 @@ Current implementation is evidence of repository state, not automatically a perm
   Policy reuses the self-contained cookie section from the canonical approved
   Privacy Notice without maintaining duplicate legal copy. Approval of a
   standalone Cookie Policy remains open.
+- Landing, form, success, Privacy, and legal-document pages use one reusable
+  viewport-aware scrolling shell. When content is short, the shared footer
+  rests at the bottom of the available viewport; longer or text-scaled content
+  expands into normal scrolling without a fixed overlay, artificial spacer
+  section, or clipping.
 - The landing and shared routed-page footers open the hosted Privacy Notice in
   the current app tab. The venue form shows
   the approved English privacy acknowledgement immediately before submission,
@@ -250,7 +255,9 @@ Header and footer section navigation scrolls within the single landing page
 while the header remains fixed above the scrolling content. The header and
 footer expose the same four active anchor destinations. Below a 600px
 outer viewport width, the fixed header uses a compact logo, the localized
-"Secure your place in the queue" action, and burger composition. The burger
+"Join the queue" action, and burger composition. The CTA remains a single-line,
+content-sized control with a minimum 44px target and overflow-safe constraints.
+The burger
 opens a full-screen, presentation-local menu
 with the same four header anchor destinations; selecting one closes the menu
 before reusing the existing anchor navigation. At 600px and above, the
@@ -280,10 +287,13 @@ established environment-selected venue repository/data-source graph. Shared
 header and footer navigation returns to `/` with a render-derived landing
 section target rather than trying to scroll keys that are absent on `/venues`.
 The shared header and footer logos push a landing-page root entry with the
-requested rendered anchor. One Flutter route is retained for each sequential
-in-app hash navigation so repeated browser Back operations do not collapse
-earlier history. Direct hash routes initialize only the requested route rather
-than fabricating a prior landing-page history entry.
+requested rendered anchor. Routing uses `auto_route`, generated typed route
+classes, and `MaterialApp.router`; the landing-section target is a typed route
+argument. Router-managed in-app pushes preserve sequential history for repeated
+browser Back and Forward operations without custom browser-history
+manipulation. Direct hash routes initialize only the requested route rather
+than fabricating a prior landing-page history entry. Unknown routes redirect to
+the landing page.
 
 Below a 600px outer viewport width, Research statistics use a horizontal,
 page-snapping carousel with one primary card, a trailing adjacent-card peek,
@@ -440,8 +450,8 @@ capabilities as implemented.
   The venue information group and text inputs retain their established styling
   while the routed page shell is aligned separately. Detailed form-control
   restyling remains deferred to the dedicated Venue form pass.
-- Generated Freezed and Injectable source is regenerated locally and in CI and
-  remains uncommitted.
+- Generated Auto Route, Freezed, and Injectable source is regenerated locally
+  and in CI and remains uncommitted.
 - `VenueInterestRequest` is a data-layer first-party request model. It emits
   only `venueName`, `venueType`, `chainStatus`, `venueCount`,
   `venueCapacity`, `website`, `firstName`, `lastName`, `role`, `email`, and
@@ -604,7 +614,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The Privacy Notice uses `https://funapp.world/#/privacy`; sign-up pages use `https://funapp.world/#/venues`, `https://funapp.world/#/here-and-now`, and `https://funapp.world/#/founding-friend`. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while Flutter owns in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The canonical public routes are `/`, `/here-and-now`, `/founding-friend`, `/venues`, `/privacy`, `/terms`, `/refunds`, `/cookies`, and `/cookie-banner`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 

@@ -106,8 +106,7 @@ final class _LandingMobileMenuState extends State<LandingMobileMenu> {
             Padding(
               key: const Key('landingMobileMenuContactArea'),
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: SizedBox(
-                width: double.infinity,
+              child: Center(
                 child: LandingCtaButton(
                   key: const Key('landingMobileMenuContactCta'),
                   label: widget.contactLabel,

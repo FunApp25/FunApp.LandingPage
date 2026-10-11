@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
+import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
@@ -361,6 +363,33 @@ void main() {
     await tester.pump();
 
     expect(tester.getTopLeft(heading).dy, lessThan(initialTop));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('long legal content scrolls without footer overlap', (
+    tester,
+  ) async {
+    setTestSurface(tester, const Size(390, 600));
+    await _pumpPrivacyPage(tester);
+
+    final content = find.byKey(const Key('legalDocumentCard-privacy'));
+    final footer = find.byType(LandingFooter);
+    final position = Scrollable.of(tester.element(content)).position;
+
+    expect(position.maxScrollExtent, greaterThan(0));
+    expect(
+      tester.getRect(content).bottom,
+      lessThanOrEqualTo(tester.getRect(footer).top),
+    );
+
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+
+    expect(tester.getRect(footer).bottom, 600);
+    expect(
+      tester.getRect(find.byKey(const Key('privacyNoticeScrollView'))).top,
+      tester.getRect(find.byType(LandingHeader)).bottom,
+    );
     expect(tester.takeException(), isNull);
   });
 

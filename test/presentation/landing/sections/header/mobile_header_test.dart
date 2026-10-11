@@ -99,7 +99,7 @@ void main() {
     expect(tester.getSize(logo).width, closeTo(89, 0.5));
     expect(tester.getSize(logo).height, 29);
     expect(tester.getRect(logo).left, 16);
-    expect(find.text('Secure your place in the queue'), findsOneWidget);
+    expect(find.text('Join the queue'), findsOneWidget);
     expect(contact, findsOneWidget);
     expect(tester.getSize(menuButton), const Size.square(44));
     expect(tester.getSize(menuVisual), const Size.square(38));
@@ -116,28 +116,28 @@ void main() {
   for (final example in const [
     (
       locale: Locale('en'),
-      contact: 'Secure your place in the queue',
+      contact: 'Join the queue',
       open: 'Open navigation menu',
       close: 'Close navigation menu',
       firstNavigation: 'OUR BELIEF',
     ),
     (
       locale: Locale('es'),
-      contact: 'Asegura tu lugar en la cola',
+      contact: 'Únete a la cola',
       open: 'Abrir menú de navegación',
       close: 'Cerrar menú de navegación',
       firstNavigation: 'NUESTRA CREENCIA',
     ),
     (
       locale: Locale('cy'),
-      contact: 'Sicrhewch eich lle yn y ciw',
+      contact: "Ymuno â'r ciw",
       open: 'Agor y ddewislen lywio',
       close: "Cau'r ddewislen lywio",
       firstNavigation: 'EIN CRED',
     ),
     (
       locale: Locale('be'),
-      contact: 'Забраніруйце месца ў чарзе',
+      contact: 'Стаць у чаргу',
       open: 'Адкрыць меню навігацыі',
       close: 'Закрыць меню навігацыі',
       firstNavigation: 'НАША ВЕРА',
@@ -238,8 +238,12 @@ void main() {
         const Key('landingMobileMenuContactCta'),
       );
       expect(tester.getSize(topArea).height, 70);
-      expect(tester.getRect(bottomContact).left, 16);
-      expect(tester.getSize(bottomContact), const Size(358, 60));
+      final contactRect = tester.getRect(bottomContact);
+      expect(contactRect.center.dx, 195);
+      expect(contactRect.left, greaterThanOrEqualTo(16));
+      expect(contactRect.right, lessThanOrEqualTo(374));
+      expect(contactRect.height, greaterThanOrEqualTo(44));
+      expect(contactRect.width, lessThan(358));
       expect(
         tester.getRect(menu).bottom - tester.getRect(bottomContact).bottom,
         16,

@@ -1,13 +1,16 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/viewport_footer_scroll_view.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
@@ -19,7 +22,6 @@ final class UserSignUpPage extends StatefulWidget {
     required this.experience,
     this.onSubmit,
     this.showConfirmedSuccess = false,
-    this.landingRouteController,
     super.key,
   });
 
@@ -31,9 +33,6 @@ final class UserSignUpPage extends StatefulWidget {
 
   /// Injected confirmed-success state for Here & Now previews/tests only.
   final bool showConfirmedSuccess;
-
-  /// Coordinates navigation back to an existing landing route.
-  final LandingRouteController? landingRouteController;
 
   @override
   State<UserSignUpPage> createState() => _UserSignUpPageState();
@@ -52,18 +51,7 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
     BuildContext context,
     LandingSectionTarget target,
   ) {
-    final controller = widget.landingRouteController;
-    if (controller != null) {
-      controller.openLandingSection(context, target);
-    } else {
-      Navigator.of(context).pushNamed('/', arguments: target);
-    }
-  }
-
-  void _openRoute(BuildContext context, String routeName) {
-    if (ModalRoute.of(context)?.settings.name != routeName) {
-      Navigator.of(context).pushNamed(routeName);
-    }
+    unawaited(context.router.push(LandingRoute(initialSection: target)));
   }
 
   @override
@@ -99,45 +87,43 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
                 context,
                 LandingSectionTarget.venues,
               ),
-              onContactSelected: () => _openRoute(context, '/here-and-now'),
+              onContactSelected: () =>
+                  unawaited(context.router.push(HereAndNowRoute())),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                key: Key('userSignUpScrollView-${widget.experience.name}'),
+              child: ViewportFooterScrollView(
+                scrollKey: Key(
+                  'userSignUpScrollView-${widget.experience.name}',
+                ),
                 controller: _scrollController,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _UserSignUpMain(
-                      experience: widget.experience,
-                      onSubmit: widget.onSubmit,
-                      showConfirmedSuccess: showsConfirmedSuccess,
-                    ),
-                    LandingFooter(
-                      onLogoSelected: () => _openLandingSection(
-                        context,
-                        LandingSectionTarget.ourBelief,
-                      ),
-                      onOurBeliefSelected: () => _openLandingSection(
-                        context,
-                        LandingSectionTarget.ourBelief,
-                      ),
-                      onMembershipSelected: () => _openLandingSection(
-                        context,
-                        LandingSectionTarget.membership,
-                      ),
-                      onFoundingFriendsSelected: () => _openLandingSection(
-                        context,
-                        LandingSectionTarget.foundingFriends,
-                      ),
-                      onVenuesSelected: () => _openLandingSection(
-                        context,
-                        LandingSectionTarget.venues,
-                      ),
-                      onPrivacyNoticeSelected: () =>
-                          _openRoute(context, LegalRoutes.privacy),
-                    ),
-                  ],
+                content: _UserSignUpMain(
+                  experience: widget.experience,
+                  onSubmit: widget.onSubmit,
+                  showConfirmedSuccess: showsConfirmedSuccess,
+                ),
+                footer: LandingFooter(
+                  onLogoSelected: () => _openLandingSection(
+                    context,
+                    LandingSectionTarget.ourBelief,
+                  ),
+                  onOurBeliefSelected: () => _openLandingSection(
+                    context,
+                    LandingSectionTarget.ourBelief,
+                  ),
+                  onMembershipSelected: () => _openLandingSection(
+                    context,
+                    LandingSectionTarget.membership,
+                  ),
+                  onFoundingFriendsSelected: () => _openLandingSection(
+                    context,
+                    LandingSectionTarget.foundingFriends,
+                  ),
+                  onVenuesSelected: () => _openLandingSection(
+                    context,
+                    LandingSectionTarget.venues,
+                  ),
+                  onPrivacyNoticeSelected: () =>
+                      unawaited(context.router.push(PrivacyNoticeRoute())),
                 ),
               ),
             ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:ui' show CheckedState;
 
+import 'package:auto_route/auto_route.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
@@ -55,7 +57,7 @@ void main() {
     expect(find.byType(LandingDialog), findsNothing);
     expect(
       ModalRoute.of(tester.element(find.byType(VenuePage)))?.settings.name,
-      VenuePage.routeName,
+      VenueRoute.name,
     );
     expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
 
@@ -70,9 +72,9 @@ void main() {
     final semantics = tester.ensureSemantics();
     final launched = <Uri>[];
     await _pumpApp(tester, onPrivacyNoticeLaunch: launched.add);
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed(VenuePage.routeName);
+    unawaited(
+      tester.element(find.byType(LandingPage)).router.push(VenueRoute()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(LandingHeader), findsOneWidget);
@@ -387,7 +389,7 @@ void main() {
       expect(repository.submittedLeads, hasLength(2));
       expect(
         ModalRoute.of(tester.element(find.byType(VenuePage)))?.settings.name,
-        VenuePage.routeName,
+        VenueRoute.name,
       );
     },
   );
@@ -413,7 +415,7 @@ void main() {
       expect(scrollable.controller?.offset, greaterThan(0));
       expect(
         ModalRoute.of(tester.element(find.byType(LandingPage)))?.settings.name,
-        '/',
+        LandingRoute.name,
       );
     },
   );
@@ -835,9 +837,9 @@ Future<void> _pumpDirectVenuePage(
     ),
   );
   await tester.pump();
-  Navigator.of(
-    tester.element(find.byType(LandingPage)),
-  ).pushNamed(VenuePage.routeName);
+  unawaited(
+    tester.element(find.byType(LandingPage)).router.push(VenueRoute()),
+  );
   await tester.pumpAndSettle();
 }
 

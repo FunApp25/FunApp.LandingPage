@@ -1,17 +1,17 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
-import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
 import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
 
 /// Hosts the approved Fun App Ltd Privacy Notice as a dedicated web page.
+@RoutePage()
 final class PrivacyNoticePage extends StatelessWidget {
   /// Creates the Privacy Notice page.
   const PrivacyNoticePage({
     this.markdownData,
     this.onLinkLaunch,
-    this.landingRouteController,
     super.key,
   });
 
@@ -20,9 +20,6 @@ final class PrivacyNoticePage extends StatelessWidget {
 
   /// Optional link-launch override used by deterministic tests.
   final ValueChanged<Uri>? onLinkLaunch;
-
-  /// Coordinates navigation to landing-page anchors.
-  final LandingRouteController? landingRouteController;
 
   /// Flutter route represented by the GitHub-Pages-safe hash URL.
   static const String routeName = LegalRoutes.privacy;
@@ -47,6 +44,5 @@ final class PrivacyNoticePage extends StatelessWidget {
     markdownKey: const Key('privacyNoticeMarkdown'),
     documentHeadingKey: const Key('privacyNoticeDocumentHeading'),
     onLinkLaunch: onLinkLaunch,
-    landingRouteController: landingRouteController,
   );
 }

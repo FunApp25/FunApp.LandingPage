@@ -1,16 +1,19 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
-import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/viewport_footer_scroll_view.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
-import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_form_region.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_introduction.dart';
 import 'package:fun_app_landing_page/presentation/venue/widgets/venue_success_content.dart';
@@ -20,12 +23,12 @@ typedef VenueLeadFormBlocFactory = VenueLeadFormBloc Function();
 
 /// Dedicated Venue route aligned with form nodes `2731:1392` and `2733:2319`
 /// and success nodes `2733:2857` and `2733:3031`.
+@RoutePage()
 final class VenuePage extends StatelessWidget {
   /// Creates the routed Venue sign-up page.
   const VenuePage({
     this.createBloc,
     this.onPrivacyNoticeLaunch,
-    this.landingRouteController,
     super.key,
   });
 
@@ -38,27 +41,28 @@ final class VenuePage extends StatelessWidget {
   /// Optional browser-launch override for presentation tests.
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
 
-  /// Coordinates navigation back to an existing landing route.
-  final LandingRouteController? landingRouteController;
-
   @override
-  Widget build(BuildContext context) => BlocProvider(
-    create: (_) => (createBloc ?? getIt.call<VenueLeadFormBloc>)(),
-    child: _VenuePageView(
-      onPrivacyNoticeLaunch: onPrivacyNoticeLaunch,
-      landingRouteController: landingRouteController,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final dependencies = AppRouteDependencies.maybeOf(context);
+    final blocFactory =
+        createBloc ??
+        dependencies?.createVenueLeadFormBloc ??
+        getIt.call<VenueLeadFormBloc>;
+
+    return BlocProvider(
+      create: (_) => blocFactory(),
+      child: _VenuePageView(
+        onPrivacyNoticeLaunch:
+            onPrivacyNoticeLaunch ?? dependencies?.onPrivacyNoticeLaunch,
+      ),
+    );
+  }
 }
 
 final class _VenuePageView extends StatefulWidget {
-  const _VenuePageView({
-    this.onPrivacyNoticeLaunch,
-    this.landingRouteController,
-  });
+  const _VenuePageView({this.onPrivacyNoticeLaunch});
 
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
-  final LandingRouteController? landingRouteController;
 
   @override
   State<_VenuePageView> createState() => _VenuePageViewState();
@@ -77,18 +81,7 @@ final class _VenuePageViewState extends State<_VenuePageView> {
     BuildContext context,
     LandingSectionTarget target,
   ) {
-    final controller = widget.landingRouteController;
-    if (controller != null) {
-      controller.openLandingSection(context, target);
-    } else {
-      Navigator.of(context).pushNamed('/', arguments: target);
-    }
-  }
-
-  void _openRoute(BuildContext context, String routeName) {
-    if (ModalRoute.of(context)?.settings.name != routeName) {
-      Navigator.of(context).pushNamed(routeName);
-    }
+    unawaited(context.router.push(LandingRoute(initialSection: target)));
   }
 
   void _openPrivacyNotice() {
@@ -151,45 +144,40 @@ final class _VenuePageViewState extends State<_VenuePageView> {
                         LandingSectionTarget.venues,
                       ),
                       onContactSelected: () =>
-                          _openRoute(context, HereAndNowPage.routeName),
+                          unawaited(context.router.push(HereAndNowRoute())),
                     ),
                     Expanded(
-                      child: SingleChildScrollView(
-                        key: const Key('venuePageScrollView'),
+                      child: ViewportFooterScrollView(
+                        scrollKey: const Key('venuePageScrollView'),
                         controller: _scrollController,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _VenuePageMain(
-                              submissionSucceeded: submissionSucceeded,
-                              onPrivacyNoticeSelected: _openPrivacyNotice,
-                            ),
-                            LandingFooter(
-                              onLogoSelected: () => _openLandingSection(
-                                context,
-                                LandingSectionTarget.ourBelief,
-                              ),
-                              onOurBeliefSelected: () => _openLandingSection(
-                                context,
-                                LandingSectionTarget.ourBelief,
-                              ),
-                              onMembershipSelected: () => _openLandingSection(
-                                context,
-                                LandingSectionTarget.membership,
-                              ),
-                              onFoundingFriendsSelected: () =>
-                                  _openLandingSection(
-                                    context,
-                                    LandingSectionTarget.foundingFriends,
-                                  ),
-                              onVenuesSelected: () => _openLandingSection(
-                                context,
-                                LandingSectionTarget.venues,
-                              ),
-                              onPrivacyNoticeSelected: () =>
-                                  _openRoute(context, LegalRoutes.privacy),
-                            ),
-                          ],
+                        content: _VenuePageMain(
+                          submissionSucceeded: submissionSucceeded,
+                          onPrivacyNoticeSelected: _openPrivacyNotice,
+                        ),
+                        footer: LandingFooter(
+                          onLogoSelected: () => _openLandingSection(
+                            context,
+                            LandingSectionTarget.ourBelief,
+                          ),
+                          onOurBeliefSelected: () => _openLandingSection(
+                            context,
+                            LandingSectionTarget.ourBelief,
+                          ),
+                          onMembershipSelected: () => _openLandingSection(
+                            context,
+                            LandingSectionTarget.membership,
+                          ),
+                          onFoundingFriendsSelected: () => _openLandingSection(
+                            context,
+                            LandingSectionTarget.foundingFriends,
+                          ),
+                          onVenuesSelected: () => _openLandingSection(
+                            context,
+                            LandingSectionTarget.venues,
+                          ),
+                          onPrivacyNoticeSelected: () => unawaited(
+                            context.router.push(PrivacyNoticeRoute()),
+                          ),
                         ),
                       ),
                     ),

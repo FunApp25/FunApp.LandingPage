@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:ui' show CheckedState;
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
@@ -56,7 +59,7 @@ void main() {
     expect(find.byType(HereAndNowPage), findsOneWidget);
     expect(
       ModalRoute.of(tester.element(find.byType(HereAndNowPage)))?.settings.name,
-      HereAndNowPage.routeName,
+      HereAndNowRoute.name,
     );
 
     await tester.binding.handlePopRoute();
@@ -96,7 +99,7 @@ void main() {
       ModalRoute.of(
         tester.element(find.byType(FoundingFriendPage)),
       )?.settings.name,
-      FoundingFriendPage.routeName,
+      FoundingFriendRoute.name,
     );
 
     await tester.binding.handlePopRoute();
@@ -110,9 +113,9 @@ void main() {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(const FunAppLandingPageApp());
     await tester.pump();
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed(HereAndNowPage.routeName);
+    unawaited(
+      tester.element(find.byType(LandingPage)).router.push(HereAndNowRoute()),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(
@@ -132,9 +135,12 @@ void main() {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(const FunAppLandingPageApp());
     await tester.pump();
-    Navigator.of(
-      tester.element(find.byType(LandingPage)),
-    ).pushNamed(FoundingFriendPage.routeName);
+    unawaited(
+      tester
+          .element(find.byType(LandingPage))
+          .router
+          .push(FoundingFriendRoute()),
+    );
     await tester.pumpAndSettle();
 
     final footerLogo = find.byKey(const Key('footerLogoLink'));

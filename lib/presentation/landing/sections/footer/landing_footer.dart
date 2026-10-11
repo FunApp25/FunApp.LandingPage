@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
@@ -7,7 +11,6 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
-import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 
 /// Landing-page footer from Figma node `2262:1347`.
 final class LandingFooter extends StatelessWidget {
@@ -63,9 +66,9 @@ final class LandingFooter extends StatelessWidget {
         onSelected: onVenuesSelected,
       ),
     ];
-    void openLegalRoute(String routeName) {
-      if (ModalRoute.of(context)?.settings.name != routeName) {
-        Navigator.of(context).pushNamed(routeName);
+    void openLegalRoute(PageRouteInfo route) {
+      if (context.router.current.name != route.routeName) {
+        unawaited(context.router.push(route));
       }
     }
 
@@ -78,22 +81,22 @@ final class LandingFooter extends StatelessWidget {
       (
         semanticKey: const Key('footerTermsLink'),
         label: context.l10n.landingFooterTermsOfUse,
-        onSelected: () => openLegalRoute(LegalRoutes.terms),
+        onSelected: () => openLegalRoute(const TermsRoute()),
       ),
       (
         semanticKey: const Key('footerRefundsLink'),
         label: context.l10n.landingFooterRefundCancellationPolicy,
-        onSelected: () => openLegalRoute(LegalRoutes.refunds),
+        onSelected: () => openLegalRoute(const RefundsRoute()),
       ),
       (
         semanticKey: const Key('footerCookiePolicyLink'),
         label: context.l10n.landingFooterCookiePolicy,
-        onSelected: () => openLegalRoute(LegalRoutes.cookies),
+        onSelected: () => openLegalRoute(const CookiePolicyRoute()),
       ),
       (
         semanticKey: const Key('footerCookieBannerLink'),
         label: context.l10n.landingFooterCookieBanner,
-        onSelected: () => openLegalRoute(LegalRoutes.cookieBanner),
+        onSelected: () => openLegalRoute(const CookieBannerRoute()),
       ),
     ];
     final isMobile = MediaQuery.sizeOf(context).width < 600;

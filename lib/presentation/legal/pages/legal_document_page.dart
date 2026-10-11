@@ -1,16 +1,18 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
-import 'package:fun_app_landing_page/presentation/landing/navigation/landing_route_controller.dart';
+import 'package:fun_app_landing_page/presentation/core/widgets/viewport_footer_scroll_view.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/landing_header.dart';
-import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:markdown/markdown.dart' as markdown;
 
 /// Shared branded shell and Markdown renderer for public legal documents.
@@ -32,7 +34,6 @@ final class LegalDocumentPage extends StatelessWidget {
     this.headingKey,
     this.documentHeadingKey,
     this.onLinkLaunch,
-    this.landingRouteController,
     super.key,
   });
 
@@ -66,9 +67,6 @@ final class LegalDocumentPage extends StatelessWidget {
   /// Optional link-launch override used by deterministic tests.
   final ValueChanged<Uri>? onLinkLaunch;
 
-  /// Coordinates navigation to landing-page anchors.
-  final LandingRouteController? landingRouteController;
-
   /// Stable page key.
   final Key pageKey;
 
@@ -84,18 +82,7 @@ final class LegalDocumentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void openLandingSection(LandingSectionTarget target) {
-      final controller = landingRouteController;
-      if (controller != null) {
-        controller.openLandingSection(context, target);
-      } else {
-        Navigator.of(context).pushNamed('/', arguments: target);
-      }
-    }
-
-    void openRoute(String routeName) {
-      if (ModalRoute.of(context)?.settings.name != routeName) {
-        Navigator.of(context).pushNamed(routeName);
-      }
+      unawaited(context.router.push(LandingRoute(initialSection: target)));
     }
 
     return Title(
@@ -118,45 +105,41 @@ final class LegalDocumentPage extends StatelessWidget {
                     openLandingSection(LandingSectionTarget.foundingFriends),
                 onVenuesSelected: () =>
                     openLandingSection(LandingSectionTarget.venues),
-                onContactSelected: () => openRoute(HereAndNowPage.routeName),
+                onContactSelected: () =>
+                    unawaited(context.router.push(HereAndNowRoute())),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  key: scrollKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _LegalDocumentCard(
-                        documentId: documentId,
-                        title: title,
-                        markdownData: markdownData,
-                        markdownFuture: markdownFuture,
-                        status: status,
-                        statusKey: statusKey,
-                        showLocalizedHeading: showLocalizedHeading,
-                        headingKey: headingKey,
-                        documentHeadingKey: documentHeadingKey,
-                        contentKey: contentKey,
-                        markdownKey: markdownKey,
-                        onLinkLaunch: onLinkLaunch,
-                      ),
-                      LandingFooter(
-                        onLogoSelected: () =>
-                            openLandingSection(LandingSectionTarget.ourBelief),
-                        onOurBeliefSelected: () =>
-                            openLandingSection(LandingSectionTarget.ourBelief),
-                        onMembershipSelected: () => openLandingSection(
-                          LandingSectionTarget.membership,
-                        ),
-                        onFoundingFriendsSelected: () => openLandingSection(
-                          LandingSectionTarget.foundingFriends,
-                        ),
-                        onVenuesSelected: () =>
-                            openLandingSection(LandingSectionTarget.venues),
-                        onPrivacyNoticeSelected: () =>
-                            openRoute(LegalRoutes.privacy),
-                      ),
-                    ],
+                child: ViewportFooterScrollView(
+                  scrollKey: scrollKey,
+                  content: _LegalDocumentCard(
+                    documentId: documentId,
+                    title: title,
+                    markdownData: markdownData,
+                    markdownFuture: markdownFuture,
+                    status: status,
+                    statusKey: statusKey,
+                    showLocalizedHeading: showLocalizedHeading,
+                    headingKey: headingKey,
+                    documentHeadingKey: documentHeadingKey,
+                    contentKey: contentKey,
+                    markdownKey: markdownKey,
+                    onLinkLaunch: onLinkLaunch,
+                  ),
+                  footer: LandingFooter(
+                    onLogoSelected: () =>
+                        openLandingSection(LandingSectionTarget.ourBelief),
+                    onOurBeliefSelected: () =>
+                        openLandingSection(LandingSectionTarget.ourBelief),
+                    onMembershipSelected: () => openLandingSection(
+                      LandingSectionTarget.membership,
+                    ),
+                    onFoundingFriendsSelected: () => openLandingSection(
+                      LandingSectionTarget.foundingFriends,
+                    ),
+                    onVenuesSelected: () =>
+                        openLandingSection(LandingSectionTarget.venues),
+                    onPrivacyNoticeSelected: () =>
+                        unawaited(context.router.push(PrivacyNoticeRoute())),
                   ),
                 ),
               ),
