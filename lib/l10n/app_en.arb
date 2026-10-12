@@ -28,6 +28,10 @@
   "@landingHeaderQueueCta": {
     "description": "Header call to action that opens the Here and Now sign-up route."
   },
+  "landingHeaderMobileCta": "Join the fun",
+  "@landingHeaderMobileCta": {
+    "description": "Mobile header call to action that opens the Here and Now sign-up route."
+  },
   "landingOpenNavigationMenu": "Open navigation menu",
   "@landingOpenNavigationMenu": {
     "description": "Accessible label for opening the mobile landing navigation menu."
@@ -778,9 +782,17 @@
   "@landingFaqCancelAnswer1": {
     "description": "First paragraph answering the cancellation question."
   },
-  "landingFaqCancelAnswer2": "After launch and the initial one-month trial period, you can cancel your Founding Friend free subscription, and after 14 days for other, later, free and paid subscription types. We want you here because the Fun App is useful and enjoyable, not because you forgot where the cancel button is.",
+  "landingFaqCancelAnswer2": "You can cancel your free membership or Here & Now subscription at any point. We just ask that you give 14 days’ notice so that Fun App can keep all its administration in-line.",
   "@landingFaqCancelAnswer2": {
     "description": "Second paragraph answering the cancellation question."
+  },
+  "landingFaqCancelAnswer3": "Founding Friends can get a refund of their membership fee within 14 days of purchase and will be able to resell their Founding Friend status to other Fun App users, via Fun App, beyond one year after launch. Resale prices will be determined by buyers and sellers.",
+  "@landingFaqCancelAnswer3": {
+    "description": "Third paragraph answering the cancellation question."
+  },
+  "landingFaqCancelAnswer4": "We want you here because Fun App is useful and enjoyable, not because you forgot where the cancel button is.",
+  "@landingFaqCancelAnswer4": {
+    "description": "Fourth paragraph answering the cancellation question."
   },
   "landingFaqPhotoQuestion": "What photo should I use?",
   "@landingFaqPhotoQuestion": {

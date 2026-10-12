@@ -112,7 +112,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      contact: 'Únete a la cola',
+      contact: 'Únete a la diversión',
       eyebrow: 'UNA FORMA MÁS AMABLE DE CONECTAR',
       headline:
           'Fun App nació de la convicción de que crear conexiones debería ser '
@@ -120,7 +120,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      contact: "Ymuno â'r ciw",
+      contact: "Ymuno â'r hwyl",
       eyebrow: 'FFORDD FWY CYFEILLGAR O GYSYLLTU',
       headline:
           'Dechreuodd Fun App o’r gred y dylai creu cysylltiadau fod '
@@ -128,7 +128,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      contact: 'Стаць у чаргу',
+      contact: 'Далучыцца да весялосці',
       eyebrow: 'БОЛЬШ ПРЫЯЗНЫ СПОСАБ ЗНАЁМІЦЦА',
       headline:
           'Fun App пачаўся з веры ў тое, што наладжваць сувязі павінна быць '
@@ -598,7 +598,14 @@ void main() {
         reason: 'No layout exception is expected at $size.',
       );
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
-      expect(find.text('Join the queue'), findsOneWidget);
+      expect(
+        find.text(
+          size.width < LandingHeader.mobileUxBreakpoint
+              ? 'Join the fun'
+              : 'Join the queue',
+        ),
+        findsOneWidget,
+      );
 
       final heroTop = tester.getTopLeft(find.byType(HeroSection)).dy;
       final heroCardTop = tester
@@ -831,7 +838,14 @@ void main() {
               ? findsOneWidget
               : findsNWidgets(2),
         );
-        expect(find.text('Стаць у чаргу'), findsOneWidget);
+        expect(
+          find.text(
+            size.width < LandingHeader.mobileUxBreakpoint
+                ? 'Далучыцца да весялосці'
+                : 'Стаць у чаргу',
+          ),
+          findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
         expect(
           size.width < LandingHeader.mobileUxBreakpoint

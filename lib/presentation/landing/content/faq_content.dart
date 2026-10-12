@@ -48,6 +48,8 @@ List<FaqItemContent> buildFaqItems(AppLocalizations l10n) => [
     paragraphs: [
       FaqParagraphContent(l10n.landingFaqCancelAnswer1),
       FaqParagraphContent(l10n.landingFaqCancelAnswer2),
+      FaqParagraphContent(l10n.landingFaqCancelAnswer3),
+      FaqParagraphContent(l10n.landingFaqCancelAnswer4),
     ],
   ),
   FaqItemContent(

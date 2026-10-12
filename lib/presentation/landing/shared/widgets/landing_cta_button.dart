@@ -98,9 +98,12 @@ final class LandingCtaButton extends StatelessWidget {
           LandingCtaSize.prominent => LandingTextStyles.heroCta,
         }.copyWith(color: foregroundColor),
       );
+      final compactLabel = constraints.hasBoundedWidth
+          ? FittedBox(fit: BoxFit.scaleDown, child: labelWidget)
+          : labelWidget;
 
       final content = switch (size) {
-        LandingCtaSize.compact => labelWidget,
+        LandingCtaSize.compact => compactLabel,
         LandingCtaSize.prominent => Row(
           mainAxisSize: useConstrainedProminentLayout
               ? MainAxisSize.max

@@ -99,7 +99,7 @@ void main() {
     expect(tester.getSize(logo).width, closeTo(89, 0.5));
     expect(tester.getSize(logo).height, 29);
     expect(tester.getRect(logo).left, 16);
-    expect(find.text('Join the queue'), findsOneWidget);
+    expect(find.text('Join the fun'), findsOneWidget);
     expect(contact, findsOneWidget);
     expect(tester.getSize(menuButton), const Size.square(44));
     expect(tester.getSize(menuVisual), const Size.square(38));
@@ -116,28 +116,28 @@ void main() {
   for (final example in const [
     (
       locale: Locale('en'),
-      contact: 'Join the queue',
+      contact: 'Join the fun',
       open: 'Open navigation menu',
       close: 'Close navigation menu',
       firstNavigation: 'OUR BELIEF',
     ),
     (
       locale: Locale('es'),
-      contact: 'Únete a la cola',
+      contact: 'Únete a la diversión',
       open: 'Abrir menú de navegación',
       close: 'Cerrar menú de navegación',
       firstNavigation: 'NUESTRA CREENCIA',
     ),
     (
       locale: Locale('cy'),
-      contact: "Ymuno â'r ciw",
+      contact: "Ymuno â'r hwyl",
       open: 'Agor y ddewislen lywio',
       close: "Cau'r ddewislen lywio",
       firstNavigation: 'EIN CRED',
     ),
     (
       locale: Locale('be'),
-      contact: 'Стаць у чаргу',
+      contact: 'Далучыцца да весялосці',
       open: 'Адкрыць меню навігацыі',
       close: 'Закрыць меню навігацыі',
       firstNavigation: 'НАША ВЕРА',
@@ -190,6 +190,43 @@ void main() {
       },
     );
   }
+
+  testWidgets('keeps the mobile CTA compact at 2x text scale', (tester) async {
+    tester.binding.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(
+      tester.binding.platformDispatcher.clearTextScaleFactorTestValue,
+    );
+
+    for (final example in const [
+      (locale: Locale('en'), contact: 'Join the fun'),
+      (locale: Locale('es'), contact: 'Únete a la diversión'),
+      (locale: Locale('cy'), contact: "Ymuno â'r hwyl"),
+      (locale: Locale('be'), contact: 'Далучыцца да весялосці'),
+    ]) {
+      for (final width in const [320.0, 390.0, 599.0]) {
+        setTestSurface(tester, Size(width, 844));
+        await pumpLandingApp(tester, locale: example.locale);
+
+        final header = find.byType(LandingHeader);
+        final logo = find.descendant(
+          of: header,
+          matching: find.byKey(const Key('funAppLogo')),
+        );
+        final contact = find.byKey(const Key('landingHeaderContactCta'));
+        final menu = find.byKey(const Key('landingMobileMenuButton'));
+        final contactRect = tester.getRect(contact);
+        final logoRect = tester.getRect(logo);
+        final menuRect = tester.getRect(menu);
+
+        expect(find.text(example.contact), findsOneWidget);
+        expect(contactRect.height, greaterThanOrEqualTo(44));
+        expect(contactRect.height, lessThanOrEqualTo(70));
+        expect(contactRect.left, greaterThanOrEqualTo(logoRect.right));
+        expect(contactRect.right, lessThanOrEqualTo(menuRect.left));
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
 
   testWidgets(
     'menu uses modal focus, semantics, Escape, and repeat dismissal',
