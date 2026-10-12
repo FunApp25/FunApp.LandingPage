@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -106,11 +107,16 @@ void main() {
     expect(tester.getSize(contact).height, 44);
     final contactVisual = _ctaVisual(contact);
     final contactLabel = find.text('Join the fun');
+    final contactParagraph = tester.renderObject<RenderParagraph>(
+      contactLabel,
+    );
     expect(tester.getSize(contactVisual).height, 38);
     expect(
       tester.getSize(contactVisual).width,
       closeTo(tester.getSize(contactLabel).width + 40, 0.5),
     );
+    expect(contactParagraph.text.toPlainText(), 'Join the fun');
+    expect(contactParagraph.didExceedMaxLines, isFalse);
     expect(tester.getRect(contactVisual).center.dy, 35);
     expect(tester.getSize(menuVisual), const Size.square(38));
     expect(tester.getRect(menuVisual).center.dy, 35);
@@ -160,10 +166,15 @@ void main() {
           final contactRect = tester.getRect(
             contact,
           );
+          final contactParagraph = tester.renderObject<RenderParagraph>(
+            find.text(example.contact),
+          );
           final contactVisualRect = tester.getRect(_ctaVisual(contact));
           final menuVisualRect = tester.getRect(menuVisual);
           final logoRect = tester.getRect(logo);
           expect(tester.getSize(_ctaVisual(contact)).height, 38);
+          expect(contactParagraph.text.toPlainText(), example.contact);
+          expect(contactParagraph.didExceedMaxLines, isFalse);
           expect(contactRect.width, lessThan(width - 32));
           expect(
             contactRect.height,

@@ -132,7 +132,10 @@ final class LandingCtaButton extends StatelessWidget {
         )..layout();
         final desiredWidth = textPainter.width + (horizontalPadding * 2);
         if (desiredWidth <= constraints.maxWidth) {
-          return SizedBox(width: textPainter.width, child: labelWidget);
+          return UnconstrainedBox(
+            constrainedAxis: Axis.vertical,
+            child: labelWidget,
+          );
         }
 
         return SizedBox(
