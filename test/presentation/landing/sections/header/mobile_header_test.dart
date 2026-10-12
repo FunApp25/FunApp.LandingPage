@@ -138,12 +138,22 @@ void main() {
           findsOneWidget,
         );
         if (width < LandingHeader.mobileUxBreakpoint) {
+          final header = find.byType(LandingHeader);
+          final logo = find.descendant(
+            of: header,
+            matching: find.byKey(const Key('funAppLogo')),
+          );
           final contact = find.byKey(
             const Key('landingHeaderContactCta'),
+          );
+          final menuVisual = find.byKey(
+            const Key('mobileMenuControlVisual'),
           );
           final contactRect = tester.getRect(
             contact,
           );
+          final menuVisualRect = tester.getRect(menuVisual);
+          final logoRect = tester.getRect(logo);
           expect(tester.getSize(_ctaVisual(contact)).height, 38);
           expect(contactRect.width, lessThan(width - 32));
           expect(
@@ -152,6 +162,11 @@ void main() {
                 .getSize(find.byKey(const Key('landingMobileMenuButton')))
                 .height,
           );
+          expect(menuVisualRect.right, width - 16);
+          expect(menuVisualRect.left - contactRect.right, 8);
+          expect(contactRect.left, greaterThanOrEqualTo(logoRect.right));
+          expect(contactRect.center.dy, 35);
+          expect(menuVisualRect.center.dy, 35);
         }
         expect(tester.takeException(), isNull);
       }

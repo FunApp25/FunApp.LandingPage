@@ -57,30 +57,39 @@ final class MobileHeader extends StatelessWidget {
             horizontal: AppSizes.mobileHeaderPadding,
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               HeaderLogo(onSelected: onLogoSelected),
-              const SizedBox(width: 8),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
-                  child: LandingCtaButton(
-                    key: const Key('landingHeaderContactCta'),
-                    label: contactLabel,
-                    size: LandingCtaSize.compact,
-                    compactHorizontalPadding: contactHorizontalPadding,
-                    compactVisualHeight: AppSizes.mobileControlVisualSize,
-                    onPressed: onContactSelected,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: LandingCtaButton(
+                          key: const Key('landingHeaderContactCta'),
+                          label: contactLabel,
+                          size: LandingCtaSize.compact,
+                          compactHorizontalPadding: contactHorizontalPadding,
+                          compactVisualHeight: AppSizes.mobileControlVisualSize,
+                          onPressed: onContactSelected,
+                        ),
+                      ),
+                      // The menu target has a 6px leading visual inset so its
+                      // 38px visual remains flush with the header's right edge.
+                      const SizedBox(width: 2),
+                      MobileMenuControl(
+                        key: const Key('landingMobileMenuButton'),
+                        semanticLabel: menuSemanticLabel,
+                        iconAsset: AppAssets.mobileMenu,
+                        expanded: isMenuExpanded,
+                        focusNode: menuFocusNode,
+                        onPressed: onMenuPressed,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 2),
-              MobileMenuControl(
-                key: const Key('landingMobileMenuButton'),
-                semanticLabel: menuSemanticLabel,
-                iconAsset: AppAssets.mobileMenu,
-                expanded: isMenuExpanded,
-                focusNode: menuFocusNode,
-                onPressed: onMenuPressed,
               ),
             ],
           ),
