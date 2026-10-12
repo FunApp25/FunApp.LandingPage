@@ -81,7 +81,7 @@ void main() {
     }
     expect(find.text('MEMBERSHIP'), findsNWidgets(2));
     for (final label in [
-      'Join the queue',
+      'Join the fun',
       'A FRIENDLIER WAY TO CONNECT',
     ]) {
       expect(find.text(label), findsOneWidget);
@@ -112,7 +112,7 @@ void main() {
   for (final example in const [
     (
       locale: Locale('es'),
-      contact: 'Únete a la cola',
+      contact: 'Únete a la diversión',
       eyebrow: 'UNA FORMA MÁS AMABLE DE CONECTAR',
       headline:
           'Fun App nació de la convicción de que crear conexiones debería ser '
@@ -120,7 +120,7 @@ void main() {
     ),
     (
       locale: Locale('cy'),
-      contact: "Ymuno â'r ciw",
+      contact: "Ymuno â'r hwyl",
       eyebrow: 'FFORDD FWY CYFEILLGAR O GYSYLLTU',
       headline:
           'Dechreuodd Fun App o’r gred y dylai creu cysylltiadau fod '
@@ -128,7 +128,7 @@ void main() {
     ),
     (
       locale: Locale('be'),
-      contact: 'Стаць у чаргу',
+      contact: 'Далучыцца да весялосці',
       eyebrow: 'БОЛЬШ ПРЫЯЗНЫ СПОСАБ ЗНАЁМІЦЦА',
       headline:
           'Fun App пачаўся з веры ў тое, што наладжваць сувязі павінна быць '
@@ -502,9 +502,9 @@ void main() {
     );
 
     final contact = tester
-        .getSemantics(find.text('Join the queue'))
+        .getSemantics(find.text('Join the fun'))
         .getSemanticsData();
-    expect(contact.label, 'Join the queue');
+    expect(contact.label, 'Join the fun');
     expect(contact.flagsCollection.isButton, isTrue);
     expect(contact.flagsCollection.isLink, isFalse);
     expect(
@@ -598,7 +598,7 @@ void main() {
         reason: 'No layout exception is expected at $size.',
       );
       expect(find.byKey(const Key('heroPeopleImage')), findsOneWidget);
-      expect(find.text('Join the queue'), findsOneWidget);
+      expect(find.text('Join the fun'), findsOneWidget);
 
       final heroTop = tester.getTopLeft(find.byType(HeroSection)).dy;
       final heroCardTop = tester
@@ -831,7 +831,7 @@ void main() {
               ? findsOneWidget
               : findsNWidgets(2),
         );
-        expect(find.text('Стаць у чаргу'), findsOneWidget);
+        expect(find.text('Далучыцца да весялосці'), findsOneWidget);
         expect(tester.takeException(), isNull);
         expect(
           size.width < LandingHeader.mobileUxBreakpoint
