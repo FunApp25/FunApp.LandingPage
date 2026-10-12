@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
@@ -106,19 +108,38 @@ final class LandingCtaButton extends StatelessWidget {
         LandingCtaSize.prominent => 40.0,
       };
 
+      final labelStyle = switch (size) {
+        LandingCtaSize.compact => LandingTextStyles.headerCta,
+        LandingCtaSize.prominent => LandingTextStyles.heroCta,
+      }.copyWith(color: foregroundColor);
       final labelWidget = Text(
         label,
         textAlign: TextAlign.center,
         maxLines: 1,
         softWrap: false,
-        style: switch (size) {
-          LandingCtaSize.compact => LandingTextStyles.headerCta,
-          LandingCtaSize.prominent => LandingTextStyles.heroCta,
-        }.copyWith(color: foregroundColor),
+        style: labelStyle,
       );
-      final compactLabel = constraints.hasBoundedWidth
-          ? FittedBox(fit: BoxFit.scaleDown, child: labelWidget)
-          : labelWidget;
+      final compactLabel = () {
+        if (!constraints.hasBoundedWidth || isProminent) {
+          return labelWidget;
+        }
+
+        final textPainter = TextPainter(
+          text: TextSpan(text: label, style: labelStyle),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+          maxLines: 1,
+        )..layout();
+        final desiredWidth = textPainter.width + (horizontalPadding * 2);
+        if (desiredWidth <= constraints.maxWidth) {
+          return SizedBox(width: textPainter.width, child: labelWidget);
+        }
+
+        return SizedBox(
+          width: math.max(0, constraints.maxWidth - (horizontalPadding * 2)),
+          child: FittedBox(fit: BoxFit.scaleDown, child: labelWidget),
+        );
+      }();
 
       final content = switch (size) {
         LandingCtaSize.compact => compactLabel,
@@ -182,12 +203,11 @@ final class LandingCtaButton extends StatelessWidget {
           ? SizedBox(width: double.infinity, child: visual)
           : visual;
       final renderedVisual = usesCompactTarget
-          ? SizedBox(
-              height: AppSizes.mobileControlTargetSize,
-              child: Align(
-                alignment: compactVisualAlignment,
-                child: compactVisual,
-              ),
+          ? Align(
+              alignment: compactVisualAlignment,
+              widthFactor: compactExpandWidth ? null : 1,
+              heightFactor: AppSizes.mobileControlTargetSize / compactHeight,
+              child: compactVisual,
             )
           : compactVisual;
 

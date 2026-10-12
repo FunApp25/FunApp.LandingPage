@@ -105,12 +105,20 @@ void main() {
     expect(tester.getSize(menuButton), const Size.square(44));
     expect(tester.getSize(contact).height, 44);
     final contactVisual = _ctaVisual(contact);
+    final contactLabel = find.text('Join the fun');
     expect(tester.getSize(contactVisual).height, 38);
+    expect(
+      tester.getSize(contactVisual).width,
+      closeTo(tester.getSize(contactLabel).width + 40, 0.5),
+    );
     expect(tester.getRect(contactVisual).center.dy, 35);
     expect(tester.getSize(menuVisual), const Size.square(38));
     expect(tester.getRect(menuVisual).center.dy, 35);
     expect(tester.getRect(header).right - tester.getRect(menuVisual).right, 16);
-    expect(tester.getRect(menuVisual).left - tester.getRect(contact).right, 8);
+    expect(
+      tester.getRect(menuVisual).left - tester.getRect(contactVisual).right,
+      8,
+    );
     expect(
       (icon.bytesLoader as SvgAssetLoader).assetName,
       AppAssets.mobileMenu,
@@ -152,6 +160,7 @@ void main() {
           final contactRect = tester.getRect(
             contact,
           );
+          final contactVisualRect = tester.getRect(_ctaVisual(contact));
           final menuVisualRect = tester.getRect(menuVisual);
           final logoRect = tester.getRect(logo);
           expect(tester.getSize(_ctaVisual(contact)).height, 38);
@@ -163,7 +172,7 @@ void main() {
                 .height,
           );
           expect(menuVisualRect.right, width - 16);
-          expect(menuVisualRect.left - contactRect.right, 8);
+          expect(menuVisualRect.left - contactVisualRect.right, 8);
           expect(contactRect.left, greaterThanOrEqualTo(logoRect.right));
           expect(contactRect.center.dy, 35);
           expect(menuVisualRect.center.dy, 35);
