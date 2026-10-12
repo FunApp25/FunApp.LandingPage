@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/header_navigation_item_data.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/mobile_menu_control.dart';
@@ -66,9 +67,11 @@ final class _LandingMobileMenuState extends State<LandingMobileMenu> {
           children: [
             SizedBox(
               key: const Key('landingMobileMenuTopArea'),
-              height: 70,
+              height: AppSizes.mobileHeaderHeight,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.mobileHeaderPadding,
+                ),
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: MobileMenuControl(
@@ -105,14 +108,20 @@ final class _LandingMobileMenuState extends State<LandingMobileMenu> {
             ),
             Padding(
               key: const Key('landingMobileMenuContactArea'),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Center(
-                child: LandingCtaButton(
-                  key: const Key('landingMobileMenuContactCta'),
-                  label: widget.contactLabel,
-                  size: LandingCtaSize.compact,
-                  onPressed: widget.onContactSelected,
-                ),
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.mobileHeaderPadding,
+                AppSizes.mobileMenuBottomSpacing,
+                AppSizes.mobileHeaderPadding,
+                AppSizes.mobileMenuBottomSpacing,
+              ),
+              child: LandingCtaButton(
+                key: const Key('landingMobileMenuContactCta'),
+                label: widget.contactLabel,
+                size: LandingCtaSize.compact,
+                compactVisualHeight: AppSizes.mobileControlVisualSize,
+                compactVisualAlignment: Alignment.bottomCenter,
+                compactExpandWidth: true,
+                onPressed: widget.onContactSelected,
               ),
             ),
           ],

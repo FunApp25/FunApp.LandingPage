@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/header_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/mobile_menu_control.dart';
@@ -42,7 +43,7 @@ final class MobileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox(
     key: const Key('landingHeaderMobileLayout'),
-    height: 70,
+    height: AppSizes.mobileHeaderHeight,
     child: LayoutBuilder(
       builder: (context, constraints) {
         final interpolation = ((constraints.maxWidth - 320) / 70).clamp(
@@ -52,7 +53,9 @@ final class MobileHeader extends StatelessWidget {
         final contactHorizontalPadding = 12 + (8 * interpolation);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.mobileHeaderPadding,
+          ),
           child: Row(
             children: [
               HeaderLogo(onSelected: onLogoSelected),
@@ -65,6 +68,7 @@ final class MobileHeader extends StatelessWidget {
                     label: contactLabel,
                     size: LandingCtaSize.compact,
                     compactHorizontalPadding: contactHorizontalPadding,
+                    compactVisualHeight: AppSizes.mobileControlVisualSize,
                     onPressed: onContactSelected,
                   ),
                 ),

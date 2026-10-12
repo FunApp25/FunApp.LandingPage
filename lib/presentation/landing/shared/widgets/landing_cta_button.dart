@@ -35,6 +35,9 @@ final class LandingCtaButton extends StatelessWidget {
     this.appearance = LandingCtaAppearance.brandOrange,
     this.arrowKey,
     this.compactHorizontalPadding = 20,
+    this.compactVisualHeight,
+    this.compactVisualAlignment = Alignment.center,
+    this.compactExpandWidth = false,
     this.prominentContentExpands = false,
     this.onPressed,
     super.key,
@@ -58,6 +61,18 @@ final class LandingCtaButton extends StatelessWidget {
   /// callers may reduce it when localized text has less available width.
   final double compactHorizontalPadding;
 
+  /// Optional compact visual height for a mobile Figma control.
+  ///
+  /// When set, the visual surface keeps this height while its interactive
+  /// wrapper retains the shared minimum target size.
+  final double? compactVisualHeight;
+
+  /// Alignment of an optional compact visual surface inside its target.
+  final AlignmentGeometry compactVisualAlignment;
+
+  /// Whether an optional compact visual surface should fill its width.
+  final bool compactExpandWidth;
+
   /// Whether a full-width prominent CTA must keep its label flexible.
   final bool prominentContentExpands;
 
@@ -68,6 +83,9 @@ final class LandingCtaButton extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final isProminent = size == LandingCtaSize.prominent;
+      final compactHeight =
+          compactVisualHeight ?? AppSizes.mobileControlTargetSize;
+      final usesCompactTarget = !isProminent && compactVisualHeight != null;
       final backgroundColor = switch (appearance) {
         LandingCtaAppearance.brandOrange => AppColors.warmOrange,
         LandingCtaAppearance.brandBlue => AppColors.blueMain,
@@ -134,8 +152,10 @@ final class LandingCtaButton extends StatelessWidget {
 
       final visual = ConstrainedBox(
         constraints: BoxConstraints(
-          minHeight: 44,
-          maxHeight: isProminent ? double.infinity : 44,
+          minHeight: isProminent
+              ? AppSizes.mobileControlTargetSize
+              : compactHeight,
+          maxHeight: isProminent ? double.infinity : compactHeight,
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -158,6 +178,19 @@ final class LandingCtaButton extends StatelessWidget {
         ),
       );
 
+      final compactVisual = compactExpandWidth
+          ? SizedBox(width: double.infinity, child: visual)
+          : visual;
+      final renderedVisual = usesCompactTarget
+          ? SizedBox(
+              height: AppSizes.mobileControlTargetSize,
+              child: Align(
+                alignment: compactVisualAlignment,
+                child: compactVisual,
+              ),
+            )
+          : compactVisual;
+
       final callback = onPressed;
       if (callback != null) {
         return Semantics(
@@ -178,12 +211,12 @@ final class LandingCtaButton extends StatelessWidget {
               borderRadius: const BorderRadius.all(
                 Radius.circular(AppSizes.pillRadius),
               ),
-              child: visual,
+              child: renderedVisual,
             ),
           ),
         );
       } else {
-        return visual;
+        return renderedVisual;
       }
     },
   );
