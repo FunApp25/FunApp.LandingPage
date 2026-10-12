@@ -102,6 +102,7 @@ void main() {
     expect(find.text('Join the fun'), findsOneWidget);
     expect(contact, findsOneWidget);
     expect(tester.getSize(menuButton), const Size.square(44));
+    expect(tester.getSize(contact).height, 44);
     expect(tester.getSize(menuVisual), const Size.square(38));
     expect(tester.getRect(header).right - tester.getRect(menuVisual).right, 16);
     expect(tester.getRect(menuVisual).left - tester.getRect(contact).right, 8);
@@ -111,6 +112,41 @@ void main() {
     );
     expect(find.byKey(const Key('landingHeaderNavigationItem0')), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('uses one localized CTA label across all header breakpoints', (
+    tester,
+  ) async {
+    for (final example in const [
+      (locale: Locale('en'), contact: 'Join the fun'),
+      (locale: Locale('es'), contact: 'Únete a la diversión'),
+      (locale: Locale('cy'), contact: "Ymuno â'r hwyl"),
+      (locale: Locale('be'), contact: 'Далучыцца да весялосці'),
+    ]) {
+      for (final width in const [320.0, 390.0, 599.0, 600.0, 1440.0]) {
+        setTestSurface(tester, Size(width, 844));
+        await pumpLandingApp(tester, locale: example.locale);
+
+        expect(find.text(example.contact), findsOneWidget);
+        expect(
+          find.byKey(const Key('landingHeaderContactCta')),
+          findsOneWidget,
+        );
+        if (width < LandingHeader.mobileUxBreakpoint) {
+          final contactRect = tester.getRect(
+            find.byKey(const Key('landingHeaderContactCta')),
+          );
+          expect(contactRect.width, lessThan(width - 32));
+          expect(
+            contactRect.height,
+            tester
+                .getSize(find.byKey(const Key('landingMobileMenuButton')))
+                .height,
+          );
+        }
+        expect(tester.takeException(), isNull);
+      }
+    }
   });
 
   for (final example in const [
@@ -219,8 +255,8 @@ void main() {
         final menuRect = tester.getRect(menu);
 
         expect(find.text(example.contact), findsOneWidget);
-        expect(contactRect.height, greaterThanOrEqualTo(44));
-        expect(contactRect.height, lessThanOrEqualTo(70));
+        expect(contactRect.height, 44);
+        expect(contactRect.height, tester.getSize(menu).height);
         expect(contactRect.left, greaterThanOrEqualTo(logoRect.right));
         expect(contactRect.right, lessThanOrEqualTo(menuRect.left));
         expect(tester.takeException(), isNull);

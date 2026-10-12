@@ -24,13 +24,9 @@
   "@landingHeaderForVenues": {
     "description": "Venues visual navigation label in the landing-page header."
   },
-  "landingHeaderQueueCta": "Join the queue",
+  "landingHeaderQueueCta": "Join the fun",
   "@landingHeaderQueueCta": {
     "description": "Header call to action that opens the Here and Now sign-up route."
-  },
-  "landingHeaderMobileCta": "Join the fun",
-  "@landingHeaderMobileCta": {
-    "description": "Mobile header call to action that opens the Here and Now sign-up route."
   },
   "landingOpenNavigationMenu": "Open navigation menu",
   "@landingOpenNavigationMenu": {

@@ -201,14 +201,14 @@ final class _LandingHeaderState extends State<LandingHeader> {
       child: usesMobileUx
           ? MobileHeader(
               onLogoSelected: widget.onLogoSelected,
-              contactLabel: context.l10n.landingHeaderMobileCta,
+              contactLabel: context.l10n.landingHeaderQueueCta,
               onContactSelected: widget.onContactSelected,
               menuSemanticLabel: context.l10n.landingOpenNavigationMenu,
               isMenuExpanded: _isMenuOpen,
               menuFocusNode: _menuFocusNode,
               onMenuPressed: () => _openMobileMenu(
                 navigationItems,
-                context.l10n.landingHeaderMobileCta,
+                context.l10n.landingHeaderQueueCta,
                 context.l10n.landingCloseNavigationMenu,
               ),
             )

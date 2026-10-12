@@ -133,7 +133,10 @@ final class LandingCtaButton extends StatelessWidget {
       };
 
       final visual = ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
+        constraints: BoxConstraints(
+          minHeight: 44,
+          maxHeight: isProminent ? double.infinity : 44,
+        ),
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: backgroundColor,
@@ -146,7 +149,11 @@ final class LandingCtaButton extends StatelessWidget {
               horizontal: horizontalPadding,
               vertical: isProminent ? 12 : 8,
             ),
-            child: Center(widthFactor: 1, child: content),
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: content,
+            ),
           ),
         ),
       );
