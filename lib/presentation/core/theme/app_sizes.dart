@@ -43,6 +43,21 @@ abstract final class AppSizes {
   /// Height of the V2 wordmark in the Figma landing-page header.
   static const double headerWordmarkHeight = 29;
 
+  /// Height of the compact mobile header row from the Figma landing page.
+  static const double mobileHeaderHeight = 70;
+
+  /// Horizontal inset used by the compact mobile header and menu.
+  static const double mobileHeaderPadding = 16;
+
+  /// Visible height of compact mobile controls from the Figma landing page.
+  static const double mobileControlVisualSize = 38;
+
+  /// Effective interaction target used by compact mobile controls.
+  static const double mobileControlTargetSize = 44;
+
+  /// Bottom inset used by the full-screen mobile menu CTA.
+  static const double mobileMenuBottomSpacing = 16;
+
   /// Width of the V2 wordmark in the Figma landing-page footer.
   static const double footerWordmarkWidth = 123;
 

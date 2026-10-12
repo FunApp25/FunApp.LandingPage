@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
@@ -99,12 +101,30 @@ void main() {
     expect(tester.getSize(logo).width, closeTo(89, 0.5));
     expect(tester.getSize(logo).height, 29);
     expect(tester.getRect(logo).left, 16);
-    expect(find.text('Join the queue'), findsOneWidget);
+    expect(find.text('Join the fun'), findsOneWidget);
     expect(contact, findsOneWidget);
     expect(tester.getSize(menuButton), const Size.square(44));
+    expect(tester.getSize(contact).height, 44);
+    final contactVisual = _ctaVisual(contact);
+    final contactLabel = find.text('Join the fun');
+    final contactParagraph = tester.renderObject<RenderParagraph>(
+      contactLabel,
+    );
+    expect(tester.getSize(contactVisual).height, 38);
+    expect(
+      tester.getSize(contactVisual).width,
+      closeTo(tester.getSize(contactLabel).width + 40, 0.5),
+    );
+    expect(contactParagraph.text.toPlainText(), 'Join the fun');
+    expect(contactParagraph.didExceedMaxLines, isFalse);
+    expect(tester.getRect(contactVisual).center.dy, 35);
     expect(tester.getSize(menuVisual), const Size.square(38));
+    expect(tester.getRect(menuVisual).center.dy, 35);
     expect(tester.getRect(header).right - tester.getRect(menuVisual).right, 16);
-    expect(tester.getRect(menuVisual).left - tester.getRect(contact).right, 8);
+    expect(
+      tester.getRect(menuVisual).left - tester.getRect(contactVisual).right,
+      8,
+    );
     expect(
       (icon.bytesLoader as SvgAssetLoader).assetName,
       AppAssets.mobileMenu,
@@ -113,31 +133,91 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('uses one localized CTA label across all header breakpoints', (
+    tester,
+  ) async {
+    for (final example in const [
+      (locale: Locale('en'), contact: 'Join the fun'),
+      (locale: Locale('es'), contact: 'Únete a la diversión'),
+      (locale: Locale('cy'), contact: "Ymuno â'r hwyl"),
+      (locale: Locale('be'), contact: 'Далучыцца да весялосці'),
+    ]) {
+      for (final width in const [320.0, 390.0, 599.0, 600.0, 1440.0]) {
+        setTestSurface(tester, Size(width, 844));
+        await pumpLandingApp(tester, locale: example.locale);
+
+        expect(find.text(example.contact), findsOneWidget);
+        expect(
+          find.byKey(const Key('landingHeaderContactCta')),
+          findsOneWidget,
+        );
+        if (width < LandingHeader.mobileUxBreakpoint) {
+          final header = find.byType(LandingHeader);
+          final logo = find.descendant(
+            of: header,
+            matching: find.byKey(const Key('funAppLogo')),
+          );
+          final contact = find.byKey(
+            const Key('landingHeaderContactCta'),
+          );
+          final menuVisual = find.byKey(
+            const Key('mobileMenuControlVisual'),
+          );
+          final contactRect = tester.getRect(
+            contact,
+          );
+          final contactParagraph = tester.renderObject<RenderParagraph>(
+            find.text(example.contact),
+          );
+          final contactVisualRect = tester.getRect(_ctaVisual(contact));
+          final menuVisualRect = tester.getRect(menuVisual);
+          final logoRect = tester.getRect(logo);
+          expect(tester.getSize(_ctaVisual(contact)).height, 38);
+          expect(contactParagraph.text.toPlainText(), example.contact);
+          expect(contactParagraph.didExceedMaxLines, isFalse);
+          expect(contactRect.width, lessThan(width - 32));
+          expect(
+            contactRect.height,
+            tester
+                .getSize(find.byKey(const Key('landingMobileMenuButton')))
+                .height,
+          );
+          expect(menuVisualRect.right, width - 16);
+          expect(menuVisualRect.left - contactVisualRect.right, 8);
+          expect(contactRect.left, greaterThanOrEqualTo(logoRect.right));
+          expect(contactRect.center.dy, 35);
+          expect(menuVisualRect.center.dy, 35);
+        }
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
   for (final example in const [
     (
       locale: Locale('en'),
-      contact: 'Join the queue',
+      contact: 'Join the fun',
       open: 'Open navigation menu',
       close: 'Close navigation menu',
       firstNavigation: 'OUR BELIEF',
     ),
     (
       locale: Locale('es'),
-      contact: 'Únete a la cola',
+      contact: 'Únete a la diversión',
       open: 'Abrir menú de navegación',
       close: 'Cerrar menú de navegación',
       firstNavigation: 'NUESTRA CREENCIA',
     ),
     (
       locale: Locale('cy'),
-      contact: "Ymuno â'r ciw",
+      contact: "Ymuno â'r hwyl",
       open: 'Agor y ddewislen lywio',
       close: "Cau'r ddewislen lywio",
       firstNavigation: 'EIN CRED',
     ),
     (
       locale: Locale('be'),
-      contact: 'Стаць у чаргу',
+      contact: 'Далучыцца да весялосці',
       open: 'Адкрыць меню навігацыі',
       close: 'Закрыць меню навігацыі',
       firstNavigation: 'НАША ВЕРА',
@@ -191,6 +271,138 @@ void main() {
     );
   }
 
+  testWidgets('keeps the mobile CTA compact at 2x text scale', (tester) async {
+    tester.binding.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(
+      tester.binding.platformDispatcher.clearTextScaleFactorTestValue,
+    );
+
+    for (final example in const [
+      (locale: Locale('en'), contact: 'Join the fun'),
+      (locale: Locale('es'), contact: 'Únete a la diversión'),
+      (locale: Locale('cy'), contact: "Ymuno â'r hwyl"),
+      (locale: Locale('be'), contact: 'Далучыцца да весялосці'),
+    ]) {
+      for (final width in const [320.0, 390.0, 599.0]) {
+        setTestSurface(tester, Size(width, 844));
+        await pumpLandingApp(tester, locale: example.locale);
+
+        final header = find.byType(LandingHeader);
+        final logo = find.descendant(
+          of: header,
+          matching: find.byKey(const Key('funAppLogo')),
+        );
+        final contact = find.byKey(const Key('landingHeaderContactCta'));
+        final menu = find.byKey(const Key('landingMobileMenuButton'));
+        final contactRect = tester.getRect(contact);
+        final contactVisualRect = tester.getRect(_ctaVisual(contact));
+        final logoRect = tester.getRect(logo);
+        final menuRect = tester.getRect(menu);
+
+        expect(find.text(example.contact), findsOneWidget);
+        expect(contactRect.height, 44);
+        expect(contactVisualRect.height, 38);
+        expect(contactRect.height, tester.getSize(menu).height);
+        expect(contactVisualRect.center.dy, menuRect.center.dy);
+        expect(contactRect.left, greaterThanOrEqualTo(logoRect.right));
+        expect(contactRect.right, lessThanOrEqualTo(menuRect.left));
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
+  testWidgets('expanded menu matches the Figma mobile layout', (tester) async {
+    for (final example in const [
+      (locale: Locale('en'), contact: 'Join the fun'),
+      (locale: Locale('es'), contact: 'Únete a la diversión'),
+      (locale: Locale('cy'), contact: "Ymuno â'r hwyl"),
+      (locale: Locale('be'), contact: 'Далучыцца да весялосці'),
+    ]) {
+      for (final width in const [320.0, 390.0, 599.0]) {
+        setTestSurface(tester, Size(width, 844));
+        await pumpLandingApp(tester, locale: example.locale);
+        await tester.tap(find.byKey(const Key('landingMobileMenuButton')));
+        await tester.pump();
+
+        final menu = find.byKey(const Key('landingMobileMenu'));
+        final bottomContact = find.byKey(
+          const Key('landingMobileMenuContactCta'),
+        );
+        final bottomVisual = _ctaVisual(bottomContact);
+        final menuRect = tester.getRect(menu);
+        final visualRect = tester.getRect(bottomVisual);
+
+        expect(find.text(example.contact), findsNWidgets(2));
+        expect(
+          tester.getSize(bottomContact),
+          Size(width - (AppSizes.mobileHeaderPadding * 2), 44),
+        );
+        expect(
+          tester.getSize(bottomVisual),
+          Size(width - (AppSizes.mobileHeaderPadding * 2), 38),
+        );
+        expect(visualRect.bottom, menuRect.bottom - 16);
+        expect(
+          tester
+              .getRect(find.byKey(const Key('landingMobileMenuNavigation')))
+              .center
+              .dx,
+          width / 2,
+        );
+        expect(
+          find.descendant(
+            of: menu,
+            matching: find.byKey(const Key('landingHeaderContactCta')),
+          ),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+
+        await tester.tap(
+          find.byKey(const Key('landingMobileMenuCloseButton')),
+        );
+        await tester.pump();
+      }
+    }
+  });
+
+  testWidgets('expanded menu stays safe at 2x text scale', (tester) async {
+    tester.binding.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(
+      tester.binding.platformDispatcher.clearTextScaleFactorTestValue,
+    );
+
+    for (final example in const [
+      (locale: Locale('en'), contact: 'Join the fun'),
+      (locale: Locale('es'), contact: 'Únete a la diversión'),
+      (locale: Locale('cy'), contact: "Ymuno â'r hwyl"),
+      (locale: Locale('be'), contact: 'Далучыцца да весялосці'),
+    ]) {
+      setTestSurface(tester, const Size(390, 844));
+      await pumpLandingApp(tester, locale: example.locale);
+      await tester.tap(find.byKey(const Key('landingMobileMenuButton')));
+      await tester.pump();
+
+      final menu = find.byKey(const Key('landingMobileMenu'));
+      final bottomContact = find.byKey(
+        const Key('landingMobileMenuContactCta'),
+      );
+      final bottomVisual = _ctaVisual(bottomContact);
+      final visualRect = tester.getRect(bottomVisual);
+
+      expect(find.text(example.contact), findsNWidgets(2));
+      expect(tester.getSize(bottomContact), const Size(358, 44));
+      expect(tester.getSize(bottomVisual), const Size(358, 38));
+      expect(visualRect.bottom, tester.getRect(menu).bottom - 16);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(
+        find.byKey(const Key('landingMobileMenuCloseButton')),
+      );
+      await tester.pump();
+    }
+  });
+
   testWidgets(
     'menu uses modal focus, semantics, Escape, and repeat dismissal',
     (
@@ -211,6 +423,10 @@ void main() {
 
       final menu = find.byKey(const Key('landingMobileMenu'));
       final close = find.byKey(const Key('landingMobileMenuCloseButton'));
+      final closeVisual = find.descendant(
+        of: close,
+        matching: find.byKey(const Key('mobileMenuControlVisual')),
+      );
       expect(menu, findsOneWidget);
       expect(tester.getSize(menu), const Size(390, 844));
       expect(_expandedState(tester, opener), isTrue);
@@ -219,6 +435,8 @@ void main() {
       final closeData = tester.getSemantics(close).getSemanticsData();
       expect(closeData.label, 'Close navigation menu');
       expect(closeData.flagsCollection.isButton, isTrue);
+      expect(tester.getSize(close), const Size.square(44));
+      expect(tester.getSize(closeVisual), const Size.square(38));
       expect(_controlFocusNode(tester, close).hasFocus, isTrue);
       expect(_focusIsInside(menu), isTrue);
       final closeIcon = tester.widget<SvgPicture>(
@@ -237,15 +455,19 @@ void main() {
       final bottomContact = find.byKey(
         const Key('landingMobileMenuContactCta'),
       );
+      final bottomVisual = _ctaVisual(bottomContact);
       expect(tester.getSize(topArea).height, 70);
       final contactRect = tester.getRect(bottomContact);
+      final visualRect = tester.getRect(bottomVisual);
       expect(contactRect.center.dx, 195);
+      expect(contactRect.width, 358);
+      expect(contactRect.height, AppSizes.mobileControlTargetSize);
+      expect(visualRect.size, const Size(358, 38));
+      expect(visualRect.center.dx, 195);
       expect(contactRect.left, greaterThanOrEqualTo(16));
       expect(contactRect.right, lessThanOrEqualTo(374));
-      expect(contactRect.height, greaterThanOrEqualTo(44));
-      expect(contactRect.width, lessThan(358));
       expect(
-        tester.getRect(menu).bottom - tester.getRect(bottomContact).bottom,
+        tester.getRect(menu).bottom - visualRect.bottom,
         16,
       );
       expect(
@@ -495,6 +717,11 @@ void main() {
     _expectTargetBelowHeader(tester, MembershipSection);
   });
 }
+
+Finder _ctaVisual(Finder cta) => find.descendant(
+  of: cta,
+  matching: find.byType(DecoratedBox),
+);
 
 bool? _expandedState(WidgetTester tester, Finder control) => tester
     .widget<Semantics>(

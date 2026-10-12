@@ -20,6 +20,19 @@ const _freeAnswerFirst =
 const _freeAnswerSecond =
     'However, join early and get Here & Now membership free for six months '
     'from Fun App launch.';
+const _cancelAnswerFirst = 'Of course.';
+const _cancelAnswerSecond =
+    'You can cancel your free membership or Here & Now subscription at any '
+    'point. We just ask that you give 14 days’ notice so that Fun App can keep '
+    'all its administration in-line.';
+const _cancelAnswerThird =
+    'Founding Friends can get a refund of their membership fee within 14 days '
+    'of purchase and will be able to resell their Founding Friend status to '
+    'other Fun App users, via Fun App, beyond one year after launch. Resale '
+    'prices will be determined by buyers and sellers.';
+const _cancelAnswerFourth =
+    'We want you here because Fun App is useful and enjoyable, not because you '
+    'forgot where the cancel button is.';
 
 void main() {
   const englishQuestions = [
@@ -79,6 +92,15 @@ void main() {
       orderedEquals(const [
         _freeAnswerFirst,
         _freeAnswerSecond,
+      ]),
+    );
+    expect(
+      items[2].paragraphs.map((paragraph) => paragraph.text),
+      orderedEquals(const [
+        _cancelAnswerFirst,
+        _cancelAnswerSecond,
+        _cancelAnswerThird,
+        _cancelAnswerFourth,
       ]),
     );
     expect(

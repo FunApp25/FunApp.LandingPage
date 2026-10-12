@@ -39,8 +39,6 @@ final class MobileMenuControl extends StatefulWidget {
 }
 
 final class _MobileMenuControlState extends State<MobileMenuControl> {
-  static const _targetSize = 44.0;
-  static const _visualSize = 38.0;
   static const _radius = BorderRadius.all(Radius.circular(AppSizes.pillRadius));
 
   bool _isFocused = false;
@@ -62,7 +60,7 @@ final class _MobileMenuControlState extends State<MobileMenuControl> {
         borderRadius: _radius,
       ),
       child: SizedBox.square(
-        dimension: _targetSize,
+        dimension: AppSizes.mobileControlTargetSize,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -88,7 +86,7 @@ final class _MobileMenuControlState extends State<MobileMenuControl> {
                   borderRadius: _radius,
                 ),
                 child: SizedBox.square(
-                  dimension: _visualSize,
+                  dimension: AppSizes.mobileControlVisualSize,
                   child: Center(
                     child: SvgPicture.asset(
                       widget.iconAsset,

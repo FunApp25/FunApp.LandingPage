@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/header_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/header/mobile_menu_control.dart';
@@ -42,7 +43,7 @@ final class MobileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox(
     key: const Key('landingHeaderMobileLayout'),
-    height: 70,
+    height: AppSizes.mobileHeaderHeight,
     child: LayoutBuilder(
       builder: (context, constraints) {
         final interpolation = ((constraints.maxWidth - 320) / 70).clamp(
@@ -52,31 +53,43 @@ final class MobileHeader extends StatelessWidget {
         final contactHorizontalPadding = 12 + (8 * interpolation);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.mobileHeaderPadding,
+          ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               HeaderLogo(onSelected: onLogoSelected),
-              const SizedBox(width: 8),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
-                  child: LandingCtaButton(
-                    key: const Key('landingHeaderContactCta'),
-                    label: contactLabel,
-                    size: LandingCtaSize.compact,
-                    compactHorizontalPadding: contactHorizontalPadding,
-                    onPressed: onContactSelected,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: LandingCtaButton(
+                          key: const Key('landingHeaderContactCta'),
+                          label: contactLabel,
+                          size: LandingCtaSize.compact,
+                          compactHorizontalPadding: contactHorizontalPadding,
+                          compactVisualHeight: AppSizes.mobileControlVisualSize,
+                          onPressed: onContactSelected,
+                        ),
+                      ),
+                      // The menu target has a 6px leading visual inset so its
+                      // 38px visual remains flush with the header's right edge.
+                      const SizedBox(width: 2),
+                      MobileMenuControl(
+                        key: const Key('landingMobileMenuButton'),
+                        semanticLabel: menuSemanticLabel,
+                        iconAsset: AppAssets.mobileMenu,
+                        expanded: isMenuExpanded,
+                        focusNode: menuFocusNode,
+                        onPressed: onMenuPressed,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 2),
-              MobileMenuControl(
-                key: const Key('landingMobileMenuButton'),
-                semanticLabel: menuSemanticLabel,
-                iconAsset: AppAssets.mobileMenu,
-                expanded: isMenuExpanded,
-                focusNode: menuFocusNode,
-                onPressed: onMenuPressed,
               ),
             ],
           ),
