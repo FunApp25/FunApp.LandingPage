@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
@@ -51,9 +50,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(
-        releaseConfiguration: ReleaseConfiguration.preview(),
-      ),
+      const FunAppLandingPageApp(),
     );
     await tester.pump();
 
@@ -117,9 +114,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(
-        releaseConfiguration: ReleaseConfiguration.preview(),
-      ),
+      const FunAppLandingPageApp(),
     );
     await tester.pump();
     unawaited(
@@ -143,9 +138,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(
-        releaseConfiguration: ReleaseConfiguration.preview(),
-      ),
+      const FunAppLandingPageApp(),
     );
     await tester.pump();
     unawaited(

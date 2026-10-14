@@ -1,10 +1,5 @@
-import 'dart:async';
-
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
-import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
-import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
@@ -67,45 +62,12 @@ final class LandingFooter extends StatelessWidget {
         onSelected: onVenuesSelected,
       ),
     ];
-    void openLegalRoute(PageRouteInfo route) {
-      if (context.router.current.name != route.routeName) {
-        unawaited(context.router.push(route));
-      }
-    }
-
-    final previewEnabled =
-        AppRouteDependencies.maybeOf(
-          context,
-        )?.releaseConfiguration.unfinishedPreviewEnabled ??
-        true;
     final legalItems = <FooterLegalItemData>[
       (
         semanticKey: const Key('footerPrivacyNoticeLink'),
         label: context.l10n.landingFooterPrivacyPolicy,
         onSelected: onPrivacyNoticeSelected,
       ),
-      if (previewEnabled) ...[
-        (
-          semanticKey: const Key('footerTermsLink'),
-          label: context.l10n.landingFooterTermsOfUse,
-          onSelected: () => openLegalRoute(const TermsRoute()),
-        ),
-        (
-          semanticKey: const Key('footerRefundsLink'),
-          label: context.l10n.landingFooterRefundCancellationPolicy,
-          onSelected: () => openLegalRoute(const RefundsRoute()),
-        ),
-        (
-          semanticKey: const Key('footerCookiePolicyLink'),
-          label: context.l10n.landingFooterCookiePolicy,
-          onSelected: () => openLegalRoute(const CookiePolicyRoute()),
-        ),
-        (
-          semanticKey: const Key('footerCookieBannerLink'),
-          label: context.l10n.landingFooterCookieBanner,
-          onSelected: () => openLegalRoute(const CookieBannerRoute()),
-        ),
-      ],
     ];
     final isMobile = MediaQuery.sizeOf(context).width < 600;
 

@@ -1,13 +1,9 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
-import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
@@ -46,20 +42,17 @@ void main() {
     ) async {
       setTestSurface(tester, const Size(390, 844));
       await tester.pumpWidget(
-        const FunAppLandingPageApp(
-          releaseConfiguration: ReleaseConfiguration.preview(),
+        MaterialApp(
+          theme: appTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: LegalPlaceholderPage(kind: example.kind),
         ),
-      );
-      await tester.pump();
-      unawaited(
-        tester
-            .element(find.byType(LandingPage))
-            .router
-            .push(_legalRouteFor(example.kind)),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
+      expect(find.byType(LandingPage), findsNothing);
       expect(
         find.byKey(Key('legalPlaceholderPage-${example.kind.name}')),
         findsOneWidget,
@@ -87,18 +80,16 @@ void main() {
         tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
       );
       await tester.pumpWidget(
-        const FunAppLandingPageApp(
-          releaseConfiguration: ReleaseConfiguration.preview(),
-        ),
+        const FunAppLandingPageApp(),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
+      expect(find.byType(LandingPage), findsOneWidget);
       expect(
         find.byKey(Key('legalPlaceholderPage-${example.kind.name}')),
-        findsOneWidget,
+        findsNothing,
       );
-      expect(find.byType(LandingPage), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
@@ -210,50 +201,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('footer Privacy navigation avoids duplicate route entries', (
-    tester,
-  ) async {
-    setTestSurface(tester, const Size(1440, 1000));
-    await tester.pumpWidget(
-      const FunAppLandingPageApp(
-        releaseConfiguration: ReleaseConfiguration.preview(),
-      ),
-    );
-    await tester.pump();
-    final terms = find.byKey(const Key('footerTermsLink'));
-    await tester.ensureVisible(terms);
-    await tester.tap(terms);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-
-    final privacy = find.descendant(
-      of: find.byKey(const Key('legalPlaceholderPage-terms')),
-      matching: find.byKey(const Key('footerPrivacyNoticeLink')),
-    );
-    await tester.ensureVisible(privacy);
-    await tester.tap(privacy);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(find.byType(PrivacyNoticePage), findsOneWidget);
-
-    final router = tester.element(find.byType(PrivacyNoticePage)).router;
-    expect(router.stackData, hasLength(3));
-    final privacyFooter = find.descendant(
-      of: find.byKey(const Key('privacyNoticePage')),
-      matching: find.byKey(const Key('footerPrivacyNoticeLink')),
-    );
-    await tester.ensureVisible(privacyFooter);
-    await tester.tap(privacyFooter);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.tap(privacyFooter);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-
-    expect(find.byType(PrivacyNoticePage), findsOneWidget);
-    expect(router.stackData, hasLength(3));
-  });
-
   testWidgets('legal layout is localized and bounded at target widths', (
     tester,
   ) async {
@@ -290,10 +237,3 @@ void main() {
     }
   });
 }
-
-PageRouteInfo<void> _legalRouteFor(LegalPlaceholderKind kind) => switch (kind) {
-  LegalPlaceholderKind.terms => const TermsRoute(),
-  LegalPlaceholderKind.refunds => const RefundsRoute(),
-  LegalPlaceholderKind.cookies => const CookiePolicyRoute(),
-  LegalPlaceholderKind.cookieBanner => const CookieBannerRoute(),
-};

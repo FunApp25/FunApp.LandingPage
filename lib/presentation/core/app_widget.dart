@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
@@ -12,15 +11,10 @@ import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
 final class FunAppLandingPageApp extends StatefulWidget {
   /// Creates the root landing-page application widget.
   const FunAppLandingPageApp({
-    this.releaseConfiguration =
-        const ReleaseConfiguration.intermediateProduction(),
     this.onPrivacyNoticeLaunch,
     this.createVenueLeadFormBloc,
     super.key,
   });
-
-  /// Build-time release features available to routing and presentation.
-  final ReleaseConfiguration releaseConfiguration;
 
   /// Optional browser-launch override for presentation tests.
   final ValueChanged<Uri>? onPrivacyNoticeLaunch;
@@ -38,9 +32,7 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
   @override
   void initState() {
     super.initState();
-    _appRouter = AppRouter(
-      releaseConfiguration: widget.releaseConfiguration,
-    );
+    _appRouter = AppRouter();
     _appRouter.routeInfoProvider(
       initialRouteInformation: RouteInformation(
         uri: Uri.parse(
@@ -69,7 +61,6 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
     localeListResolutionCallback: _resolveLocaleList,
     routerConfig: _appRouter.config(includePrefixMatches: false),
     builder: (context, child) => AppRouteDependencies(
-      releaseConfiguration: widget.releaseConfiguration,
       onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
       createVenueLeadFormBloc: widget.createVenueLeadFormBloc,
       child: child ?? const SizedBox.shrink(),

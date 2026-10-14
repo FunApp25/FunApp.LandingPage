@@ -92,14 +92,6 @@
   "@cookiePolicyPrivacyExcerptStatus": {
     "description": "Status explaining that the Cookie Policy route reuses approved Privacy Notice text while a standalone policy remains unapproved."
   },
-  "landingInterestedUserComingSoonTitle": "Coming soon",
-  "@landingInterestedUserComingSoonTitle": {
-    "description": "Title of the presentation-only prospective-user dialog."
-  },
-  "landingInterestedUserComingSoonBody": "We’re preparing this part of Fun App. Check back soon.",
-  "@landingInterestedUserComingSoonBody": {
-    "description": "Supporting text in the presentation-only prospective-user dialog."
-  },
   "venuePageEyebrow": "Life is tough for people. Life is tough for venues. Fun App is arriving to help.",
   "@venuePageEyebrow": {
     "description": "Eyebrow above the dedicated Venue sign-up page introduction."
