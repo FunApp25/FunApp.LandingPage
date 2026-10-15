@@ -15,8 +15,9 @@ hosted Privacy Notice; it does not submit a consent field. The Here & Now and
 Founding Friend forms are public routes at `/here-and-now` and
 `/founding-friend`. Each has an independent domain model, provider-neutral
 repository contract, and application BLoC. The current repositories
-deliberately fail closed without network or persistence until their
-Cloudflare-backed HubSpot transport is implemented in Stage 3.
+support explicitly configured development-only direct HubSpot testing and
+otherwise fail closed without network or persistence. Production remains
+fail-closed until the Cloudflare-backed transport is implemented in Stage 3.
 
 ## 2. Decision model
 
@@ -95,9 +96,10 @@ Current implementation is evidence of repository state, not automatically a perm
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
 - The Here & Now and Founding Friend forms are responsive public routes backed
   by separate provider-neutral registration models, repository contracts, and
-  application BLoCs. Their deferred repositories perform no network,
-  persistence, payment, or membership-status operation and return a
-  provider-neutral unavailable failure until Stage 3.
+  application BLoCs. Explicitly configured development builds use the public
+  unauthenticated HubSpot Forms endpoint; unconfigured development and all
+  production builds use deferred repositories that perform no network,
+  persistence, payment, or membership-status operation.
 
 ### Open
 
@@ -153,8 +155,10 @@ validation and provider-neutral submission models. The active `application`
 surfaces own the Venue, Here & Now, and Founding Friend form BLoCs. `data/venue`
 owns one provider-neutral repository, its DTO, first-party request model, and
 environment-specific data sources. `data/user_registration` contains only the
-two fail-closed pre-transport repository implementations. `core` owns typed
-environment selection and dependency composition. The landing-page repository
+two workflow repositories, shared development HubSpot data source and request
+mapping, and fail-closed repository implementations. `core` owns typed
+environment selection, public development configuration, and dependency
+composition. The landing-page repository
 aligns architectural concepts with the main Fun App Flutter application where
 appropriate, but the repositories do not share source code or packages.
 
@@ -418,10 +422,13 @@ capabilities as implemented.
   `Prefer not to answer`. The Founding Friend country control uses the complete
   live `country` property label/value set captured in the English localization
   source rather than a shortened list.
-- Future integration references portal `149114580`, Here & Now form
+- Development integration references portal `149114580`, Here & Now form
   `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
-  `39f027d9-e786-4768-b532-54ed44e1f718`. These documented identifiers do not
-  appear in Flutter submission code, and no browser-to-HubSpot path exists.
+  `39f027d9-e786-4768-b532-54ed44e1f718`. The identifiers are public and are
+  supplied to development builds through `FUN_APP_HUBSPOT_REGISTRATION_PORTAL_ID`,
+  `FUN_APP_HUBSPOT_HERE_AND_NOW_FORM_GUID`, and
+  `FUN_APP_HUBSPOT_FOUNDING_FRIEND_FORM_GUID`; no private HubSpot credential is
+  present in Flutter source or the browser bundle.
 - `HereAndNowRegistration` and `FoundingFriendRegistration` are independent
   provider-neutral domain aggregates. Each has its own repository contract and
   form BLoC so the workflows can evolve without sharing payment, membership,
@@ -432,9 +439,11 @@ capabilities as implemented.
   semantic success/failure, retry, duplicate in-flight suppression, and stale
   completion rejection. Optional gender, usage reason, and marketing opt-in do
   not block submission. Founding Friend additionally requires country.
-- Production resolves deferred repositories that always return service
-  unavailable and perform no I/O. Injected repositories are the only way tests
-  can produce confirmed success before Stage 3. Confirmed Here & Now success
+- Development resolves direct-HubSpot repositories only when all three public
+  identifiers are valid; otherwise it resolves deferred repositories that
+  return service unavailable without I/O. Production always resolves the
+  deferred repositories, even if development identifiers are supplied.
+  Confirmed Here & Now success
   uses the existing approved success presentation. Founding Friend retains its
   form after application-level success because approved payment ordering and
   success copy remain open; no membership or payment confirmation is implied.
@@ -531,6 +540,19 @@ capabilities as implemented.
   map to their matching `AppFailure` categories. Unclassified exceptions map to
   `AppFailure.unexpected`. Data-source exceptions do not cross the domain
   repository boundary.
+- The development-only registration data source posts JSON directly to
+  `https://api.hsforms.com/submissions/v3/integration/submit/{portalId}/{formGuid}`
+  without authentication. It maps `firstname`, `lastname`, `email`, numeric
+  `age`, optional `gender`, Founding Friend `country`, optional `usage_reason`,
+  and boolean `marketing_consent` to the Forms API's string-valued field entries.
+  Absent optional values are omitted. Marketing opt-in is a contact property,
+  not processing consent; the request deliberately contains no
+  `legalConsentOptions`, tracking cookie, page context, or submitted timestamp.
+- Direct registration submissions use one abortable 15-second deadline and no
+  automatic retry. A 200 response succeeds; 400 is submission rejected; 429,
+  every 5xx response, transport failures, and timeout aborts are service
+  unavailable; other statuses are unexpected. Response bodies and submitted
+  personal data are neither parsed nor logged.
 - GetIt and Injectable own composition now that environment-dependent
   implementations exist. `VenueLeadFormBloc` is a factory registration, the
   repository is a provider-neutral lazy singleton, and core composition
@@ -556,7 +578,7 @@ capabilities as implemented.
 
 ### Provisional
 
-- The user forms will submit through a Fun App-owned Cloudflare boundary after
+- The user forms should submit through a Fun App-owned Cloudflare boundary after
   the Stage 3 transport and backend contracts are approved, following the
   established Venue integration pattern.
 - Flutter should remain decoupled from backend implementation through interfaces, repositories, data sources, DTO/boundary mapping, and configuration.
@@ -566,6 +588,11 @@ capabilities as implemented.
 - An approved consent/privacy field contract and any corresponding HubSpot
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.
+- Independent confirmation of each published registration form's required-field
+  set, included fields, legal-consent configuration, and direct-submission test
+  result. The former public form-definition lookup returns 404, so this requires
+  authorized HubSpot portal inspection or an explicitly authorized synthetic
+  submission.
 - The current venue privacy acknowledgement is approved informational copy,
   not a consent field. Its optional checkbox state lives only in the routed
   presentation and adds no BLoC state, domain value, DTO property, repository

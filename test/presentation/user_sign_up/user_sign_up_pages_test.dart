@@ -9,6 +9,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
+import 'package:fun_app_landing_page/core/config/hubspot_registration_forms_config.dart';
+import 'package:fun_app_landing_page/data/user_registration/data_sources/hubspot_user_registration_data_source.dart';
+import 'package:fun_app_landing_page/data/user_registration/here_and_now_registration_repository.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
 import 'package:fun_app_landing_page/domain/user_registration/entities/founding_friend_registration.dart';
@@ -29,6 +32,8 @@ import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dar
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 import '../landing/landing_test_helpers.dart';
 
@@ -767,6 +772,43 @@ void main() {
       expect(text.style?.fontSize, greaterThanOrEqualTo(14));
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('mocked HubSpot success drives the existing success UI', (
+    tester,
+  ) async {
+    late http.Request capturedRequest;
+    final config = HubSpotRegistrationFormsConfig(
+      portalId: '149114580',
+      hereAndNowFormGuid: '3284e6bc-e3a2-4d2e-9e21-684399126f3b',
+      foundingFriendFormGuid: '39f027d9-e786-4768-b532-54ed44e1f718',
+    );
+    final repository = HereAndNowRegistrationRepository(
+      HubSpotUserRegistrationDataSource(
+        client: MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('', 200);
+        }),
+        config: config,
+      ),
+    );
+    setTestSurface(tester, const Size(1440, 1000));
+    await _pumpPage(
+      tester,
+      HereAndNowPage(
+        createBloc: () => HereAndNowRegistrationFormBloc(repository),
+      ),
+    );
+
+    await _enterHereAndNowRequiredFields(tester);
+    await _tapSubmit(tester, 'hereAndNow');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
+    expect(
+      capturedRequest.url,
+      config.submissionEndpoint(config.hereAndNowFormGuid),
+    );
   });
 }
 

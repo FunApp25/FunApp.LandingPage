@@ -2,10 +2,8 @@ import 'package:dartz/dartz.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/user_registration/entities/here_and_now_registration.dart';
 import 'package:fun_app_landing_page/domain/user_registration/here_and_now_registration_repository_interface.dart';
-import 'package:injectable/injectable.dart';
 
 /// Fail-closed repository used until the Stage 3 transport is implemented.
-@LazySingleton(as: HereAndNowRegistrationRepositoryInterface)
 final class DeferredHereAndNowRegistrationRepository
     implements HereAndNowRegistrationRepositoryInterface {
   @override

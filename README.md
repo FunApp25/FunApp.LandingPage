@@ -26,9 +26,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   branded forms with optional, unchecked marketing consent. Separate domain
   models, provider-neutral repository contracts, and application BLoCs own
   validation, pending, success, failure, duplicate prevention, and retry. The
-  current repositories deliberately fail closed without network or persistence
-  until the Stage 3 Cloudflare-backed HubSpot transport exists. Injected test
-  repositories can confirm the existing Here & Now success presentation;
+  development can opt into the public unauthenticated HubSpot Forms v3 endpoint
+  through compile-time public identifiers. With no development configuration,
+  and in every production composition, the repositories deliberately fail
+  closed without network or persistence. Injected test repositories can confirm
+  the existing Here & Now success presentation;
   Founding Friend has no invented membership, payment, or checkout confirmation.
   The stable
   responsive presentation includes the mobile navigation menu, a mobile
@@ -128,10 +130,24 @@ puro flutter run -d chrome -t lib/main_dev.dart
 ```
 
 Both entrypoints expose the Here & Now and Founding Friend forms. Their BLoCs
-validate and attempt submission, but the deferred repositories always report
-the service unavailable and perform no I/O pending the approved Stage 3
-integration. Consent and age-eligibility decisions remain open. Draft legal
-routes remain restricted.
+validate and attempt submission. Development remains fail-closed by default,
+but can be configured for authorized direct-browser testing through HubSpot's
+public unauthenticated Forms v3 endpoint:
+
+```bash
+puro flutter run -d chrome -t lib/main_dev.dart \
+  --dart-define=FUN_APP_HUBSPOT_REGISTRATION_PORTAL_ID=149114580 \
+  --dart-define=FUN_APP_HUBSPOT_HERE_AND_NOW_FORM_GUID=3284e6bc-e3a2-4d2e-9e21-684399126f3b \
+  --dart-define=FUN_APP_HUBSPOT_FOUNDING_FRIEND_FORM_GUID=39f027d9-e786-4768-b532-54ed44e1f718
+```
+
+These are public form identifiers, not credentials. Do not put private HubSpot
+access tokens or secrets in Dart defines or a Flutter Web bundle. The direct
+transport sends no `legalConsentOptions`; independently verify each form's
+required fields and legal-consent settings in HubSpot before any authorized
+live test. Production remains fail-closed even if these defines are present.
+Consent and age-eligibility decisions remain open. Draft legal routes remain
+restricted.
 
 VS Code and VSCodium users can also launch either explicit Flutter entrypoint
 on Chrome in debug mode through the committed configurations:
@@ -291,7 +307,7 @@ lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
 lib/domain/user_registration/ Provider-neutral registration models and contracts
 lib/data/venue/               Venue repository, DTO, and selectable data sources
-lib/data/user_registration/  Fail-closed repositories pending Stage 3 transport
+lib/data/user_registration/  Development HubSpot transport and fail-closed fallback
 lib/l10n/                    Localization ARB source files
 lib/presentation/core/routing/ Typed auto_route configuration and dependencies
 lib/presentation/core/widgets/ Shared viewport/footer page shell
@@ -329,9 +345,11 @@ them. `domain` owns validation and the provider-neutral Venue, Here & Now, and
 Founding Friend contracts; separate application BLoCs coordinate each form.
 The Venue data repository maps validated leads into a provider-neutral DTO and
 delegates to an environment-selected data source. Prospective-user repositories
-remain fail-closed until Stage 3. The explicit development and production
-entrypoints pass a typed environment into `core`, which configures GetIt
-through Injectable before the app starts.
+use direct HubSpot Forms submission only in explicitly configured development
+builds; unconfigured development and every production build remain fail-closed
+until Stage 3. The explicit development and production entrypoints pass a typed
+environment into `core`, which configures GetIt through Injectable before the
+app starts.
 The production data boundary maps the DTO to the Fun App-owned JSON contract
 and posts to same-origin `/api/venue-interest` with an abortable 15-second
 request deadline. The Worker keeps HubSpot mapping outside Flutter layers.
