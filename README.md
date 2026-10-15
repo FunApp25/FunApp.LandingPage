@@ -23,12 +23,14 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Lifetime Membership CTA, and Founding Friend CTA retain their approved labels
   and styling and navigate to the appropriate public form route. The
   `/#/here-and-now` and `/#/founding-friend` destinations use responsive
-  branded UI-only forms with local validation and optional, unchecked marketing
-  consent. Their form actions remain disabled until the approved
-  Cloudflare-backed HubSpot workflow exists, so no personal data is discarded
-  or falsely reported as submitted. The Here & Now confirmation is available
-  only through an injected test/development state; Founding Friend has no
-  invented success or payment behavior. The stable
+  branded forms with optional, unchecked marketing consent. Separate domain
+  models, provider-neutral repository contracts, and application BLoCs own
+  validation, pending, success, failure, duplicate prevention, and retry. The
+  current repositories deliberately fail closed without network or persistence
+  until the Stage 3 Cloudflare-backed HubSpot transport exists. Injected test
+  repositories can confirm the existing Here & Now success presentation;
+  Founding Friend has no invented membership, payment, or checkout confirmation.
+  The stable
   responsive presentation includes the mobile navigation menu, a mobile
   Research-statistics and Founding Friend carousels, restrained anchor/FAQ
   interaction motion, and
@@ -125,9 +127,11 @@ Those machine-specific settings remain ignored.
 puro flutter run -d chrome -t lib/main_dev.dart
 ```
 
-Both entrypoints expose the Here & Now and Founding Friend presentation forms.
-Their submission actions remain disabled pending the approved integration,
-consent, and eligibility requirements. Draft legal routes remain restricted.
+Both entrypoints expose the Here & Now and Founding Friend forms. Their BLoCs
+validate and attempt submission, but the deferred repositories always report
+the service unavailable and perform no I/O pending the approved Stage 3
+integration. Consent and age-eligibility decisions remain open. Draft legal
+routes remain restricted.
 
 VS Code and VSCodium users can also launch either explicit Flutter entrypoint
 on Chrome in debug mode through the committed configurations:
@@ -236,8 +240,8 @@ puro flutter build web -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
 ```
 
-The test suite covers domain validation, venue-lead form orchestration, the
-UI-only user sign-up forms, and the active landing surface's branding,
+The test suite covers domain validation, Venue and prospective-user form
+orchestration, the user sign-up widgets, and the active landing surface's branding,
 localization, theme, interactions, and responsive viewport contracts.
 
 ## Cloudflare Worker development
@@ -280,11 +284,14 @@ lib/                         Active Flutter application source
 lib/main_dev.dart            Development/fake Flutter entrypoint
 lib/main_prod.dart           Production first-party Flutter entrypoint
 lib/application/venue/       Venue-lead form state and submission orchestration
+lib/application/user_registration/ Independent Here & Now and Founding Friend BLoCs
 lib/core/config/              Typed application-environment selection
 lib/core/injection/           GetIt/Injectable composition root
 lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
+lib/domain/user_registration/ Provider-neutral registration models and contracts
 lib/data/venue/               Venue repository, DTO, and selectable data sources
+lib/data/user_registration/  Fail-closed repositories pending Stage 3 transport
 lib/l10n/                    Localization ARB source files
 lib/presentation/core/routing/ Typed auto_route configuration and dependencies
 lib/presentation/core/widgets/ Shared viewport/footer page shell
@@ -318,12 +325,13 @@ the same file as its public widget.
 
 Application behavior uses a layer-first direction with `presentation`,
 `application`, `domain`, and `data` responsibilities when active code requires
-them. `domain` owns validation and the provider-neutral prospective-venue
-contract; the application BLoC coordinates the form through that contract. One
-data repository maps validated leads into a provider-neutral DTO and delegates
-to an environment-selected data source. The explicit development and production
-entrypoints pass a typed environment into `core`, which configures GetIt through
-Injectable before the app starts.
+them. `domain` owns validation and the provider-neutral Venue, Here & Now, and
+Founding Friend contracts; separate application BLoCs coordinate each form.
+The Venue data repository maps validated leads into a provider-neutral DTO and
+delegates to an environment-selected data source. Prospective-user repositories
+remain fail-closed until Stage 3. The explicit development and production
+entrypoints pass a typed environment into `core`, which configures GetIt
+through Injectable before the app starts.
 The production data boundary maps the DTO to the Fun App-owned JSON contract
 and posts to same-origin `/api/venue-interest` with an abortable 15-second
 request deadline. The Worker keeps HubSpot mapping outside Flutter layers.

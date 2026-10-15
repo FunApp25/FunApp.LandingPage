@@ -1,8 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
+import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
+import 'package:fun_app_landing_page/data/user_registration/deferred_founding_friend_registration_repository.dart';
+import 'package:fun_app_landing_page/data/user_registration/deferred_here_and_now_registration_repository.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/development_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/production_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_interface.dart';
@@ -12,6 +16,8 @@ import 'package:fun_app_landing_page/domain/core/value_objects/email_address.dar
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/personal_name.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/website.dart';
+import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
+import 'package:fun_app_landing_page/domain/user_registration/here_and_now_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
 import 'package:http/http.dart' as http;
@@ -40,6 +46,16 @@ void main() {
     expect(getIt.isRegistered<http.Client>(), isFalse);
     final bloc = getIt<VenueLeadFormBloc>();
     await bloc.close();
+    expect(
+      getIt<HereAndNowRegistrationRepositoryInterface>(),
+      isA<DeferredHereAndNowRegistrationRepository>(),
+    );
+    expect(
+      getIt<FoundingFriendRegistrationRepositoryInterface>(),
+      isA<DeferredFoundingFriendRegistrationRepository>(),
+    );
+    await getIt<HereAndNowRegistrationFormBloc>().close();
+    await getIt<FoundingFriendRegistrationFormBloc>().close();
   });
 
   test(
@@ -76,6 +92,16 @@ void main() {
       );
       final bloc = getIt<VenueLeadFormBloc>();
       await bloc.close();
+      expect(
+        getIt<HereAndNowRegistrationRepositoryInterface>(),
+        isA<DeferredHereAndNowRegistrationRepository>(),
+      );
+      expect(
+        getIt<FoundingFriendRegistrationRepositoryInterface>(),
+        isA<DeferredFoundingFriendRegistrationRepository>(),
+      );
+      await getIt<HereAndNowRegistrationFormBloc>().close();
+      await getIt<FoundingFriendRegistrationFormBloc>().close();
     },
   );
 }

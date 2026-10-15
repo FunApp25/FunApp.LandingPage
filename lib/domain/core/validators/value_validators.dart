@@ -86,6 +86,15 @@ Either<ValueFailure<int>, int> validateInteger(String input) {
   }
 }
 
+/// Requires non-blank input before parsing a base-ten integer.
+Either<ValueFailure<int>, int> validateRequiredInteger(String input) {
+  if (input.trim().isEmpty) {
+    return left(ValueFailure.emptyString(failedValue: input));
+  } else {
+    return validateInteger(input);
+  }
+}
+
 /// Validates that [input] is at least one.
 Either<ValueFailure<int>, int> validatePositiveInteger(int input) {
   if (input >= 1) {

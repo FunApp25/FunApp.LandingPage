@@ -2,12 +2,22 @@ import 'dart:async';
 import 'dart:ui' show CheckedState;
 
 import 'package:auto_route/auto_route.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
+import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
+import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
+import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
+import 'package:fun_app_landing_page/domain/user_registration/entities/founding_friend_registration.dart';
+import 'package:fun_app_landing_page/domain/user_registration/entities/here_and_now_registration.dart';
+import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
+import 'package:fun_app_landing_page/domain/user_registration/here_and_now_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
@@ -16,7 +26,6 @@ import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_for
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
@@ -50,7 +59,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(),
+      _testApp(),
     );
     await tester.pump();
 
@@ -114,7 +123,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(),
+      _testApp(),
     );
     await tester.pump();
     unawaited(
@@ -138,7 +147,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(),
+      _testApp(),
     );
     await tester.pump();
     unawaited(
@@ -214,7 +223,7 @@ void main() {
     final submit = tester.widget<FilledButton>(
       find.byKey(const Key('userSignUpSubmit-hereAndNow')),
     );
-    expect(submit.onPressed, isNull);
+    expect(submit.onPressed, isNotNull);
     expect(find.byType(UserSignUpSuccess), findsNothing);
     _expectHint(
       tester,
@@ -312,7 +321,7 @@ void main() {
       final submit = tester.widget<FilledButton>(
         find.byKey(const Key('userSignUpSubmit-foundingFriend')),
       );
-      expect(submit.onPressed, isNull);
+      expect(submit.onPressed, isNotNull);
       expect(find.byType(UserSignUpSuccess), findsNothing);
       _expectHint(
         tester,
@@ -329,16 +338,18 @@ void main() {
   testWidgets('Here & Now validates locally and preserves the entered draft', (
     tester,
   ) async {
-    UserSignUpDraft? submitted;
+    final repository = _HereAndNowRepository(result: right(unit));
     setTestSurface(tester, const Size(390, 1000));
     await _pumpPage(
       tester,
-      HereAndNowPage(onSubmit: (draft) => submitted = draft),
+      HereAndNowPage(
+        createBloc: () => HereAndNowRegistrationFormBloc(repository),
+      ),
     );
 
     await _tapSubmit(tester, 'hereAndNow');
     expect(find.text('Required field'), findsNWidgets(4));
-    expect(submitted, isNull);
+    expect(repository.submissions, isEmpty);
 
     await tester.enterText(
       find.byKey(const Key('firstNameField-hereAndNow')),
@@ -358,7 +369,7 @@ void main() {
     );
     expect(
       tester
-          .widget<TextFormField>(
+          .widget<TextField>(
             find.byKey(const Key('ageField-hereAndNow')),
           )
           .controller
@@ -367,10 +378,10 @@ void main() {
     );
     await _tapSubmit(tester, 'hereAndNow');
     expect(find.text('Enter a valid email address'), findsOneWidget);
-    expect(submitted, isNull);
+    expect(repository.submissions, isEmpty);
     expect(
       tester
-          .widget<TextFormField>(
+          .widget<TextField>(
             find.byKey(const Key('firstNameField-hereAndNow')),
           )
           .controller
@@ -383,25 +394,28 @@ void main() {
       'alex@example.com',
     );
     await _tapSubmit(tester, 'hereAndNow');
-    expect(submitted, isNotNull);
-    expect(submitted?.firstName, 'Alex');
-    expect(submitted?.lastName, 'Morgan');
-    expect(submitted?.age, 29);
-    expect(submitted?.gender, isNull);
-    expect(submitted?.usageReason, isNull);
-    expect(submitted?.marketingConsent, isFalse);
-    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(repository.submissions, hasLength(1));
+    final submitted = repository.submissions.single;
+    expect(submitted.firstName.getOrCrash(), 'Alex');
+    expect(submitted.lastName.getOrCrash(), 'Morgan');
+    expect(submitted.age.getOrCrash(), 29);
+    expect(submitted.gender, none<NonEmptySingleLineText>());
+    expect(submitted.usageReason, none<String>());
+    expect(submitted.marketingConsent, isFalse);
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
   });
 
   testWidgets('Founding Friend requires country and keeps consent optional', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    UserSignUpDraft? submitted;
+    final repository = _FoundingFriendRepository(result: right(unit));
     setTestSurface(tester, const Size(390, 1000));
     await _pumpPage(
       tester,
-      FoundingFriendPage(onSubmit: (draft) => submitted = draft),
+      FoundingFriendPage(
+        createBloc: () => FoundingFriendRegistrationFormBloc(repository),
+      ),
     );
 
     await tester.enterText(
@@ -422,7 +436,7 @@ void main() {
     );
     await _tapSubmit(tester, 'foundingFriend');
     expect(find.text('Required field'), findsOneWidget);
-    expect(submitted, isNull);
+    expect(repository.submissions, isEmpty);
 
     final country = find.byKey(const Key('countryField-foundingFriend'));
     await tester.ensureVisible(country);
@@ -462,10 +476,39 @@ void main() {
     );
 
     await _tapSubmit(tester, 'foundingFriend');
-    expect(submitted?.country, 'Afghanistan');
-    expect(submitted?.marketingConsent, isTrue);
+    expect(repository.submissions, hasLength(1));
+    expect(repository.submissions.single.country.getOrCrash(), 'Afghanistan');
+    expect(repository.submissions.single.marketingConsent, isTrue);
     expect(find.byType(UserSignUpSuccess), findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('failed Here & Now submission remains editable and can retry', (
+    tester,
+  ) async {
+    final repository = _RetryHereAndNowRepository();
+    setTestSurface(tester, const Size(390, 1000));
+    await _pumpPage(
+      tester,
+      HereAndNowPage(
+        createBloc: () => HereAndNowRegistrationFormBloc(repository),
+      ),
+    );
+    await _enterHereAndNowRequiredFields(tester);
+
+    await _tapSubmit(tester, 'hereAndNow');
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('userSignUpSubmissionFailure-hereAndNow')),
+      findsOneWidget,
+    );
+    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(repository.submissions, hasLength(1));
+
+    await _tapSubmit(tester, 'hereAndNow');
+    await tester.pumpAndSettle();
+    expect(repository.submissions, hasLength(2));
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
   });
 
   testWidgets('only injected Here & Now success shows approved confirmation', (
@@ -473,7 +516,7 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const HereAndNowPage(showConfirmedSuccess: true),
+      const HereAndNowPage(createBloc: _successfulHereAndNowBloc),
     );
     expect(find.byType(UserSignUpSuccess), findsOneWidget);
     expect(
@@ -533,7 +576,10 @@ void main() {
 
       await _pumpPage(
         tester,
-        const HereAndNowPage(showConfirmedSuccess: true),
+        HereAndNowPage(
+          key: ValueKey('successfulHereAndNow-$width'),
+          createBloc: _successfulHereAndNowBloc,
+        ),
       );
       final success = tester.widget<Text>(
         find.byKey(const Key('hereAndNowSuccessHeading')),
@@ -554,7 +600,7 @@ void main() {
       setTestSurface(tester, Size(width, 1200));
       await _pumpPage(
         tester,
-        const HereAndNowPage(showConfirmedSuccess: true),
+        const HereAndNowPage(createBloc: _successfulHereAndNowBloc),
         textScaleFactor: 2,
       );
 
@@ -736,16 +782,24 @@ Future<void> _pumpPage(
       theme: appTheme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      home: page,
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(
           context,
         ).copyWith(textScaler: TextScaler.linear(textScaleFactor)),
-        child: child!,
+        child: AppRouteDependencies(
+          createHereAndNowRegistrationFormBloc: () =>
+              HereAndNowRegistrationFormBloc(_HereAndNowRepository()),
+          createFoundingFriendRegistrationFormBloc: () =>
+              FoundingFriendRegistrationFormBloc(
+                _FoundingFriendRepository(),
+              ),
+          child: child!,
+        ),
       ),
-      home: page,
     ),
   );
-  await tester.pump();
+  await tester.pumpAndSettle();
 }
 
 void _expectHint(WidgetTester tester, Key key, String expected) {
@@ -763,11 +817,105 @@ Future<void> _tapSubmit(WidgetTester tester, String semanticId) async {
   await tester.pump();
 }
 
+Future<void> _enterHereAndNowRequiredFields(WidgetTester tester) async {
+  await tester.enterText(
+    find.byKey(const Key('firstNameField-hereAndNow')),
+    'Alex',
+  );
+  await tester.enterText(
+    find.byKey(const Key('lastNameField-hereAndNow')),
+    'Morgan',
+  );
+  await tester.enterText(
+    find.byKey(const Key('emailField-hereAndNow')),
+    'alex@example.com',
+  );
+  await tester.enterText(
+    find.byKey(const Key('ageField-hereAndNow')),
+    '29',
+  );
+}
+
 void _expectOrdered(WidgetTester tester, List<Key> keys) {
   final positions = [
     for (final key in keys) tester.getTopLeft(find.byKey(key)).dy,
   ];
   for (var index = 1; index < positions.length; index++) {
     expect(positions[index], greaterThan(positions[index - 1]));
+  }
+}
+
+FunAppLandingPageApp _testApp() => FunAppLandingPageApp(
+  createHereAndNowRegistrationFormBloc: () =>
+      HereAndNowRegistrationFormBloc(_HereAndNowRepository()),
+  createFoundingFriendRegistrationFormBloc: () =>
+      FoundingFriendRegistrationFormBloc(_FoundingFriendRepository()),
+);
+
+HereAndNowRegistrationFormBloc _successfulHereAndNowBloc() {
+  final bloc =
+      HereAndNowRegistrationFormBloc(
+          _HereAndNowRepository(result: right(unit)),
+        )
+        ..add(const HereAndNowRegistrationFormEvent.firstNameChanged('Alex'))
+        ..add(const HereAndNowRegistrationFormEvent.lastNameChanged('Morgan'))
+        ..add(
+          const HereAndNowRegistrationFormEvent.emailChanged(
+            'alex@example.com',
+          ),
+        )
+        ..add(const HereAndNowRegistrationFormEvent.ageChanged('29'))
+        ..add(const HereAndNowRegistrationFormEvent.submitted());
+  return bloc;
+}
+
+final class _HereAndNowRepository
+    implements HereAndNowRegistrationRepositoryInterface {
+  _HereAndNowRepository({
+    this.result = const Left(AppFailure.serviceUnavailable()),
+  });
+
+  final Either<AppFailure, Unit> result;
+  final submissions = <HereAndNowRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitHereAndNowRegistration(
+    HereAndNowRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return result;
+  }
+}
+
+final class _FoundingFriendRepository
+    implements FoundingFriendRegistrationRepositoryInterface {
+  _FoundingFriendRepository({
+    this.result = const Left(AppFailure.serviceUnavailable()),
+  });
+
+  final Either<AppFailure, Unit> result;
+  final submissions = <FoundingFriendRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitFoundingFriendRegistration(
+    FoundingFriendRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return result;
+  }
+}
+
+final class _RetryHereAndNowRepository
+    implements HereAndNowRegistrationRepositoryInterface {
+  final submissions = <HereAndNowRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitHereAndNowRegistration(
+    HereAndNowRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return submissions.length == 1
+        ? left(const AppFailure.serviceUnavailable())
+        : right(unit);
   }
 }

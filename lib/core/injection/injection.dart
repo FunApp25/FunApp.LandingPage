@@ -1,5 +1,9 @@
+import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
+import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
 import 'package:fun_app_landing_page/core/injection/injection.config.dart';
+import 'package:fun_app_landing_page/data/user_registration/deferred_founding_friend_registration_repository.dart';
+import 'package:fun_app_landing_page/data/user_registration/deferred_here_and_now_registration_repository.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/development_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/production_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_interface.dart';
@@ -40,4 +44,27 @@ void configureDependencies(
   }
 
   getIt.init();
+}
+
+/// Resolves the configured Here & Now BLoC or a fail-closed widget-test graph.
+HereAndNowRegistrationFormBloc createDefaultHereAndNowRegistrationFormBloc() {
+  if (getIt.isRegistered<HereAndNowRegistrationFormBloc>()) {
+    return getIt<HereAndNowRegistrationFormBloc>();
+  } else {
+    return HereAndNowRegistrationFormBloc(
+      DeferredHereAndNowRegistrationRepository(),
+    );
+  }
+}
+
+/// Resolves the configured Founding Friend BLoC or a fail-closed test graph.
+FoundingFriendRegistrationFormBloc
+createDefaultFoundingFriendRegistrationFormBloc() {
+  if (getIt.isRegistered<FoundingFriendRegistrationFormBloc>()) {
+    return getIt<FoundingFriendRegistrationFormBloc>();
+  } else {
+    return FoundingFriendRegistrationFormBloc(
+      DeferredFoundingFriendRegistrationRepository(),
+    );
+  }
 }

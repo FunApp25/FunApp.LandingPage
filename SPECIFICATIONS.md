@@ -12,10 +12,11 @@ hash route, whose localized form preserves the established application and
 data workflow. That form shows the approved informational
 privacy acknowledgement with a presentation-local checkbox and links to the
 hosted Privacy Notice; it does not submit a consent field. The Here & Now and
-Founding Friend prospective-user field surfaces are public UI-only routes at
-`/here-and-now` and `/founding-friend`. Their forms validate locally, but their
-actions remain disabled until their Cloudflare-backed HubSpot workflow,
-age-eligibility policy, and consent semantics are approved and implemented.
+Founding Friend forms are public routes at `/here-and-now` and
+`/founding-friend`. Each has an independent domain model, provider-neutral
+repository contract, and application BLoC. The current repositories
+deliberately fail closed without network or persistence until their
+Cloudflare-backed HubSpot transport is implemented in Stage 3.
 
 ## 2. Decision model
 
@@ -92,9 +93,11 @@ Current implementation is evidence of repository state, not automatically a perm
   Environment for runtime bindings and Cloudflare authentication. GitHub Pages
   remains the web origin for every other path.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
-- The Here & Now and Founding Friend forms are responsive presentation-only
-  public routes. Their actions remain disabled and perform no network,
-  persistence, payment, or membership-status operation.
+- The Here & Now and Founding Friend forms are responsive public routes backed
+  by separate provider-neutral registration models, repository contracts, and
+  application BLoCs. Their deferred repositories perform no network,
+  persistence, payment, or membership-status operation and return a
+  provider-neutral unavailable failure until Stage 3.
 
 ### Open
 
@@ -107,8 +110,8 @@ Current implementation is evidence of repository state, not automatically a perm
 - Public Fun App product and brand communication.
 - Responsive Flutter Web presentation.
 - Deliberate public-web, accessibility, and SEO behavior throughout implementation and release work.
-- Approved UI-only Here & Now waitlist and Founding Friend sign-up fields,
-  copy, validation, and route navigation.
+- Approved Here & Now waitlist and Founding Friend sign-up fields, copy,
+  domain validation, application submission lifecycles, and route navigation.
 
 ### Provisional
 
@@ -146,11 +149,12 @@ The repository is an active Flutter Web project:
 
 Flutter code uses `presentation`, `application`, `domain`, `data`, and `core`
 areas only when active behavior needs them. `domain` is active for reusable
-validation and the provider-neutral venue-lead model. The narrow active
-`application/venue` surface owns the venue-lead form BLoC. `data/venue` owns one
-provider-neutral repository, its DTO, first-party request model, and
-environment-specific data sources. `core` owns typed environment selection and
-dependency composition. The landing-page repository
+validation and provider-neutral submission models. The active `application`
+surfaces own the Venue, Here & Now, and Founding Friend form BLoCs. `data/venue`
+owns one provider-neutral repository, its DTO, first-party request model, and
+environment-specific data sources. `data/user_registration` contains only the
+two fail-closed pre-transport repository implementations. `core` owns typed
+environment selection and dependency composition. The landing-page repository
 aligns architectural concepts with the main Fun App Flutter application where
 appropriate, but the repositories do not share source code or packages.
 
@@ -403,10 +407,11 @@ capabilities as implemented.
   country while keeping gender and usage reason optional. Both forms expose a
   separate optional marketing-consent checkbox that starts unchecked and does
   not block local validation.
-- Presentation validation rejects blank required names, structurally invalid
-  email, non-integer age input, and a missing Founding Friend country. It does
-  not invent an age threshold. This validation is usability only and does not
-  authorize production collection without matching backend validation.
+- Domain validation rejects blank required names, structurally invalid email,
+  non-integer age input, and a missing Founding Friend country. It does not
+  invent an age threshold. Presentation exposes those application-coordinated
+  errors after a submit attempt. This validation is usability only and does
+  not authorize production collection without matching backend validation.
 - Current live HubSpot contact properties are `firstname`, `lastname`,
   `email`, `age`, `gender`, `country`, `usage_reason`, and
   `marketing_consent`. Gender stores `Man`, `Woman`, `Non-binary`, or
@@ -417,11 +422,22 @@ capabilities as implemented.
   `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
   `39f027d9-e786-4768-b532-54ed44e1f718`. These documented identifiers do not
   appear in Flutter submission code, and no browser-to-HubSpot path exists.
-- Production supplies no submit callback to either user form. A small
-  presentation draft and injected callback exist only for isolated UI tests and
-  previews. The approved Here & Now success copy is reachable only through an
-  explicitly injected confirmed-success state; no Founding Friend success copy
-  or payment state exists.
+- `HereAndNowRegistration` and `FoundingFriendRegistration` are independent
+  provider-neutral domain aggregates. Each has its own repository contract and
+  form BLoC so the workflows can evolve without sharing payment, membership,
+  or transport behavior. They reuse established name, email, single-line text,
+  failure, and value-object foundations. `Age` requires only an integer and
+  deliberately applies no eligibility threshold.
+- Both BLoCs own editable drafts, validation-attempt visibility, pending state,
+  semantic success/failure, retry, duplicate in-flight suppression, and stale
+  completion rejection. Optional gender, usage reason, and marketing opt-in do
+  not block submission. Founding Friend additionally requires country.
+- Production resolves deferred repositories that always return service
+  unavailable and perform no I/O. Injected repositories are the only way tests
+  can produce confirmed success before Stage 3. Confirmed Here & Now success
+  uses the existing approved success presentation. Founding Friend retains its
+  form after application-level success because approved payment ordering and
+  success copy remain open; no membership or payment confirmation is implied.
 
 - The prospective-venue lead contract is provider-neutral and lives in
   `domain`. It uses `dartz` `Either` for validation results and `Option` for
@@ -540,8 +556,9 @@ capabilities as implemented.
 
 ### Provisional
 
-- The user forms will eventually submit through a Fun App-owned Cloudflare
-  boundary following the established Venue integration pattern.
+- The user forms will submit through a Fun App-owned Cloudflare boundary after
+  the Stage 3 transport and backend contracts are approved, following the
+  established Venue integration pattern.
 - Flutter should remain decoupled from backend implementation through interfaces, repositories, data sources, DTO/boundary mapping, and configuration.
 
 ### Open

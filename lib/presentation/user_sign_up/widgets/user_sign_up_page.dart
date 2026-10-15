@@ -13,7 +13,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/header/landin
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/utils/open_user_sign_up_experience.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form_region.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
 
 /// Shared branded page shell for the two prospective-user forms.
@@ -21,7 +21,6 @@ final class UserSignUpPage extends StatefulWidget {
   /// Creates a presentation-only sign-up page.
   const UserSignUpPage({
     required this.experience,
-    this.onSubmit,
     this.showConfirmedSuccess = false,
     super.key,
   });
@@ -29,10 +28,7 @@ final class UserSignUpPage extends StatefulWidget {
   /// Determines the approved copy and field surface.
   final UserSignUpExperience experience;
 
-  /// Optional test/development submission seam; absent in production.
-  final UserSignUpSubmit? onSubmit;
-
-  /// Injected confirmed-success state for Here & Now previews/tests only.
+  /// Confirmed Here & Now success from the application workflow.
   final bool showConfirmedSuccess;
 
   @override
@@ -101,7 +97,6 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
                 controller: _scrollController,
                 content: _UserSignUpMain(
                   experience: widget.experience,
-                  onSubmit: widget.onSubmit,
                   showConfirmedSuccess: showsConfirmedSuccess,
                 ),
                 footer: LandingFooter(
@@ -140,12 +135,10 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
 final class _UserSignUpMain extends StatelessWidget {
   const _UserSignUpMain({
     required this.experience,
-    required this.onSubmit,
     required this.showConfirmedSuccess,
   });
 
   final UserSignUpExperience experience;
-  final UserSignUpSubmit? onSubmit;
   final bool showConfirmedSuccess;
 
   @override
@@ -196,9 +189,8 @@ final class _UserSignUpMain extends StatelessWidget {
                               mobile: mobile,
                             ),
                             SizedBox(height: mobile ? 40 : 64),
-                            UserSignUpForm(
+                            UserSignUpFormRegion(
                               experience: experience,
-                              onSubmit: onSubmit,
                             ),
                           ],
                         ),
