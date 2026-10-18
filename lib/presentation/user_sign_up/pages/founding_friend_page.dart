@@ -37,15 +37,15 @@ final class FoundingFriendPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => blocFactory(),
       child:
-          BlocBuilder<
+          BlocSelector<
             FoundingFriendRegistrationFormBloc,
-            FoundingFriendRegistrationFormState
+            FoundingFriendRegistrationFormState,
+            bool
           >(
-            buildWhen: (previous, current) =>
-                _submissionSucceeded(previous) != _submissionSucceeded(current),
-            builder: (context, state) => UserSignUpPage(
+            selector: _submissionSucceeded,
+            builder: (context, submissionSucceeded) => UserSignUpPage(
               experience: UserSignUpExperience.foundingFriend,
-              showConfirmedSuccess: _submissionSucceeded(state),
+              showConfirmedSuccess: submissionSucceeded,
             ),
           ),
     );

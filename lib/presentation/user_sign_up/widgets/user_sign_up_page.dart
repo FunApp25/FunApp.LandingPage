@@ -17,7 +17,7 @@ import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
 
 /// Shared branded page shell for the two prospective-user forms.
-final class UserSignUpPage extends StatefulWidget {
+final class UserSignUpPage extends StatelessWidget {
   /// Creates a presentation-only sign-up page.
   const UserSignUpPage({
     required this.experience,
@@ -31,19 +31,6 @@ final class UserSignUpPage extends StatefulWidget {
   /// Confirmed success from the selected application workflow.
   final bool showConfirmedSuccess;
 
-  @override
-  State<UserSignUpPage> createState() => _UserSignUpPageState();
-}
-
-final class _UserSignUpPageState extends State<UserSignUpPage> {
-  final _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   void _openLandingSection(
     BuildContext context,
     LandingSectionTarget target,
@@ -53,10 +40,10 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final showsConfirmedSuccess = widget.showConfirmedSuccess;
+    final showsConfirmedSuccess = showConfirmedSuccess;
 
     return Scaffold(
-      key: Key('userSignUpPage-${widget.experience.name}'),
+      key: Key('userSignUpPage-${experience.name}'),
       backgroundColor: AppColors.lightForeground,
       body: SafeArea(
         child: Column(
@@ -90,11 +77,10 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
             Expanded(
               child: ViewportFooterScrollView(
                 scrollKey: Key(
-                  'userSignUpScrollView-${widget.experience.name}',
+                  'userSignUpScrollView-${experience.name}',
                 ),
-                controller: _scrollController,
                 content: _UserSignUpMain(
-                  experience: widget.experience,
+                  experience: experience,
                   showConfirmedSuccess: showsConfirmedSuccess,
                 ),
                 footer: LandingFooter(

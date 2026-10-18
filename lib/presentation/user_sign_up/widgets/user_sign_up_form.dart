@@ -11,7 +11,7 @@ import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchabl
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
 
 /// Shared field surface driven by one registration workflow BLoC.
-final class UserSignUpForm extends StatefulWidget {
+final class UserSignUpForm extends StatelessWidget {
   /// Creates the controlled sign-up form.
   const UserSignUpForm({
     required this.experience,
@@ -101,62 +101,41 @@ final class UserSignUpForm extends StatefulWidget {
   /// Attempts submission through the owning BLoC.
   final VoidCallback onSubmit;
 
-  @override
-  State<UserSignUpForm> createState() => _UserSignUpFormState();
-}
-
-final class _UserSignUpFormState extends State<UserSignUpForm> {
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _ageController = TextEditingController();
-  final _usageReasonController = TextEditingController();
-
-  String get _semanticId => switch (widget.experience) {
+  String get _semanticId => switch (experience) {
     UserSignUpExperience.hereAndNow => 'hereAndNow',
     UserSignUpExperience.foundingFriend => 'foundingFriend',
   };
 
   bool get _requiresCountry =>
-      widget.experience == UserSignUpExperience.foundingFriend;
-
-  @override
-  void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _emailController.dispose();
-    _ageController.dispose();
-    _usageReasonController.dispose();
-    super.dispose();
-  }
+      experience == UserSignUpExperience.foundingFriend;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final firstNameLabel = switch (widget.experience) {
+    final firstNameLabel = switch (experience) {
       UserSignUpExperience.hereAndNow =>
         l10n.userSignUpHereAndNowFirstNameLabel,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendFirstNameLabel,
     };
-    final lastNameLabel = switch (widget.experience) {
+    final lastNameLabel = switch (experience) {
       UserSignUpExperience.hereAndNow => l10n.userSignUpHereAndNowLastNameLabel,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendLastNameLabel,
     };
-    final usageReasonLabel = switch (widget.experience) {
+    final usageReasonLabel = switch (experience) {
       UserSignUpExperience.hereAndNow =>
         l10n.userSignUpHereAndNowUsageReasonLabel,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendUsageReasonLabel,
     };
-    final marketingCopy = switch (widget.experience) {
+    final marketingCopy = switch (experience) {
       UserSignUpExperience.hereAndNow =>
         l10n.userSignUpHereAndNowMarketingConsent,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendMarketingConsent,
     };
-    final ctaLabel = switch (widget.experience) {
+    final ctaLabel = switch (experience) {
       UserSignUpExperience.hereAndNow => l10n.userSignUpHereAndNowCta,
       UserSignUpExperience.foundingFriend => l10n.userSignUpFoundingFriendCta,
     };
@@ -179,58 +158,59 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
           builder: (context, constraints) {
             final usesDesktopGrid = constraints.maxWidth >= 760;
             final firstName = _textField(
+              context: context,
               key: Key('firstNameField-$_semanticId'),
-              controller: _firstNameController,
               label: firstNameLabel,
               placeholder: l10n.userSignUpFirstNamePlaceholder,
               required: true,
-              errorText: widget.firstNameError,
+              errorText: firstNameError,
               keyboardType: TextInputType.name,
               autofillHints: const [AutofillHints.givenName],
-              onChanged: widget.onFirstNameChanged,
+              onChanged: onFirstNameChanged,
             );
             final lastName = _textField(
+              context: context,
               key: Key('lastNameField-$_semanticId'),
-              controller: _lastNameController,
               label: lastNameLabel,
               placeholder: l10n.userSignUpLastNamePlaceholder,
               required: true,
-              errorText: widget.lastNameError,
+              errorText: lastNameError,
               keyboardType: TextInputType.name,
               autofillHints: const [AutofillHints.familyName],
-              onChanged: widget.onLastNameChanged,
+              onChanged: onLastNameChanged,
             );
             final email = _textField(
+              context: context,
               key: Key('emailField-$_semanticId'),
-              controller: _emailController,
               label: l10n.userSignUpEmailLabel,
               placeholder: l10n.userSignUpEmailPlaceholder,
               required: true,
-              errorText: widget.emailError,
+              errorText: emailError,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
-              onChanged: widget.onEmailChanged,
+              onChanged: onEmailChanged,
             );
             final age = _textField(
+              context: context,
               key: Key('ageField-$_semanticId'),
-              controller: _ageController,
               label: l10n.userSignUpAgeLabel,
               placeholder: l10n.userSignUpAgePlaceholder,
               required: true,
-              errorText: widget.ageError,
+              errorText: ageError,
               keyboardType: TextInputType.number,
               inputFormatters: const [_AsciiDigitsOnlyFormatter()],
-              onChanged: widget.onAgeChanged,
+              onChanged: onAgeChanged,
             );
-            final gender = _dropdownField(
+            final genderField = _dropdownField(
+              context: context,
               key: Key('genderField-$_semanticId'),
               label: l10n.userSignUpGenderLabel,
               placeholder: l10n.userSignUpGenderPlaceholder,
-              value: widget.gender,
+              value: gender,
               options: genderOptions,
-              onChanged: widget.onGenderChanged,
+              onChanged: onGenderChanged,
             );
-            final country = _requiresCountry
+            final countryField = _requiresCountry
                 ? SearchableCountryDropdown(
                     fieldKey: Key('countryField-$_semanticId'),
                     label: l10n.userSignUpCountryLabel,
@@ -239,10 +219,10 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
                     ),
                     placeholder: l10n.userSignUpCountryPlaceholder,
                     noResultsLabel: l10n.userSignUpCountryNoResults,
-                    errorText: widget.countryError,
-                    value: widget.country,
+                    errorText: countryError,
+                    value: country,
                     options: countryOptions,
-                    onChanged: widget.onCountryChanged,
+                    onChanged: onCountryChanged,
                   )
                 : null;
 
@@ -268,8 +248,8 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
                 _fieldPair(
                   rowKey: Key('demographicFieldsRow-$_semanticId'),
                   columnKey: Key('demographicFieldsColumn-$_semanticId'),
-                  leading: country ?? gender,
-                  trailing: country == null ? null : gender,
+                  leading: countryField ?? genderField,
+                  trailing: countryField == null ? null : genderField,
                   usesDesktopGrid: usesDesktopGrid,
                 ),
               ],
@@ -278,25 +258,25 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
         ),
         const SizedBox(height: 16),
         _textField(
+          context: context,
           key: Key('usageReasonField-$_semanticId'),
-          controller: _usageReasonController,
           label: usageReasonLabel,
           placeholder: l10n.userSignUpUsageReasonPlaceholder,
           minLines: 5,
           maxLines: 7,
           textInputAction: TextInputAction.newline,
           multiline: true,
-          onChanged: widget.onUsageReasonChanged,
+          onChanged: onUsageReasonChanged,
         ),
         const SizedBox(height: 20),
         UserSignUpMarketingConsent(
           semanticId: _semanticId,
           label: marketingCopy,
-          value: widget.marketingConsent,
-          onChanged: widget.onMarketingConsentChanged,
+          value: marketingConsent,
+          onChanged: onMarketingConsentChanged,
         ),
         SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 40 : 64),
-        if (widget.hasSubmissionFailure) ...[
+        if (hasSubmissionFailure) ...[
           Semantics(
             key: Key('userSignUpSubmissionFailure-$_semanticId'),
             container: true,
@@ -308,7 +288,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
           ),
           const SizedBox(height: 12),
         ],
-        if (widget.isSubmitting) ...[
+        if (isSubmitting) ...[
           Semantics(
             key: Key('userSignUpSubmissionProgress-$_semanticId'),
             container: true,
@@ -327,8 +307,8 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
   }
 
   Widget _textField({
+    required BuildContext context,
     required Key key,
-    required TextEditingController controller,
     required String label,
     required String placeholder,
     required ValueChanged<String> onChanged,
@@ -348,7 +328,6 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
 
     return BrandedFormTextField(
       fieldKey: key,
-      controller: controller,
       label: label,
       semanticLabel: semanticLabel,
       hint: placeholder,
@@ -366,6 +345,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
   }
 
   Widget _dropdownField({
+    required BuildContext context,
     required Key key,
     required String label,
     required String placeholder,
@@ -410,9 +390,7 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
     buttonKey: Key('userSignUpSubmit-$_semanticId'),
     arrowKey: Key('userSignUpSubmitArrow-$_semanticId'),
     label: label,
-    onPressed: widget.isSubmitting || widget.submissionSucceeded
-        ? null
-        : widget.onSubmit,
+    onPressed: isSubmitting || submissionSucceeded ? null : onSubmit,
     disabledBackgroundColor: AppColors.warmOrange.withValues(alpha: 0.45),
   );
 

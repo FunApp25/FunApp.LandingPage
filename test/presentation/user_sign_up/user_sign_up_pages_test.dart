@@ -375,11 +375,14 @@ void main() {
     );
     expect(
       tester
-          .widget<TextField>(
-            find.byKey(const Key('ageField-hereAndNow')),
+          .widget<EditableText>(
+            find.descendant(
+              of: find.byKey(const Key('ageField-hereAndNow')),
+              matching: find.byType(EditableText),
+            ),
           )
           .controller
-          ?.text,
+          .text,
       '29',
     );
     await _tapSubmit(tester, 'hereAndNow');
@@ -387,11 +390,14 @@ void main() {
     expect(repository.submissions, isEmpty);
     expect(
       tester
-          .widget<TextField>(
-            find.byKey(const Key('firstNameField-hereAndNow')),
+          .widget<EditableText>(
+            find.descendant(
+              of: find.byKey(const Key('firstNameField-hereAndNow')),
+              matching: find.byType(EditableText),
+            ),
           )
           .controller
-          ?.text,
+          .text,
       'Alex',
     );
 

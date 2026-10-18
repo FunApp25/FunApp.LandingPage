@@ -37,15 +37,15 @@ final class HereAndNowPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => blocFactory(),
       child:
-          BlocBuilder<
+          BlocSelector<
             HereAndNowRegistrationFormBloc,
-            HereAndNowRegistrationFormState
+            HereAndNowRegistrationFormState,
+            bool
           >(
-            buildWhen: (previous, current) =>
-                _submissionSucceeded(previous) != _submissionSucceeded(current),
-            builder: (context, state) => UserSignUpPage(
+            selector: _submissionSucceeded,
+            builder: (context, submissionSucceeded) => UserSignUpPage(
               experience: UserSignUpExperience.hereAndNow,
-              showConfirmedSuccess: _submissionSucceeded(state),
+              showConfirmedSuccess: submissionSucceeded,
             ),
           ),
     );
