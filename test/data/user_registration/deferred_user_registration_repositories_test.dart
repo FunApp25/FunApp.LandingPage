@@ -11,7 +11,7 @@ import 'package:fun_app_landing_page/domain/user_registration/entities/founding_
 import 'package:fun_app_landing_page/domain/user_registration/entities/here_and_now_registration.dart';
 
 void main() {
-  test('Here & Now stays fail-closed before Stage 3', () async {
+  test('Here & Now stays fail-closed when registration is deferred', () async {
     final result = await DeferredHereAndNowRegistrationRepository()
         .submitHereAndNowRegistration(
           HereAndNowRegistration(
@@ -31,24 +31,27 @@ void main() {
     );
   });
 
-  test('Founding Friend stays fail-closed before Stage 3', () async {
-    final result = await DeferredFoundingFriendRegistrationRepository()
-        .submitFoundingFriendRegistration(
-          FoundingFriendRegistration(
-            firstName: PersonalName('Taylor'),
-            lastName: PersonalName('Jones'),
-            email: EmailAddress('taylor@example.com'),
-            age: Age('31'),
-            country: NonEmptySingleLineText('Afghanistan'),
-            gender: none(),
-            usageReason: none(),
-            marketingConsent: true,
-          ),
-        );
+  test(
+    'Founding Friend stays fail-closed when registration is deferred',
+    () async {
+      final result = await DeferredFoundingFriendRegistrationRepository()
+          .submitFoundingFriendRegistration(
+            FoundingFriendRegistration(
+              firstName: PersonalName('Taylor'),
+              lastName: PersonalName('Jones'),
+              email: EmailAddress('taylor@example.com'),
+              age: Age('31'),
+              country: NonEmptySingleLineText('Afghanistan'),
+              gender: none(),
+              usageReason: none(),
+              marketingConsent: true,
+            ),
+          );
 
-    expect(
-      result,
-      left<AppFailure, Unit>(const AppFailure.serviceUnavailable()),
-    );
-  });
+      expect(
+        result,
+        left<AppFailure, Unit>(const AppFailure.serviceUnavailable()),
+      );
+    },
+  );
 }

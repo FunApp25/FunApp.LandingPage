@@ -14,10 +14,10 @@ privacy acknowledgement with a presentation-local checkbox and links to the
 hosted Privacy Notice; it does not submit a consent field. The Here & Now and
 Founding Friend forms are public routes at `/here-and-now` and
 `/founding-friend`. Each has an independent domain model, provider-neutral
-repository contract, and application BLoC. The current repositories
-support explicitly configured development-only direct HubSpot testing and
-otherwise fail closed without network or persistence. Production remains
-fail-closed until the Cloudflare-backed transport is implemented in Stage 3.
+repository contract, and application BLoC. Development can explicitly select
+temporary direct HubSpot testing or a first-party local Worker transport backed
+by deterministic mocks. The default development graph and every production
+graph remain fail-closed without registration I/O.
 
 ## 2. Decision model
 
@@ -86,20 +86,22 @@ Current implementation is evidence of repository state, not automatically a perm
   request contract and has no HubSpot identifiers, fields, or direct endpoint.
 - `cloudflare/venue-interest-worker/` is the repository-controlled,
   independently testable Worker project targeting the existing
-  `funapp-venue-interest` Worker. Its active production boundary is
-  first-party `POST /api/venue-interest` on `https://funapp.world`, via a
-  dashboard-managed narrow Worker Route. It has no route, account ID, or zone
-  ID in repository configuration. Its source-controlled
+  `funapp-venue-interest` Worker. Its code implements `POST
+  /api/venue-interest`, `POST /api/registrations/here-and-now`, and `POST
+  /api/registrations/founding-friend`. Only the Venue endpoint is currently
+  routed and active in production; registration routes and activation remain
+  unprovisioned. It has no route, account ID, or zone ID in repository
+  configuration. Its source-controlled
   GitHub Actions deployment is manual only and uses the GitHub `production`
   Environment for runtime bindings and Cloudflare authentication. GitHub Pages
   remains the web origin for every other path.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
 - The Here & Now and Founding Friend forms are responsive public routes backed
   by separate provider-neutral registration models, repository contracts, and
-  application BLoCs. Explicitly configured development builds use the public
-  unauthenticated HubSpot Forms endpoint; unconfigured development and all
-  production builds use deferred repositories that perform no network,
-  persistence, payment, or membership-status operation.
+  application BLoCs. Explicit development selection uses either the public
+  unauthenticated HubSpot Forms endpoint or the local mocked first-party Worker;
+  unconfigured development and all production builds use deferred repositories
+  that perform no network, persistence, payment, or membership-status operation.
 
 ### Open
 
@@ -144,7 +146,7 @@ The repository is an active Flutter Web project:
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
 - `cloudflare/venue-interest-worker/` contains the isolated TypeScript
-  first-party venue-interest Worker and its focused tests; it is not part of
+  first-party forms Worker and its focused tests; it is not part of
   Flutter's `lib/` architecture.
 - `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
 - `.github/workflows/deploy.yml` validates and builds Flutter through Puro, uploads `build/web`, and deploys it through GitHub Pages.
@@ -154,9 +156,10 @@ areas only when active behavior needs them. `domain` is active for reusable
 validation and provider-neutral submission models. The active `application`
 surfaces own the Venue, Here & Now, and Founding Friend form BLoCs. `data/venue`
 owns one provider-neutral repository, its DTO, first-party request model, and
-environment-specific data sources. `data/user_registration` contains only the
-two workflow repositories, shared development HubSpot data source and request
-mapping, and fail-closed repository implementations. `core` owns typed
+environment-specific data sources. `data/user_registration` contains the two
+workflow repositories, direct HubSpot and first-party Worker development data
+sources and request mappings, and fail-closed repository implementations.
+`core` owns typed
 environment selection, public development configuration, and dependency
 composition. The landing-page repository
 aligns architectural concepts with the main Fun App Flutter application where
@@ -440,10 +443,12 @@ capabilities as implemented.
   semantic success/failure, retry, duplicate in-flight suppression, and stale
   completion rejection. Optional gender, usage reason, and marketing opt-in do
   not block submission. Founding Friend additionally requires country.
-- Development resolves direct-HubSpot repositories only when all three public
-  identifiers are valid; otherwise it resolves deferred repositories that
-  return service unavailable without I/O. Production always resolves the
-  deferred repositories, even if development identifiers are supplied.
+- Development resolves direct-HubSpot repositories only when that transport is
+  explicitly selected and all three public identifiers are valid. It resolves
+  the Worker-backed repositories only when the local Worker transport and a
+  valid loopback origin are explicitly selected. Otherwise it resolves deferred
+  repositories that return service unavailable without I/O. Production always
+  resolves the deferred repositories, even if development settings are supplied.
   Confirmed success replaces the submitted form with the established branded
   confirmation presentation. Here & Now uses its approved membership-specific
   success copy. Founding Friend uses the existing neutral reaching-out
@@ -555,6 +560,18 @@ capabilities as implemented.
   every 5xx response, transport failures, and timeout aborts are service
   unavailable; other statuses are unexpected. Response bodies and submitted
   personal data are neither parsed nor logged.
+- `HereAndNowRegistrationRequest` and `FoundingFriendRegistrationRequest` are
+  first-party request models. Both emit required `firstName`, `lastName`,
+  `email`, integer `age`, and boolean `marketingConsent`; absent `gender` and
+  `usageReason` are omitted. Founding Friend additionally emits required
+  canonical `country`. They contain no portal/form identifier or HubSpot field
+  name.
+- `WorkerUserRegistrationDataSource` posts those models to exact local Worker
+  paths `/api/registrations/here-and-now` and
+  `/api/registrations/founding-friend`. It uses one abortable 15-second deadline
+  and no retry. A 204 succeeds; 400/422 are submission rejected; 429/503 and
+  transport/deadline failures are service unavailable; 500 and unrecognised
+  statuses are unexpected. It neither parses nor logs response bodies.
 - GetIt and Injectable own composition now that environment-dependent
   implementations exist. `VenueLeadFormBloc` is a factory registration, the
   repository is a provider-neutral lazy singleton, and core composition
@@ -562,28 +579,38 @@ capabilities as implemented.
   Application and data classes use constructor injection rather than reading
   GetIt or importing application configuration.
 - Environment selection is structural: `lib/main_dev.dart` passes the typed
-  `AppEnvironment.development` value into bootstrap and resolves deterministic
-  development dependencies, while `lib/main_prod.dart` passes
-  `AppEnvironment.production` and resolves the first-party production graph. No
-  environment-selection dart-define or string parsing is used.
+  `AppEnvironment.development` value into bootstrap, while `lib/main_prod.dart`
+  passes `AppEnvironment.production`. Development additionally requires an
+  explicit `FUN_APP_REGISTRATION_TRANSPORT` selection (`deferred`,
+  `direct_hubspot`, or `local_worker`); omission selects deferred. The local
+  Worker selection accepts only an HTTP(S) loopback origin. Production ignores
+  every development registration selection and remains deferred.
 - Flutter production needs no Venue submission runtime configuration. A local
   production browser run resolves the same-origin endpoint to localhost and
   therefore cannot reach the deployed Worker without separate local routing;
   development remains the deterministic fake path.
-- The repository-controlled Cloudflare Worker validates the untrusted Fun App
-  request, maps it to HubSpot only at its provider boundary, and obtains its
-  public provider identifiers from Worker environment bindings. It does not log
-  submitted form content or HubSpot response bodies. The deployed narrow route
-  owns `/api/venue-interest`; GitHub Pages remains the origin for all other
-  paths. The Worker reads at most 16 KiB per request and makes one upstream
-  attempt with a 10-second deadline; it does not automatically retry.
-
-### Provisional
-
-- The user forms should submit through a Fun App-owned Cloudflare boundary after
-  the Stage 3 transport and backend contracts are approved, following the
-  established Venue integration pattern.
-- Flutter should remain decoupled from backend implementation through interfaces, repositories, data sources, DTO/boundary mapping, and configuration.
+- The repository-controlled Cloudflare Worker performs exact route dispatch,
+  validates each untrusted Fun App request independently, maps to HubSpot only
+  at its provider boundary, and obtains public provider identifiers from Worker
+  bindings. It rejects unknown properties, malformed JSON, non-JSON content,
+  non-integer ages, unsupported canonical gender/country values, and requests
+  over 16 KiB. It applies no age eligibility threshold and no extra registration
+  field-length constraints beyond that body limit.
+- Registration Worker forwarding is disabled unless
+  `REGISTRATION_SUBMISSIONS_ENABLED` is exactly `true`. Activation additionally
+  requires valid portal/form IDs and the `REGISTRATION_RATE_LIMITER` binding;
+  missing or malformed mandatory configuration fails closed. The binding allows
+  10 attempts per 60 seconds per route and Cloudflare connecting-IP key. It is
+  an abuse control, not authentication, and may group users behind shared IPs.
+- The Worker preserves the current `HUBSPOT_FORM_GUID` Venue binding and also
+  accepts `HUBSPOT_VENUE_FORM_GUID` as a migration alias. Venue remains
+  independent of registration enablement, form IDs, and rate limiting. Every
+  provider call is a single attempt with a 10-second deadline. Provider bodies,
+  submitted values, request headers, and cookies are not returned or logged.
+- Local Wrangler development requires an explicit localhost origin plus one of
+  six deterministic mock scenarios. In that mode Venue and registration never
+  contact HubSpot. Local-only CORS responses support the fixed Flutter dev
+  origin; production remains same-origin and emits no CORS allowance.
 
 ### Open
 
@@ -603,8 +630,7 @@ capabilities as implemented.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count
   cross-field invariant.
-- Prospective-user API endpoints and DTOs, and venue-lead retention/deletion
-  requirements.
+- Prospective-user retention/deletion requirements.
 - The minimum/maximum age eligibility policy and corresponding backend rule.
 - Whether approved display labels should differ from the confirmed HubSpot
   gender values, and any explicit reversible mapping if they do.
@@ -612,8 +638,9 @@ capabilities as implemented.
   integration and release.
 - The Founding Friend payment provider, checkout ordering, payment status, and
   success behavior.
-- Timing and authorized deployment of the Cloudflare Worker, its narrow route,
-  and the later Flutter data-source switch to the first-party endpoint.
+- Timing and authorized deployment of the updated Worker, registration route
+  attachment, controlled live verification, and any future production Flutter
+  switch to the first-party registration transport.
 
 Backend implementation must be driven by an actual approved contract rather than inferred from the main mobile application. Do not copy `/profiles`, Entra, OIDC, user-profile, onboarding, or other mobile-app contracts into this project without an explicit landing-page requirement.
 
@@ -627,7 +654,7 @@ Backend implementation must be driven by an actual approved contract rather than
 - Treat every value embedded in Flutter Web as publicly recoverable, including values injected by CI.
 - Client-side validation improves usability but is not a security boundary; backend validation and authorization must exist where applicable.
 - Do not include personal information in logs, analytics, diagnostics, crash reports, fixtures, or examples without explicit, justified handling.
-- The venue-interest Worker must not log request bodies, submitted field values,
+- The first-party forms Worker must not log request bodies, submitted field values,
   HubSpot payloads, HubSpot response bodies, or request headers/cookies. It
   returns only provider-neutral response codes and opaque request IDs.
 - Use HTTPS for production backend communication.
@@ -710,8 +737,13 @@ The project tracks Flutter stable through Puro rather than establishing a perman
   GitHub `production` Environment for public HubSpot and Cloudflare account
   configuration and the Cloudflare API-token secret; it does not configure the
   route.
-- Pull requests targeting `main` run read-only formatting, generation,
-  analysis, full-suite coverage, and production-entrypoint compile checks.
+- The registration Worker routes are not attached and
+  `REGISTRATION_SUBMISSIONS_ENABLED` remains false. Later activation requires
+  the two registration form variables, source-declared rate-limit binding,
+  exact route attachment, controlled verification, and legal/product approval.
+- Pull requests targeting `main` run Worker typechecking, tests, and dry-run
+  validation plus Flutter formatting, generation, analysis, full-suite
+  coverage, and production-entrypoint compile checks.
   Pull-request checks do not deploy; pushes to `main` remain the production
   Pages deployment trigger.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.

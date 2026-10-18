@@ -26,10 +26,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   branded forms with optional, unchecked marketing consent. Separate domain
   models, provider-neutral repository contracts, and application BLoCs own
   validation, pending, success, failure, duplicate prevention, and retry. The
-  development can opt into the public unauthenticated HubSpot Forms v3 endpoint
-  through compile-time public identifiers. With no development configuration,
-  and in every production composition, the repositories deliberately fail
-  closed without network or persistence. Injected test repositories can confirm
+  development can explicitly select the temporary direct HubSpot transport or
+  a first-party local Worker transport backed by deterministic mocks. With no
+  explicit development selection, and in every production composition, the
+  repositories deliberately fail closed without network or persistence.
+  Injected test repositories can confirm
   the existing Here & Now success presentation;
   Founding Friend has no invented membership, payment, or checkout confirmation.
   The stable
@@ -141,7 +142,9 @@ direct-HubSpot development test:
 
 ```bash
 cp .env.example .env
-puro flutter run -d chrome -t lib/main_dev.dart --dart-define-from-file=.env
+puro flutter run -d chrome -t lib/main_dev.dart \
+  --dart-define-from-file=.env \
+  --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot
 ```
 
 These are public form identifiers, not credentials. Do not put private HubSpot
@@ -158,8 +161,13 @@ on Chrome in debug mode through the committed configurations:
 - **Fun App Landing — Development (Fake Repositories)** selects the
   deterministic local data source and does not load `.env`.
 - **Fun App Landing — Development (Direct HubSpot)** loads `.env` for the two
-  development-only registration transports. This is the only committed launch
+  development-only registration workflows. This is the only committed launch
   configuration that can make direct registration requests.
+- **Fun App Landing — Development (Local Worker)** uses Flutter port `7357`,
+  loads the Worker origin from `.env`, and sends provider-neutral registration
+  JSON only to the local Worker.
+- **Fun App Worker — Local Mock** runs Wrangler on `localhost:8787`; the
+  **Fun App Landing + Local Mock Worker** compound starts both local processes.
 - **Fun App Landing — Production** selects the production first-party Venue
   source without loading `.env`. The registration repositories remain
   deliberately deferred in this composition.
@@ -270,11 +278,14 @@ localization, theme, interactions, and responsive viewport contracts.
 
 ## Cloudflare Worker development
 
-`cloudflare/venue-interest-worker/` is an isolated TypeScript Worker project
-for the active first-party `POST /api/venue-interest` boundary. It validates
-the Fun App-owned request contract and maps to HubSpot only inside the Worker.
-Its production route is dashboard-managed; GitHub Pages remains the origin for
-every non-API path.
+`cloudflare/venue-interest-worker/` is the isolated TypeScript project for the
+existing `funapp-venue-interest` Worker. It preserves `POST
+/api/venue-interest` and implements exact dispatch for `POST
+/api/registrations/here-and-now` and `POST
+/api/registrations/founding-friend`. The registration routes are implemented
+but are not attached or enabled in production. The Worker validates each Fun
+App-owned request contract and maps to HubSpot only inside the Worker. GitHub
+Pages remains the origin for every non-API path.
 
 Install and validate it independently:
 
@@ -287,19 +298,68 @@ npm run wrangler:validate
 ```
 
 Fake local values live only in the tracked `.dev.vars.example`; copy that file
-to an ignored `.dev.vars` for local Wrangler development if needed. The
-`wrangler.jsonc` file declares no deployable HubSpot `vars` and sets
-`keep_vars: true`, so an authorized code deployment preserves separately
-configured dashboard bindings. The Worker does not log submitted form content
-or HubSpot response bodies. It reads at most 16 KiB per request and makes one
-HubSpot attempt with a 10-second timeout; it does not retry form submissions.
+to an ignored `.dev.vars` for local Wrangler development. Its required mock
+scenario makes both Venue and registration submissions deterministic and
+prevents HubSpot I/O. Start it with `npm run dev`; copy `.env.example` to the
+ignored root `.env`; then use the compound launch configuration. Change
+`HUBSPOT_MOCK_SCENARIO` and restart Wrangler to exercise `success`,
+`provider_rejection`, `rate_limited`, `provider_unavailable`,
+`network_failure`, or `timeout`. Send malformed JSON or omit a required field
+to exercise request validation.
+
+```bash
+cd cloudflare/venue-interest-worker
+cp .dev.vars.example .dev.vars
+npm run dev
+```
+
+The Here & Now request requires `firstName`, `lastName`, `email`, integer
+`age`, and boolean `marketingConsent`; `gender` and `usageReason` are optional.
+Founding Friend uses the same contract plus required canonical `country`.
+Unknown properties, malformed JSON, unsupported gender/country values,
+non-integer ages, non-JSON content, and bodies over 16 KiB are rejected.
+Responses are provider-neutral: `204` success, `400` invalid request, `404`
+unknown route, `405` unsupported method, `422` provider validation rejection,
+`429` rate limited, `503` disabled/unavailable, and `500` unexpected or invalid
+configuration. Provider bodies and submitted personal data are never returned
+or logged.
+
+The Worker uses `HUBSPOT_PORTAL_ID`, the existing `HUBSPOT_FORM_GUID` (or the
+supported migration alias `HUBSPOT_VENUE_FORM_GUID`),
+`HUBSPOT_HERE_AND_NOW_FORM_GUID`,
+`HUBSPOT_FOUNDING_FRIEND_FORM_GUID`, and
+`REGISTRATION_SUBMISSIONS_ENABLED`. Registration defaults to disabled and
+requires the source-declared `REGISTRATION_RATE_LIMITER` binding. That binding
+allows 10 attempts per 60 seconds for each route/connecting-IP key. The
+`wrangler.jsonc` file declares no HubSpot `vars` and sets `keep_vars: true`.
+The Worker makes at most one HubSpot attempt with a 10-second timeout and never
+retries. `LOCAL_DEVELOPMENT_ALLOWED_ORIGIN` and `HUBSPOT_MOCK_SCENARIO` are
+local-only mock settings; mock mode is rejected unless both the configured
+origin and Worker request URL are loopback URLs. Do not configure them on the
+deployed Worker.
 
 `.github/workflows/deploy-venue-interest-worker.yml` is manually triggered
 only. Its sole job targets the GitHub `production` Environment, validates the
 Worker, and deploys the existing Worker using that Environment's
 `HUBSPOT_PORTAL_ID`, `HUBSPOT_FORM_GUID`, `CLOUDFLARE_ACCOUNT_ID`, and
-`CLOUDFLARE_API_TOKEN`. It deliberately configures no route; route attachment
-remains dashboard-managed.
+`CLOUDFLARE_API_TOKEN`. It supplies
+`REGISTRATION_SUBMISSIONS_ENABLED=false` when that Environment variable is
+absent. The two registration form variables are required only if the flag is
+later set to `true`. Do not enable it until consent/legal approval and the
+Cloudflare routes and bindings have been reviewed. The workflow deliberately
+configures no route; route attachment remains dashboard-managed.
+
+Pending manual production setup is deliberately unperformed: keep the existing
+`HUBSPOT_PORTAL_ID`, `HUBSPOT_FORM_GUID`, `CLOUDFLARE_ACCOUNT_ID`, and
+`CLOUDFLARE_API_TOKEN`; add GitHub Environment variables
+`HUBSPOT_HERE_AND_NOW_FORM_GUID`,
+`HUBSPOT_FOUNDING_FRIEND_FORM_GUID`, and
+`REGISTRATION_SUBMISSIONS_ENABLED=false`; confirm rate-limit namespace `1001`
+is unique in the Cloudflare account; and later attach the existing Worker to
+the exact `funapp.world/api/registrations/here-and-now` and
+`funapp.world/api/registrations/founding-friend` routes. Do not change the flag
+to `true` until the outstanding legal/consent and controlled-live-verification
+gates are approved.
 
 ## Repository structure
 
@@ -315,7 +375,7 @@ lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
 lib/domain/user_registration/ Provider-neutral registration models and contracts
 lib/data/venue/               Venue repository, DTO, and selectable data sources
-lib/data/user_registration/  Development HubSpot transport and fail-closed fallback
+lib/data/user_registration/  Direct/Worker transports and fail-closed fallback
 lib/l10n/                    Localization ARB source files
 lib/presentation/core/routing/ Typed auto_route configuration and dependencies
 lib/presentation/core/widgets/ Shared viewport/footer page shell
@@ -330,7 +390,7 @@ assets/fonts/                Bundled Google Fonts files and OFL license assets
 assets/legal/                Approved canonical website legal content
 test/                        Flutter widget tests for active behavior
 web/                         Flutter Web shell and web-root static inputs
-cloudflare/venue-interest-worker/ Isolated first-party Venue enquiry Worker
+cloudflare/venue-interest-worker/ Existing first-party forms Worker
 l10n.yaml                    Flutter localization generation configuration
 archive/astro_site/          Deprecated pre-Flutter historical reference
 .github/workflows/deploy.yml Flutter GitHub Pages workflow
@@ -353,9 +413,10 @@ them. `domain` owns validation and the provider-neutral Venue, Here & Now, and
 Founding Friend contracts; separate application BLoCs coordinate each form.
 The Venue data repository maps validated leads into a provider-neutral DTO and
 delegates to an environment-selected data source. Prospective-user repositories
-use direct HubSpot Forms submission only in explicitly configured development
-builds; unconfigured development and every production build remain fail-closed
-until Stage 3. The explicit development and production entrypoints pass a typed
+use direct HubSpot only in the explicit direct-development profile, or
+provider-neutral requests to a local mocked Worker in the explicit Worker
+profile. Unconfigured development and every production build remain
+fail-closed. The explicit development and production entrypoints pass a typed
 environment into `core`, which configures GetIt through Injectable before the
 app starts.
 The production data boundary maps the DTO to the Fun App-owned JSON contract
@@ -367,8 +428,9 @@ dependency boundaries.
 
 ## Deployment
 
-Pull requests targeting `main` run formatting, generation, analysis, the full
-test suite with coverage, and a production compile through
+Pull requests targeting `main` run Worker typechecking, tests, and dry-run
+validation plus Flutter formatting, generation, analysis, the full test suite
+with coverage, and a production compile through
 the read-only `PR Checks` workflow. These checks do not deploy anything.
 
 Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.

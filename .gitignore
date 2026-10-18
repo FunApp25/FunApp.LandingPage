@@ -304,6 +304,7 @@ node_modules/
 # Cloudflare Worker local bindings; keep the tracked example only.
 cloudflare/venue-interest-worker/.dev.vars*
 !cloudflare/venue-interest-worker/.dev.vars.example
+cloudflare/venue-interest-worker/.wrangler/
 
 # Visual Studio 6 build log
 *.plg

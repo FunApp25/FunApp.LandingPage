@@ -1,10 +1,12 @@
 import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
+import 'package:fun_app_landing_page/core/config/development_registration_transport.dart';
 import 'package:fun_app_landing_page/core/config/hubspot_registration_forms_config.dart';
 import 'package:fun_app_landing_page/core/injection/injection.config.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/hubspot_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/user_registration_data_source_interface.dart';
+import 'package:fun_app_landing_page/data/user_registration/data_sources/worker_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/deferred_founding_friend_registration_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/deferred_here_and_now_registration_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/founding_friend_registration_repository.dart';
@@ -37,40 +39,50 @@ void configureDependencies(
   AppEnvironment environment, {
   http.Client? productionHttpClient,
   http.Client? developmentRegistrationHttpClient,
+  DevelopmentRegistrationTransport? developmentRegistrationTransport,
   HubSpotRegistrationFormsConfig? developmentHubSpotConfig,
+  LocalRegistrationWorkerConfig? developmentWorkerConfig,
 }) {
   if (environment == AppEnvironment.development) {
     getIt.registerLazySingleton<VenueLeadDataSourceInterface>(
       DevelopmentVenueLeadDataSource.new,
     );
-    final hubSpotConfig =
-        developmentHubSpotConfig ??
-        HubSpotRegistrationFormsConfig.fromEnvironment();
+    final registrationTransport =
+        developmentRegistrationTransport ??
+        DevelopmentRegistrationTransport.fromEnvironment();
 
-    if (hubSpotConfig == null) {
+    if (registrationTransport == DevelopmentRegistrationTransport.deferred) {
       _registerDeferredUserRegistrationRepositories();
-    } else {
-      getIt
-        ..registerLazySingleton<http.Client>(
-          () => developmentRegistrationHttpClient ?? http.Client(),
-          dispose: (client) => client.close(),
-        )
-        ..registerLazySingleton<UserRegistrationDataSourceInterface>(
-          () => HubSpotUserRegistrationDataSource(
-            client: getIt<http.Client>(),
-            config: hubSpotConfig,
-          ),
-        )
-        ..registerLazySingleton<HereAndNowRegistrationRepositoryInterface>(
-          () => HereAndNowRegistrationRepository(
-            getIt<UserRegistrationDataSourceInterface>(),
-          ),
-        )
-        ..registerLazySingleton<FoundingFriendRegistrationRepositoryInterface>(
-          () => FoundingFriendRegistrationRepository(
-            getIt<UserRegistrationDataSourceInterface>(),
-          ),
+    } else if (registrationTransport ==
+        DevelopmentRegistrationTransport.directHubSpot) {
+      final hubSpotConfig =
+          developmentHubSpotConfig ??
+          HubSpotRegistrationFormsConfig.fromEnvironment();
+
+      if (hubSpotConfig == null) {
+        throw StateError(
+          'Direct HubSpot registration requires complete configuration.',
         );
+      }
+
+      _registerDevelopmentRegistrationDataSource(
+        dataSource: (client) => HubSpotUserRegistrationDataSource(
+          client: client,
+          config: hubSpotConfig,
+        ),
+        httpClient: developmentRegistrationHttpClient,
+      );
+    } else {
+      final workerConfig =
+          developmentWorkerConfig ??
+          LocalRegistrationWorkerConfig.fromEnvironment();
+      _registerDevelopmentRegistrationDataSource(
+        dataSource: (client) => WorkerUserRegistrationDataSource(
+          client: client,
+          config: workerConfig,
+        ),
+        httpClient: developmentRegistrationHttpClient,
+      );
     }
   } else {
     getIt
@@ -87,6 +99,31 @@ void configureDependencies(
   }
 
   getIt.init();
+}
+
+void _registerDevelopmentRegistrationDataSource({
+  required UserRegistrationDataSourceInterface Function(http.Client client)
+  dataSource,
+  required http.Client? httpClient,
+}) {
+  getIt
+    ..registerLazySingleton<http.Client>(
+      () => httpClient ?? http.Client(),
+      dispose: (client) => client.close(),
+    )
+    ..registerLazySingleton<UserRegistrationDataSourceInterface>(
+      () => dataSource(getIt<http.Client>()),
+    )
+    ..registerLazySingleton<HereAndNowRegistrationRepositoryInterface>(
+      () => HereAndNowRegistrationRepository(
+        getIt<UserRegistrationDataSourceInterface>(),
+      ),
+    )
+    ..registerLazySingleton<FoundingFriendRegistrationRepositoryInterface>(
+      () => FoundingFriendRegistrationRepository(
+        getIt<UserRegistrationDataSourceInterface>(),
+      ),
+    );
 }
 
 void _registerDeferredUserRegistrationRepositories() {

@@ -4,10 +4,12 @@ import 'package:fun_app_landing_page/application/user_registration/founding_frie
 import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
+import 'package:fun_app_landing_page/core/config/development_registration_transport.dart';
 import 'package:fun_app_landing_page/core/config/hubspot_registration_forms_config.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/hubspot_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/user_registration_data_source_interface.dart';
+import 'package:fun_app_landing_page/data/user_registration/data_sources/worker_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/deferred_founding_friend_registration_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/deferred_here_and_now_registration_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/founding_friend_registration_repository.dart';
@@ -79,6 +81,8 @@ void main() {
       configureDependencies(
         AppEnvironment.development,
         developmentRegistrationHttpClient: client,
+        developmentRegistrationTransport:
+            DevelopmentRegistrationTransport.directHubSpot,
         developmentHubSpotConfig: config,
       );
 
@@ -121,6 +125,65 @@ void main() {
   );
 
   test(
+    'local Worker development wires both repositories to first-party HTTP',
+    () async {
+      final requestedUrls = <Uri>[];
+      final client = MockClient((request) async {
+        requestedUrls.add(request.url);
+        return http.Response('', 204);
+      });
+      configureDependencies(
+        AppEnvironment.development,
+        developmentRegistrationHttpClient: client,
+        developmentRegistrationTransport:
+            DevelopmentRegistrationTransport.localWorker,
+        developmentWorkerConfig: LocalRegistrationWorkerConfig(
+          baseUrl: 'http://localhost:8787',
+        ),
+      );
+
+      expect(
+        getIt<UserRegistrationDataSourceInterface>(),
+        isA<WorkerUserRegistrationDataSource>(),
+      );
+      expect(
+        getIt<HereAndNowRegistrationRepositoryInterface>(),
+        isA<HereAndNowRegistrationRepository>(),
+      );
+      expect(
+        getIt<FoundingFriendRegistrationRepositoryInterface>(),
+        isA<FoundingFriendRegistrationRepository>(),
+      );
+
+      final hereAndNowBloc = getIt<HereAndNowRegistrationFormBloc>()
+        ..add(const HereAndNowRegistrationFormEvent.firstNameChanged('Alex'))
+        ..add(const HereAndNowRegistrationFormEvent.lastNameChanged('Morgan'))
+        ..add(
+          const HereAndNowRegistrationFormEvent.emailChanged(
+            'alex@example.com',
+          ),
+        )
+        ..add(const HereAndNowRegistrationFormEvent.ageChanged('29'));
+      await hereAndNowBloc.stream.firstWhere(
+        (state) => state.registration.isValid,
+      );
+      final settled = hereAndNowBloc.stream.firstWhere(
+        (state) => state.submissionResult.isSome(),
+      );
+      hereAndNowBloc.add(const HereAndNowRegistrationFormEvent.submitted());
+      await settled;
+
+      expect(requestedUrls, [
+        Uri.parse(
+          'http://localhost:8787/api/registrations/here-and-now',
+        ),
+      ]);
+      await hereAndNowBloc.close();
+      await getIt<FoundingFriendRegistrationFormBloc>().close();
+    },
+  );
+
+  test(
     'production injects the first-party data source without real I/O',
     () async {
       late http.Request capturedRequest;
@@ -131,6 +194,11 @@ void main() {
       configureDependencies(
         AppEnvironment.production,
         productionHttpClient: client,
+        developmentRegistrationTransport:
+            DevelopmentRegistrationTransport.localWorker,
+        developmentWorkerConfig: LocalRegistrationWorkerConfig(
+          baseUrl: 'http://localhost:8787',
+        ),
         developmentHubSpotConfig: HubSpotRegistrationFormsConfig(
           portalId: '149114580',
           hereAndNowFormGuid: '3284e6bc-e3a2-4d2e-9e21-684399126f3b',

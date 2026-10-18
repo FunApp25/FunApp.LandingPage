@@ -45,6 +45,9 @@ jobs:
         env:
           HUBSPOT_PORTAL_ID: ${{ vars.HUBSPOT_PORTAL_ID }}
           HUBSPOT_FORM_GUID: ${{ vars.HUBSPOT_FORM_GUID }}
+          HUBSPOT_HERE_AND_NOW_FORM_GUID: ${{ vars.HUBSPOT_HERE_AND_NOW_FORM_GUID }}
+          HUBSPOT_FOUNDING_FRIEND_FORM_GUID: ${{ vars.HUBSPOT_FOUNDING_FRIEND_FORM_GUID }}
+          REGISTRATION_SUBMISSIONS_ENABLED: ${{ vars.REGISTRATION_SUBMISSIONS_ENABLED || 'false' }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -61,6 +64,26 @@ jobs:
             fi
           done
 
+          case "$REGISTRATION_SUBMISSIONS_ENABLED" in
+            true)
+              for variable_name in \
+                HUBSPOT_HERE_AND_NOW_FORM_GUID \
+                HUBSPOT_FOUNDING_FRIEND_FORM_GUID
+              do
+                if [[ -z "${!variable_name:-}" ]]; then
+                  echo "::error::Registration activation requires: $variable_name"
+                  exit 1
+                fi
+              done
+              ;;
+            false)
+              ;;
+            *)
+              echo "::error::REGISTRATION_SUBMISSIONS_ENABLED must be true or false"
+              exit 1
+              ;;
+          esac
+
       - name: Deploy existing Worker
         uses: cloudflare/wrangler-action@v4
         with:
@@ -72,6 +95,12 @@ jobs:
           vars: |
             HUBSPOT_PORTAL_ID
             HUBSPOT_FORM_GUID
+            REGISTRATION_SUBMISSIONS_ENABLED
+            ${{ (vars.REGISTRATION_SUBMISSIONS_ENABLED || 'false') == 'true' && 'HUBSPOT_HERE_AND_NOW_FORM_GUID' || '' }}
+            ${{ (vars.REGISTRATION_SUBMISSIONS_ENABLED || 'false') == 'true' && 'HUBSPOT_FOUNDING_FRIEND_FORM_GUID' || '' }}
         env:
           HUBSPOT_PORTAL_ID: ${{ vars.HUBSPOT_PORTAL_ID }}
           HUBSPOT_FORM_GUID: ${{ vars.HUBSPOT_FORM_GUID }}
+          HUBSPOT_HERE_AND_NOW_FORM_GUID: ${{ vars.HUBSPOT_HERE_AND_NOW_FORM_GUID }}
+          HUBSPOT_FOUNDING_FRIEND_FORM_GUID: ${{ vars.HUBSPOT_FOUNDING_FRIEND_FORM_GUID }}
+          REGISTRATION_SUBMISSIONS_ENABLED: ${{ vars.REGISTRATION_SUBMISSIONS_ENABLED || 'false' }}
