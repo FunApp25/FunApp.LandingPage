@@ -2,6 +2,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/core/config/hubspot_registration_forms_config.dart';
 
 void main() {
+  test('reads the supported compile-time key set or is absent', () {
+    const portalId = String.fromEnvironment('FUN_APP_HUBSPOT_PORTAL_ID');
+    const hereAndNowFormGuid = String.fromEnvironment(
+      'FUN_APP_HUBSPOT_HERE_AND_NOW_FORM_GUID',
+    );
+    const foundingFriendFormGuid = String.fromEnvironment(
+      'FUN_APP_HUBSPOT_FOUNDING_FRIEND_FORM_GUID',
+    );
+    final config = HubSpotRegistrationFormsConfig.fromEnvironment();
+
+    if (portalId.isEmpty &&
+        hereAndNowFormGuid.isEmpty &&
+        foundingFriendFormGuid.isEmpty) {
+      expect(config, isNull);
+    } else {
+      expect(config, isNotNull);
+      expect(config!.portalId, portalId);
+      expect(config.hereAndNowFormGuid, hereAndNowFormGuid);
+      expect(config.foundingFriendFormGuid, foundingFriendFormGuid);
+    }
+  });
+
   test('builds the supported public Forms v3 endpoint', () {
     final config = _config();
 

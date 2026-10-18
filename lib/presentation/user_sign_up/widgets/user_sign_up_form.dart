@@ -7,6 +7,7 @@ import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_for
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_row.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchable_country_dropdown.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
 
 /// Shared field surface driven by one registration workflow BLoC.
@@ -230,11 +231,14 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
               onChanged: widget.onGenderChanged,
             );
             final country = _requiresCountry
-                ? _dropdownField(
-                    key: Key('countryField-$_semanticId'),
+                ? SearchableCountryDropdown(
+                    fieldKey: Key('countryField-$_semanticId'),
                     label: l10n.userSignUpCountryLabel,
+                    semanticLabel: l10n.userSignUpRequiredFieldSemantics(
+                      l10n.userSignUpCountryLabel,
+                    ),
                     placeholder: l10n.userSignUpCountryPlaceholder,
-                    required: true,
+                    noResultsLabel: l10n.userSignUpCountryNoResults,
                     errorText: widget.countryError,
                     value: widget.country,
                     options: countryOptions,

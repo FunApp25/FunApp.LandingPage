@@ -116,6 +116,51 @@ void main() {
     FoundingFriendRegistrationFormBloc,
     FoundingFriendRegistrationFormState
   >(
+    'discards a stale completion after an in-flight edit',
+    setUp: () {
+      final completer = Completer<Either<AppFailure, Unit>>();
+      repository.configurePending(completer);
+    },
+    build: buildBloc,
+    seed: () => _state(registration: _validRegistration()),
+    act: (bloc) async {
+      final pending = bloc.stream.firstWhere((state) => state.isSubmitting);
+      bloc.add(const FoundingFriendRegistrationFormEvent.submitted());
+      await pending;
+      bloc.add(
+        const FoundingFriendRegistrationFormEvent.firstNameChanged('Edited'),
+      );
+      await bloc.stream.firstWhere(
+        (state) => state.registration.firstName == PersonalName('Edited'),
+      );
+      repository.complete!();
+    },
+    expect: () => [
+      _state(
+        registration: _validRegistration(),
+        hasAttemptedSubmit: true,
+        isSubmitting: true,
+      ),
+      _state(
+        registration: _validRegistration().copyWith(
+          firstName: PersonalName('Edited'),
+        ),
+        hasAttemptedSubmit: true,
+        isSubmitting: true,
+      ),
+      _state(
+        registration: _validRegistration().copyWith(
+          firstName: PersonalName('Edited'),
+        ),
+        hasAttemptedSubmit: true,
+      ),
+    ],
+  );
+
+  blocTest<
+    FoundingFriendRegistrationFormBloc,
+    FoundingFriendRegistrationFormState
+  >(
     'failure can be retried successfully without losing the draft',
     setUp: () {
       repository.onSubmit = (_) async => repository.submissions.length == 1

@@ -214,6 +214,7 @@
   "userSignUpAgeLabel": "Edad",
   "userSignUpCountryLabel": "País",
   "userSignUpCountryPlaceholder": "Selecciona tu país",
+  "userSignUpCountryNoResults": "No se encontraron países",
   "userSignUpEmailLabel": "Correo electrónico",
   "userSignUpFoundingFriendCta": "Cambia el mundo",
   "userSignUpFoundingFriendEyebrow": "Founding Friend",

@@ -28,7 +28,7 @@ final class UserSignUpPage extends StatefulWidget {
   /// Determines the approved copy and field surface.
   final UserSignUpExperience experience;
 
-  /// Confirmed Here & Now success from the application workflow.
+  /// Confirmed success from the selected application workflow.
   final bool showConfirmedSuccess;
 
   @override
@@ -53,9 +53,7 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final showsConfirmedSuccess =
-        widget.experience == UserSignUpExperience.hereAndNow &&
-        widget.showConfirmedSuccess;
+    final showsConfirmedSuccess = widget.showConfirmedSuccess;
 
     return Scaffold(
       key: Key('userSignUpPage-${widget.experience.name}'),
@@ -169,7 +167,10 @@ final class _UserSignUpMain extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             ),
             child: showConfirmedSuccess
-                ? UserSignUpSuccess(mobile: mobile)
+                ? UserSignUpSuccess(
+                    experience: experience,
+                    mobile: mobile,
+                  )
                 : Padding(
                     padding: EdgeInsets.fromLTRB(
                       mobile ? 16 : 40,

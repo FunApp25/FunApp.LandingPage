@@ -214,6 +214,7 @@
   "userSignUpAgeLabel": "Узрост",
   "userSignUpCountryLabel": "Краіна",
   "userSignUpCountryPlaceholder": "Выберыце сваю краіну",
+  "userSignUpCountryNoResults": "Краіны не знойдзены",
   "userSignUpEmailLabel": "Электронная пошта",
   "userSignUpFoundingFriendCta": "Змяніць свет",
   "userSignUpFoundingFriendEyebrow": "Founding Friend",

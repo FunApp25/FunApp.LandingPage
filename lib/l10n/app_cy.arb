@@ -214,6 +214,7 @@
   "userSignUpAgeLabel": "Oedran",
   "userSignUpCountryLabel": "Gwlad",
   "userSignUpCountryPlaceholder": "Dewiswch eich gwlad",
+  "userSignUpCountryNoResults": "Ni chanfuwyd unrhyw wledydd",
   "userSignUpEmailLabel": "E-bost",
   "userSignUpFoundingFriendCta": "Newidiwch y Byd",
   "userSignUpFoundingFriendEyebrow": "Founding Friend",

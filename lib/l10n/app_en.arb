@@ -982,6 +982,8 @@
   "@userSignUpCountryLabel": {"description":"Required country label on the Founding Friend form."},
   "userSignUpCountryPlaceholder": "Select Your Country",
   "@userSignUpCountryPlaceholder": {"description":"Unselected country dropdown value on the Founding Friend form."},
+  "userSignUpCountryNoResults": "No countries found",
+  "@userSignUpCountryNoResults": {"description":"Message shown and announced when a Founding Friend country search has no matches."},
   "userSignUpGenderLabel": "Gender",
   "@userSignUpGenderLabel": {"description":"Optional gender label shared by the user sign-up forms."},
   "userSignUpGenderPlaceholder": "Select Your Gender",

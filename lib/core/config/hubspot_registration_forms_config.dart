@@ -51,7 +51,7 @@ final class HubSpotRegistrationFormsConfig {
   /// targeting the wrong form.
   static HubSpotRegistrationFormsConfig? fromEnvironment() {
     const portalId = String.fromEnvironment(
-      'FUN_APP_HUBSPOT_REGISTRATION_PORTAL_ID',
+      'FUN_APP_HUBSPOT_PORTAL_ID',
     );
     const hereAndNowFormGuid = String.fromEnvironment(
       'FUN_APP_HUBSPOT_HERE_AND_NOW_FORM_GUID',

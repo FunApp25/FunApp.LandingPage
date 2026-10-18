@@ -31,6 +31,7 @@ import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_for
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchable_country_dropdown.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -447,7 +448,14 @@ void main() {
     await tester.ensureVisible(country);
     await tester.tap(country);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Afghanistan').last);
+    await tester.enterText(
+      find.descendant(of: country, matching: find.byType(EditableText)),
+      'Afghanistan',
+    );
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(MenuItemButton, 'Afghanistan').hitTestable(),
+    );
     await tester.pumpAndSettle();
 
     final checkbox = find.byKey(
@@ -481,10 +489,26 @@ void main() {
     );
 
     await _tapSubmit(tester, 'foundingFriend');
+    await tester.pumpAndSettle();
     expect(repository.submissions, hasLength(1));
     expect(repository.submissions.single.country.getOrCrash(), 'Afghanistan');
     expect(repository.submissions.single.marketingConsent, isTrue);
-    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
+    expect(
+      find.text(
+        'Thank you for reaching out, we’ll be in touch shortly',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('userSignUpForm-foundingFriend')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const Key('userSignUpSubmit-foundingFriend')),
+      findsNothing,
+    );
     semantics.dispose();
   });
 
@@ -514,6 +538,38 @@ void main() {
     await tester.pumpAndSettle();
     expect(repository.submissions, hasLength(2));
     expect(find.byType(UserSignUpSuccess), findsOneWidget);
+  });
+
+  testWidgets('failed Founding Friend submission can retry to confirmation', (
+    tester,
+  ) async {
+    final repository = _RetryFoundingFriendRepository();
+    setTestSurface(tester, const Size(390, 1000));
+    await _pumpPage(
+      tester,
+      FoundingFriendPage(
+        createBloc: () => FoundingFriendRegistrationFormBloc(repository),
+      ),
+    );
+    await _enterFoundingFriendRequiredFields(tester);
+
+    await _tapSubmit(tester, 'foundingFriend');
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('userSignUpSubmissionFailure-foundingFriend')),
+      findsOneWidget,
+    );
+    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(repository.submissions, hasLength(1));
+
+    await _tapSubmit(tester, 'foundingFriend');
+    await tester.pumpAndSettle();
+    expect(repository.submissions, hasLength(2));
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
+    expect(
+      find.byKey(const Key('userSignUpSubmit-foundingFriend')),
+      findsNothing,
+    );
   });
 
   testWidgets('only injected Here & Now success shows approved confirmation', (
@@ -706,14 +762,15 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('forms use shared branded controls with exact selector styling', (
+  testWidgets('forms retain branded controls with exact selector styling', (
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1200));
     await _pumpPage(tester, const FoundingFriendPage());
 
     expect(find.byType(BrandedFormTextField), findsNWidgets(5));
-    expect(find.byType(BrandedFormDropdown<String>), findsNWidgets(2));
+    expect(find.byType(BrandedFormDropdown<String>), findsOneWidget);
+    expect(find.byType(SearchableCountryDropdown), findsOneWidget);
     expect(find.byType(BrandedFormCheckbox), findsOneWidget);
     expect(find.byType(BrandedFormActionButton), findsOneWidget);
 
@@ -878,6 +935,38 @@ Future<void> _enterHereAndNowRequiredFields(WidgetTester tester) async {
   );
 }
 
+Future<void> _enterFoundingFriendRequiredFields(WidgetTester tester) async {
+  await tester.enterText(
+    find.byKey(const Key('firstNameField-foundingFriend')),
+    'Taylor',
+  );
+  await tester.enterText(
+    find.byKey(const Key('lastNameField-foundingFriend')),
+    'Jones',
+  );
+  await tester.enterText(
+    find.byKey(const Key('emailField-foundingFriend')),
+    'taylor@example.com',
+  );
+  await tester.enterText(
+    find.byKey(const Key('ageField-foundingFriend')),
+    '31',
+  );
+  final country = find.byKey(const Key('countryField-foundingFriend'));
+  await tester.ensureVisible(country);
+  await tester.tap(country);
+  await tester.pumpAndSettle();
+  await tester.enterText(
+    find.descendant(of: country, matching: find.byType(EditableText)),
+    'Afghanistan',
+  );
+  await tester.pump();
+  await tester.tap(
+    find.widgetWithText(MenuItemButton, 'Afghanistan').hitTestable(),
+  );
+  await tester.pumpAndSettle();
+}
+
 void _expectOrdered(WidgetTester tester, List<Key> keys) {
   final positions = [
     for (final key in keys) tester.getTopLeft(find.byKey(key)).dy,
@@ -954,6 +1043,21 @@ final class _RetryHereAndNowRepository
   @override
   Future<Either<AppFailure, Unit>> submitHereAndNowRegistration(
     HereAndNowRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return submissions.length == 1
+        ? left(const AppFailure.serviceUnavailable())
+        : right(unit);
+  }
+}
+
+final class _RetryFoundingFriendRepository
+    implements FoundingFriendRegistrationRepositoryInterface {
+  final submissions = <FoundingFriendRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitFoundingFriendRegistration(
+    FoundingFriendRegistration registration,
   ) async {
     submissions.add(registration);
     return submissions.length == 1

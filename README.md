@@ -131,33 +131,41 @@ puro flutter run -d chrome -t lib/main_dev.dart
 
 Both entrypoints expose the Here & Now and Founding Friend forms. Their BLoCs
 validate and attempt submission. Development remains fail-closed by default,
-but can be configured for authorized direct-browser testing through HubSpot's
-public unauthenticated Forms v3 endpoint:
+and does not load local HubSpot configuration. Copy `.env.example` to the
+ignored local `.env`, then replace the four placeholder identifiers with the
+approved portal and form identifiers. The Venue form identifier is retained
+only as a local reference for configuring the Worker-specific `.dev.vars` file;
+Flutter does not read it. The shared portal identifier and two registration
+form identifiers configure only an explicitly configured temporary
+direct-HubSpot development test:
 
 ```bash
-puro flutter run -d chrome -t lib/main_dev.dart \
-  --dart-define=FUN_APP_HUBSPOT_REGISTRATION_PORTAL_ID=149114580 \
-  --dart-define=FUN_APP_HUBSPOT_HERE_AND_NOW_FORM_GUID=3284e6bc-e3a2-4d2e-9e21-684399126f3b \
-  --dart-define=FUN_APP_HUBSPOT_FOUNDING_FRIEND_FORM_GUID=39f027d9-e786-4768-b532-54ed44e1f718
+cp .env.example .env
+puro flutter run -d chrome -t lib/main_dev.dart --dart-define-from-file=.env
 ```
 
 These are public form identifiers, not credentials. Do not put private HubSpot
 access tokens or secrets in Dart defines or a Flutter Web bundle. The direct
 transport sends no `legalConsentOptions`; independently verify each form's
 required fields and legal-consent settings in HubSpot before any authorized
-live test. Production remains fail-closed even if these defines are present.
-Consent and age-eligibility decisions remain open. Draft legal routes remain
-restricted.
+live test. Production registration submissions remain fail-closed even when
+these defines are present. Consent and age-eligibility decisions remain open.
+Draft legal routes remain restricted.
 
 VS Code and VSCodium users can also launch either explicit Flutter entrypoint
 on Chrome in debug mode through the committed configurations:
 
 - **Fun App Landing — Development (Fake Repositories)** selects the
-  deterministic local data source.
-- **Fun App Landing — Production** selects the production first-party data
-  source.
+  deterministic local data source and does not load `.env`.
+- **Fun App Landing — Development (Direct HubSpot)** loads `.env` for the two
+  development-only registration transports. This is the only committed launch
+  configuration that can make direct registration requests.
+- **Fun App Landing — Production** selects the production first-party Venue
+  source without loading `.env`. The registration repositories remain
+  deliberately deferred in this composition.
 
-The production entrypoint requires no browser configuration:
+For a terminal production launch, use the production entrypoint without the
+development-only registration configuration:
 
 ```bash
 puro flutter run -d chrome -t lib/main_prod.dart

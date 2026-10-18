@@ -421,11 +421,12 @@ capabilities as implemented.
   `marketing_consent`. Gender stores `Man`, `Woman`, `Non-binary`, or
   `Prefer not to answer`. The Founding Friend country control uses the complete
   live `country` property label/value set captured in the English localization
-  source rather than a shortened list.
+  source rather than a shortened list. Its localized labels are searchable by
+  case-insensitive partial name while selection retains the stable live value.
 - Development integration references portal `149114580`, Here & Now form
   `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
   `39f027d9-e786-4768-b532-54ed44e1f718`. The identifiers are public and are
-  supplied to development builds through `FUN_APP_HUBSPOT_REGISTRATION_PORTAL_ID`,
+  supplied to development builds through `FUN_APP_HUBSPOT_PORTAL_ID`,
   `FUN_APP_HUBSPOT_HERE_AND_NOW_FORM_GUID`, and
   `FUN_APP_HUBSPOT_FOUNDING_FRIEND_FORM_GUID`; no private HubSpot credential is
   present in Flutter source or the browser bundle.
@@ -443,10 +444,11 @@ capabilities as implemented.
   identifiers are valid; otherwise it resolves deferred repositories that
   return service unavailable without I/O. Production always resolves the
   deferred repositories, even if development identifiers are supplied.
-  Confirmed Here & Now success
-  uses the existing approved success presentation. Founding Friend retains its
-  form after application-level success because approved payment ordering and
-  success copy remain open; no membership or payment confirmation is implied.
+  Confirmed success replaces the submitted form with the established branded
+  confirmation presentation. Here & Now uses its approved membership-specific
+  success copy. Founding Friend uses the existing neutral reaching-out
+  acknowledgement, confirming only that interest was recorded; it does not
+  imply membership activation or payment.
 
 - The prospective-venue lead contract is provider-neutral and lives in
   `domain`. It uses `dartz` `Either` for validation results and `Option` for
