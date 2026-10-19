@@ -367,7 +367,7 @@ function registrationFormGuid(endpoint: Endpoint, env: Env): string | null {
 }
 
 function venueFormGuid(env: Env): string | null {
-  const formGuid = env.HUBSPOT_VENUE_FORM_GUID ?? env.HUBSPOT_FORM_GUID;
+  const formGuid = env.HUBSPOT_FORM_GUID ?? env.HUBSPOT_VENUE_FORM_GUID;
   return typeof formGuid === 'string' && formGuid.trim().length > 0
     ? formGuid
     : null;
@@ -384,9 +384,10 @@ function hasConfiguredText(value: string | undefined): value is string {
 function hasValidMockConfiguration(env: Env, workerUrl: URL): boolean {
   const origin = env.LOCAL_DEVELOPMENT_ALLOWED_ORIGIN;
   const scenario = env.HUBSPOT_MOCK_SCENARIO;
+  const isLocalWorker = isLoopbackHostname(workerUrl.hostname);
 
-  if (origin === undefined && scenario === undefined) {
-    return true;
+  if (!isLocalWorker) {
+    return origin === undefined && scenario === undefined;
   } else if (origin === undefined || scenario === undefined) {
     return false;
   }
@@ -396,7 +397,6 @@ function hasValidMockConfiguration(env: Env, workerUrl: URL): boolean {
     return (
       url.origin === origin &&
       isLoopbackHostname(url.hostname) &&
-      isLoopbackHostname(workerUrl.hostname) &&
       (url.protocol === 'http:' || url.protocol === 'https:') &&
       mockScenarios.has(scenario)
     );

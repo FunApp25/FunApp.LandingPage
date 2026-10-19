@@ -255,4 +255,3 @@ Yemen
 Zambia
 Canary Islands`.split('\n'),
 );
-

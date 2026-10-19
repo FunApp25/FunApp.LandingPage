@@ -98,6 +98,64 @@ void main() {
     });
   });
 
+  test('enforces the Worker UTF-8 body limit before network I/O', () async {
+    final requests = <http.Request>[];
+    final dataSource = _dataSource(
+      MockClient((request) async {
+        requests.add(request);
+        return http.Response('', 204);
+      }),
+    );
+    final emptyReasonBytes = utf8
+        .encode(
+          jsonEncode(
+            HereAndNowRegistrationRequest.fromDto(
+              _hereAndNowDtoWithUsageReason(''),
+            ).toJson(),
+          ),
+        )
+        .length;
+    final exactBoundaryReason = _repeat(
+      'x',
+      maxWorkerRegistrationRequestBodyBytes - emptyReasonBytes,
+    );
+
+    await dataSource.submitHereAndNowRegistration(
+      _hereAndNowDtoWithUsageReason(exactBoundaryReason),
+    );
+
+    expect(utf8.encode(requests.single.body).length, 16 * 1024);
+
+    await expectLater(
+      dataSource.submitHereAndNowRegistration(
+        _hereAndNowDtoWithUsageReason('${exactBoundaryReason}x'),
+      ),
+      throwsA(isA<UserRegistrationSubmissionRejectedException>()),
+    );
+    expect(requests, hasLength(1));
+  });
+
+  test(
+    'counts multi-byte payloads as UTF-8 bytes before network I/O',
+    () async {
+      var calls = 0;
+      final dataSource = _dataSource(
+        MockClient((_) async {
+          calls += 1;
+          return http.Response('', 204);
+        }),
+      );
+
+      await expectLater(
+        dataSource.submitHereAndNowRegistration(
+          _hereAndNowDtoWithUsageReason(_repeat('é', 8192)),
+        ),
+        throwsA(isA<UserRegistrationSubmissionRejectedException>()),
+      );
+      expect(calls, 0);
+    },
+  );
+
   final responseCases = <(String, int, Matcher)>[
     (
       '400 invalid request',
@@ -200,6 +258,19 @@ const _foundingFriendDto = FoundingFriendRegistrationDto(
   usageReason: null,
   marketingConsent: true,
 );
+
+HereAndNowRegistrationDto _hereAndNowDtoWithUsageReason(String usageReason) =>
+    HereAndNowRegistrationDto(
+      firstName: _hereAndNowDto.firstName,
+      lastName: _hereAndNowDto.lastName,
+      email: _hereAndNowDto.email,
+      age: _hereAndNowDto.age,
+      gender: _hereAndNowDto.gender,
+      usageReason: usageReason,
+      marketingConsent: _hereAndNowDto.marketingConsent,
+    );
+
+String _repeat(String value, int count) => List.filled(count, value).join();
 
 WorkerUserRegistrationDataSource _dataSource(
   http.Client client, {

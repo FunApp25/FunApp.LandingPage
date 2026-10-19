@@ -55,7 +55,9 @@ Current implementation is evidence of repository state, not automatically a perm
   fallback for unsupported locales. The canonical Privacy Notice legal prose
   remains English until separately approved legal translations are supplied.
 - GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
-- GitHub Pages builds Flutter through Puro and publishes `build/web` from the repository root at base href `/`.
+- GitHub Pages builds Flutter directly through `subosito/flutter-action@v2` and
+  publishes `build/web` from the repository root at base href `/`; local Flutter
+  and Dart commands continue to use Puro.
 - The approved English Fun App Ltd Privacy Notice is hosted at
   `https://funapp.world/#/privacy`. Its canonical website source is
   `assets/legal/privacy_notice.md`; the hash route supports direct access,
@@ -149,7 +151,9 @@ The repository is an active Flutter Web project:
   first-party forms Worker and its focused tests; it is not part of
   Flutter's `lib/` architecture.
 - `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
-- `.github/workflows/deploy.yml` validates and builds Flutter through Puro, uploads `build/web`, and deploys it through GitHub Pages.
+- `.github/workflows/deploy.yml` validates and builds Flutter directly through
+  `subosito/flutter-action@v2`, uploads `build/web`, and deploys it through
+  GitHub Pages.
 
 Flutter code uses `presentation`, `application`, `domain`, `data`, and `core`
 areas only when active behavior needs them. `domain` is active for reusable
@@ -593,24 +597,33 @@ capabilities as implemented.
   validates each untrusted Fun App request independently, maps to HubSpot only
   at its provider boundary, and obtains public provider identifiers from Worker
   bindings. It rejects unknown properties, malformed JSON, non-JSON content,
-  non-integer ages, unsupported canonical gender/country values, and requests
-  over 16 KiB. It applies no age eligibility threshold and no extra registration
-  field-length constraints beyond that body limit.
+  non-safe-integer ages, unsupported canonical gender/country values, and
+  requests over 16 KiB. The Flutter Worker transport applies the same exact
+  JavaScript integer-serialization and UTF-8 total-body boundaries before I/O.
+  It applies no age eligibility threshold and no extra registration field-length
+  constraints beyond that total-body limit.
 - Registration Worker forwarding is disabled unless
   `REGISTRATION_SUBMISSIONS_ENABLED` is exactly `true`. Activation additionally
   requires valid portal/form IDs and the `REGISTRATION_RATE_LIMITER` binding;
-  missing or malformed mandatory configuration fails closed. The binding allows
-  10 attempts per 60 seconds per route and Cloudflare connecting-IP key. It is
-  an abuse control, not authentication, and may group users behind shared IPs.
-- The Worker preserves the current `HUBSPOT_FORM_GUID` Venue binding and also
-  accepts `HUBSPOT_VENUE_FORM_GUID` as a migration alias. Venue remains
+  missing or malformed mandatory configuration fails closed. The binding
+  provides approximate, Cloudflare-location-local protection targeting 10
+  attempts per 60 seconds per route and connecting-IP key, not a strict
+  globally consistent quota. It is an abuse control, not authentication:
+  shared IPs may group unrelated users into collective throttling, and requests
+  handled in different Cloudflare locations may exceed the nominal aggregate
+  rate.
+- The Worker preserves the current `HUBSPOT_FORM_GUID` Venue binding as
+  authoritative and accepts `HUBSPOT_VENUE_FORM_GUID` only as a fallback alias
+  when the established binding is absent. Venue remains
   independent of registration enablement, form IDs, and rate limiting. Every
   provider call is a single attempt with a 10-second deadline. Provider bodies,
   submitted values, request headers, and cookies are not returned or logged.
 - Local Wrangler development requires an explicit localhost origin plus one of
-  six deterministic mock scenarios. In that mode Venue and registration never
-  contact HubSpot. Local-only CORS responses support the fixed Flutter dev
-  origin; production remains same-origin and emits no CORS allowance.
+  six deterministic mock scenarios. Missing, partial, or invalid local mock
+  configuration fails closed, and loopback Venue and registration requests
+  never contact HubSpot. Non-loopback execution rejects either local-only
+  setting. Local-only CORS responses support the fixed Flutter dev origin;
+  production remains same-origin and emits no CORS allowance.
 
 ### Open
 
@@ -722,7 +735,8 @@ puro dart run tool/prepare_intermediate_release_artifact.dart
 
 The active widget test suite covers the landing surface and its durable responsive and interaction contracts. Verification should grow with implemented behavior rather than speculative tooling.
 
-The project tracks Flutter stable through Puro rather than establishing a permanent exact Flutter version pin.
+Local development tracks Flutter stable through Puro. Hosted workflows install
+their documented Flutter version directly through `subosito/flutter-action@v2`.
 
 ## 12. Deployment
 
@@ -747,10 +761,11 @@ The project tracks Flutter stable through Puro rather than establishing a perman
   Pull-request checks do not deploy; pushes to `main` remain the production
   Pages deployment trigger.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
-- The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
-  environment from Flutter stable, generates localizations and Dart sources,
+- The active workflow installs Flutter 3.47.2 directly through
+  `subosito/flutter-action@v2`, generates localizations and Dart sources,
   analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`
-  without browser-side HubSpot configuration. It then removes the three
+  without browser-side HubSpot configuration. Local development continues to
+  use Puro. The workflow then removes the three
   review-only legal Markdown files from `build/web`. The production artifact
   does not publish those draft source documents as static assets.
 - Only pushes to `main` and manual dispatches run the Pages deployment. The

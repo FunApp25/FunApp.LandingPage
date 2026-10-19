@@ -14,6 +14,8 @@ const foundingFriendEndpoint =
   'https://funapp.world/api/registrations/founding-friend';
 const localHereAndNowEndpoint =
   'http://localhost:8787/api/registrations/here-and-now';
+const localFoundingFriendEndpoint =
+  'http://localhost:8787/api/registrations/founding-friend';
 const hereAndNowFormGuid = '11111111-1111-1111-1111-111111111111';
 const foundingFriendFormGuid = '22222222-2222-2222-2222-222222222222';
 
@@ -120,6 +122,8 @@ describe('registration routes', () => {
     ['missing firstName', { ...hereAndNowRegistration, firstName: undefined }],
     ['missing marketingConsent', { ...hereAndNowRegistration, marketingConsent: undefined }],
     ['non-integer age', { ...hereAndNowRegistration, age: 29.5 }],
+    ['age above the JavaScript safe-integer maximum', { ...hereAndNowRegistration, age: Number.MAX_SAFE_INTEGER + 1 }],
+    ['age below the JavaScript safe-integer minimum', { ...hereAndNowRegistration, age: Number.MIN_SAFE_INTEGER - 1 }],
     ['string age', { ...hereAndNowRegistration, age: '29' }],
     ['string consent', { ...hereAndNowRegistration, marketingConsent: 'false' }],
     ['invalid email', { ...hereAndNowRegistration, email: 'invalid' }],
@@ -193,6 +197,16 @@ describe('registration routes', () => {
 
   it('allows negative and zero integer ages without inventing eligibility', async () => {
     for (const age of [-1, 0]) {
+      const response = await post(hereAndNowEndpoint, {
+        ...hereAndNowRegistration,
+        age,
+      });
+      expect(response.status).toBe(204);
+    }
+  });
+
+  it('accepts both JavaScript safe-integer age boundaries', async () => {
+    for (const age of [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]) {
       const response = await post(hereAndNowEndpoint, {
         ...hereAndNowRegistration,
         age,
@@ -387,6 +401,39 @@ describe('registration routes', () => {
     expect(response.headers.get('access-control-allow-origin')).toBe(
       'http://localhost:7357',
     );
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['missing mock settings', {}],
+    ['only the local origin', { LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'http://localhost:7357' }],
+    ['only the mock scenario', { HUBSPOT_MOCK_SCENARIO: 'success' }],
+    [
+      'an invalid mock scenario',
+      {
+        LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'http://localhost:7357',
+        HUBSPOT_MOCK_SCENARIO: 'live',
+      },
+    ],
+  ])('fails closed locally for %s on both registration routes', async (_, mockEnv) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const rateLimiter = { limit: vi.fn(async () => ({ success: true })) };
+
+    for (const [endpoint, body] of [
+      [localHereAndNowEndpoint, hereAndNowRegistration],
+      [localFoundingFriendEndpoint, foundingFriendRegistration],
+    ] as const) {
+      const response = await rawRequest(
+        jsonRequest(endpoint, body),
+        { ...enabledEnv, ...mockEnv },
+        upstreamFetch,
+        rateLimiter,
+      );
+
+      await expectError(response, 500, 'unexpected');
+    }
+
+    expect(rateLimiter.limit).not.toHaveBeenCalled();
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
 

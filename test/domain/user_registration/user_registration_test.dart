@@ -23,6 +23,13 @@ void main() {
       expect(Age('29.5').isValid(), isFalse);
       expect(Age('29 years').isValid(), isFalse);
     });
+
+    test('accepts only integers that JavaScript can serialize exactly', () {
+      expect(Age('9007199254740991').getOrCrash(), 9007199254740991);
+      expect(Age('-9007199254740991').getOrCrash(), -9007199254740991);
+      expect(Age('9007199254740992').isValid(), isFalse);
+      expect(Age('-9007199254740992').isValid(), isFalse);
+    });
   });
 
   test('Here & Now requires only name, email, and integer age', () {

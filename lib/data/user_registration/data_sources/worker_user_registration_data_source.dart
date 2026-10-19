@@ -20,6 +20,9 @@ const foundingFriendRegistrationEndpointPath =
 /// Maximum duration of one first-party registration submission.
 const defaultWorkerRegistrationSubmissionTimeout = Duration(seconds: 15);
 
+/// Maximum UTF-8 request size accepted by the first-party Worker.
+const int maxWorkerRegistrationRequestBodyBytes = 16 * 1024;
+
 /// Registration data source backed by Fun App's first-party Worker.
 final class WorkerUserRegistrationDataSource
     implements UserRegistrationDataSourceInterface {
@@ -64,6 +67,13 @@ final class WorkerUserRegistrationDataSource
     required String endpointPath,
     required Map<String, Object> payload,
   }) async {
+    final requestBody = jsonEncode(payload);
+
+    if (utf8.encode(requestBody).length >
+        maxWorkerRegistrationRequestBodyBytes) {
+      throw const UserRegistrationSubmissionRejectedException();
+    }
+
     final abortCompleter = Completer<void>();
     final timeoutTimer = Timer(_submissionTimeout, abortCompleter.complete);
     final request =
@@ -73,7 +83,7 @@ final class WorkerUserRegistrationDataSource
             abortTrigger: abortCompleter.future,
           )
           ..headers['Content-Type'] = 'application/json'
-          ..body = jsonEncode(payload);
+          ..body = requestBody;
     final int statusCode;
 
     try {

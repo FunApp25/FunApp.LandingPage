@@ -6,7 +6,8 @@ import 'package:fun_app_landing_page/domain/core/value_objects/value_object.dart
 /// An integer age with no product eligibility threshold applied.
 class Age extends ValueObject<int> {
   /// Creates an [Age] without throwing for invalid editable input.
-  factory Age(String input) => Age._(validateRequiredInteger(input));
+  factory Age(String input) =>
+      Age._(validateRequiredJavaScriptSafeInteger(input));
 
   const Age._(this.value);
 

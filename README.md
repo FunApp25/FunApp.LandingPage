@@ -89,7 +89,8 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   translations.
 - Dart analysis follows the main Fun App Flutter project's
   `very_good_analysis` policy.
-- GitHub Pages builds Flutter through Puro and deploys `build/web` to
+- GitHub Pages builds Flutter directly through `subosito/flutter-action@v2`
+  and deploys `build/web` to
   [https://funapp.world](https://funapp.world).
 - Web-root static inputs, including `CNAME` and `robots.txt`, live under `web/`.
 
@@ -317,26 +318,35 @@ The Here & Now request requires `firstName`, `lastName`, `email`, integer
 `age`, and boolean `marketingConsent`; `gender` and `usageReason` are optional.
 Founding Friend uses the same contract plus required canonical `country`.
 Unknown properties, malformed JSON, unsupported gender/country values,
-non-integer ages, non-JSON content, and bodies over 16 KiB are rejected.
+non-safe-integer ages, non-JSON content, and bodies over 16 KiB are rejected.
+The local Flutter Worker client applies the same JavaScript safe-integer and
+UTF-8 body-size boundaries before sending; these are serialization constraints,
+not age eligibility or product-specific text-length rules.
 Responses are provider-neutral: `204` success, `400` invalid request, `404`
 unknown route, `405` unsupported method, `422` provider validation rejection,
 `429` rate limited, `503` disabled/unavailable, and `500` unexpected or invalid
 configuration. Provider bodies and submitted personal data are never returned
 or logged.
 
-The Worker uses `HUBSPOT_PORTAL_ID`, the existing `HUBSPOT_FORM_GUID` (or the
-supported migration alias `HUBSPOT_VENUE_FORM_GUID`),
+The Worker uses `HUBSPOT_PORTAL_ID`, the authoritative existing
+`HUBSPOT_FORM_GUID` (with `HUBSPOT_VENUE_FORM_GUID` supported only as a fallback
+alias when the established binding is absent),
 `HUBSPOT_HERE_AND_NOW_FORM_GUID`,
 `HUBSPOT_FOUNDING_FRIEND_FORM_GUID`, and
 `REGISTRATION_SUBMISSIONS_ENABLED`. Registration defaults to disabled and
 requires the source-declared `REGISTRATION_RATE_LIMITER` binding. That binding
-allows 10 attempts per 60 seconds for each route/connecting-IP key. The
+provides approximate, Cloudflare-location-local protection targeting 10
+attempts per 60 seconds for each route/connecting-IP key; it is not a strict,
+globally consistent quota. Shared public IPs can group unrelated users and
+cause collective throttling, while traffic handled in different Cloudflare
+locations may exceed the nominal aggregate rate. The
 `wrangler.jsonc` file declares no HubSpot `vars` and sets `keep_vars: true`.
 The Worker makes at most one HubSpot attempt with a 10-second timeout and never
 retries. `LOCAL_DEVELOPMENT_ALLOWED_ORIGIN` and `HUBSPOT_MOCK_SCENARIO` are
-local-only mock settings; mock mode is rejected unless both the configured
-origin and Worker request URL are loopback URLs. Do not configure them on the
-deployed Worker.
+local-only mock settings. Loopback Worker execution requires both settings and
+a valid scenario, otherwise it fails closed without provider I/O. A deployed
+Worker rejects either local setting. Do not configure them on the deployed
+Worker.
 
 `.github/workflows/deploy-venue-interest-worker.yml` is manually triggered
 only. Its sole job targets the GitHub `production` Environment, validates the
@@ -435,9 +445,10 @@ the read-only `PR Checks` workflow. These checks do not deploy anything.
 
 Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.
 The `dev` branch has no separate deployment workflow or Pages environment.
-CI installs Puro, creates the `fun-app-landing` stable environment, generates
-localizations and Dart sources, analyzes, tests, and explicitly builds
-`lib/main_prod.dart` without browser-side provider configuration. The workflow
+Hosted CI installs Flutter 3.47.2 directly through
+`subosito/flutter-action@v2`, then generates localizations and Dart sources,
+analyzes, tests, and explicitly builds `lib/main_prod.dart` without browser-side
+provider configuration. Local development continues to use Puro. The workflow
 then removes the three review-only legal Markdown assets before it uploads
 `build/web` and deploys to
 [https://funapp.world](https://funapp.world).
