@@ -5,8 +5,13 @@ import 'package:fun_app_landing_page/application/user_registration/here_and_now_
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
 import 'package:fun_app_landing_page/core/config/development_registration_transport.dart';
+import 'package:fun_app_landing_page/core/config/founding_friend_payment_config.dart';
 import 'package:fun_app_landing_page/core/config/hubspot_registration_forms_config.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/founding_friend_payment_data_source_interface.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/worker_founding_friend_payment_data_source.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/deferred_founding_friend_payment_repository.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/founding_friend_payment_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/hubspot_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/user_registration_data_source_interface.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/worker_user_registration_data_source.dart';
@@ -23,6 +28,7 @@ import 'package:fun_app_landing_page/domain/core/value_objects/email_address.dar
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/personal_name.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/website.dart';
+import 'package:fun_app_landing_page/domain/founding_friend_payment/founding_friend_payment_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/here_and_now_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
@@ -60,6 +66,10 @@ void main() {
     expect(
       getIt<FoundingFriendRegistrationRepositoryInterface>(),
       isA<DeferredFoundingFriendRegistrationRepository>(),
+    );
+    expect(
+      getIt<FoundingFriendPaymentRepositoryInterface>(),
+      isA<DeferredFoundingFriendPaymentRepository>(),
     );
     await getIt<HereAndNowRegistrationFormBloc>().close();
     await getIt<FoundingFriendRegistrationFormBloc>().close();
@@ -140,6 +150,12 @@ void main() {
         developmentWorkerConfig: LocalRegistrationWorkerConfig(
           baseUrl: 'http://localhost:8787',
         ),
+        developmentPaymentTransport: DevelopmentPaymentTransport.localWorker,
+        developmentPaymentConfig: FoundingFriendPaymentConfig(
+          baseUrl: 'http://localhost:8788',
+          allowLocalMockCheckoutUrls: true,
+          localCheckoutOrigin: 'http://localhost:7357',
+        ),
       );
 
       expect(
@@ -153,6 +169,14 @@ void main() {
       expect(
         getIt<FoundingFriendRegistrationRepositoryInterface>(),
         isA<FoundingFriendRegistrationRepository>(),
+      );
+      expect(
+        getIt<FoundingFriendPaymentDataSourceInterface>(),
+        isA<WorkerFoundingFriendPaymentDataSource>(),
+      );
+      expect(
+        getIt<FoundingFriendPaymentRepositoryInterface>(),
+        isA<FoundingFriendPaymentRepository>(),
       );
 
       final hereAndNowBloc = getIt<HereAndNowRegistrationFormBloc>()
@@ -238,6 +262,14 @@ void main() {
       expect(
         getIt.isRegistered<UserRegistrationDataSourceInterface>(),
         isFalse,
+      );
+      expect(
+        getIt<FoundingFriendPaymentDataSourceInterface>(),
+        isA<WorkerFoundingFriendPaymentDataSource>(),
+      );
+      expect(
+        getIt<FoundingFriendPaymentRepositoryInterface>(),
+        isA<FoundingFriendPaymentRepository>(),
       );
       await getIt<HereAndNowRegistrationFormBloc>().close();
       await getIt<FoundingFriendRegistrationFormBloc>().close();

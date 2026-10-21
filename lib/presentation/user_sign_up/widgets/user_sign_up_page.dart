@@ -22,6 +22,7 @@ final class UserSignUpPage extends StatelessWidget {
   const UserSignUpPage({
     required this.experience,
     this.showConfirmedSuccess = false,
+    this.contentOverride,
     super.key,
   });
 
@@ -30,6 +31,9 @@ final class UserSignUpPage extends StatelessWidget {
 
   /// Confirmed success from the selected application workflow.
   final bool showConfirmedSuccess;
+
+  /// Optional workflow-specific content rendered inside the branded card.
+  final Widget? contentOverride;
 
   void _openLandingSection(
     BuildContext context,
@@ -82,6 +86,7 @@ final class UserSignUpPage extends StatelessWidget {
                 content: _UserSignUpMain(
                   experience: experience,
                   showConfirmedSuccess: showsConfirmedSuccess,
+                  contentOverride: contentOverride,
                 ),
                 footer: LandingFooter(
                   onLogoSelected: () => _openLandingSection(
@@ -120,10 +125,12 @@ final class _UserSignUpMain extends StatelessWidget {
   const _UserSignUpMain({
     required this.experience,
     required this.showConfirmedSuccess,
+    required this.contentOverride,
   });
 
   final UserSignUpExperience experience;
   final bool showConfirmedSuccess;
+  final Widget? contentOverride;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -152,38 +159,40 @@ final class _UserSignUpMain extends StatelessWidget {
               color: AppColors.beigeAccent,
               borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             ),
-            child: showConfirmedSuccess
-                ? UserSignUpSuccess(
-                    experience: experience,
-                    mobile: mobile,
-                  )
-                : Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      mobile ? 16 : 40,
-                      mobile ? 80 : 128,
-                      mobile ? 16 : 40,
-                      mobile ? 80 : 128,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        key: Key('userSignUpContent-${experience.name}'),
-                        constraints: const BoxConstraints(maxWidth: 1016),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _UserSignUpIntroduction(
-                              experience: experience,
-                              mobile: mobile,
-                            ),
-                            SizedBox(height: mobile ? 40 : 64),
-                            UserSignUpFormRegion(
-                              experience: experience,
-                            ),
-                          ],
+            child:
+                contentOverride ??
+                (showConfirmedSuccess
+                    ? UserSignUpSuccess(
+                        experience: experience,
+                        mobile: mobile,
+                      )
+                    : Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          mobile ? 16 : 40,
+                          mobile ? 80 : 128,
+                          mobile ? 16 : 40,
+                          mobile ? 80 : 128,
                         ),
-                      ),
-                    ),
-                  ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            key: Key('userSignUpContent-${experience.name}'),
+                            constraints: const BoxConstraints(maxWidth: 1016),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _UserSignUpIntroduction(
+                                  experience: experience,
+                                  mobile: mobile,
+                                ),
+                                SizedBox(height: mobile ? 40 : 64),
+                                UserSignUpFormRegion(
+                                  experience: experience,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )),
           ),
         ),
       );

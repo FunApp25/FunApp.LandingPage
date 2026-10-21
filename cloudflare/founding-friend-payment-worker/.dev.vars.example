@@ -1,0 +1,17 @@
+# Local mock mode never contacts Stripe. Copy this file to .dev.vars only when
+# you need to select a scenario other than the npm run dev:mock default.
+PAYMENT_CREATION_ENABLED="true"
+STRIPE_AUTOMATIC_TAX_ENABLED="false"
+LOCAL_DEVELOPMENT_ALLOWED_ORIGIN="http://localhost:7357"
+PUBLIC_APP_ORIGIN="http://localhost:7357"
+PURCHASE_REFERENCE_SECRET="local-development-only-reference-secret"
+# created | paid | pending | cancelled | expired | provider_validation_failure |
+# payment_mismatch | network_failure | provider_unavailable | timeout |
+# duplicate_attempt | refunded | disputed
+STRIPE_MOCK_SCENARIO="paid"
+
+# Do not add Stripe credentials to this tracked example. Production later needs:
+# STRIPE_SECRET_KEY as a Cloudflare secret (prefer an rk_ restricted key), plus
+# STRIPE_PRICE_ID, STRIPE_EXPECTED_LIVEMODE, and the explicitly approved
+# STRIPE_AUTOMATIC_TAX_ENABLED=true|false as environment variables. Keep
+# automatic tax false until the business tax setup is separately approved.

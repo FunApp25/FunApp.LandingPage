@@ -30,9 +30,12 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   a first-party local Worker transport backed by deterministic mocks. With no
   explicit development selection, and in every production composition, the
   repositories deliberately fail closed without network or persistence.
-  Injected test repositories can confirm
-  the existing Here & Now success presentation;
-  Founding Friend has no invented membership, payment, or checkout confirmation.
+  Injected test repositories can confirm the existing Here & Now success
+  presentation. After a confirmed Founding Friend registration, the separate
+  payment workflow prepares a server-owned one-time Stripe-hosted Checkout for
+  exactly £249 GBP. A payment return page shows confirmation and the purchase
+  reference only after the payment Worker verifies the Checkout Session; it
+  never claims that membership has been activated.
   The stable
   responsive presentation includes the mobile navigation menu, a mobile
   Research-statistics and Founding Friend carousels, restrained anchor/FAQ
@@ -73,7 +76,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   bottom of the viewport, while longer content and scaled text remain in the
   normal scroll flow without a fixed overlay. The
   Membership section is rendered between Connection and Limited Offer; its
-  header and mobile-menu anchor is active. No payment behavior is implemented.
+  header and mobile-menu anchor is active. Payment creation and registration
+  both remain disabled in production pending separate external setup and
+  authorization.
 - Reusable branding assets live under `assets/branding/`, with active widget
   paths centralized in project code. Figma assets consumed by implemented
   landing sections live under `assets/landing/`.
@@ -165,13 +170,17 @@ on Chrome in debug mode through the committed configurations:
   development-only registration workflows. This is the only committed launch
   configuration that can make direct registration requests.
 - **Fun App Landing — Development (Local Worker)** uses Flutter port `7357`,
-  loads the Worker origin from `.env`, and sends provider-neutral registration
-  JSON only to the local Worker.
+  loads both Worker origins from `.env`, and sends provider-neutral
+  registration and payment JSON only to their separate local Workers.
 - **Fun App Worker — Local Mock** runs Wrangler on `localhost:8787`; the
   **Fun App Landing + Local Mock Worker** compound starts both local processes.
+- **Fun App Payment Worker — Local Mock** runs the deterministic Stripe mock on
+  `localhost:8788`; the **Fun App Landing + Local Mock Workers** compound starts
+  Flutter and both isolated Workers without contacting HubSpot or Stripe.
 - **Fun App Landing — Production** selects the production first-party Venue
-  source without loading `.env`. The registration repositories remain
-  deliberately deferred in this composition.
+  source and same-origin payment verification boundary without loading `.env`.
+  Registration remains deferred, so the purchase flow cannot start, and the
+  payment Worker separately defaults creation to disabled.
 
 For a terminal production launch, use the production entrypoint without the
 development-only registration configuration:
@@ -221,8 +230,9 @@ Generated localization Dart files are local build inputs and are not committed.
 
 Flutter routing uses `auto_route` with generated typed route classes and
 `MaterialApp.router`. The public paths are `/`, `/venues`, `/privacy`,
-`/here-and-now`, and `/founding-friend`; deployed URLs retain Flutter Web's
-hash form (for example, `/#/privacy`). Direct production visits to `/terms`,
+`/here-and-now`, `/founding-friend`, `/founding-friend/payment`, and
+`/founding-friend/payment/cancelled`; deployed URLs retain Flutter Web's hash
+form (for example, `/#/privacy`). Direct production visits to `/terms`,
 `/refunds`, `/cookies`, or `/cookie-banner` redirect to `/` without rendering
 the unfinished legal document. Unknown paths fall back to `/`. Direct-route
 loads do not synthesize a landing-page history entry, while in-app pushes,
@@ -274,7 +284,8 @@ puro dart run tool/prepare_intermediate_release_artifact.dart
 ```
 
 The test suite covers domain validation, Venue and prospective-user form
-orchestration, the user sign-up widgets, and the active landing surface's branding,
+orchestration, the Founding Friend Checkout and payment-verification lifecycle,
+the user sign-up widgets, and the active landing surface's branding,
 localization, theme, interactions, and responsive viewport contracts.
 
 ## Cloudflare Worker development
@@ -371,6 +382,130 @@ the exact `funapp.world/api/registrations/here-and-now` and
 to `true` until the outstanding legal/consent and controlled-live-verification
 gates are approved.
 
+### Founding Friend payment Worker
+
+`cloudflare/founding-friend-payment-worker/` is a separate Worker project. It
+does not modify, share deployment with, or add bindings to the existing Venue
+Worker. It owns two first-party JSON endpoints:
+
+- `POST /api/founding-friend-payments/checkout-sessions` accepts exactly a
+  validated `email` and UUID v4 `attemptId`. When creation is enabled, the
+  Worker validates its configured tax-inclusive Stripe Price, creates one
+  Stripe Checkout Session in `payment` mode for quantity 1 and exactly £249
+  GBP, explicitly applies the approved automatic-tax setting, always creates a
+  Stripe Customer after Checkout completion, prefills the Customer email, and
+  returns only `checkoutUrl`, `sessionId`, and an opaque request ID.
+- `POST /api/founding-friend-payments/checkout-sessions/verify` accepts exactly
+  a Stripe Checkout `sessionId`. It retrieves that specific session and its
+  line item, verifies environment, mode, configured Price, quantity, currency,
+  amount, paid state, purchase reference, and the latest-charge refund/dispute
+  signals available from Stripe. It returns only a provider-neutral status and
+  exposes the purchase reference after confirmed payment.
+
+The browser never supplies a Price, amount, currency, or redirect URL. The
+Worker generates `FF-...` purchase references with a server-only HMAC secret
+and writes each reference to Stripe `client_reference_id`, Checkout metadata,
+and PaymentIntent metadata. The explicit automatic-tax choice is also stored in
+Checkout and PaymentIntent metadata so later verification checks the Session's
+own creation contract rather than whichever tax setting is current then.
+Payment-mode Checkout uses
+`customer_creation=always`; a completed qualifying payment must contain the
+resulting Stripe Customer ID, while a newly created or pending Session may not
+have a Customer yet. Verification is read-only and remains available when new
+Checkout creation is disabled. Responses contain no email, Customer ID,
+billing or payment-method details, raw Stripe objects, provider errors,
+Checkout URLs on verification, or secrets.
+
+Checkout creation uses `founding-friend-checkout-v1-{attemptId}` as the Stripe
+idempotency key. Flutter creates the attempt only after successful HubSpot
+registration and keeps the email and attempt ID in tab-scoped browser session
+storage for an explicit payment retry. A retry therefore does not resubmit the
+registration and, while Stripe retains the idempotency result, reuses the
+logical Checkout creation. This is not durable exactly-once behavior: no D1,
+KV, Durable Object, or other payment database exists. A lost response after
+Stripe's idempotency retention window, cleared tab storage, an independent
+browser session, or an expired Checkout Session can require a new attempt and
+may produce another unpaid session. In the original browser tab, an explicitly
+retried expired session rotates only the payment attempt and does not resubmit
+registration; without that tab state, the UI fails safely to support guidance.
+Stripe remains the only purchase record; customers must not be treated as paid
+from a redirect alone.
+
+Install and validate the payment Worker independently:
+
+```bash
+cd cloudflare/founding-friend-payment-worker
+npm ci
+npm run typecheck
+npm test
+npm run wrangler:validate
+```
+
+Ordinary local development needs no Stripe account or credential. Run
+`npm run dev:mock` for the default confirmed-payment scenario, or copy the
+tracked `.dev.vars.example` to ignored `.dev.vars` and select one deterministic
+scenario: `created`, `paid`, `pending`, `cancelled`, `expired`,
+`provider_validation_failure`, `payment_mismatch`, `network_failure`,
+`provider_unavailable`, `timeout`, `duplicate_attempt`, `refunded`, or
+`disputed`, then run `npm run dev`. Local mode requires the exact loopback
+Flutter origin and never calls Stripe. Point Flutter at it with the committed
+VSCodium compound or:
+
+```bash
+puro flutter run -d chrome -t lib/main_dev.dart --web-port=7357 \
+  --dart-define-from-file=.env \
+  --dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker \
+  --dart-define=FUN_APP_PAYMENT_TRANSPORT=local_worker
+```
+
+`duplicate_attempt` models Stripe's idempotent replay: identical email and
+attempt-ID requests return the same mock Session and Checkout URL, while a new
+attempt ID creates a different mock Session. It does not claim durable
+exactly-once behavior.
+
+The Worker accepts JSON bodies up to 4 KiB, exact schemas only, a strict public
+application origin, abortable 10-second Stripe requests, exact
+`checkout.stripe.com` redirects, and a required Cloudflare rate-limit binding.
+It performs no operational logging of emails, names, request bodies, Checkout
+URLs, payment details, credentials, or provider responses. Local mock settings
+are rejected outside loopback execution. `PAYMENT_CREATION_ENABLED` must be
+exactly `true` before creation is possible and defaults to false; invalid or
+incomplete Price, live/test-mode, origin, key, secret, or binding configuration
+fails closed without creating a session. For creation,
+`STRIPE_AUTOMATIC_TAX_ENABLED` is a required exact `true` or `false`; the
+Worker always sends it to Stripe and
+never inherits an account-level Checkout tax default. The configured Price
+must be tax-inclusive so the customer-facing total remains exactly £249
+whether the separately approved automatic-tax setting is enabled or disabled.
+
+`.github/workflows/deploy-founding-friend-payment-worker.yml` is a separate,
+manual-only validation and deployment workflow and has not been run. Later
+external setup requires Cloudflare Environment variables
+`PAYMENT_CREATION_ENABLED=false`, `STRIPE_PRICE_ID`,
+`STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
+`PUBLIC_APP_ORIGIN=https://funapp.world`, and
+`CLOUDFLARE_ACCOUNT_ID`; Cloudflare/GitHub secrets `STRIPE_SECRET_KEY`
+(prefer a least-privilege restricted key), `PURCHASE_REFERENCE_SECRET`, and
+`CLOUDFLARE_API_TOKEN`; a unique rate-limit namespace for source ID `1002`;
+and exact route attachment for the two payment paths. No Product, Price,
+credential, secret, route, binding, GitHub Environment value, or deployment is
+created by this repository change.
+
+Before activation, approve the tax treatment and then set
+`STRIPE_AUTOMATIC_TAX_ENABLED` deliberately. Enabling it also requires the
+business's confirmed Stripe Tax settings, origin address, applicable active
+registrations, and approved Product tax code; the code does not choose any of
+those legal or business inputs. Also approve the refund/cancellation policy and
+copy, supported payment methods, dispute/support handling, and any required
+terms. This MVP deliberately performs no automatic HubSpot payment sync,
+webhook fulfillment, account creation, or membership provisioning. The later
+authenticated Fun App backend must verify a qualifying Stripe payment against
+the account's verified email. Customers are reminded to use the purchase email
+for that future account; the present payment confirmation does not activate
+membership. If delayed payment methods or payment-triggered side effects are
+introduced, their asynchronous lifecycle and authenticated webhook handling
+must be designed before launch.
+
 ## Repository structure
 
 ```text
@@ -379,13 +514,16 @@ lib/main_dev.dart            Development/fake Flutter entrypoint
 lib/main_prod.dart           Production first-party Flutter entrypoint
 lib/application/venue/       Venue-lead form state and submission orchestration
 lib/application/user_registration/ Independent Here & Now and Founding Friend BLoCs
+lib/application/founding_friend_payment/ Checkout and verification BLoCs
 lib/core/config/              Typed application-environment selection
 lib/core/injection/           GetIt/Injectable composition root
 lib/domain/core/             Pure-Dart failures, validators, and value objects
 lib/domain/venue/            Provider-neutral prospective-venue domain model
 lib/domain/user_registration/ Provider-neutral registration models and contracts
+lib/domain/founding_friend_payment/ Provider-neutral payment contracts and status
 lib/data/venue/               Venue repository, DTO, and selectable data sources
 lib/data/user_registration/  Direct/Worker transports and fail-closed fallback
+lib/data/founding_friend_payment/ Payment Worker transport and tab-scoped retry state
 lib/l10n/                    Localization ARB source files
 lib/presentation/core/routing/ Typed auto_route configuration and dependencies
 lib/presentation/core/widgets/ Shared viewport/footer page shell
@@ -401,10 +539,12 @@ assets/legal/                Approved canonical website legal content
 test/                        Flutter widget tests for active behavior
 web/                         Flutter Web shell and web-root static inputs
 cloudflare/venue-interest-worker/ Existing first-party forms Worker
+cloudflare/founding-friend-payment-worker/ Separate Stripe payment Worker
 l10n.yaml                    Flutter localization generation configuration
 archive/astro_site/          Deprecated pre-Flutter historical reference
 .github/workflows/deploy.yml Flutter GitHub Pages workflow
 .github/workflows/deploy-venue-interest-worker.yml Manual Worker deployment
+.github/workflows/deploy-founding-friend-payment-worker.yml Manual payment Worker deployment
 SPECIFICATIONS.md            Authoritative project decisions
 AGENTS.md                    Coding-agent working rules
 ```
@@ -419,14 +559,18 @@ the same file as its public widget.
 
 Application behavior uses a layer-first direction with `presentation`,
 `application`, `domain`, and `data` responsibilities when active code requires
-them. `domain` owns validation and the provider-neutral Venue, Here & Now, and
-Founding Friend contracts; separate application BLoCs coordinate each form.
+them. `domain` owns validation and the provider-neutral Venue, Here & Now,
+Founding Friend registration, Checkout, and payment-status contracts; separate
+application BLoCs coordinate registration, Checkout creation, and reloadable
+payment verification.
 The Venue data repository maps validated leads into a provider-neutral DTO and
 delegates to an environment-selected data source. Prospective-user repositories
 use direct HubSpot only in the explicit direct-development profile, or
 provider-neutral requests to a local mocked Worker in the explicit Worker
 profile. Unconfigured development and every production build remain
-fail-closed. The explicit development and production entrypoints pass a typed
+fail-closed. Payment uses only the separate first-party Worker boundary;
+Flutter has no Stripe SDK or secret. The explicit development and production
+entrypoints pass a typed
 environment into `core`, which configures GetIt through Injectable before the
 app starts.
 The production data boundary maps the DTO to the Fun App-owned JSON contract
@@ -438,8 +582,8 @@ dependency boundaries.
 
 ## Deployment
 
-Pull requests targeting `main` run Worker typechecking, tests, and dry-run
-validation plus Flutter formatting, generation, analysis, the full test suite
+Pull requests targeting `main` run both Worker projects' typechecking, tests,
+and dry-run validation plus Flutter formatting, generation, analysis, the full test suite
 with coverage, and a production compile through
 the read-only `PR Checks` workflow. These checks do not deploy anything.
 

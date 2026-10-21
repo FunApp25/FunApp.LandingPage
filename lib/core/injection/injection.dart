@@ -1,9 +1,17 @@
+import 'package:fun_app_landing_page/application/founding_friend_payment/founding_friend_checkout_bloc.dart';
+import 'package:fun_app_landing_page/application/founding_friend_payment/founding_friend_payment_status_bloc.dart';
 import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
 import 'package:fun_app_landing_page/core/config/development_registration_transport.dart';
+import 'package:fun_app_landing_page/core/config/founding_friend_payment_config.dart';
 import 'package:fun_app_landing_page/core/config/hubspot_registration_forms_config.dart';
 import 'package:fun_app_landing_page/core/injection/injection.config.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/founding_friend_payment_data_source_interface.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/worker_founding_friend_payment_data_source.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/deferred_founding_friend_payment_repository.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/founding_friend_payment_repository.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/session_pending_founding_friend_payment_store.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/hubspot_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/user_registration_data_source_interface.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/worker_user_registration_data_source.dart';
@@ -14,6 +22,8 @@ import 'package:fun_app_landing_page/data/user_registration/here_and_now_registr
 import 'package:fun_app_landing_page/data/venue/data_sources/development_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/production_venue_lead_data_source.dart';
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_interface.dart';
+import 'package:fun_app_landing_page/domain/founding_friend_payment/founding_friend_payment_repository_interface.dart';
+import 'package:fun_app_landing_page/domain/founding_friend_payment/pending_founding_friend_payment_store_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/here_and_now_registration_repository_interface.dart';
 import 'package:get_it/get_it.dart';
@@ -33,6 +43,8 @@ final GetIt getIt = GetIt.instance;
     VenueLeadDataSourceInterface,
     HereAndNowRegistrationRepositoryInterface,
     FoundingFriendRegistrationRepositoryInterface,
+    FoundingFriendPaymentRepositoryInterface,
+    PendingFoundingFriendPaymentStoreInterface,
   ],
 )
 void configureDependencies(
@@ -42,6 +54,9 @@ void configureDependencies(
   DevelopmentRegistrationTransport? developmentRegistrationTransport,
   HubSpotRegistrationFormsConfig? developmentHubSpotConfig,
   LocalRegistrationWorkerConfig? developmentWorkerConfig,
+  DevelopmentPaymentTransport? developmentPaymentTransport,
+  FoundingFriendPaymentConfig? developmentPaymentConfig,
+  FoundingFriendPaymentConfig? productionPaymentConfig,
 }) {
   if (environment == AppEnvironment.development) {
     getIt.registerLazySingleton<VenueLeadDataSourceInterface>(
@@ -84,6 +99,19 @@ void configureDependencies(
         httpClient: developmentRegistrationHttpClient,
       );
     }
+
+    final paymentTransport =
+        developmentPaymentTransport ??
+        DevelopmentPaymentTransport.fromEnvironment();
+    if (paymentTransport == DevelopmentPaymentTransport.localWorker) {
+      _registerWorkerPaymentRepository(
+        developmentPaymentConfig ??
+            FoundingFriendPaymentConfig.localFromEnvironment(),
+        httpClient: developmentRegistrationHttpClient,
+      );
+    } else {
+      _registerDeferredPaymentRepository();
+    }
   } else {
     getIt
       ..registerLazySingleton<http.Client>(
@@ -96,9 +124,16 @@ void configureDependencies(
         ),
       );
     _registerDeferredUserRegistrationRepositories();
+    _registerWorkerPaymentRepository(
+      productionPaymentConfig ?? FoundingFriendPaymentConfig.production(),
+    );
   }
 
-  getIt.init();
+  getIt
+    ..registerLazySingleton<PendingFoundingFriendPaymentStoreInterface>(
+      SessionPendingFoundingFriendPaymentStore.new,
+    )
+    ..init();
 }
 
 void _registerDevelopmentRegistrationDataSource({
@@ -106,11 +141,8 @@ void _registerDevelopmentRegistrationDataSource({
   dataSource,
   required http.Client? httpClient,
 }) {
+  _ensureHttpClient(httpClient);
   getIt
-    ..registerLazySingleton<http.Client>(
-      () => httpClient ?? http.Client(),
-      dispose: (client) => client.close(),
-    )
     ..registerLazySingleton<UserRegistrationDataSourceInterface>(
       () => dataSource(getIt<http.Client>()),
     )
@@ -124,6 +156,40 @@ void _registerDevelopmentRegistrationDataSource({
         getIt<UserRegistrationDataSourceInterface>(),
       ),
     );
+}
+
+void _registerWorkerPaymentRepository(
+  FoundingFriendPaymentConfig config, {
+  http.Client? httpClient,
+}) {
+  _ensureHttpClient(httpClient);
+  getIt
+    ..registerLazySingleton<FoundingFriendPaymentDataSourceInterface>(
+      () => WorkerFoundingFriendPaymentDataSource(
+        client: getIt<http.Client>(),
+        config: config,
+      ),
+    )
+    ..registerLazySingleton<FoundingFriendPaymentRepositoryInterface>(
+      () => FoundingFriendPaymentRepository(
+        getIt<FoundingFriendPaymentDataSourceInterface>(),
+      ),
+    );
+}
+
+void _registerDeferredPaymentRepository() {
+  getIt.registerLazySingleton<FoundingFriendPaymentRepositoryInterface>(
+    DeferredFoundingFriendPaymentRepository.new,
+  );
+}
+
+void _ensureHttpClient(http.Client? httpClient) {
+  if (!getIt.isRegistered<http.Client>()) {
+    getIt.registerLazySingleton<http.Client>(
+      () => httpClient ?? http.Client(),
+      dispose: (client) => client.close(),
+    );
+  }
 }
 
 void _registerDeferredUserRegistrationRepositories() {
@@ -158,3 +224,28 @@ createDefaultFoundingFriendRegistrationFormBloc() {
     );
   }
 }
+
+/// Resolves a Checkout BLoC with fail-closed defaults for widget tests.
+FoundingFriendCheckoutBloc createDefaultFoundingFriendCheckoutBloc() =>
+    FoundingFriendCheckoutBloc(
+      repository: getIt.isRegistered<FoundingFriendPaymentRepositoryInterface>()
+          ? getIt<FoundingFriendPaymentRepositoryInterface>()
+          : DeferredFoundingFriendPaymentRepository(),
+      pendingStore:
+          getIt.isRegistered<PendingFoundingFriendPaymentStoreInterface>()
+          ? getIt<PendingFoundingFriendPaymentStoreInterface>()
+          : const SessionPendingFoundingFriendPaymentStore(),
+    );
+
+/// Resolves a return-page verification BLoC with fail-closed defaults.
+FoundingFriendPaymentStatusBloc
+createDefaultFoundingFriendPaymentStatusBloc() =>
+    FoundingFriendPaymentStatusBloc(
+      repository: getIt.isRegistered<FoundingFriendPaymentRepositoryInterface>()
+          ? getIt<FoundingFriendPaymentRepositoryInterface>()
+          : DeferredFoundingFriendPaymentRepository(),
+      pendingStore:
+          getIt.isRegistered<PendingFoundingFriendPaymentStoreInterface>()
+          ? getIt<PendingFoundingFriendPaymentStoreInterface>()
+          : const SessionPendingFoundingFriendPaymentStore(),
+    );

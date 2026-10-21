@@ -499,12 +499,9 @@ void main() {
     expect(repository.submissions, hasLength(1));
     expect(repository.submissions.single.country.getOrCrash(), 'Afghanistan');
     expect(repository.submissions.single.marketingConsent, isTrue);
-    expect(find.byType(UserSignUpSuccess), findsOneWidget);
+    expect(find.byType(UserSignUpSuccess), findsNothing);
     expect(
-      find.text(
-        'Thank you for reaching out, we’ll be in touch shortly',
-        findRichText: true,
-      ),
+      find.byKey(const Key('foundingFriendCheckoutPanel')),
       findsOneWidget,
     );
     expect(
@@ -571,7 +568,11 @@ void main() {
     await _tapSubmit(tester, 'foundingFriend');
     await tester.pumpAndSettle();
     expect(repository.submissions, hasLength(2));
-    expect(find.byType(UserSignUpSuccess), findsOneWidget);
+    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(
+      find.byKey(const Key('foundingFriendCheckoutPanel')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const Key('userSignUpSubmit-foundingFriend')),
       findsNothing,

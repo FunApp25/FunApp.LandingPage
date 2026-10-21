@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/presentation/core/routing/app_route_depende
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
+import 'package:fun_app_landing_page/presentation/founding_friend_payment/pages/founding_friend_payment_return_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
@@ -17,6 +18,9 @@ final class FunAppLandingPageApp extends StatefulWidget {
     this.createVenueLeadFormBloc,
     this.createHereAndNowRegistrationFormBloc,
     this.createFoundingFriendRegistrationFormBloc,
+    this.createFoundingFriendCheckoutBloc,
+    this.createFoundingFriendPaymentStatusBloc,
+    this.onFoundingFriendCheckoutRedirect,
     super.key,
   });
 
@@ -33,6 +37,17 @@ final class FunAppLandingPageApp extends StatefulWidget {
   /// Optional Founding Friend BLoC factory override for presentation tests.
   final FoundingFriendRegistrationFormBlocFactory?
   createFoundingFriendRegistrationFormBloc;
+
+  /// Optional Founding Friend Checkout BLoC factory override.
+  final FoundingFriendPaymentCheckoutBlocFactory?
+  createFoundingFriendCheckoutBloc;
+
+  /// Optional payment return-page BLoC factory override.
+  final FoundingFriendPaymentStatusBlocFactory?
+  createFoundingFriendPaymentStatusBloc;
+
+  /// Optional hosted Checkout redirect override.
+  final FoundingFriendPaymentCheckoutRedirect? onFoundingFriendCheckoutRedirect;
 
   @override
   State<FunAppLandingPageApp> createState() => _FunAppLandingPageAppState();
@@ -79,6 +94,10 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
           widget.createHereAndNowRegistrationFormBloc,
       createFoundingFriendRegistrationFormBloc:
           widget.createFoundingFriendRegistrationFormBloc,
+      createFoundingFriendCheckoutBloc: widget.createFoundingFriendCheckoutBloc,
+      createFoundingFriendPaymentStatusBloc:
+          widget.createFoundingFriendPaymentStatusBloc,
+      onFoundingFriendCheckoutRedirect: widget.onFoundingFriendCheckoutRedirect,
       child: child ?? const SizedBox.shrink(),
     ),
   );

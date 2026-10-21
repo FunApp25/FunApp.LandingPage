@@ -1,5 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/presentation/founding_friend_payment/pages/founding_friend_payment_cancelled_page.dart';
+import 'package:fun_app_landing_page/presentation/founding_friend_payment/pages/founding_friend_payment_return_page.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
 import 'package:fun_app_landing_page/presentation/legal/pages/legal_route_pages.dart';
@@ -24,6 +26,14 @@ final class AppRouter extends RootStackRouter {
     AutoRoute(page: LandingRoute.page, path: '/', initial: true),
     AutoRoute(page: HereAndNowRoute.page, path: '/here-and-now'),
     AutoRoute(page: FoundingFriendRoute.page, path: '/founding-friend'),
+    AutoRoute(
+      page: FoundingFriendPaymentReturnRoute.page,
+      path: '/founding-friend/payment',
+    ),
+    AutoRoute(
+      page: FoundingFriendPaymentCancelledRoute.page,
+      path: '/founding-friend/payment/cancelled',
+    ),
     AutoRoute(page: VenueRoute.page, path: '/venues'),
     AutoRoute(page: PrivacyNoticeRoute.page, path: '/privacy'),
     RedirectRoute(path: '/terms', redirectTo: '/'),
