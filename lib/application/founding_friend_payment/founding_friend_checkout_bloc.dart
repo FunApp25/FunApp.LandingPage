@@ -165,7 +165,7 @@ final class FoundingFriendCheckoutBloc
     FoundingFriendExpiredCheckoutRetryRequested event,
     Emitter<FoundingFriendCheckoutState> emit,
   ) async {
-    if (state.phase != FoundingFriendCheckoutPhase.preparing) {
+    if (state.phase == FoundingFriendCheckoutPhase.idle) {
       final prior = _pendingPayment ?? _pendingStore.read();
       if (prior == null) {
         emit(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/founding_friend_payment/pages/founding_friend_payment_return_page.dart';
+import 'package:fun_app_landing_page/presentation/founding_friend_payment/utils/checkout_redirect.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
@@ -34,15 +35,14 @@ final class AppRouteDependencies extends InheritedWidget {
   createFoundingFriendRegistrationFormBloc;
 
   /// Optional Founding Friend Checkout BLoC factory override.
-  final FoundingFriendPaymentCheckoutBlocFactory?
-  createFoundingFriendCheckoutBloc;
+  final FoundingFriendCheckoutBlocFactory? createFoundingFriendCheckoutBloc;
 
   /// Optional return-page payment status BLoC factory override.
   final FoundingFriendPaymentStatusBlocFactory?
   createFoundingFriendPaymentStatusBloc;
 
   /// Optional hosted Checkout redirect override.
-  final FoundingFriendPaymentCheckoutRedirect? onFoundingFriendCheckoutRedirect;
+  final FoundingFriendCheckoutRedirect? onFoundingFriendCheckoutRedirect;
 
   /// Returns the nearest route dependency scope, when installed.
   static AppRouteDependencies? maybeOf(BuildContext context) =>

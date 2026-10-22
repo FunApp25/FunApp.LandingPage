@@ -16,13 +16,6 @@ import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign
 typedef FoundingFriendRegistrationFormBlocFactory =
     FoundingFriendRegistrationFormBloc Function();
 
-/// Creates one Founding Friend Checkout BLoC for a route lifecycle.
-typedef FoundingFriendPaymentCheckoutBlocFactory =
-    FoundingFriendCheckoutBloc Function();
-
-/// Browser redirect callback used by Founding Friend presentation tests.
-typedef FoundingFriendPaymentCheckoutRedirect = Future<bool> Function(Uri uri);
-
 /// Dedicated Founding Friend registration and Checkout-start route.
 @RoutePage()
 final class FoundingFriendPage extends StatelessWidget {
@@ -41,10 +34,10 @@ final class FoundingFriendPage extends StatelessWidget {
   final FoundingFriendRegistrationFormBlocFactory? createBloc;
 
   /// Optional Checkout BLoC factory override for presentation tests.
-  final FoundingFriendPaymentCheckoutBlocFactory? createCheckoutBloc;
+  final FoundingFriendCheckoutBlocFactory? createCheckoutBloc;
 
   /// Optional validated Checkout redirect override for presentation tests.
-  final FoundingFriendPaymentCheckoutRedirect? onCheckoutRedirect;
+  final FoundingFriendCheckoutRedirect? onCheckoutRedirect;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +85,11 @@ final class FoundingFriendPage extends StatelessWidget {
               final checkout = state.checkout;
               if (checkout != null) {
                 unawaited(
-                  _redirect(context, checkout.checkoutUrl, checkoutRedirect),
+                  startFoundingFriendCheckoutRedirect(
+                    bloc: context.read<FoundingFriendCheckoutBloc>(),
+                    checkoutUrl: checkout.checkoutUrl,
+                    redirect: checkoutRedirect,
+                  ),
                 );
               }
             },
@@ -122,17 +119,4 @@ final class FoundingFriendPage extends StatelessWidget {
     () => false,
     (result) => result.isRight(),
   );
-
-  Future<void> _redirect(
-    BuildContext context,
-    Uri uri,
-    FoundingFriendPaymentCheckoutRedirect redirect,
-  ) async {
-    final bloc = context.read<FoundingFriendCheckoutBloc>()
-      ..add(const FoundingFriendCheckoutRedirectStarted());
-    final redirected = await redirect(uri);
-    if (!redirected && !bloc.isClosed) {
-      bloc.add(const FoundingFriendCheckoutRedirectFailed());
-    }
-  }
 }

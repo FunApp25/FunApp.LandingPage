@@ -134,6 +134,35 @@ void main() {
     await bloc.close();
   });
 
+  test('expired Checkout retry is accepted only once', () async {
+    const replacementAttemptId = 'd9428888-122b-4c5f-8e6a-cc2eeb112233';
+    final repository = _PaymentRepository([right(checkout)]);
+    final store = _PendingStore()
+      ..saved.add(
+        const PendingFoundingFriendPayment(
+          email: 'founder@example.com',
+          attemptId: attemptId,
+        ),
+      );
+    final bloc =
+        FoundingFriendCheckoutBloc(
+            repository: repository,
+            pendingStore: store,
+            createAttemptId: () => replacementAttemptId,
+          )
+          ..add(const FoundingFriendExpiredCheckoutRetryRequested())
+          ..add(const FoundingFriendExpiredCheckoutRetryRequested());
+    await bloc.stream.firstWhere(
+      (state) => state.phase == FoundingFriendCheckoutPhase.ready,
+    );
+
+    expect(repository.creates, [
+      (email: 'founder@example.com', attemptId: replacementAttemptId),
+    ]);
+    expect(store.saved, hasLength(2));
+    await bloc.close();
+  });
+
   test('attempt generator produces UUIDv4-compatible values', () {
     final value = generateCheckoutAttemptId();
     expect(

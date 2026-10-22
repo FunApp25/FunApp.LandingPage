@@ -11,13 +11,6 @@ import 'package:fun_app_landing_page/presentation/founding_friend_payment/widget
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_page.dart';
 
-/// Creates one Checkout BLoC for a cancellation route lifecycle.
-typedef FoundingFriendCheckoutBlocFactory =
-    FoundingFriendCheckoutBloc Function();
-
-/// Browser redirect callback used by payment presentation tests.
-typedef FoundingFriendCheckoutRedirect = Future<bool> Function(Uri uri);
-
 /// Cancellation page that never creates Checkout until the user retries.
 @RoutePage()
 final class FoundingFriendPaymentCancelledPage extends StatelessWidget {
@@ -58,7 +51,13 @@ final class FoundingFriendPaymentCancelledPage extends StatelessWidget {
             listener: (context, state) {
               final checkout = state.checkout;
               if (checkout != null) {
-                unawaited(_redirect(context, checkout.checkoutUrl, redirect));
+                unawaited(
+                  startFoundingFriendCheckoutRedirect(
+                    bloc: context.read<FoundingFriendCheckoutBloc>(),
+                    checkoutUrl: checkout.checkoutUrl,
+                    redirect: redirect,
+                  ),
+                );
               }
             },
             child: const UserSignUpPage(
@@ -67,18 +66,5 @@ final class FoundingFriendPaymentCancelledPage extends StatelessWidget {
             ),
           ),
     );
-  }
-
-  Future<void> _redirect(
-    BuildContext context,
-    Uri uri,
-    FoundingFriendCheckoutRedirect redirect,
-  ) async {
-    final bloc = context.read<FoundingFriendCheckoutBloc>()
-      ..add(const FoundingFriendCheckoutRedirectStarted());
-    final redirected = await redirect(uri);
-    if (!redirected && !bloc.isClosed) {
-      bloc.add(const FoundingFriendCheckoutRedirectFailed());
-    }
   }
 }
