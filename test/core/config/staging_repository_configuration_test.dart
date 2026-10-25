@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('Wrangler keeps production and staging Worker identities isolated', () {
+    final site = _readJsonc(
+      'cloudflare/staging-site-worker/wrangler.jsonc',
+    );
     final registration = _readJsonc(
       'cloudflare/venue-interest-worker/wrangler.jsonc',
     );
@@ -14,6 +17,8 @@ void main() {
     final registrationStaging = _stagingEnvironment(registration);
     final paymentStaging = _stagingEnvironment(payment);
 
+    expect(site['name'], 'funapp-landing-staging');
+    expect(site['main'], 'src/index.ts');
     expect(registration['name'], 'funapp-venue-interest');
     expect(registration['main'], 'src/index.ts');
     expect(
@@ -48,6 +53,7 @@ void main() {
     expect(paymentVars.containsKey('STRIPE_SECRET_KEY'), false);
     expect(paymentVars.containsKey('PURCHASE_REFERENCE_SECRET'), false);
     for (final config in [
+      site,
       registration,
       registrationStaging,
       payment,
@@ -56,6 +62,14 @@ void main() {
       expect(config.containsKey('route'), false);
       expect(config.containsKey('routes'), false);
     }
+
+    expect(site['workers_dev'], false);
+    expect(site['preview_urls'], false);
+    final assets = _objectMap(site['assets']);
+    expect(assets['directory'], '../../build/web');
+    expect(assets['binding'], 'ASSETS');
+    expect(assets['not_found_handling'], 'single-page-application');
+    expect(assets['run_worker_first'], ['/api', '/api/*']);
 
     final namespaces = <String>{
       _rateLimitNamespace(registration),
@@ -122,7 +136,9 @@ void main() {
       '.github/workflows/deploy-staging-site.yml': [
         'workflow_dispatch:',
         'environment: staging',
-        '--project-name=funapp-landing-staging',
+        'CLOUDFLARE_STAGING_SITE_API_TOKEN',
+        'workingDirectory: cloudflare/staging-site-worker',
+        'command: deploy',
         '-t lib/main_staging.dart',
       ],
       '.github/workflows/deploy-staging-registration-worker.yml': [
@@ -153,6 +169,12 @@ void main() {
       expect(workflow, isNot(contains('environment: production')));
       expect(workflow, isNot(contains('funapp.world/api/venue-interest')));
     }
+
+    final siteWorkflow = File(
+      '.github/workflows/deploy-staging-site.yml',
+    ).readAsStringSync();
+    expect(siteWorkflow, isNot(contains('pages deploy')));
+    expect(siteWorkflow, isNot(contains('CLOUDFLARE_PAGES_API_TOKEN')));
   });
 
   test('staging artifact preparation removes production host metadata', () {

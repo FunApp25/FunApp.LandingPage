@@ -166,3 +166,26 @@ jobs:
         run: >-
           dart run
           tool/prepare_staging_release_artifact.dart
+
+      - name: Set up Node.js for staging site Worker
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/staging-site-worker/package-lock.json
+
+      - name: Install staging site Worker dependencies
+        working-directory: cloudflare/staging-site-worker
+        run: npm ci
+
+      - name: Typecheck staging site Worker
+        working-directory: cloudflare/staging-site-worker
+        run: npm run typecheck
+
+      - name: Test staging site Worker
+        working-directory: cloudflare/staging-site-worker
+        run: npm test
+
+      - name: Validate staging Static Assets Worker bundle
+        working-directory: cloudflare/staging-site-worker
+        run: npm run wrangler:validate

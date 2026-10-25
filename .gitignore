@@ -308,6 +308,7 @@ cloudflare/venue-interest-worker/.wrangler/
 cloudflare/founding-friend-payment-worker/.dev.vars*
 !cloudflare/founding-friend-payment-worker/.dev.vars.example
 cloudflare/founding-friend-payment-worker/.wrangler/
+cloudflare/staging-site-worker/.wrangler/
 
 # Visual Studio 6 build log
 *.plg

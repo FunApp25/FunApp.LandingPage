@@ -34,6 +34,13 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/staging-site-worker/package-lock.json
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -65,11 +72,27 @@ jobs:
           grep -Fq 'Disallow: /' build/web/robots.txt
           grep -Fq 'X-Robots-Tag: noindex, nofollow, noarchive' build/web/_headers
 
+      - name: Install staging site Worker dependencies
+        working-directory: cloudflare/staging-site-worker
+        run: npm ci
+
+      - name: Typecheck staging site Worker
+        working-directory: cloudflare/staging-site-worker
+        run: npm run typecheck
+
+      - name: Test staging site Worker
+        working-directory: cloudflare/staging-site-worker
+        run: npm test
+
+      - name: Validate Static Assets Worker bundle
+        working-directory: cloudflare/staging-site-worker
+        run: npm run wrangler:validate
+
       - name: Validate staging deployment configuration
         shell: bash
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_SITE_API_TOKEN }}
         run: |
           set -euo pipefail
           for variable_name in CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN
@@ -80,13 +103,11 @@ jobs:
             fi
           done
 
-      - name: Deploy only to Cloudflare Pages staging project
+      - name: Deploy only the staging Static Assets Worker
         uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN }}
+          apiToken: ${{ secrets.CLOUDFLARE_STAGING_SITE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          wranglerVersion: '4.136.2'
-          command: >-
-            pages deploy build/web
-            --project-name=funapp-landing-staging
-            --branch=main
+          workingDirectory: cloudflare/staging-site-worker
+          packageManager: npm
+          command: deploy

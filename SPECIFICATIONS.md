@@ -148,8 +148,12 @@ Current implementation is evidence of repository state, not automatically a perm
   environment uses an invalid fail-closed Price/tax placeholder until the
   workflow supplies reviewed sandbox values, and defaults creation to false.
   Its rate-limit namespace is distinct from production and registration.
-- Staging hosting uses a separately provisioned Cloudflare Pages Direct Upload
-  project named `funapp-landing-staging`. The prepared staging artifact removes
+- Staging hosting uses the independent Cloudflare Workers Static Assets project
+  in `cloudflare/staging-site-worker/`, deploying with Worker identity
+  `funapp-landing-staging`. It has SPA fallback for non-asset navigation and a
+  minimal Worker-first `/api` handler that returns `404` when no more-specific
+  API Worker Route exists. Its `workers.dev` and preview URLs are disabled, and
+  it declares no route or Custom Domain. The prepared staging artifact removes
   the production `CNAME`, removes review-only legal assets, uses a staging
   canonical URL, and adds HTML, robots, and response-header noindex controls.
   Cloudflare Access remains the required access-control boundary; noindex is not
@@ -206,6 +210,9 @@ The repository is an active Flutter Web project:
 - `cloudflare/founding-friend-payment-worker/` contains the isolated Stripe
   Checkout and payment-verification Worker, deterministic mocks, and focused
   tests. It has no storage binding and is deployed separately, if authorized.
+- `cloudflare/staging-site-worker/` contains the staging-only Static Assets
+  hosting configuration and minimal fail-closed `/api` handler. It does not
+  contain either API integration and declares no route or Custom Domain.
 - `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
 - `.github/workflows/deploy.yml` validates and builds Flutter directly through
   `subosito/flutter-action@v2`, uploads `build/web`, and deploys it through
@@ -897,7 +904,13 @@ puro dart run tool/prepare_staging_release_artifact.dart
 puro flutter build web -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
 
-cd cloudflare/venue-interest-worker
+cd cloudflare/staging-site-worker
+npm ci
+npm run typecheck
+npm test
+npm run wrangler:validate
+
+cd ../venue-interest-worker
 npm ci
 npm run typecheck
 npm test
@@ -951,8 +964,9 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
   `PURCHASE_REFERENCE_SECRET`, the source-declared rate-limit binding, exact
   payment endpoint route attachment, and controlled Stripe/Cloudflare review.
-- Pull requests targeting `main` run both Worker projects' typechecking, tests,
-  and root/staging dry-run validation plus Flutter formatting, generation,
+- Pull requests targeting `main` run the staging site Worker's typechecking,
+  tests, and dry-run validation, both API Worker projects' typechecking, tests,
+  and root/staging dry-run validation, plus Flutter formatting, generation,
   analysis, full-suite coverage, and production/staging compile checks.
   Pull-request checks do not deploy; pushes to `main` remain the production
   Pages deployment trigger.
@@ -969,8 +983,10 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   environment.
 - Three staging workflows are `workflow_dispatch` only, require an explicit
   confirmation input, and use the GitHub `staging` Environment. They deploy the
-  separate Pages project, registration Worker `--env staging`, or payment Worker
-  `--env staging`; no push or pull-request event invokes them. The payment
+  separate `funapp-landing-staging` Static Assets Worker, registration Worker
+  `--env staging`, or payment Worker `--env staging`; no push or pull-request
+  event invokes them. The site Worker has public `workers.dev` and preview URLs
+  disabled and declares neither a Custom Domain nor a route. The payment
   workflow accepts only a restricted `rk_test_` key, pins expected live mode to
   false, and derives creation enablement from an explicit manual checkbox that
   defaults to false.
@@ -979,12 +995,39 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   staging values; an operator must confirm account-wide uniqueness before
   deployment. Neither staging environment declares a route, so code deployment
   alone cannot attach to a hostname.
+- The staging site uses `build/web` as its Static Assets directory with SPA
+  fallback. Its script runs first for `/api` and `/api/*` and returns `404`,
+  preventing an absent or mistyped API Route from returning the SPA document
+  with `200`.
+- The exact local staging site sequence is `puro flutter build web -t
+  lib/main_staging.dart`, `puro dart run
+  tool/prepare_staging_release_artifact.dart`, then from
+  `cloudflare/staging-site-worker/`, `npm ci`, `npm run typecheck`, `npm test`,
+  and `npm run wrangler:validate`. The authorized manual deploy command from
+  that directory is `npx wrangler deploy`; the repository does not run it
+  automatically.
+- The GitHub `staging` Environment uses `CLOUDFLARE_ACCOUNT_ID` and the distinct
+  `CLOUDFLARE_STAGING_SITE_API_TOKEN` for the site. Initial Worker creation
+  requires a staging-account-scoped Workers product Admin token; after creation
+  it must be rotated to an Editor token scoped to `funapp-landing-staging`.
+  That token receives no DNS, route, or Access permission. The existing
+  `CLOUDFLARE_WORKERS_API_TOKEN` remains for the two staging API Workers. Their
+  first deployments likewise require a staging-account-scoped Workers product
+  Admin token because neither identity exists; after both are created it must
+  be rotated to Editor access limited to those two Workers.
 - Intended dashboard-managed staging routes are only
   `staging.funapp.world/api/registrations/*` to the staging registration Worker
   and `staging.funapp.world/api/founding-friend-payments/*` to the staging
-  payment Worker. Cloudflare DNS/proxying, Pages custom-domain setup, those
-  routes, and Access must be configured manually in the documented order. No
-  staging route belongs on `funapp.world`, and the existing
+  payment Worker. The site Worker Custom Domain, Cloudflare-created DNS record
+  and certificate, those routes, and hostname-based Access must be configured
+  manually in the documented order. First deploy the unreachable site Worker,
+  enable Worker-level Access for all of its traffic, rotate the bootstrap token,
+  add `staging.funapp.world` as its dashboard-managed Custom Domain, then create
+  a hostname-based self-hosted Access application for the exact hostname with
+  no Path value before adding the two API Routes. Hostname-based Access is
+  required to cover requests handled by all three Workers; site-Worker Access
+  alone does not cover the separate API Workers. No staging route belongs on
+  `funapp.world`, and the existing
   `funapp.world/api/venue-interest` route is unchanged.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
