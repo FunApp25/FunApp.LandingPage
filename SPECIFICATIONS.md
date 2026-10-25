@@ -29,6 +29,13 @@ uses no D1 or other payment database. Local development is fully mocked. New
 payment creation and Founding Friend registration both remain disabled in
 production pending separate external configuration and authorization.
 
+The repository also prepares an isolated staging composition for
+`https://staging.funapp.world`. Staging keeps Venue submissions deterministic
+and local to Flutter, sends Here & Now and Founding Friend registration to a
+staging-only no-I/O Worker entrypoint, and sends payment requests to a separate
+Worker pinned to Stripe sandbox mode. Staging infrastructure, credentials,
+routes, DNS, Access policy, and deployments remain external and unconfigured.
+
 ## 2. Decision model
 
 Decisions use three statuses:
@@ -122,6 +129,31 @@ Current implementation is evidence of repository state, not automatically a perm
   disabled by default; verification remains independently available for
   recovery. The existing Venue Worker, its bindings, and its deployment remain
   unchanged.
+- `lib/main_staging.dart` selects an isolated hosted dependency graph. It uses
+  `https://staging.funapp.world` for both first-party registration and payment
+  API families, uses no browser-side provider credential or arbitrary endpoint,
+  and does not change `lib/main_prod.dart`.
+- The existing registration Worker project has a named `staging` environment
+  deploying as `funapp-venue-interest-staging`. Its distinct `src/staging.ts`
+  entrypoint accepts only the two exact registration paths on the staging host,
+  requires exact staging enablement plus its rate-limit binding, and injects a
+  deterministic no-I/O adapter. It has no HubSpot portal or form identifier and
+  cannot fall back to HubSpot. The production entrypoint does not select this
+  adapter from a request or binding.
+- The payment Worker has a named `staging` environment deploying as
+  `funapp-founding-friend-payment-staging`. Its distinct `src/staging.ts`
+  entrypoint accepts only the two exact payment paths on the staging host,
+  requires `STRIPE_EXPECTED_LIVEMODE=false`, fixes the public origin to staging,
+  and rejects non-restricted or non-sandbox Stripe keys before provider I/O. The
+  environment uses an invalid fail-closed Price/tax placeholder until the
+  workflow supplies reviewed sandbox values, and defaults creation to false.
+  Its rate-limit namespace is distinct from production and registration.
+- Staging hosting uses a separately provisioned Cloudflare Pages Direct Upload
+  project named `funapp-landing-staging`. The prepared staging artifact removes
+  the production `CNAME`, removes review-only legal assets, uses a staging
+  canonical URL, and adds HTML, robots, and response-header noindex controls.
+  Cloudflare Access remains the required access-control boundary; noindex is not
+  authorization.
 
 ### Open
 
@@ -859,6 +891,9 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
+puro flutter build web -t lib/main_dev.dart
+puro flutter build web -t lib/main_staging.dart
+puro dart run tool/prepare_staging_release_artifact.dart
 puro flutter build web -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
 
@@ -867,12 +902,14 @@ npm ci
 npm run typecheck
 npm test
 npm run wrangler:validate
+npm run wrangler:validate:staging
 
 cd ../founding-friend-payment-worker
 npm ci
 npm run typecheck
 npm test
 npm run wrangler:validate
+npm run wrangler:validate:staging
 ```
 
 The active suites cover the landing surface and its durable responsive and
@@ -905,16 +942,18 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
 - The payment Worker has a separate manual-only
   `deploy-founding-friend-payment-worker.yml` workflow. It validates before
   deployment, configures no route, and defaults
-  `PAYMENT_CREATION_ENABLED` to false. No Stripe Product/Price, key, Cloudflare
-  secret, rate-limit namespace, route, GitHub Environment value, or deployment
-  has been created. Later setup requires `STRIPE_PRICE_ID`,
+  `PAYMENT_CREATION_ENABLED` to false. No live Stripe Product/Price or key,
+  Cloudflare secret, route, GitHub Environment value, or deployment has been
+  created. A sandbox Product, Price, and restricted key were created manually
+  outside this repository, but are not stored or currently verified here. Later
+  production setup requires `STRIPE_PRICE_ID`,
   `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
   `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
   `PURCHASE_REFERENCE_SECRET`, the source-declared rate-limit binding, exact
   payment endpoint route attachment, and controlled Stripe/Cloudflare review.
 - Pull requests targeting `main` run both Worker projects' typechecking, tests,
-  and dry-run validation plus Flutter formatting, generation, analysis,
-  full-suite coverage, and production-entrypoint compile checks.
+  and root/staging dry-run validation plus Flutter formatting, generation,
+  analysis, full-suite coverage, and production/staging compile checks.
   Pull-request checks do not deploy; pushes to `main` remain the production
   Pages deployment trigger.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
@@ -925,8 +964,28 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   use Puro. The workflow then removes the three
   review-only legal Markdown files from `build/web`. The production artifact
   does not publish those draft source documents as static assets.
-- Only pushes to `main` and manual dispatches run the Pages deployment. The
-  `dev` branch has no separate deployment workflow or Pages environment.
+- Only pushes to `main` and manual dispatches run the production Pages
+  deployment. The `dev` branch has no automatic deployment workflow or Pages
+  environment.
+- Three staging workflows are `workflow_dispatch` only, require an explicit
+  confirmation input, and use the GitHub `staging` Environment. They deploy the
+  separate Pages project, registration Worker `--env staging`, or payment Worker
+  `--env staging`; no push or pull-request event invokes them. The payment
+  workflow accepts only a restricted `rk_test_` key, pins expected live mode to
+  false, and derives creation enablement from an explicit manual checkbox that
+  defaults to false.
+- Staging Wrangler configurations declare all non-inherited variables and
+  rate-limit bindings. Namespace IDs `2001` and `2002` are source-selected
+  staging values; an operator must confirm account-wide uniqueness before
+  deployment. Neither staging environment declares a route, so code deployment
+  alone cannot attach to a hostname.
+- Intended dashboard-managed staging routes are only
+  `staging.funapp.world/api/registrations/*` to the staging registration Worker
+  and `staging.funapp.world/api/founding-friend-payments/*` to the staging
+  payment Worker. Cloudflare DNS/proxying, Pages custom-domain setup, those
+  routes, and Access must be configured manually in the documented order. No
+  staging route belongs on `funapp.world`, and the existing
+  `funapp.world/api/venue-interest` route is unchanged.
 - The production artifact is `build/web`.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
 - Production builds include the canonical Privacy Notice asset and remove the

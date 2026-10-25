@@ -26,10 +26,10 @@ const int maxWorkerRegistrationRequestBodyBytes = 16 * 1024;
 /// Registration data source backed by Fun App's first-party Worker.
 final class WorkerUserRegistrationDataSource
     implements UserRegistrationDataSourceInterface {
-  /// Creates a Worker-backed source with an injected client and local origin.
+  /// Creates a Worker-backed source with an injected client and trusted origin.
   factory WorkerUserRegistrationDataSource({
     required http.Client client,
-    required LocalRegistrationWorkerConfig config,
+    required RegistrationWorkerConfig config,
     Duration submissionTimeout = defaultWorkerRegistrationSubmissionTimeout,
   }) => WorkerUserRegistrationDataSource._(
     client,
@@ -44,7 +44,7 @@ final class WorkerUserRegistrationDataSource
   );
 
   final http.Client _client;
-  final LocalRegistrationWorkerConfig _config;
+  final RegistrationWorkerConfig _config;
   final Duration _submissionTimeout;
 
   @override

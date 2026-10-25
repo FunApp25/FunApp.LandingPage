@@ -29,8 +29,19 @@ enum DevelopmentRegistrationTransport {
   }
 }
 
+/// Validated origin for a first-party registration Worker transport.
+sealed class RegistrationWorkerConfig {
+  const RegistrationWorkerConfig(this.baseUri);
+
+  /// Worker origin.
+  final Uri baseUri;
+
+  /// Resolves an exact Worker endpoint path against the configured origin.
+  Uri endpoint(String path) => baseUri.resolve(path);
+}
+
 /// Validated localhost origin for the development Worker transport.
-final class LocalRegistrationWorkerConfig {
+final class LocalRegistrationWorkerConfig extends RegistrationWorkerConfig {
   /// Creates a local Worker configuration.
   factory LocalRegistrationWorkerConfig({required String baseUrl}) {
     final uri = Uri.tryParse(baseUrl);
@@ -58,7 +69,7 @@ final class LocalRegistrationWorkerConfig {
     return LocalRegistrationWorkerConfig._(uri);
   }
 
-  const LocalRegistrationWorkerConfig._(this.baseUri);
+  const LocalRegistrationWorkerConfig._(super.baseUri);
 
   /// Reads the local Worker base URL supplied at compile time.
   factory LocalRegistrationWorkerConfig.fromEnvironment() {
@@ -67,10 +78,15 @@ final class LocalRegistrationWorkerConfig {
     );
     return LocalRegistrationWorkerConfig(baseUrl: baseUrl);
   }
+}
 
-  /// Local Worker origin used only by an explicit development graph.
-  final Uri baseUri;
+/// Fixed hosted origin for the isolated staging registration Worker routes.
+final class StagingRegistrationWorkerConfig extends RegistrationWorkerConfig {
+  /// Creates the staging configuration without accepting runtime overrides.
+  factory StagingRegistrationWorkerConfig() =>
+      StagingRegistrationWorkerConfig._(
+        Uri.parse('https://staging.funapp.world'),
+      );
 
-  /// Resolves an exact Worker endpoint path against the configured origin.
-  Uri endpoint(String path) => baseUri.resolve(path);
+  const StagingRegistrationWorkerConfig._(super.baseUri);
 }

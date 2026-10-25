@@ -93,6 +93,12 @@ final class FoundingFriendPaymentConfig {
     );
   }
 
+  /// Uses the isolated same-origin staging payment Worker routes.
+  factory FoundingFriendPaymentConfig.staging() => FoundingFriendPaymentConfig(
+    baseUrl: 'https://staging.funapp.world',
+    allowLocalMockCheckoutUrls: false,
+  );
+
   /// Uses same-origin production routes without enabling payment creation.
   factory FoundingFriendPaymentConfig.production() =>
       FoundingFriendPaymentConfig(

@@ -34,4 +34,16 @@ void main() {
       );
     }
   });
+
+  test('staging Worker config is fixed to the staging origin', () {
+    final config = StagingRegistrationWorkerConfig();
+
+    expect(config.baseUri, Uri.parse('https://staging.funapp.world'));
+    expect(
+      config.endpoint('/api/registrations/founding-friend'),
+      Uri.parse(
+        'https://staging.funapp.world/api/registrations/founding-friend',
+      ),
+    );
+  });
 }

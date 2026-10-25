@@ -25,6 +25,7 @@ export interface WorkerDependencies {
   upstreamFetch?: UpstreamFetch;
   submissionTimeoutMs?: number;
   registrationRateLimiter?: RateLimiter;
+  registrationProvider?: 'hubspot' | 'staging_mock';
 }
 
 const venueEndpointPath = '/api/venue-interest';
@@ -172,11 +173,14 @@ export async function handleRequest(
     const registrationConfiguration = registrationFormGuid(endpoint, env);
     const rateLimiter =
       dependencies.registrationRateLimiter ?? env.REGISTRATION_RATE_LIMITER;
+    const usesStagingMock =
+      dependencies.registrationProvider === 'staging_mock';
 
     if (
-      registrationConfiguration === null ||
       rateLimiter === undefined ||
-      !hasValidPortalId(env.HUBSPOT_PORTAL_ID)
+      (!usesStagingMock &&
+        (registrationConfiguration === null ||
+          !hasValidPortalId(env.HUBSPOT_PORTAL_ID)))
     ) {
       return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
     }
@@ -244,6 +248,13 @@ export async function handleRequest(
     } else {
       return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
     }
+  }
+
+  if (
+    endpoint.kind === 'registration' &&
+    dependencies.registrationProvider === 'staging_mock'
+  ) {
+    return new Response(null, { status: 204, headers: corsHeaders ?? {} });
   }
 
   const portalId = env.HUBSPOT_PORTAL_ID;

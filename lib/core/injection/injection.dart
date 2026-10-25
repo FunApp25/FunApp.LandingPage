@@ -35,8 +35,8 @@ final GetIt getIt = GetIt.instance;
 
 /// Registers dependencies for the selected [environment].
 ///
-/// Production overrides support deterministic composition tests without
-/// changing the application transport used by the browser.
+/// Hosted-environment overrides support deterministic composition tests
+/// without changing the application transport used by the browser.
 @InjectableInit(
   preferRelativeImports: true,
   ignoreUnregisteredTypes: [
@@ -56,6 +56,9 @@ void configureDependencies(
   LocalRegistrationWorkerConfig? developmentWorkerConfig,
   DevelopmentPaymentTransport? developmentPaymentTransport,
   FoundingFriendPaymentConfig? developmentPaymentConfig,
+  http.Client? stagingHttpClient,
+  RegistrationWorkerConfig? stagingRegistrationWorkerConfig,
+  FoundingFriendPaymentConfig? stagingPaymentConfig,
   FoundingFriendPaymentConfig? productionPaymentConfig,
 }) {
   if (environment == AppEnvironment.development) {
@@ -112,6 +115,24 @@ void configureDependencies(
     } else {
       _registerDeferredPaymentRepository();
     }
+  } else if (environment == AppEnvironment.staging) {
+    _ensureHttpClient(stagingHttpClient);
+    getIt.registerLazySingleton<VenueLeadDataSourceInterface>(
+      DevelopmentVenueLeadDataSource.new,
+    );
+    _registerDevelopmentRegistrationDataSource(
+      dataSource: (client) => WorkerUserRegistrationDataSource(
+        client: client,
+        config:
+            stagingRegistrationWorkerConfig ??
+            StagingRegistrationWorkerConfig(),
+      ),
+      httpClient: stagingHttpClient,
+    );
+    _registerWorkerPaymentRepository(
+      stagingPaymentConfig ?? FoundingFriendPaymentConfig.staging(),
+      httpClient: stagingHttpClient,
+    );
   } else {
     getIt
       ..registerLazySingleton<http.Client>(

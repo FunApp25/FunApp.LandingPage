@@ -1,0 +1,92 @@
+name: Deploy Staging Site
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging:
+        description: Confirm deployment to funapp-landing-staging only
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: funapp-landing-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validate and deploy staging site
+    if: ${{ inputs.confirm_staging }}
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Generate Dart sources
+        run: flutter pub run build_runner build
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Build staging site
+        run: flutter build web -t lib/main_staging.dart
+
+      - name: Prepare isolated staging artifact
+        run: dart run tool/prepare_staging_release_artifact.dart
+
+      - name: Verify staging artifact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e build/web/CNAME
+          grep -Fq 'https://staging.funapp.world/' build/web/index.html
+          grep -Fq 'noindex, nofollow, noarchive' build/web/index.html
+          grep -Fq 'Disallow: /' build/web/robots.txt
+          grep -Fq 'X-Robots-Tag: noindex, nofollow, noarchive' build/web/_headers
+
+      - name: Validate staging deployment configuration
+        shell: bash
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          for variable_name in CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN
+          do
+            if [[ -z "${!variable_name:-}" ]]; then
+              echo "::error::Missing required staging Environment configuration: $variable_name"
+              exit 1
+            fi
+          done
+
+      - name: Deploy only to Cloudflare Pages staging project
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.136.2'
+          command: >-
+            pages deploy build/web
+            --project-name=funapp-landing-staging
+            --branch=main

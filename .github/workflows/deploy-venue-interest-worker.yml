@@ -91,7 +91,7 @@ jobs:
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: cloudflare/venue-interest-worker
           packageManager: npm
-          command: deploy
+          command: deploy --env=""
           vars: |
             HUBSPOT_PORTAL_ID
             HUBSPOT_FORM_GUID

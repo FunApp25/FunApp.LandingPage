@@ -1,3 +1,5 @@
+# Local loopback mock configuration only. The hosted staging environment uses
+# src/staging.ts and deliberately requires no HubSpot portal or form values.
 HUBSPOT_PORTAL_ID="123456789"
 HUBSPOT_FORM_GUID="00000000-0000-0000-0000-000000000000"
 HUBSPOT_HERE_AND_NOW_FORM_GUID="11111111-1111-1111-1111-111111111111"

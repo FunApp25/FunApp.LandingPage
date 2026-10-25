@@ -10,6 +10,14 @@ void main() {
     expect(config.localCheckoutOrigin, isNull);
   });
 
+  test('staging uses its same-origin payment route without local mocks', () {
+    final config = FoundingFriendPaymentConfig.staging();
+
+    expect(config.baseUri, Uri.parse('https://staging.funapp.world'));
+    expect(config.allowLocalMockCheckoutUrls, isFalse);
+    expect(config.localCheckoutOrigin, isNull);
+  });
+
   test('local configuration requires exact loopback origins', () {
     final config = FoundingFriendPaymentConfig(
       baseUrl: 'http://localhost:8788',

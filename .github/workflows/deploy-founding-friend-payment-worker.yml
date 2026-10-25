@@ -104,7 +104,7 @@ jobs:
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: cloudflare/founding-friend-payment-worker
           packageManager: npm
-          command: deploy
+          command: deploy --env=""
           vars: |
             PAYMENT_CREATION_ENABLED
             STRIPE_PRICE_ID

@@ -1,0 +1,134 @@
+name: Deploy Staging Payment Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging:
+        description: Confirm deployment to staging payment Worker only
+        required: true
+        default: false
+        type: boolean
+      enable_payment_creation:
+        description: Explicitly enable Stripe sandbox Checkout creation
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founding-friend-payment-worker-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validate and deploy staging payment Worker
+    if: ${{ inputs.confirm_staging }}
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: cloudflare/founding-friend-payment-worker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/founding-friend-payment-worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Validate production Worker configuration
+        run: npm run wrangler:validate
+
+      - name: Validate isolated staging Worker configuration
+        run: npm run wrangler:validate:staging
+
+      - name: Validate Stripe sandbox and deployment configuration
+        shell: bash
+        env:
+          PAYMENT_CREATION_ENABLED: ${{ inputs.enable_payment_creation && 'true' || 'false' }}
+          STRIPE_PRICE_ID: ${{ vars.STRIPE_SANDBOX_PRICE_ID }}
+          STRIPE_EXPECTED_LIVEMODE: 'false'
+          STRIPE_AUTOMATIC_TAX_ENABLED: ${{ vars.STRIPE_SANDBOX_AUTOMATIC_TAX_ENABLED }}
+          PUBLIC_APP_ORIGIN: https://staging.funapp.world
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SANDBOX_RESTRICTED_KEY }}
+          PURCHASE_REFERENCE_SECRET: ${{ secrets.STAGING_PURCHASE_REFERENCE_SECRET }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          for variable_name in \
+            STRIPE_PRICE_ID \
+            STRIPE_AUTOMATIC_TAX_ENABLED \
+            STRIPE_SECRET_KEY \
+            PURCHASE_REFERENCE_SECRET \
+            CLOUDFLARE_ACCOUNT_ID \
+            CLOUDFLARE_API_TOKEN
+          do
+            if [[ -z "${!variable_name:-}" ]]; then
+              echo "::error::Missing required staging Environment configuration: $variable_name"
+              exit 1
+            fi
+          done
+
+          if [[ ! "$STRIPE_SECRET_KEY" =~ ^rk_test_[A-Za-z0-9]+$ ]]; then
+            echo "::error::STRIPE_SANDBOX_RESTRICTED_KEY must be a Stripe sandbox restricted key"
+            exit 1
+          fi
+
+          if [[ ! "$STRIPE_PRICE_ID" =~ ^price_[A-Za-z0-9]+$ ]]; then
+            echo "::error::STRIPE_SANDBOX_PRICE_ID must be a Stripe Price ID"
+            exit 1
+          fi
+
+          if [[ "$STRIPE_AUTOMATIC_TAX_ENABLED" != "true" && \
+                "$STRIPE_AUTOMATIC_TAX_ENABLED" != "false" ]]; then
+            echo "::error::STRIPE_SANDBOX_AUTOMATIC_TAX_ENABLED must be true or false"
+            exit 1
+          fi
+
+          if (( ${#PURCHASE_REFERENCE_SECRET} < 32 )); then
+            echo "::error::STAGING_PURCHASE_REFERENCE_SECRET must contain at least 32 characters"
+            exit 1
+          fi
+
+      - name: Deploy only the Stripe sandbox staging Worker environment
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare/founding-friend-payment-worker
+          packageManager: npm
+          command: deploy --env staging
+          environment: staging
+          vars: |
+            PAYMENT_CREATION_ENABLED
+            STRIPE_PRICE_ID
+            STRIPE_EXPECTED_LIVEMODE
+            STRIPE_AUTOMATIC_TAX_ENABLED
+            PUBLIC_APP_ORIGIN
+          secrets: |
+            STRIPE_SECRET_KEY
+            PURCHASE_REFERENCE_SECRET
+        env:
+          PAYMENT_CREATION_ENABLED: ${{ inputs.enable_payment_creation && 'true' || 'false' }}
+          STRIPE_PRICE_ID: ${{ vars.STRIPE_SANDBOX_PRICE_ID }}
+          STRIPE_EXPECTED_LIVEMODE: 'false'
+          STRIPE_AUTOMATIC_TAX_ENABLED: ${{ vars.STRIPE_SANDBOX_AUTOMATIC_TAX_ENABLED }}
+          PUBLIC_APP_ORIGIN: https://staging.funapp.world
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SANDBOX_RESTRICTED_KEY }}
+          PURCHASE_REFERENCE_SECRET: ${{ secrets.STAGING_PURCHASE_REFERENCE_SECRET }}

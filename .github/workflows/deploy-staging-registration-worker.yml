@@ -1,0 +1,78 @@
+name: Deploy Staging Registration Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging:
+        description: Confirm deployment to funapp-venue-interest-staging only
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: venue-interest-worker-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validate and deploy staging registration Worker
+    if: ${{ inputs.confirm_staging }}
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: cloudflare/venue-interest-worker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/venue-interest-worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Validate production Worker configuration
+        run: npm run wrangler:validate
+
+      - name: Validate isolated staging Worker configuration
+        run: npm run wrangler:validate:staging
+
+      - name: Validate staging deployment credentials
+        shell: bash
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          for variable_name in CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN
+          do
+            if [[ -z "${!variable_name:-}" ]]; then
+              echo "::error::Missing required staging Environment configuration: $variable_name"
+              exit 1
+            fi
+          done
+
+      - name: Deploy only the staging registration Worker environment
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare/venue-interest-worker
+          packageManager: npm
+          command: deploy --env staging
+          environment: staging

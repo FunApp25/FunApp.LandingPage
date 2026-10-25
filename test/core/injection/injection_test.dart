@@ -208,6 +208,91 @@ void main() {
   );
 
   test(
+    'staging injects only staging registration and payment Worker endpoints',
+    () async {
+      final requestedUrls = <Uri>[];
+      final client = MockClient((request) async {
+        requestedUrls.add(request.url);
+        if (request.url.path ==
+            '/api/founding-friend-payments/checkout-sessions') {
+          return http.Response(
+            '{"checkoutUrl":"https://checkout.stripe.com/c/pay/cs_test_staging1234567890","sessionId":"cs_test_staging1234567890","requestId":"test"}',
+            201,
+          );
+        } else {
+          return http.Response('', 204);
+        }
+      });
+      configureDependencies(
+        AppEnvironment.staging,
+        stagingHttpClient: client,
+      );
+
+      expect(
+        getIt<VenueLeadDataSourceInterface>(),
+        isA<DevelopmentVenueLeadDataSource>(),
+      );
+      expect(
+        getIt<UserRegistrationDataSourceInterface>(),
+        isA<WorkerUserRegistrationDataSource>(),
+      );
+      expect(
+        getIt<HereAndNowRegistrationRepositoryInterface>(),
+        isA<HereAndNowRegistrationRepository>(),
+      );
+      expect(
+        getIt<FoundingFriendRegistrationRepositoryInterface>(),
+        isA<FoundingFriendRegistrationRepository>(),
+      );
+      expect(
+        getIt<FoundingFriendPaymentRepositoryInterface>(),
+        isA<FoundingFriendPaymentRepository>(),
+      );
+
+      final hereAndNowBloc = getIt<HereAndNowRegistrationFormBloc>()
+        ..add(const HereAndNowRegistrationFormEvent.firstNameChanged('Alex'))
+        ..add(const HereAndNowRegistrationFormEvent.lastNameChanged('Morgan'))
+        ..add(
+          const HereAndNowRegistrationFormEvent.emailChanged(
+            'alex@example.com',
+          ),
+        )
+        ..add(const HereAndNowRegistrationFormEvent.ageChanged('29'));
+      await hereAndNowBloc.stream.firstWhere(
+        (state) => state.registration.isValid,
+      );
+      final settled = hereAndNowBloc.stream.firstWhere(
+        (state) => state.submissionResult.isSome(),
+      );
+      hereAndNowBloc.add(const HereAndNowRegistrationFormEvent.submitted());
+      await settled;
+      final checkout = await getIt<FoundingFriendPaymentRepositoryInterface>()
+          .createCheckout(
+            email: 'alex@example.com',
+            attemptId: '123e4567-e89b-42d3-a456-426614174000',
+          );
+
+      expect(checkout.isRight(), isTrue);
+      expect(requestedUrls, [
+        Uri.parse(
+          'https://staging.funapp.world/api/registrations/here-and-now',
+        ),
+        Uri.parse(
+          'https://staging.funapp.world/api/founding-friend-payments/checkout-sessions',
+        ),
+      ]);
+      expect(
+        requestedUrls.every(
+          (url) => url.origin == 'https://staging.funapp.world',
+        ),
+        isTrue,
+      );
+      await hereAndNowBloc.close();
+      await getIt<FoundingFriendRegistrationFormBloc>().close();
+    },
+  );
+
+  test(
     'production injects the first-party data source without real I/O',
     () async {
       late http.Request capturedRequest;
