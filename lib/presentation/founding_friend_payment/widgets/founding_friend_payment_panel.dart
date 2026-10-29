@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/application/founding_friend_payment/foundin
 import 'package:fun_app_landing_page/application/founding_friend_payment/founding_friend_payment_status_bloc.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
@@ -65,11 +66,8 @@ final class FoundingFriendCheckoutPanel extends StatelessWidget {
             title: title,
             body: body,
             busy: busy,
-            footer: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showRetry)
-                  BrandedFormActionButton(
+            footer: showRetry
+                ? BrandedFormActionButton(
                     buttonKey: const Key('foundingFriendCheckoutRetry'),
                     arrowKey: const Key('foundingFriendCheckoutRetryArrow'),
                     label: l10n.foundingFriendPaymentRetryCheckout,
@@ -77,21 +75,8 @@ final class FoundingFriendCheckoutPanel extends StatelessWidget {
                         context.read<FoundingFriendCheckoutBloc>().add(
                           const FoundingFriendCheckoutRetryRequested(),
                         ),
-                  ),
-                if (showRetry) const SizedBox(height: 20),
-                Text(
-                  l10n.foundingFriendPaymentSameEmailReminder,
-                  key: const Key('foundingFriendPaymentSameEmailReminder'),
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyFontStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    height: 24 / 16,
-                    color: AppColors.bodyGray,
-                  ),
-                ),
-              ],
-            ),
+                  )
+                : const SizedBox.shrink(),
           );
         },
       );
@@ -310,57 +295,67 @@ final class _PaymentPanelLayoutState extends State<_PaymentPanelLayout> {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620, minHeight: 360),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Focus(
-              focusNode: _headingFocusNode,
-              child: Semantics(
-                header: true,
-                liveRegion: true,
-                focusable: true,
-                child: Text(
-                  widget.title,
-                  key: const Key('foundingFriendPaymentHeading'),
-                  textAlign: TextAlign.center,
-                  style: LandingTextStyles.heroHeadline.copyWith(
-                    fontSize: 42,
-                    height: 52 / 42,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final mobile = constraints.maxWidth < 600;
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: mobile
+              ? AppSizes.minimumPageGutter
+              : AppSizes.desktopPageGutter,
+          vertical: mobile
+              ? AppSizes.mobileLandingSectionVerticalPadding
+              : AppSizes.desktopSectionVerticalPadding,
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620, minHeight: 360),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Focus(
+                  focusNode: _headingFocusNode,
+                  child: Semantics(
+                    header: true,
+                    liveRegion: true,
+                    focusable: true,
+                    child: Text(
+                      widget.title,
+                      key: const Key('foundingFriendPaymentHeading'),
+                      textAlign: TextAlign.center,
+                      style: LandingTextStyles.heroHeadline.copyWith(
+                        fontSize: mobile ? 36 : 60,
+                        height: mobile ? 46 / 36 : 70 / 60,
+                        letterSpacing: mobile ? -1.08 : -1.8,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              widget.body,
-              key: const Key('foundingFriendPaymentBody'),
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyFontStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                height: 26 / 18,
-                color: AppColors.bodyGray,
-              ),
-            ),
-            if (widget.busy) ...[
-              const SizedBox(height: 28),
-              const Center(
-                child: CircularProgressIndicator(
-                  key: Key('foundingFriendPaymentProgress'),
+                const SizedBox(height: 16),
+                Text(
+                  widget.body,
+                  key: const Key('foundingFriendPaymentBody'),
+                  textAlign: TextAlign.center,
+                  style: mobile
+                      ? LandingTextStyles.compactSectionBody
+                      : LandingTextStyles.heroSupporting,
                 ),
-              ),
-            ],
-            const SizedBox(height: 28),
-            widget.footer,
-          ],
+                if (widget.busy) ...[
+                  const SizedBox(height: 28),
+                  const Center(
+                    child: CircularProgressIndicator(
+                      key: Key('foundingFriendPaymentProgress'),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 28),
+                widget.footer,
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
