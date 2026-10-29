@@ -262,7 +262,7 @@
   "foundingFriendPaymentDisputedTitle": "Taliad dan anghydfod",
   "foundingFriendPaymentDisputedBody": "Cofnodir bod y taliad hwn dan anghydfod ac ni ellir ei gadarnhau fel pryniant cymwys ar hyn o bryd.",
   "foundingFriendPaymentInvalidTitle": "Ni ellid cadarnhau’r taliad",
-  "foundingFriendPaymentInvalidBody": "Nid oedd y sesiwn Talu yn cyfateb i’r taliad untro disgwyliedig o £249 GBP ar gyfer Founding Friend. Cysylltwch â’r tîm cymorth os ydych yn credu eich bod wedi talu.",
+  "foundingFriendPaymentInvalidBody": "Nid oedd y sesiwn Talu yn cyfateb i’r taliad untro disgwyliedig ar gyfer Founding Friend. Cysylltwch â’r tîm cymorth os ydych yn credu eich bod wedi talu.",
   "foundingFriendPaymentUnableTitle": "Methu gwirio’r taliad",
   "foundingFriendPaymentUnableBody": "Nid yw gwirio taliad ar gael dros dro. Rhowch gynnig arall; ni fydd y gwiriad hwn yn creu taliad arall.",
   "foundingFriendPaymentRecoveryUnavailableBody": "Nid oes gan y tab hwn bellach y manylion cofrestru sydd eu hangen i roi cynnig diogel arall ar y taliad. Dychwelwch i’r ffurflen neu cysylltwch â chymorth.",

@@ -1048,7 +1048,7 @@
   "foundingFriendPaymentDisputedTitle": "Payment disputed",
   "foundingFriendPaymentDisputedBody": "This payment is recorded as disputed and cannot currently be confirmed as a qualifying purchase.",
   "foundingFriendPaymentInvalidTitle": "Payment could not be confirmed",
-  "foundingFriendPaymentInvalidBody": "The Checkout Session did not match the expected one-time £249 GBP Founding Friend payment. Please contact support if you believe you paid.",
+  "foundingFriendPaymentInvalidBody": "The Checkout Session did not match the expected one-time Founding Friend payment. Please contact support if you believe you paid.",
   "foundingFriendPaymentUnableTitle": "Unable to verify payment",
   "foundingFriendPaymentUnableBody": "Payment verification is temporarily unavailable. Please try again; this check will not create another payment.",
   "foundingFriendPaymentRecoveryUnavailableBody": "This browser tab no longer has the registration details required for a safe payment retry. Return to the Founding Friend form or contact support.",

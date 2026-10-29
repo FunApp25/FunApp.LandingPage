@@ -81,6 +81,11 @@ interface StripeCheckoutSession {
   payment_status?: unknown;
   currency?: unknown;
   amount_total?: unknown;
+  amount_subtotal?: unknown;
+  total_details?: unknown;
+  adaptive_pricing?: unknown;
+  presentment_details?: unknown;
+  currency_conversion?: unknown;
   livemode?: unknown;
   customer_creation?: unknown;
   customer?: unknown;
@@ -97,6 +102,9 @@ const verifyEndpointPath =
   '/api/founding-friend-payments/checkout-sessions/verify';
 const expectedCurrency = 'gbp';
 const expectedAmount = 24_900;
+const currencies = new Set(Intl.supportedValuesOf('currency').map(
+  (currency) => currency.toLowerCase(),
+));
 const maxRequestBodyBytes = 4 * 1024;
 const stripeTimeoutMs = 10_000;
 const stripeApiOrigin = 'https://api.stripe.com';
@@ -451,10 +459,9 @@ function classifySession(
     session.livemode === expectedLivemode &&
     session.customer_creation === 'always' &&
     hasMatchingStoredAutomaticTax(session) &&
-    session.currency === expectedCurrency &&
-    session.amount_total === expectedAmount &&
     reference !== null &&
-    hasExpectedSingleLineItem(session.line_items, expectedPriceId);
+    hasExpectedSingleLineItem(session.line_items, expectedPriceId) &&
+    hasReconciledAmounts(session, expectedLivemode);
 
   if (!validBase) {
     return { status: 'invalid' };
@@ -466,7 +473,10 @@ function classifySession(
     charge?.disputed === true ||
     charge?.refunded === true ||
     (typeof charge?.amount_refunded === 'number' && charge.amount_refunded > 0);
-  if (hasPaidOutcome && !hasValidCustomer(session.customer)) {
+  if (
+    hasPaidOutcome &&
+    (!hasValidCustomer(session.customer) || !hasVerifiedPayment(session))
+  ) {
     return { status: 'invalid' };
   } else if (charge?.disputed === true) {
     return { status: 'disputed' };
@@ -831,12 +841,150 @@ function hasExpectedSingleLineItem(
   if (!Array.isArray(container.data) || container.data.length !== 1) {
     return false;
   }
-  const item = container.data[0] as Record<string, unknown>;
-  const price = item.price as Record<string, unknown> | undefined;
+  const item = record(container.data[0]);
+  const price = record(item?.price);
   return (
-    item.quantity === 1 &&
+    item?.quantity === 1 &&
     price?.id === expectedPriceId &&
     price.tax_behavior === 'inclusive'
+  );
+}
+
+function record(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function isPositiveAmount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function hasReconciledAmounts(
+  session: StripeCheckoutSession,
+  expectedLivemode: boolean,
+): boolean {
+  const items = record(session.line_items);
+  const item = Array.isArray(items?.data) ? record(items.data[0]) : null;
+  const price = record(item?.price);
+  const totals = record(session.total_details);
+  const localized = session.currency !== expectedCurrency;
+  const adaptive = record(session.adaptive_pricing)?.enabled === true;
+  if (
+    typeof session.currency !== 'string' ||
+    !currencies.has(session.currency) ||
+    !isPositiveAmount(session.amount_total) ||
+    session.amount_subtotal !== session.amount_total ||
+    (!localized && session.amount_total !== expectedAmount) ||
+    (localized && !adaptive) ||
+    // Legacy currency_conversion shapes are deliberately unsupported.
+    session.currency_conversion != null ||
+    items?.has_more !== false ||
+    item?.currency !== session.currency ||
+    item?.amount_total !== session.amount_total ||
+    item?.amount_subtotal !== session.amount_total ||
+    item?.amount_discount !== 0 ||
+    totals?.amount_discount !== 0 ||
+    totals?.amount_shipping !== 0 ||
+    typeof item?.amount_tax !== 'number' ||
+    !Number.isSafeInteger(item.amount_tax) ||
+    item.amount_tax < 0 ||
+    item.amount_tax > session.amount_total ||
+    totals?.amount_tax !== item.amount_tax ||
+    (record(session.automatic_tax)?.enabled === false && item.amount_tax !== 0) ||
+    price?.object !== 'price' ||
+    price.currency !== expectedCurrency ||
+    price.unit_amount !== expectedAmount ||
+    price.livemode !== expectedLivemode ||
+    price.type !== 'one_time' ||
+    price.billing_scheme !== 'per_unit' ||
+    price.custom_unit_amount != null
+  ) {
+    return false;
+  }
+
+  const intent = record(session.payment_intent);
+  const charge = record(intent?.latest_charge);
+  if (session.payment_intent != null && (
+    intent === null ||
+    intent.object !== 'payment_intent' ||
+    typeof intent.id !== 'string' || !/^pi_[A-Za-z0-9]+$/.test(intent.id) ||
+    intent.currency !== session.currency ||
+    intent.amount !== session.amount_total ||
+    typeof intent.amount_received !== 'number' ||
+    !Number.isSafeInteger(intent.amount_received) ||
+    intent.amount_received < 0 || intent.amount_received > session.amount_total ||
+    intent.livemode !== session.livemode ||
+    intent.customer !== session.customer ||
+    record(intent.metadata)?.purchase_reference !== session.client_reference_id ||
+    record(intent.metadata)?.automatic_tax_enabled !==
+      record(session.metadata)?.automatic_tax_enabled ||
+    (intent.status === 'succeeded' && session.payment_status !== 'paid')
+  )) {
+    return false;
+  }
+  if (intent?.latest_charge != null && (
+    charge === null ||
+    charge.object !== 'charge' ||
+    typeof charge.id !== 'string' || !/^(?:ch|py)_[A-Za-z0-9]+$/.test(charge.id) ||
+    charge.payment_intent !== intent.id ||
+    charge.customer !== session.customer ||
+    charge.livemode !== session.livemode ||
+    charge.currency !== session.currency ||
+    charge.amount !== session.amount_total
+  )) {
+    return false;
+  }
+  let presentment: Record<string, unknown> | null = null;
+  for (const value of [
+    session.presentment_details,
+    intent?.presentment_details,
+    charge?.presentment_details,
+  ]) {
+    if (value != null) {
+      const details = record(value);
+      if (
+        !adaptive ||
+        typeof details?.presentment_currency !== 'string' ||
+        !currencies.has(details.presentment_currency) ||
+        !isPositiveAmount(details.presentment_amount) ||
+        details.presentment_currency === expectedCurrency ||
+        (localized && (
+          details.presentment_currency !== session.currency ||
+          details.presentment_amount !== session.amount_total
+        )) ||
+        (presentment !== null && (
+          details.presentment_currency !== presentment.presentment_currency ||
+          details.presentment_amount !== presentment.presentment_amount
+        ))
+      ) {
+        return false;
+      }
+      presentment = details;
+    }
+  }
+  return true;
+}
+
+function hasVerifiedPayment(session: StripeCheckoutSession): boolean {
+  const intent = record(session.payment_intent);
+  const charge = record(intent?.latest_charge);
+  return (
+    intent !== null &&
+    intent.status === 'succeeded' &&
+    intent.amount_received === session.amount_total &&
+    charge !== null &&
+    charge.status === 'succeeded' &&
+    charge.paid === true &&
+    charge.captured === true &&
+    charge.amount_captured === session.amount_total &&
+    typeof charge.disputed === 'boolean' &&
+    typeof charge.refunded === 'boolean' &&
+    typeof charge.amount_refunded === 'number' &&
+    Number.isSafeInteger(charge.amount_refunded) &&
+    charge.amount_refunded >= 0 &&
+    charge.amount_refunded <= (session.amount_total as number) &&
+    charge.refunded === (charge.amount_refunded === session.amount_total)
   );
 }
 
@@ -874,17 +1022,7 @@ function hasValidCustomer(customer: unknown): boolean {
 function latestCharge(
   paymentIntent: unknown,
 ): { disputed?: unknown; refunded?: unknown; amount_refunded?: unknown } | null {
-  if (typeof paymentIntent !== 'object' || paymentIntent === null) {
-    return null;
-  }
-  const value = (paymentIntent as Record<string, unknown>).latest_charge;
-  return typeof value === 'object' && value !== null
-    ? (value as {
-        disputed?: unknown;
-        refunded?: unknown;
-        amount_refunded?: unknown;
-      })
-    : null;
+  return record(record(paymentIntent)?.latest_charge);
 }
 
 function mockStripeSession(
@@ -901,6 +1039,17 @@ function mockStripeSession(
     ? 'unpaid'
     : 'paid';
   const charge = {
+    id: 'ch_mock12345678',
+    object: 'charge',
+    payment_intent: 'pi_mock12345678',
+    customer: 'cus_mock12345678',
+    currency: expectedCurrency,
+    amount: expectedAmount,
+    amount_captured: expectedAmount,
+    paid: true,
+    captured: true,
+    status: 'succeeded',
+    livemode: false,
     disputed: scenario === 'disputed',
     refunded: scenario === 'refunded',
     amount_refunded: scenario === 'refunded' ? expectedAmount : 0,
@@ -913,6 +1062,8 @@ function mockStripeSession(
     payment_status: paymentStatus,
     currency: expectedCurrency,
     amount_total: valid ? expectedAmount : 1,
+    amount_subtotal: expectedAmount,
+    total_details: { amount_discount: 0, amount_shipping: 0, amount_tax: 0 },
     livemode: false,
     customer_creation: 'always',
     customer: paymentStatus === 'paid' ? 'cus_mock12345678' : null,
@@ -923,17 +1074,43 @@ function mockStripeSession(
       automatic_tax_enabled: String(automaticTaxEnabled),
     },
     line_items: {
+      has_more: false,
       data: [
         {
           quantity: 1,
+          currency: expectedCurrency,
+          amount_total: expectedAmount,
+          amount_subtotal: expectedAmount,
+          amount_discount: 0,
+          amount_tax: 0,
           price: {
+            object: 'price',
+            currency: expectedCurrency,
+            unit_amount: expectedAmount,
+            livemode: false,
+            type: 'one_time',
+            billing_scheme: 'per_unit',
             id: 'price_mock_founding_friend_249_gbp',
             tax_behavior: 'inclusive',
           },
         },
       ],
     },
-    payment_intent: { latest_charge: charge },
+    payment_intent: paymentStatus === 'paid' ? {
+      id: 'pi_mock12345678',
+      object: 'payment_intent',
+      currency: expectedCurrency,
+      amount: expectedAmount,
+      amount_received: expectedAmount,
+      status: 'succeeded',
+      livemode: false,
+      customer: 'cus_mock12345678',
+      metadata: {
+        purchase_reference: reference,
+        automatic_tax_enabled: String(automaticTaxEnabled),
+      },
+      latest_charge: charge,
+    } : null,
   };
 }
 

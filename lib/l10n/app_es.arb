@@ -262,7 +262,7 @@
   "foundingFriendPaymentDisputedTitle": "Pago en disputa",
   "foundingFriendPaymentDisputedBody": "Este pago figura como disputado y actualmente no puede confirmarse como una compra válida.",
   "foundingFriendPaymentInvalidTitle": "No se pudo confirmar el pago",
-  "foundingFriendPaymentInvalidBody": "La sesión no coincide con el pago único esperado de Founding Friend por 249 GBP. Contacta con soporte si crees que pagaste.",
+  "foundingFriendPaymentInvalidBody": "La sesión no coincide con el pago único esperado de Founding Friend. Contacta con soporte si crees que pagaste.",
   "foundingFriendPaymentUnableTitle": "No se puede verificar el pago",
   "foundingFriendPaymentUnableBody": "La verificación no está disponible temporalmente. Inténtalo de nuevo; esta comprobación no creará otro pago.",
   "foundingFriendPaymentRecoveryUnavailableBody": "Esta pestaña ya no tiene los datos de registro necesarios para reintentar el pago de forma segura. Vuelve al formulario o contacta con soporte.",

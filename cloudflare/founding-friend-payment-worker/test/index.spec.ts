@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type Env,
   type RateLimiter,
+  type UpstreamFetch,
   handleRequest,
 } from '../src/index';
+import { handleStagingRequest } from '../src/staging';
 
 const createPath = '/api/founding-friend-payments/checkout-sessions';
 const verifyPath =
@@ -472,6 +474,13 @@ describe('Founding Friend payment Worker', () => {
             purchase_reference: 'FF-1234567890ABCDEF',
             automatic_tax_enabled: 'true',
           },
+          payment_intent: {
+            ...(validSession().payment_intent as Record<string, unknown>),
+            metadata: {
+              purchase_reference: 'FF-1234567890ABCDEF',
+              automatic_tax_enabled: 'true',
+            },
+          },
         }),
       ),
     );
@@ -633,6 +642,7 @@ describe('Founding Friend payment Worker', () => {
           status: 'open',
           payment_status: 'unpaid',
           customer: null,
+          payment_intent: null,
         }),
       ),
     );
@@ -844,36 +854,48 @@ function validCreatedSession(
 function validSession(
   override: Record<string, unknown> = {},
 ): Record<string, unknown> {
+  const reference = 'FF-1234567890ABCDEF';
   return {
-    id: sessionId,
-    object: 'checkout.session',
-    mode: 'payment',
+    ...validCreatedSession(reference),
     status: 'complete',
     payment_status: 'paid',
-    currency: 'gbp',
-    amount_total: 24_900,
-    livemode: false,
-    customer_creation: 'always',
     customer: 'cus_test12345678',
-    automatic_tax: { enabled: false },
-    client_reference_id: 'FF-1234567890ABCDEF',
-    metadata: {
-      purchase_reference: 'FF-1234567890ABCDEF',
-      automatic_tax_enabled: 'false',
-    },
+    amount_subtotal: 24_900,
+    total_details: { amount_discount: 0, amount_shipping: 0, amount_tax: 0 },
     line_items: {
-      data: [
-        {
-          quantity: 1,
-          price: {
-            id: 'price_test249gbp',
-            tax_behavior: 'inclusive',
-          },
-        },
-      ],
+      has_more: false,
+      data: [{
+        quantity: 1,
+        currency: 'gbp',
+        amount_total: 24_900,
+        amount_subtotal: 24_900,
+        amount_discount: 0,
+        amount_tax: 0,
+        price: validPrice(),
+      }],
     },
     payment_intent: {
+      id: 'pi_test12345678',
+      object: 'payment_intent',
+      currency: 'gbp',
+      amount: 24_900,
+      amount_received: 24_900,
+      status: 'succeeded',
+      livemode: false,
+      customer: 'cus_test12345678',
+      metadata: { purchase_reference: reference, automatic_tax_enabled: 'false' },
       latest_charge: {
+        id: 'ch_test12345678',
+        object: 'charge',
+        payment_intent: 'pi_test12345678',
+        customer: 'cus_test12345678',
+        currency: 'gbp',
+        amount: 24_900,
+        amount_captured: 24_900,
+        paid: true,
+        captured: true,
+        status: 'succeeded',
+        livemode: false,
         disputed: false,
         refunded: false,
         amount_refunded: 0,
@@ -882,3 +904,280 @@ function validSession(
     ...override,
   };
 }
+
+// Synthetic values model the read-only sandbox shape; no customer or transaction data.
+function localizedSession(currency = 'eur', amount = 29_900, presentment = false) {
+  const session = validSession();
+  const items = session.line_items as { data: Record<string, unknown>[] };
+  const intent = session.payment_intent as Record<string, unknown>;
+  const charge = intent.latest_charge as Record<string, unknown>;
+  session.adaptive_pricing = { enabled: true };
+  if (presentment) {
+    for (const object of [session, intent, charge]) {
+      object.presentment_details = {
+        presentment_currency: currency,
+        presentment_amount: amount,
+      };
+    }
+  } else {
+    Object.assign(session, { currency, amount_total: amount, amount_subtotal: amount });
+    Object.assign(items.data[0]!, { currency, amount_total: amount, amount_subtotal: amount });
+    Object.assign(intent, { currency, amount, amount_received: amount });
+    Object.assign(charge, { currency, amount, amount_captured: amount });
+  }
+  return session;
+}
+
+function changeField(session: Record<string, unknown>, path: string, value: unknown) {
+  const parts = path.split('.');
+  let object = session;
+  for (const part of parts.slice(0, -1)) {
+    object = object[part] as Record<string, unknown>;
+  }
+  object[parts.at(-1)!] = value;
+}
+
+describe.each(['production', 'staging'])('%s Adaptive Pricing verification', (entrypoint) => {
+  async function verify(session: Record<string, unknown>) {
+    const upstreamFetch = vi.fn<UpstreamFetch>(async () => Response.json(session));
+    const handler = entrypoint === 'staging' ? handleStagingRequest : handleRequest;
+    const origin = entrypoint === 'staging'
+      ? 'https://staging.funapp.world'
+      : 'https://funapp.world';
+    const response = await handler(
+      verifyRequest(sessionId, origin),
+      productionEnv({ PUBLIC_APP_ORIGIN: origin, PAYMENT_CREATION_ENABLED: 'false' }),
+      { upstreamFetch, paymentRateLimiter: acceptingRateLimiter },
+    );
+    expect(response.status).toBe(200);
+    expect(upstreamFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = upstreamFetch.mock.calls[0]!;
+    expect(url).toContain(`/v1/checkout/sessions/${sessionId}`);
+    expect(url).toContain('expand[]=line_items.data.price');
+    expect(url).toContain('expand[]=payment_intent.latest_charge');
+    expect(init?.method).toBe('GET');
+    expect(new Headers(init?.headers).get('stripe-version')).toBe('2026-08-26.dahlia');
+    const body = await response.json() as Record<string, unknown>;
+    expect(Object.keys(body).sort()).toEqual(
+      body.status === 'confirmed'
+        ? ['purchaseReference', 'requestId', 'status']
+        : ['requestId', 'status'],
+    );
+    return body;
+  }
+
+  it('keeps the original GBP payment valid', async () => {
+    expect(await verify(validSession())).toMatchObject({ status: 'confirmed' });
+  });
+
+  it.each([
+    ['eur', 29_900],
+    ['jpy', 48_731],
+  ])('confirms Stripe-reconciled %s totals without calculating FX', async (currency, amount) => {
+    expect(await verify(localizedSession(currency as string, amount as number)))
+      .toMatchObject({ status: 'confirmed', purchaseReference: 'FF-1234567890ABCDEF' });
+    expect(await verify(localizedSession(currency as string, amount as number, true)))
+      .toMatchObject({ status: 'confirmed' });
+  });
+
+  it('rejects an unsupported currency even when all monetary fields agree', async () => {
+    expect(await verify(localizedSession('zzz', 123))).toMatchObject({ status: 'invalid' });
+  });
+
+  it('accepts reconciled inclusive tax in localized totals', async () => {
+    const session = localizedSession();
+    changeField(session, 'automatic_tax.enabled', true);
+    changeField(session, 'metadata.automatic_tax_enabled', 'true');
+    changeField(session, 'payment_intent.metadata.automatic_tax_enabled', 'true');
+    changeField(session, 'line_items.data.0.amount_tax', 4_000);
+    changeField(session, 'total_details.amount_tax', 4_000);
+    expect(await verify(session)).toMatchObject({ status: 'confirmed' });
+  });
+
+  it('does not treat an unpaid Session with a successful PaymentIntent as pending', async () => {
+    const session = localizedSession();
+    session.payment_status = 'unpaid';
+    expect(await verify(session)).toMatchObject({ status: 'invalid' });
+  });
+
+  it('preserves pending payment processing with a matching expanded intent', async () => {
+    const session = localizedSession();
+    session.payment_status = 'unpaid';
+    changeField(session, 'payment_intent.status', 'processing');
+    changeField(session, 'payment_intent.amount_received', 0);
+    changeField(session, 'payment_intent.latest_charge', null);
+    expect(await verify(session)).toMatchObject({ status: 'pending' });
+    const failedCharge = {
+      id: 'ch_testfailed123', object: 'charge', payment_intent: 'pi_test12345678',
+      customer: 'cus_test12345678', currency: 'eur', amount: 29_900,
+      livemode: false, paid: false, captured: false, amount_captured: 0,
+      refunded: false, disputed: false, amount_refunded: 0, status: 'failed',
+    };
+    changeField(session, 'payment_intent.latest_charge', failedCharge);
+    expect(await verify(session)).toMatchObject({ status: 'pending' });
+    changeField(session, 'payment_intent.latest_charge.currency', 'gbp');
+    expect(await verify(session)).toMatchObject({ status: 'invalid' });
+    changeField(session, 'payment_intent.latest_charge', null);
+    changeField(session, 'payment_intent.amount', 1);
+    expect(await verify(session)).toMatchObject({ status: 'invalid' });
+  });
+
+  it('accepts consistent optional presentment details on a localized Session', async () => {
+    const session = localizedSession();
+    session.presentment_details = { presentment_currency: 'eur', presentment_amount: 29_900 };
+    expect(await verify(session)).toMatchObject({ status: 'confirmed' });
+  });
+
+  it('accepts presentment details supplied only on the PaymentIntent', async () => {
+    const session = localizedSession('jpy', 48_731, true);
+    session.presentment_details = null;
+    changeField(session, 'payment_intent.latest_charge.presentment_details', null);
+    expect(await verify(session)).toMatchObject({ status: 'confirmed' });
+  });
+
+  it.each([
+    ['currency', 'usd'],
+    ['currency', 'EUR'],
+    ['currency', 'zzz'],
+    ['amount_total', 0],
+    ['amount_total', -1],
+    ['amount_total', 29_900.5],
+    ['amount_total', Number.MAX_SAFE_INTEGER + 1],
+    ['amount_subtotal', 29_901],
+    ['adaptive_pricing', null],
+    ['adaptive_pricing.enabled', false],
+    ['currency_conversion', { source_currency: 'gbp', amount_total: 24_900 }],
+    ['livemode', true],
+    ['id', 'cs_test_other1234567890123456'],
+    ['mode', 'subscription'],
+    ['metadata.purchase_reference', 'FF-0000000000000000'],
+    ['client_reference_id', 'FF-0000000000000000'],
+    ['metadata.automatic_tax_enabled', 'true'],
+    ['automatic_tax.enabled', true],
+    ['line_items', null],
+    ['line_items.has_more', true],
+    ['line_items.data', []],
+    ['line_items.data', [null]],
+    ['line_items.data.0.price', 'price_test249gbp'],
+    ['line_items.data.0.price.id', 'price_wrong'],
+    ['line_items.data.0.price.currency', 'eur'],
+    ['line_items.data.0.price.unit_amount', 24_901],
+    ['line_items.data.0.price.tax_behavior', 'exclusive'],
+    ['line_items.data.0.price.livemode', true],
+    ['line_items.data.0.price.type', 'recurring'],
+    ['line_items.data.0.quantity', 2],
+    ['line_items.data.0.currency', 'gbp'],
+    ['line_items.data.0.amount_total', 29_901],
+    ['line_items.data.0.amount_subtotal', 29_901],
+    ['line_items.data.0.amount_discount', 1],
+    ['line_items.data.0.amount_tax', 1],
+    ['total_details.amount_discount', 1],
+    ['total_details.amount_shipping', 1],
+    ['presentment_details', {}],
+    ['presentment_details', { presentment_currency: 'eur', presentment_amount: 29_901 }],
+    ['presentment_details', { presentment_currency: 'usd', presentment_amount: 29_900 }],
+    ['payment_intent', null],
+    ['payment_intent', 'pi_unexpanded'],
+    ['payment_intent.currency', 'gbp'],
+    ['payment_intent.amount', 29_901],
+    ['payment_intent.amount_received', 29_899],
+    ['payment_intent.status', 'processing'],
+    ['payment_intent.livemode', true],
+    ['payment_intent.metadata.purchase_reference', 'FF-0000000000000000'],
+    ['payment_intent.metadata.automatic_tax_enabled', 'true'],
+    ['payment_intent.customer', 'cus_different1234'],
+    ['payment_intent.latest_charge', null],
+    ['payment_intent.latest_charge', 'ch_unexpanded'],
+    ['payment_intent.latest_charge.payment_intent', 'pi_other'],
+    ['payment_intent.latest_charge.customer', 'cus_different1234'],
+    ['payment_intent.latest_charge.currency', 'gbp'],
+    ['payment_intent.latest_charge.amount', 29_899],
+    ['payment_intent.latest_charge.amount_captured', 29_899],
+    ['payment_intent.latest_charge.paid', false],
+    ['payment_intent.latest_charge.captured', false],
+    ['payment_intent.latest_charge.status', 'pending'],
+    ['payment_intent.latest_charge.livemode', true],
+    ['payment_intent.latest_charge.amount_refunded', -1],
+    ['payment_intent.latest_charge.amount_refunded', 29_901],
+    ['payment_intent.latest_charge.amount_refunded', 29_900],
+    ['payment_intent.latest_charge.refunded', true],
+    ['payment_intent.latest_charge.disputed', undefined],
+    ['payment_status', 'no_payment_required'],
+  ])('rejects contradictory or missing %s (%j)', async (path, value) => {
+    const session = localizedSession();
+    changeField(session, path as string, value);
+    expect(await verify(session)).toMatchObject({ status: 'invalid' });
+  });
+
+  it.each([
+    ['presentment_details.presentment_amount', 0],
+    ['payment_intent.presentment_details.presentment_amount', 29_901],
+    ['payment_intent.latest_charge.presentment_details.presentment_currency', 'usd'],
+    ['adaptive_pricing.enabled', false],
+    ['amount_total', 24_901],
+    ['line_items.data.0.amount_total', 29_900],
+    ['payment_intent.currency', 'eur'],
+    ['payment_intent.latest_charge.amount', 29_900],
+  ])('rejects contradictory documented presentment %s', async (path, value) => {
+    const session = localizedSession('eur', 29_900, true);
+    changeField(session, path as string, value);
+    expect(await verify(session)).toMatchObject({ status: 'invalid' });
+  });
+
+  it.each(['pending', 'expired', 'refunded', 'disputed', 'partial refund'])('preserves localized %s', async (state) => {
+    const session = localizedSession();
+    if (state === 'pending' || state === 'expired') {
+      Object.assign(session, {
+        status: state === 'expired' ? 'expired' : 'complete',
+        payment_status: 'unpaid',
+        payment_intent: null,
+        customer: null,
+      });
+    } else if (state === 'disputed') {
+      changeField(session, 'payment_intent.latest_charge.disputed', true);
+    } else {
+      changeField(session, 'payment_intent.latest_charge.refunded', state === 'refunded');
+      changeField(session, 'payment_intent.latest_charge.amount_refunded', state === 'refunded' ? 29_900 : 1);
+    }
+    expect(await verify(session)).toMatchObject({ status: state === 'partial refund' ? 'refunded' : state });
+  });
+});
+
+describe('Adaptive Pricing creation contract', () => {
+  it.each([false, true])('preserves GBP creation checks with presentment=%s', async (presentment) => {
+    const upstreamFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(new Headers(init?.headers).get('stripe-version')).toBe('2026-08-26.dahlia');
+      if (input.toString().includes('/v1/prices/')) {
+        expect(init?.method).toBe('GET');
+        return Response.json(validPrice());
+      }
+      expect(init?.method).toBe('POST');
+      const body = new URLSearchParams(init?.body as string);
+      expect(body.has('adaptive_pricing[enabled]')).toBe(false);
+      expect(body.has('currency')).toBe(false);
+      return Response.json(validCreatedSession(body.get('client_reference_id'), {
+        adaptive_pricing: { enabled: true },
+        ...(presentment ? { presentment_details: { presentment_currency: 'eur', presentment_amount: 29_900 } } : {}),
+      }));
+    });
+    const response = await handleRequest(createRequest(), productionEnv(), {
+      upstreamFetch, paymentRateLimiter: acceptingRateLimiter,
+    });
+    expect(response.status).toBe(201);
+    expect(upstreamFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('still rejects a localized creation response', async () => {
+    const upstreamFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (input.toString().includes('/v1/prices/')) return Response.json(validPrice());
+      const body = new URLSearchParams(init?.body as string);
+      return Response.json(validCreatedSession(body.get('client_reference_id'), {
+        currency: 'eur', amount_total: 29_900, adaptive_pricing: { enabled: true },
+      }));
+    });
+    const response = await handleRequest(createRequest(), productionEnv(), {
+      upstreamFetch, paymentRateLimiter: acceptingRateLimiter,
+    });
+    expect(response.status).toBe(502);
+  });
+});

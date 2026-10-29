@@ -262,7 +262,7 @@
   "foundingFriendPaymentDisputedTitle": "Аплата аспрэчваецца",
   "foundingFriendPaymentDisputedBody": "Гэта аплата пазначана як аспрэчаная і цяпер не можа быць пацверджана як прыдатная пакупка.",
   "foundingFriendPaymentInvalidTitle": "Не ўдалося пацвердзіць аплату",
-  "foundingFriendPaymentInvalidBody": "Сесія не адпавядае чаканаму аднаразоваму плацяжу Founding Friend у памеры 249 GBP. Звярніцеся ў падтрымку, калі лічыце, што заплацілі.",
+  "foundingFriendPaymentInvalidBody": "Сесія не адпавядае чаканаму аднаразоваму плацяжу Founding Friend. Звярніцеся ў падтрымку, калі лічыце, што заплацілі.",
   "foundingFriendPaymentUnableTitle": "Немагчыма праверыць аплату",
   "foundingFriendPaymentUnableBody": "Праверка аплаты часова недаступная. Паўтарыце спробу; гэта не створыць новую аплату.",
   "foundingFriendPaymentRecoveryUnavailableBody": "У гэтай укладцы больш няма рэгістрацыйных даных для бяспечнага паўтору аплаты. Вярніцеся да формы або звярніцеся ў падтрымку.",

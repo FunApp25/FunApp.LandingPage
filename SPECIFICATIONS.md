@@ -20,9 +20,9 @@ by deterministic mocks. The default development graph and every production
 graph remain fail-closed without registration I/O.
 
 After a confirmed Founding Friend registration, the implemented purchase
-workflow can prepare a separate one-time Stripe-hosted Checkout for exactly
-£249 GBP through `cloudflare/founding-friend-payment-worker/`. That Worker is
-independent of the existing forms Worker and is the only Stripe boundary. It
+workflow can prepare a separate one-time Stripe-hosted Checkout with a
+£249 GBP base price and Stripe Adaptive Pricing through
+`cloudflare/founding-friend-payment-worker/`. That Worker is independent of the existing forms Worker and is the only Stripe boundary. It
 stores the purchase reference and payment record in Stripe, verifies a
 specific Checkout Session before Flutter displays payment confirmation, and
 uses no D1 or other payment database. Local development is fully mocked. New
@@ -172,8 +172,8 @@ Current implementation is evidence of repository state, not automatically a perm
 - Deliberate public-web, accessibility, and SEO behavior throughout implementation and release work.
 - Approved Here & Now waitlist and Founding Friend sign-up fields, copy,
   domain validation, application submission lifecycles, and route navigation.
-- One-time £249 GBP Founding Friend Stripe-hosted Checkout preparation,
-  backend-verified payment status, purchase-reference confirmation, and fully
+- One-time £249 GBP base-price Founding Friend Stripe-hosted Checkout preparation
+  with Stripe Adaptive Pricing, backend-verified payment status, purchase-reference confirmation, and fully
   deterministic local mock behavior without external service configuration.
 
 ### Provisional
@@ -327,8 +327,8 @@ content. Membership presents static Free, Here & Now, and Founding Friend
 pricing cards. Those cards and the Founding Friend descriptions are approved
 marketing presentation. They do not themselves prove payment, entitlement, or
 membership activation. The Founding Friend form can continue to the separately
-implemented one-time £249 GBP purchase workflow; subscriptions, immediate
-entitlement, badges, and other membership behavior remain unimplemented. The
+implemented one-time £249 GBP base-price purchase workflow with Stripe Adaptive
+Pricing; subscriptions, immediate entitlement, badges, and other membership behavior remain unimplemented. The
 pricing controls retain their approved appearance and navigate to the public
 `/here-and-now` and `/founding-friend` routes.
 Pricing cards use three, two,
@@ -731,17 +731,56 @@ capabilities as implemented.
   creation: a lost response after Stripe's retention window, expired session,
   cleared tab state, or independent browser session can require a new attempt
   and can leave another unpaid Stripe Session. Stripe remains authoritative.
+- Stripe Adaptive Pricing remains enabled in Stripe settings. The Worker does
+  not override it or calculate FX. £249 GBP (24900 minor units) is the original
+  tax-inclusive, one-time Price contract; Stripe may collect its localized
+  equivalent. Checkout creation still validates the configured active GBP Price
+  and requires the creation response to have GBP/24900 totals; no localized
+  creation response has been verified. Quantity, tax, references, idempotency,
+  fixed redirects, and all creation safeguards remain in place.
 - The read-only verification endpoint retrieves the named Checkout Session with
-  its line items and latest PaymentIntent charge. It verifies environment,
-  purchase mode, configured Price, exact quantity, GBP currency, £249 total,
-  tax-inclusive Price behavior, explicit automatic-tax setting, Customer
-  creation mode, reference consistency, and paid state before returning
-  `confirmed`. Completed paid, refunded, or disputed Sessions must also contain
-  a valid Stripe Customer ID; pending Sessions may not have one yet. Where
-  present, latest-charge refund and dispute signals map to provider-neutral
-  `refunded` or `disputed`; other results are `pending`, `expired`, or `invalid`.
-  Those refund/dispute checks are a current-status best effort, not a substitute
-  for a durable event ledger.
+  expanded line items, original Price, PaymentIntent, and latest charge using
+  the pinned `Stripe-Version: 2026-08-26.dahlia`. It requires the exact configured
+  original GBP/24900 one-time per-unit inclusive Price, quantity 1, the expected
+  environment, Customer creation mode, and matching stored automatic-tax choice
+  and purchase references. It accepts GBP/24900 Session and payment totals,
+  with optional Stripe `presentment_details` describing the localized payment.
+  It also accepts localized Session totals when `adaptive_pricing.enabled` is
+  true, with the original expanded GBP/24900 Price. Session, sole line item,
+  PaymentIntent, and captured charge must agree in that localized currency
+  and amount.
+  All amounts must be safe integers; totals must be positive, use a recognized
+  ISO currency, and reconcile without discounts, shipping, or additional items.
+  Inclusive line-item tax must match Session tax; disabled automatic tax cannot
+  introduce tax. Every supplied presentment amount/currency must be valid and
+  agree across Session, PaymentIntent, and charge; for localized Sessions it
+  must also agree with Session totals. Missing or contradictory required data
+  and legacy non-null `currency_conversion` shapes fail closed. No exchange
+  rate or fixed converted price is assumed.
+- A paid outcome additionally requires a valid Customer and an expanded
+  successful PaymentIntent with the full amount received, matching Customer,
+  livemode, purchase reference, and stored tax choice. Its successful paid,
+  captured charge must reference that intent, match the Customer/environment,
+  and reconcile the full captured amount. Refund/dispute fields must be valid;
+  disputes, full refunds, and partial refunds retain their provider-neutral
+  statuses. Other results remain `pending`, `expired`, or `invalid`; only a
+  complete, paid Session can return `confirmed` and its purchase reference.
+  An unpaid Session can have no PaymentIntent yet or a matching processing
+  intent. Refund/dispute checks remain a current-status best effort, not a
+  durable event ledger.
+- Contract evidence (2026-10-29): Stripe's [Adaptive Pricing
+  guide](https://docs.stripe.com/payments/checkout/localize-prices/adaptive-pricing?payment-ui=stripe-hosted)
+  and [presentment-details changelog](https://docs.stripe.com/changelog/basil/2025-03-31/add_presentment_details)
+  describe integration-currency Session/PaymentIntent totals with separate
+  presentment details. A read-only connected Fun App sandbox retrieval instead
+  showed EUR/29900 throughout Session, line item, PaymentIntent and captured
+  charge, `adaptive_pricing.enabled=true`, the original GBP/24900 inclusive
+  Price, and no `presentment_details`. The connector advertised a
+  `2026-09-30.preview` operation schema and cannot override the request's API
+  version; that is not proof of the pinned Dahlia response. Local tests assert
+  the outgoing Dahlia header and cover both representations. A direct pinned-
+  version sandbox GET and hosted validation remain unperformed. Neither this
+  investigation nor the tests create a Stripe payment or mutate Stripe.
 - Flutter trusts neither Checkout redirection nor browser parameters as proof
   of payment. The return route verifies its `session_id` through the Worker and
   shows the purchase reference only for confirmed payment. Cancelled, pending,

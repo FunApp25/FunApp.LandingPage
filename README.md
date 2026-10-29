@@ -33,8 +33,9 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   Injected test repositories can confirm the existing Here & Now success
   presentation. After a confirmed Founding Friend registration, the separate
   payment workflow prepares a server-owned one-time Stripe-hosted Checkout for
-  exactly £249 GBP. A payment return page shows confirmation and the purchase
-  reference only after the payment Worker verifies the Checkout Session; it
+  a £249 GBP base price, with Stripe Adaptive Pricing for localized payments.
+  A payment return page shows confirmation and the purchase reference only
+  after the payment Worker verifies the Checkout Session; it
   never claims that membership has been activated.
   The stable
   responsive presentation includes the mobile navigation menu, a mobile
@@ -653,9 +654,9 @@ Worker. It owns two first-party JSON endpoints:
 - `POST /api/founding-friend-payments/checkout-sessions` accepts exactly a
   validated `email` and UUID v4 `attemptId`. When creation is enabled, the
   Worker validates its configured tax-inclusive Stripe Price, creates one
-  Stripe Checkout Session in `payment` mode for quantity 1 and exactly £249
-  GBP, explicitly applies the approved automatic-tax setting, always creates a
-  Stripe Customer after Checkout completion, prefills the Customer email, and
+  Stripe Checkout Session in `payment` mode for quantity 1 and a £249 GBP
+  base price, explicitly applies the approved automatic-tax setting, always
+  creates a Stripe Customer after Checkout completion, prefills the Customer email, and
   returns only `checkoutUrl`, `sessionId`, and an opaque request ID.
 - `POST /api/founding-friend-payments/checkout-sessions/verify` accepts exactly
   a Stripe Checkout `sessionId`. It retrieves that specific session and its
@@ -737,8 +738,18 @@ fails closed without creating a session. For creation,
 `STRIPE_AUTOMATIC_TAX_ENABLED` is a required exact `true` or `false`; the
 Worker always sends it to Stripe and
 never inherits an account-level Checkout tax default. The configured Price
-must be tax-inclusive so the customer-facing total remains exactly £249
-whether the separately approved automatic-tax setting is enabled or disabled.
+must be tax-inclusive so the base total remains £249 GBP whether the
+separately approved automatic-tax setting is enabled or disabled. Adaptive
+Pricing remains enabled in Stripe; Stripe calculates any localized equivalent.
+Creation response checks remain GBP/24900. Verification accepts either GBP
+Session/payment totals with optional presentment details, or reconciled
+localized Session, line-item, PaymentIntent and captured-charge totals tied to
+that exact original GBP Price. It requires successful payment/capture, matching
+references and environment, and consistent supplied presentment details; it
+never computes an exchange rate. See the [payment
+contract in SPECIFICATIONS.md](SPECIFICATIONS.md) for details and the documented
+API-version evidence limit: the read-only sandbox showed localized totals, but
+the connector cannot make a GET pinned to the Worker's Dahlia version.
 
 `.github/workflows/deploy-founding-friend-payment-worker.yml` is a separate,
 manual-only validation and deployment workflow and has not been run. Later
