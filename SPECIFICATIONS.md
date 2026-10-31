@@ -1046,21 +1046,44 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   Worker deployment workflows remain manual-only and no live Stripe payment
   activation is introduced.
 - Pushes to `dev`, including PR merges, run `deploy-staging-site.yml` (**Deploy
-  Staging**). It calls the credential-free `pr_checks.yml` via `workflow_call`
-  and requires every validation job to succeed before its sole publishing job
-  may enter the GitHub `staging` environment. That environment is restricted to
-  `dev`; GitHub `production` is restricted to `main`.
+  Staging**). It calls the credential-free `pr_checks.yml` via `workflow_call`.
+  Temporarily, staging publishing is disabled with literal `if: ${{ false }}`
+  conditions on the entire retained `deploy` job and the staging web artifact
+  upload. Validation, coverage upload, builds, and credential-free Wrangler dry
+  runs remain enabled. No Worker code, secrets, or site assets are published.
+- After all checks succeed, a dev-push-only `diagnostic` job enters GitHub
+  `staging` with only the existing `CLOUDFLARE_WORKERS_API_TOKEN` and
+  `CLOUDFLARE_ACCOUNT_ID`. It shares the `funapp-staging-deployment` lock with
+  `cancel-in-progress: false`. GitHub `staging` remains restricted to `dev`;
+  GitHub `production` remains restricted to `main`.
+- The temporary diagnostic uses only fixed Cloudflare API GET endpoints for
+  `funapp-founding-friend-payment-staging`: service metadata, then environment
+  bindings/routes, Custom Domain records, subdomain, environment metadata, and
+  schedules, using `result.default_environment.environment`. No credentials are
+  created or retrieved locally. Requests reject redirects and time out after
+  30 seconds including body reads, without retries. An unusable service lookup
+  stops further requests; otherwise all six probes run despite individual errors.
+  JSON output contains only endpoint category, HTTP status (null when absent),
+  numeric `errors[].code`, and a validated CF-Ray identifier (or null). Bodies,
+  error messages, bindings, credentials, and other metadata are never logged.
+  A failed/unusable lookup exits 1, including malformed responses or missing
+  credentials. Mock tests cover these cases without live API calls.
+- Restoring publishing requires a separate reviewed repair that removes the
+  diagnostic job, restores both dev-push conditions, and updates the temporary
+  safety assertions and documentation. Retained deployment requirements below
+  apply upon restoration. Older queued/active runs use their own revisions and
+  are not disabled or cancelled by this change.
 - PR events target `dev` and `main` and validate only. They never reference the
   staging environment, inherit deployment secrets, or invoke a deployment job.
   Stable PR check names are **Worker checks**, **Payment Worker checks**, and
   **Flutter and staging site checks**. No path filter skips these checks.
 - The three prior staging workflows are consolidated into one push-only
   workflow; the individual manual staging API deployment workflows and payment
-  enablement checkbox are retired. The publishing job uses a shared concurrency
-  lock without cancelling an active publish and checks the revision against
+  enablement checkbox are retired. The retained publishing job uses a shared
+  concurrency lock without cancelling an active publish and checks the revision against
   current `dev` HEAD under that lock, rejecting superseded queued jobs/reruns.
-- The staging site artifact comes from the successful validation run for that
-  revision. It is prepared with the existing tool and checked before upload and
+- On restoration, the staging site artifact comes from the successful validation
+  run for that revision. It is prepared with the existing tool and checked before upload and
   again after download. Flutter builds never receive deployment credentials.
   Both API Workers publish before the site; publishing is sequential, not atomic.
 - Preflight validates the complete existing environment configuration and reads
@@ -1107,8 +1130,9 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `npm ci`, `npm run typecheck`, `npm test`, and `npm run wrangler:validate`.
   These commands validate only. Automatic publishing uses generated staging
   configs after complete preflight, rather than deploying source placeholders.
-- A normal rollback reverts code through a PR to `dev`, then validates and
-  republishes with current environment secrets. For an emergency version rollback,
+- After publishing is restored, a normal rollback reverts code through a PR to
+  `dev`, then validates and republishes with current environment secrets. For an
+  emergency version rollback,
   disable the staging workflow, cancel queued runs, let any active publish
   settle, and restore known-good versions on the affected staging Workers in
   Cloudflare. Review version-bound variables/secrets first: an older version may

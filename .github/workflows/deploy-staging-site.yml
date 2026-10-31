@@ -13,10 +13,39 @@ jobs:
     name: Validation
     uses: ./.github/workflows/pr_checks.yml
 
+  diagnostic:
+    name: Read-only staging Cloudflare diagnostic
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    concurrency:
+      group: funapp-staging-deployment
+      cancel-in-progress: false
+    steps:
+      - name: Checkout validated revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Read payment Worker metadata statuses
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_WORKERS_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+        run: node tool/staging_cloudflare_diagnostic.mjs
+
   deploy:
     name: Deploy staging site and API Workers
     needs: checks
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    # Temporary diagnostic only. Restore the dev-push condition in a reviewed repair PR.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: staging

@@ -91,7 +91,7 @@ jobs:
       - name: Test staging deployment safety and Wrangler upload metadata
         env:
           WORKER_PROJECT: founding-friend-payment-worker
-        run: node --test ../../test/tool/staging_deployment.test.mjs
+        run: node --test ../../test/tool/staging_deployment.test.mjs ../../test/tool/staging_cloudflare_diagnostic.test.mjs
 
   quality:
     name: Flutter and staging site checks
@@ -212,7 +212,8 @@ jobs:
         run: bash tool/verify_staging_artifact.sh
 
       - name: Upload validated staging artifact for dev deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        # Restore alongside the staging publishing job in a reviewed repair PR.
+        if: ${{ false }}
         uses: actions/upload-artifact@v7
         with:
           name: staging-web-${{ github.sha }}
