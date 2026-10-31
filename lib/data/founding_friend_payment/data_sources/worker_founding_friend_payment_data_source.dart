@@ -83,7 +83,12 @@ final class WorkerFoundingFriendPaymentDataSource
       {'sessionId': sessionId},
       expectedStatus: 200,
     );
-    if (!_hasOnlyKeys(body, {'status', 'purchaseReference', 'requestId'})) {
+    if (!_hasOnlyKeys(body, {
+      'status',
+      'purchaseReference',
+      'requestId',
+      'canResumeCheckout',
+    })) {
       throw const FoundingFriendPaymentUnexpectedException();
     }
     final status = switch (body['status']) {
@@ -96,9 +101,12 @@ final class WorkerFoundingFriendPaymentDataSource
       _ => null,
     };
     final reference = body['purchaseReference'];
+    final canResumeCheckout = body['canResumeCheckout'] ?? false;
     final referenceIsValid =
         reference is String && RegExp(r'^FF-[A-F0-9]{16}$').hasMatch(reference);
     if (status == null ||
+        canResumeCheckout is! bool ||
+        (canResumeCheckout && status != FoundingFriendPaymentStatus.pending) ||
         (status == FoundingFriendPaymentStatus.confirmed &&
             !referenceIsValid) ||
         (status != FoundingFriendPaymentStatus.confirmed &&
@@ -108,6 +116,7 @@ final class WorkerFoundingFriendPaymentDataSource
     return FoundingFriendPaymentVerification(
       status: status,
       purchaseReference: referenceIsValid ? reference : null,
+      canResumeCheckout: canResumeCheckout,
     );
   }
 
@@ -125,7 +134,11 @@ final class WorkerFoundingFriendPaymentDataSource
             _config.endpoint(path),
             abortTrigger: abortCompleter.future,
           )
-          ..headers['Content-Type'] = 'application/json'
+          ..headers.addAll({
+            'Content-Type': 'application/json',
+            if (path == foundingFriendCheckoutVerificationEndpointPath)
+              'Accept': 'application/json; checkout-recovery=1',
+          })
           ..body = jsonEncode(payload);
     late http.StreamedResponse response;
     try {

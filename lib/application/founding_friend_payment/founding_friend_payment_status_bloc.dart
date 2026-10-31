@@ -43,6 +43,27 @@ final class FoundingFriendPaymentStatusState {
     this.failure,
   });
 
+  /// Maps a sanitized repository result for either payment recovery page.
+  factory FoundingFriendPaymentStatusState.verified(
+    FoundingFriendPaymentVerification verification,
+  ) => FoundingFriendPaymentStatusState(
+    phase: switch (verification.status) {
+      FoundingFriendPaymentStatus.confirmed =>
+        FoundingFriendPaymentStatusPhase.confirmed,
+      FoundingFriendPaymentStatus.pending =>
+        FoundingFriendPaymentStatusPhase.pending,
+      FoundingFriendPaymentStatus.expired =>
+        FoundingFriendPaymentStatusPhase.expired,
+      FoundingFriendPaymentStatus.refunded =>
+        FoundingFriendPaymentStatusPhase.refunded,
+      FoundingFriendPaymentStatus.disputed =>
+        FoundingFriendPaymentStatusPhase.disputed,
+      FoundingFriendPaymentStatus.invalid =>
+        FoundingFriendPaymentStatusPhase.invalid,
+    },
+    purchaseReference: verification.purchaseReference,
+  );
+
   /// Initial state before explicit verification.
   const FoundingFriendPaymentStatusState.initial()
     : phase = FoundingFriendPaymentStatusPhase.initial,
@@ -110,29 +131,13 @@ final class FoundingFriendPaymentStatusBloc
           ),
         ),
         (verification) {
-          final phase = switch (verification.status) {
-            FoundingFriendPaymentStatus.confirmed =>
-              FoundingFriendPaymentStatusPhase.confirmed,
-            FoundingFriendPaymentStatus.pending =>
-              FoundingFriendPaymentStatusPhase.pending,
-            FoundingFriendPaymentStatus.expired =>
-              FoundingFriendPaymentStatusPhase.expired,
-            FoundingFriendPaymentStatus.refunded =>
-              FoundingFriendPaymentStatusPhase.refunded,
-            FoundingFriendPaymentStatus.disputed =>
-              FoundingFriendPaymentStatusPhase.disputed,
-            FoundingFriendPaymentStatus.invalid =>
-              FoundingFriendPaymentStatusPhase.invalid,
-          };
-          if (phase == FoundingFriendPaymentStatusPhase.confirmed) {
+          final status = FoundingFriendPaymentStatusState.verified(
+            verification,
+          );
+          if (status.phase == FoundingFriendPaymentStatusPhase.confirmed) {
             _pendingStore.clear();
           }
-          emit(
-            FoundingFriendPaymentStatusState(
-              phase: phase,
-              purchaseReference: verification.purchaseReference,
-            ),
-          );
+          emit(status);
         },
       );
     }

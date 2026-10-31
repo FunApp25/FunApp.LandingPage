@@ -25,10 +25,14 @@ PendingFoundingFriendPayment? readPendingPayment() {
     if (decoded is Map<String, dynamic>) {
       final email = decoded['email'];
       final attemptId = decoded['attemptId'];
-      if (email is String && attemptId is String) {
+      final sessionId = decoded['sessionId'];
+      if (email is String &&
+          attemptId is String &&
+          (sessionId == null || sessionId is String)) {
         return PendingFoundingFriendPayment(
           email: email,
           attemptId: attemptId,
+          sessionId: sessionId as String?,
         );
       }
     }
@@ -43,7 +47,11 @@ void savePendingPayment(PendingFoundingFriendPayment payment) {
   try {
     web.window.sessionStorage.setItem(
       _storageKey,
-      jsonEncode({'email': payment.email, 'attemptId': payment.attemptId}),
+      jsonEncode({
+        'email': payment.email,
+        'attemptId': payment.attemptId,
+        if (payment.sessionId != null) 'sessionId': payment.sessionId,
+      }),
     );
   } on Object {
     // The active checkout can continue without browser retry correlation.

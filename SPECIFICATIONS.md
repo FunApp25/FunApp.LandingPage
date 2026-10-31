@@ -731,10 +731,11 @@ capabilities as implemented.
   database is used.
 - Checkout creation uses the attempt-derived Stripe idempotency key
   `founding-friend-checkout-v1-{attemptId}`. Flutter creates the attempt only
-  after confirmed registration and retains its email and attempt ID in
-  current-tab session storage for explicit payment retry. This prevents a
-  payment retry from resubmitting registration and correlates retries while
-  Stripe retains its idempotency result. It is not durable exactly-once
+  after confirmed registration and retains its email, attempt ID, and opaque
+  Checkout Session ID (once creation succeeds) in current-tab session storage
+  for explicit payment retry. Older stored attempts without a Session ID
+  remain readable. This prevents payment retry from resubmitting registration
+  and correlates retries while Stripe retains its idempotency result. It is not durable exactly-once
   creation: a lost response after Stripe's retention window, expired session,
   cleared tab state, or independent browser session can require a new attempt
   and can leave another unpaid Stripe Session. Stripe remains authoritative.
@@ -792,12 +793,28 @@ capabilities as implemented.
   of payment. The return route verifies its `session_id` through the Worker and
   shows the purchase reference only for confirmed payment. Cancelled, pending,
   expired, refunded, disputed, invalid, and temporarily unverifiable states
-  receive localized recovery guidance. Verification can be retried without
-  creating a Session. An explicitly retried expired Session rotates to a new
-  payment attempt using current-tab registration state without resubmitting
-  registration; missing tab state fails safely to support guidance. The
-  confirmation states that membership is not active yet and asks customers to
-  use the purchase email for their future Fun App account, whose authenticated
+  receive localized recovery guidance. The cancellation page stays inert until
+  explicit retry. Recovery verifies the stored Session before creation; only
+  verified expiry rotates the attempt. Open/unpaid verification returns
+  `pending` with `canResumeCheckout: true`; complete/unpaid returns `pending`
+  with that flag false. This optional response field is negotiated with
+  `Accept: application/json; checkout-recovery=1`, preserving the exact old
+  response schema for older clients. Missing flags in older responses cannot authorize a
+  redirect. An anomalous expired/paid Session is invalid, not retryable expiry.
+  For an open Session, recovery replays creation with the original attempt to
+  recover its hosted URL and verifies the same returned Session again before
+  redirect. A different returned Session is rejected without replacing the
+  known Session. Older data or interrupted creation without a Session ID first
+  replays the original attempt and persists and verifies the returned Session;
+  it never guesses expiry. This retains the existing idempotency-retention
+  limit when the original Session ID is unknown. Confirmed, refunded,
+  disputed, invalid, pending-but-not-resumable, and unavailable verification
+  never authorize another Checkout. Verification failures remain retryable;
+  overlapping retry events are ignored. The return page retains explicit
+  verified-expired retry using current-tab registration state without
+  resubmitting registration; missing tab state fails safely to support guidance.
+  The confirmation states that membership is not active yet and asks customers
+  to use the purchase email for their future Fun App account, whose authenticated
   backend will later verify a qualifying payment against its verified email.
 - Flutter accepts Checkout redirects only from exact HTTPS
   `checkout.stripe.com`, or from its exact configured loopback origin in local

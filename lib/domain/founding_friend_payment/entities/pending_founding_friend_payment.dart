@@ -4,6 +4,7 @@ final class PendingFoundingFriendPayment {
   const PendingFoundingFriendPayment({
     required this.email,
     required this.attemptId,
+    this.sessionId,
   });
 
   /// Validated registration email used only to prefill hosted Checkout.
@@ -11,4 +12,7 @@ final class PendingFoundingFriendPayment {
 
   /// Random non-personal correlation identifier reused for Stripe idempotency.
   final String attemptId;
+
+  /// Opaque Checkout identifier, absent until creation succeeds or in old data.
+  final String? sessionId;
 }

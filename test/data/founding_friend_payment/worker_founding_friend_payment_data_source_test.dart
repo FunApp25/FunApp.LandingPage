@@ -120,6 +120,75 @@ void main() {
     );
   });
 
+  for (final capability in [null, false, true]) {
+    test(
+      'pending redirect capability $capability is explicit and fail-closed',
+      () async {
+        final source = WorkerFoundingFriendPaymentDataSource(
+          client: MockClient(
+            (request) async {
+              expect(
+                request.headers['accept'],
+                'application/json; checkout-recovery=1',
+              );
+              return http.Response(
+                jsonEncode({
+                  'status': 'pending',
+                  'canResumeCheckout': ?capability,
+                }),
+                200,
+              );
+            },
+          ),
+          config: localConfig,
+        );
+        final result = await source.verifyCheckout(
+          'cs_test_abcdefghijklmnopqrstuvwxyz123456',
+        );
+        expect(result.status, FoundingFriendPaymentStatus.pending);
+        expect(result.canResumeCheckout, capability == true);
+      },
+    );
+  }
+
+  for (final body in [
+    {'status': 'pending', 'canResumeCheckout': 'true'},
+    {'status': 'expired', 'canResumeCheckout': true},
+    {'status': 'invalid', 'canResumeCheckout': true},
+    {'status': 'refunded', 'canResumeCheckout': true},
+    {'status': 'disputed', 'canResumeCheckout': true},
+    {
+      'status': 'confirmed',
+      'purchaseReference': 'FF-1234567890ABCDEF',
+      'canResumeCheckout': true,
+    },
+  ]) {
+    test('rejects invalid redirect authorization $body', () async {
+      final source = WorkerFoundingFriendPaymentDataSource(
+        client: MockClient((_) async => http.Response(jsonEncode(body), 200)),
+        config: localConfig,
+      );
+      await expectLater(
+        source.verifyCheckout('cs_test_abcdefghijklmnopqrstuvwxyz123456'),
+        throwsA(isA<FoundingFriendPaymentUnexpectedException>()),
+      );
+    });
+  }
+
+  test('verification timeout aborts the request without creation', () async {
+    final client = _AbortAwareClient();
+    final source = WorkerFoundingFriendPaymentDataSource(
+      client: client,
+      config: localConfig,
+      timeout: const Duration(milliseconds: 1),
+    );
+    await expectLater(
+      source.verifyCheckout('cs_test_abcdefghijklmnopqrstuvwxyz123456'),
+      throwsA(isA<FoundingFriendPaymentServiceUnavailableException>()),
+    );
+    expect(client.abortObserved, isTrue);
+  });
+
   test('maps provider-neutral failures and abortable timeouts', () async {
     final unavailable = WorkerFoundingFriendPaymentDataSource(
       client: MockClient((_) async => http.Response('{}', 503)),

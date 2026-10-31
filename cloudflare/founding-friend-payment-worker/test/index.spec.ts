@@ -635,6 +635,34 @@ describe('Founding Friend payment Worker', () => {
     expect(body.purchaseReference).toBeUndefined();
   });
 
+  it.each(['open', 'complete'])('preserves the old %s/unpaid verification response for older clients', async (status) => {
+    const request = verifyRequest(sessionId);
+    request.headers.delete('accept');
+    const response = await handleRequest(request, productionEnv(), {
+      upstreamFetch: async () => Response.json(validSession({
+        status, payment_status: 'unpaid', customer: null, payment_intent: null,
+      })),
+      paymentRateLimiter: acceptingRateLimiter,
+    });
+    const body = await response.json() as Record<string, unknown>;
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('pending');
+    expect(Object.keys(body).sort()).toEqual(['requestId', 'status']);
+  });
+
+  it('does not authorize an expiry retry for a contradictory paid Session', async () => {
+    const response = await handleRequest(
+      verifyRequest(sessionId),
+      productionEnv(),
+      {
+        upstreamFetch: async () => Response.json(validSession({ status: 'expired' })),
+        paymentRateLimiter: acceptingRateLimiter,
+      },
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ status: 'invalid' });
+  });
+
   it('keeps a pre-completion Session pending without requiring a Customer yet', async () => {
     const upstreamFetch = vi.fn(async () =>
       Response.json(
@@ -653,7 +681,7 @@ describe('Founding Friend payment Worker', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ status: 'pending' });
+    expect(await response.json()).toMatchObject({ status: 'pending', canResumeCheckout: true });
   });
 
   it('rejects malformed and extra request fields', async () => {
@@ -772,6 +800,7 @@ function verifyRequest(
     method: 'POST',
     headers: {
       'content-type': 'application/json',
+      accept: 'application/json; checkout-recovery=1',
       origin: 'http://localhost:7357',
     },
     body: JSON.stringify({ sessionId: id }),
@@ -961,7 +990,9 @@ describe.each(['production', 'staging'])('%s Adaptive Pricing verification', (en
     expect(Object.keys(body).sort()).toEqual(
       body.status === 'confirmed'
         ? ['purchaseReference', 'requestId', 'status']
-        : ['requestId', 'status'],
+        : body.status === 'pending'
+          ? ['canResumeCheckout', 'requestId', 'status']
+          : ['requestId', 'status'],
     );
     return body;
   }
@@ -1006,7 +1037,7 @@ describe.each(['production', 'staging'])('%s Adaptive Pricing verification', (en
     changeField(session, 'payment_intent.status', 'processing');
     changeField(session, 'payment_intent.amount_received', 0);
     changeField(session, 'payment_intent.latest_charge', null);
-    expect(await verify(session)).toMatchObject({ status: 'pending' });
+    expect(await verify(session)).toMatchObject({ status: 'pending', canResumeCheckout: false });
     const failedCharge = {
       id: 'ch_testfailed123', object: 'charge', payment_intent: 'pi_test12345678',
       customer: 'cus_test12345678', currency: 'eur', amount: 29_900,
@@ -1014,7 +1045,7 @@ describe.each(['production', 'staging'])('%s Adaptive Pricing verification', (en
       refunded: false, disputed: false, amount_refunded: 0, status: 'failed',
     };
     changeField(session, 'payment_intent.latest_charge', failedCharge);
-    expect(await verify(session)).toMatchObject({ status: 'pending' });
+    expect(await verify(session)).toMatchObject({ status: 'pending', canResumeCheckout: false });
     changeField(session, 'payment_intent.latest_charge.currency', 'gbp');
     expect(await verify(session)).toMatchObject({ status: 'invalid' });
     changeField(session, 'payment_intent.latest_charge', null);

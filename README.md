@@ -686,18 +686,37 @@ Checkout URLs on verification, or secrets.
 
 Checkout creation uses `founding-friend-checkout-v1-{attemptId}` as the Stripe
 idempotency key. Flutter creates the attempt only after successful HubSpot
-registration and keeps the email and attempt ID in tab-scoped browser session
-storage for an explicit payment retry. A retry therefore does not resubmit the
-registration and, while Stripe retains the idempotency result, reuses the
-logical Checkout creation. This is not durable exactly-once behavior: no D1,
-KV, Durable Object, or other payment database exists. A lost response after
+registration and keeps the email, attempt ID, and opaque Checkout Session ID
+once returned in tab-scoped browser session storage for explicit payment retry.
+A retry therefore does not resubmit registration and, while Stripe retains the
+idempotency result, reuses the logical Checkout creation. This is not durable
+exactly-once behavior: no D1, KV, Durable Object, or other payment database exists. A lost response after
 Stripe's idempotency retention window, cleared tab storage, an independent
 browser session, or an expired Checkout Session can require a new attempt and
 may produce another unpaid session. In the original browser tab, an explicitly
 retried expired session rotates only the payment attempt and does not resubmit
-registration; without that tab state, the UI fails safely to support guidance.
+registration. Cancellation stays inert until explicit retry, then verifies the
+stored Session through the payment repository. Only verified expiry rotates the
+attempt. Open/unpaid `pending` results explicitly allow resuming Checkout via
+`canResumeCheckout`. Updated clients opt in with
+`Accept: application/json; checkout-recovery=1`; older clients retain the
+previous response schema. Complete/unpaid or older responses without that
+capability cannot authorize a redirect. Creation replay recovers the URL using the same
+attempt, and the returned Session is verified again before redirect. Older
+stored attempts and interrupted creation without a Session ID replay the
+original attempt, then persist and verify the response; they retain the existing
+Stripe idempotency-retention limitation. Verification failure never rotates the
+attempt. Confirmed, refunded, disputed, and invalid results cannot create a new
+Checkout. Without tab state, the UI fails safely to support guidance.
 Stripe remains the only purchase record; customers must not be treated as paid
 from a redirect alone.
+
+Run the browser storage regression separately from the normal Flutter suite:
+
+```bash
+puro flutter test --platform chrome \
+  test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
+```
 
 Install and validate the payment Worker independently:
 

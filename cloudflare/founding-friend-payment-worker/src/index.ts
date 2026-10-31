@@ -236,6 +236,7 @@ export async function handleRequest(
         mockConfiguration,
         requestId,
         corsHeaders,
+        request.headers.get('accept') === 'application/json; checkout-recovery=1',
       );
     }
   } catch (error) {
@@ -396,6 +397,7 @@ async function verifyCheckoutSession(
   mockConfiguration: 'valid' | 'absent',
   requestId: string,
   corsHeaders: Headers | null,
+  includeCheckoutAvailability: boolean,
 ): Promise<Response> {
   let session: StripeCheckoutSession;
   let expectedLivemode: boolean;
@@ -441,6 +443,7 @@ async function verifyCheckoutSession(
     input.sessionId,
     expectedPriceId,
     expectedLivemode,
+    includeCheckoutAvailability,
   );
   return jsonResponse(200, result, requestId, corsHeaders);
 }
@@ -450,7 +453,8 @@ function classifySession(
   requestedSessionId: string,
   expectedPriceId: string,
   expectedLivemode: boolean,
-): { status: PaymentStatus; purchaseReference?: string } {
+  includeCheckoutAvailability: boolean,
+): { status: PaymentStatus; purchaseReference?: string; canResumeCheckout?: boolean } {
   const reference = validPurchaseReference(session);
   const validBase =
     session.object === 'checkout.session' &&
@@ -485,7 +489,7 @@ function classifySession(
     (typeof charge?.amount_refunded === 'number' && charge.amount_refunded > 0)
   ) {
     return { status: 'refunded' };
-  } else if (session.status === 'expired') {
+  } else if (session.status === 'expired' && session.payment_status === 'unpaid') {
     return { status: 'expired' };
   } else if (
     session.status === 'complete' &&
@@ -496,7 +500,10 @@ function classifySession(
     (session.status === 'open' || session.status === 'complete') &&
     session.payment_status === 'unpaid'
   ) {
-    return { status: 'pending' };
+    return {
+      status: 'pending',
+      ...(includeCheckoutAvailability ? { canResumeCheckout: session.status === 'open' } : {}),
+    };
   } else {
     return { status: 'invalid' };
   }
@@ -1032,10 +1039,12 @@ function mockStripeSession(
 ): StripeCheckoutSession {
   const reference = `FF-${sessionId.slice(-16).toUpperCase()}`;
   const valid = scenario !== 'payment_mismatch';
-  const status = scenario === 'expired' ? 'expired' : 'complete';
+  const status = scenario === 'expired' ? 'expired' :
+    scenario === 'created' || scenario === 'cancelled' ? 'open' : 'complete';
   const paymentStatus = scenario === 'pending' ||
     scenario === 'created' ||
-    scenario === 'cancelled'
+    scenario === 'cancelled' ||
+    scenario === 'expired'
     ? 'unpaid'
     : 'paid';
   const charge = {

@@ -25,6 +25,7 @@ final class FoundingFriendPaymentVerification {
   const FoundingFriendPaymentVerification({
     required this.status,
     this.purchaseReference,
+    this.canResumeCheckout = false,
   });
 
   /// Provider-neutral payment state.
@@ -33,4 +34,8 @@ final class FoundingFriendPaymentVerification {
   /// Server-generated reference, present only for
   /// [FoundingFriendPaymentStatus.confirmed].
   final String? purchaseReference;
+
+  /// True only when the service verified an open, unpaid Checkout.
+  /// Missing capability in older responses must never authorize a redirect.
+  final bool canResumeCheckout;
 }
