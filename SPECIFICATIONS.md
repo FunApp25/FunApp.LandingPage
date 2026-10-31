@@ -673,6 +673,8 @@ capabilities as implemented.
   production browser run resolves the same-origin endpoint to localhost and
   therefore cannot reach the deployed Worker without separate local routing;
   development remains the deterministic fake path.
+  Payment configuration instead targets fixed `https://funapp.world` endpoints,
+  including in local production-mode runs, subject to browser CORS restrictions.
 - The repository-controlled Cloudflare Worker performs exact route dispatch,
   validates each untrusted Fun App request independently, maps to HubSpot only
   at its provider boundary, and obtains public provider identifiers from Worker

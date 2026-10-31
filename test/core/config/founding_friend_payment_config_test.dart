@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/core/config/founding_friend_payment_config.dart';
 
 void main() {
-  test('production uses the same-origin payment route without local mocks', () {
+  test('production uses its fixed origin without local mocks', () {
     final config = FoundingFriendPaymentConfig.production();
 
     expect(config.baseUri, Uri.parse('https://funapp.world'));

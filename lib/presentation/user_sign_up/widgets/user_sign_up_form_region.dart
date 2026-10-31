@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/application/user_registration/founding_frie
 import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
+import 'package:fun_app_landing_page/domain/core/value_objects/value_object.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
@@ -46,6 +47,11 @@ final class UserSignUpFormRegion extends StatelessWidget {
 
     return UserSignUpForm(
       experience: experience,
+      firstName: _inputText(registration.firstName),
+      lastName: _inputText(registration.lastName),
+      email: _inputText(registration.email),
+      age: _inputText(registration.age),
+      usageReason: registration.usageReason.toNullable(),
       gender: _optionalText(registration.gender),
       country: null,
       marketingConsent: registration.marketingConsent,
@@ -106,6 +112,11 @@ final class UserSignUpFormRegion extends StatelessWidget {
 
     return UserSignUpForm(
       experience: experience,
+      firstName: _inputText(registration.firstName),
+      lastName: _inputText(registration.lastName),
+      email: _inputText(registration.email),
+      age: _inputText(registration.age),
+      usageReason: registration.usageReason.toNullable(),
       gender: _optionalText(registration.gender),
       country: registration.country.value.fold((_) => null, (value) => value),
       marketingConsent: registration.marketingConsent,
@@ -159,6 +170,11 @@ final class UserSignUpFormRegion extends StatelessWidget {
       ),
     );
   }
+
+  String _inputText<T>(ValueObject<T> value) => value.value.fold(
+    (failure) => failure.failedValue.toString(),
+    (input) => input.toString(),
+  );
 
   String? _optionalText(Option<NonEmptySingleLineText> value) => value.fold(
     () => null,

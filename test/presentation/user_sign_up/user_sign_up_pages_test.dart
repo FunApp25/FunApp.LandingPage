@@ -39,6 +39,235 @@ import 'package:http/testing.dart';
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final foundingFriend in [false, true]) {
+    final semanticId = foundingFriend ? 'foundingFriend' : 'hereAndNow';
+
+    testWidgets(
+      '$semanticId retains rendered drafts across responsive changes',
+      (
+        tester,
+      ) async {
+        final hereAndNowRepository = _HereAndNowRepository();
+        final foundingFriendRepository = _FoundingFriendRepository();
+        Widget page() => foundingFriend
+            ? FoundingFriendPage(
+                createBloc: () => FoundingFriendRegistrationFormBloc(
+                  foundingFriendRepository,
+                ),
+              )
+            : HereAndNowPage(
+                createBloc: () => HereAndNowRegistrationFormBloc(
+                  hereAndNowRepository,
+                ),
+              );
+        setTestSurface(tester, const Size(1440, 1000));
+        await _pumpPage(tester, page());
+        if (foundingFriend) {
+          await _enterFoundingFriendRequiredFields(tester);
+        }
+        final inputs = <String, String>{
+          'firstName': 'Alex',
+          'lastName': 'Morgan',
+          'email': 'alex@example.com',
+          'age': '029',
+          'usageReason': 'Meet local people\nand join activities',
+        };
+        for (final entry in inputs.entries) {
+          await tester.enterText(
+            find.byKey(Key('${entry.key}Field-$semanticId')),
+            entry.value,
+          );
+        }
+        await tester.pump();
+        final emailController = _inputController(tester, 'email', semanticId)
+          ..selection = const TextSelection.collapsed(offset: 4);
+
+        for (final width in [390.0, 1440.0]) {
+          tester.view.physicalSize = Size(width, 1000);
+          await tester.pumpAndSettle();
+          for (final entry in inputs.entries) {
+            expect(
+              _inputController(tester, entry.key, semanticId).text,
+              entry.value,
+            );
+          }
+          expect(
+            _inputController(tester, 'email', semanticId),
+            emailController,
+          );
+          expect(emailController.selection.baseOffset, 4);
+          if (width == 390) {
+            inputs['email'] = 'alex.updated@example.com';
+            await tester.showKeyboard(
+              find.byKey(Key('emailField-$semanticId')),
+            );
+            final editingValue = TextEditingValue(
+              text: inputs['email']!,
+              selection: const TextSelection.collapsed(offset: 4),
+              composing: const TextRange(start: 0, end: 4),
+            );
+            tester.testTextInput.updateEditingValue(editingValue);
+            await tester.pump();
+            expect(emailController.value, editingValue);
+          }
+        }
+
+        await tester.enterText(
+          find.byKey(Key('firstNameField-$semanticId')),
+          '',
+        );
+        await _tapSubmit(tester, semanticId);
+        expect(find.text('Required field'), findsOneWidget);
+        expect(hereAndNowRepository.submissions, isEmpty);
+        expect(foundingFriendRepository.submissions, isEmpty);
+        await tester.enterText(
+          find.byKey(Key('firstNameField-$semanticId')),
+          inputs['firstName']!,
+        );
+        await _tapSubmit(tester, semanticId);
+        await tester.pumpAndSettle();
+        final submitted = foundingFriend
+            ? [
+                foundingFriendRepository.submissions.single.firstName
+                    .getOrCrash(),
+                foundingFriendRepository.submissions.single.lastName
+                    .getOrCrash(),
+                foundingFriendRepository.submissions.single.email.getOrCrash(),
+                foundingFriendRepository.submissions.single.age.getOrCrash(),
+                foundingFriendRepository.submissions.single.usageReason
+                    .toNullable(),
+              ]
+            : [
+                hereAndNowRepository.submissions.single.firstName.getOrCrash(),
+                hereAndNowRepository.submissions.single.lastName.getOrCrash(),
+                hereAndNowRepository.submissions.single.email.getOrCrash(),
+                hereAndNowRepository.submissions.single.age.getOrCrash(),
+                hereAndNowRepository.submissions.single.usageReason
+                    .toNullable(),
+              ];
+        expect(submitted, [
+          inputs['firstName'],
+          inputs['lastName'],
+          inputs['email'],
+          int.parse(inputs['age']!),
+          inputs['usageReason'],
+        ]);
+        for (final entry in inputs.entries) {
+          expect(
+            _inputController(tester, entry.key, semanticId).text,
+            entry.value,
+          );
+        }
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await _pumpPage(tester, page());
+        for (final field in inputs.keys) {
+          expect(_inputController(tester, field, semanticId).text, isEmpty);
+        }
+        await _tapSubmit(tester, semanticId);
+        expect(
+          find.text('Required field'),
+          findsNWidgets(foundingFriend ? 5 : 4),
+        );
+      },
+    );
+
+    testWidgets(
+      '$semanticId displays initial and external BLoC draft updates',
+      (
+        tester,
+      ) async {
+        final hereAndNowBloc = HereAndNowRegistrationFormBloc(
+          _HereAndNowRepository(),
+        );
+        final foundingFriendBloc = FoundingFriendRegistrationFormBloc(
+          _FoundingFriendRepository(),
+        );
+        if (foundingFriend) {
+          addTearDown(hereAndNowBloc.close);
+        } else {
+          addTearDown(foundingFriendBloc.close);
+        }
+        void updateDraft(
+          String name,
+          String lastName,
+          String email,
+          String age,
+          String reason,
+        ) {
+          if (foundingFriend) {
+            foundingFriendBloc
+              ..add(FoundingFriendRegistrationFormEvent.firstNameChanged(name))
+              ..add(
+                FoundingFriendRegistrationFormEvent.lastNameChanged(lastName),
+              )
+              ..add(FoundingFriendRegistrationFormEvent.emailChanged(email))
+              ..add(FoundingFriendRegistrationFormEvent.ageChanged(age))
+              ..add(
+                FoundingFriendRegistrationFormEvent.usageReasonChanged(reason),
+              );
+          } else {
+            hereAndNowBloc
+              ..add(HereAndNowRegistrationFormEvent.firstNameChanged(name))
+              ..add(HereAndNowRegistrationFormEvent.lastNameChanged(lastName))
+              ..add(HereAndNowRegistrationFormEvent.emailChanged(email))
+              ..add(HereAndNowRegistrationFormEvent.ageChanged(age))
+              ..add(HereAndNowRegistrationFormEvent.usageReasonChanged(reason));
+          }
+        }
+
+        updateDraft(
+          'Alex',
+          'Morgan',
+          'invalid-email',
+          'invalid-age',
+          'Meet people',
+        );
+        await tester.pump();
+        await _pumpPage(
+          tester,
+          foundingFriend
+              ? FoundingFriendPage(createBloc: () => foundingFriendBloc)
+              : HereAndNowPage(createBloc: () => hereAndNowBloc),
+        );
+        expect(_inputController(tester, 'firstName', semanticId).text, 'Alex');
+        expect(_inputController(tester, 'lastName', semanticId).text, 'Morgan');
+        expect(
+          _inputController(tester, 'email', semanticId).text,
+          'invalid-email',
+        );
+        expect(_inputController(tester, 'age', semanticId).text, 'invalid-age');
+        expect(
+          _inputController(tester, 'usageReason', semanticId).text,
+          'Meet people',
+        );
+        updateDraft('', 'Updated', 'updated@example.com', '32', '');
+        await tester.pump();
+        await tester.pump();
+        expect(_inputController(tester, 'firstName', semanticId).text, isEmpty);
+        expect(
+          _inputController(tester, 'lastName', semanticId).text,
+          'Updated',
+        );
+        expect(
+          _inputController(tester, 'email', semanticId).text,
+          'updated@example.com',
+        );
+        expect(_inputController(tester, 'age', semanticId).text, '32');
+        expect(
+          _inputController(tester, 'usageReason', semanticId).text,
+          isEmpty,
+        );
+        for (final invalidAge in ['9007199254740992', '9007199254740993']) {
+          updateDraft('', 'Updated', 'updated@example.com', invalidAge, '');
+          await tester.pump();
+          await tester.pump();
+          expect(_inputController(tester, 'age', semanticId).text, invalidAge);
+        }
+      },
+    );
+  }
+
   const hereAndNowIntroduction =
       'Thank you for interest in joining Fun App with a 6 month free trial '
       'of Here & Now membership';
@@ -914,6 +1143,19 @@ void _expectHint(WidgetTester tester, Key key, String expected) {
     findsOneWidget,
   );
 }
+
+TextEditingController _inputController(
+  WidgetTester tester,
+  String field,
+  String semanticId,
+) => tester
+    .widget<EditableText>(
+      find.descendant(
+        of: find.byKey(Key('${field}Field-$semanticId')),
+        matching: find.byType(EditableText),
+      ),
+    )
+    .controller;
 
 Future<void> _tapSubmit(WidgetTester tester, String semanticId) async {
   final submit = find.byKey(Key('userSignUpSubmit-$semanticId'));

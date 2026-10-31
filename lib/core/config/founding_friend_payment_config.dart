@@ -99,7 +99,7 @@ final class FoundingFriendPaymentConfig {
     allowLocalMockCheckoutUrls: false,
   );
 
-  /// Uses same-origin production routes without enabling payment creation.
+  /// Targets the fixed production origin, including in local production runs.
   factory FoundingFriendPaymentConfig.production() =>
       FoundingFriendPaymentConfig(
         baseUrl: 'https://funapp.world',

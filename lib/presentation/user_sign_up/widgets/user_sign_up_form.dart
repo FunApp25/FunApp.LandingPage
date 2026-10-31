@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fun_app_landing_page/domain/core/value_objects/age.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
@@ -11,10 +12,15 @@ import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchabl
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
 
 /// Shared field surface driven by one registration workflow BLoC.
-final class UserSignUpForm extends StatelessWidget {
+final class UserSignUpForm extends StatefulWidget {
   /// Creates the controlled sign-up form.
   const UserSignUpForm({
     required this.experience,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.age,
+    required this.usageReason,
     required this.gender,
     required this.country,
     required this.marketingConsent,
@@ -40,6 +46,21 @@ final class UserSignUpForm extends StatelessWidget {
 
   /// Determines the approved fields and copy.
   final UserSignUpExperience experience;
+
+  /// Current text from the application draft, including invalid input.
+  final String firstName;
+
+  /// Current last-name draft.
+  final String lastName;
+
+  /// Current email draft.
+  final String email;
+
+  /// Current age draft, retaining rejected input when invalid.
+  final String age;
+
+  /// Current optional usage reason; blank input represents absence.
+  final String? usageReason;
 
   /// Current optional gender selection.
   final String? gender;
@@ -101,41 +122,105 @@ final class UserSignUpForm extends StatelessWidget {
   /// Attempts submission through the owning BLoC.
   final VoidCallback onSubmit;
 
-  String get _semanticId => switch (experience) {
+  @override
+  State<UserSignUpForm> createState() => _UserSignUpFormState();
+}
+
+final class _UserSignUpFormState extends State<UserSignUpForm> {
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _ageController;
+  late final TextEditingController _usageReasonController;
+
+  @override
+  void initState() {
+    super.initState();
+    _firstNameController = TextEditingController(text: widget.firstName);
+    _lastNameController = TextEditingController(text: widget.lastName);
+    _emailController = TextEditingController(text: widget.email);
+    _ageController = TextEditingController(text: widget.age);
+    _usageReasonController = TextEditingController(text: widget.usageReason);
+  }
+
+  @override
+  void didUpdateWidget(UserSignUpForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncText(_firstNameController, oldWidget.firstName, widget.firstName);
+    _syncText(_lastNameController, oldWidget.lastName, widget.lastName);
+    _syncText(_emailController, oldWidget.email, widget.email);
+    // Age stores an integer; its echoed value must not rewrite typed zeroes.
+    if (Age(_ageController.text) != Age(widget.age)) {
+      _syncText(_ageController, oldWidget.age, widget.age);
+    }
+    final reason = _usageReasonController.text;
+    if ((reason.trim().isEmpty ? null : reason) != widget.usageReason) {
+      _syncText(
+        _usageReasonController,
+        oldWidget.usageReason ?? '',
+        widget.usageReason ?? '',
+      );
+    }
+  }
+
+  void _syncText(
+    TextEditingController controller,
+    String previous,
+    String current,
+  ) {
+    if (previous != current && controller.text != current) {
+      controller.value = TextEditingValue(
+        text: current,
+        selection: TextSelection.collapsed(offset: current.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _ageController.dispose();
+    _usageReasonController.dispose();
+    super.dispose();
+  }
+
+  String get _semanticId => switch (widget.experience) {
     UserSignUpExperience.hereAndNow => 'hereAndNow',
     UserSignUpExperience.foundingFriend => 'foundingFriend',
   };
 
   bool get _requiresCountry =>
-      experience == UserSignUpExperience.foundingFriend;
+      widget.experience == UserSignUpExperience.foundingFriend;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final firstNameLabel = switch (experience) {
+    final firstNameLabel = switch (widget.experience) {
       UserSignUpExperience.hereAndNow =>
         l10n.userSignUpHereAndNowFirstNameLabel,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendFirstNameLabel,
     };
-    final lastNameLabel = switch (experience) {
+    final lastNameLabel = switch (widget.experience) {
       UserSignUpExperience.hereAndNow => l10n.userSignUpHereAndNowLastNameLabel,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendLastNameLabel,
     };
-    final usageReasonLabel = switch (experience) {
+    final usageReasonLabel = switch (widget.experience) {
       UserSignUpExperience.hereAndNow =>
         l10n.userSignUpHereAndNowUsageReasonLabel,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendUsageReasonLabel,
     };
-    final marketingCopy = switch (experience) {
+    final marketingCopy = switch (widget.experience) {
       UserSignUpExperience.hereAndNow =>
         l10n.userSignUpHereAndNowMarketingConsent,
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendMarketingConsent,
     };
-    final ctaLabel = switch (experience) {
+    final ctaLabel = switch (widget.experience) {
       UserSignUpExperience.hereAndNow => l10n.userSignUpHereAndNowCta,
       UserSignUpExperience.foundingFriend => l10n.userSignUpFoundingFriendCta,
     };
@@ -160,55 +245,59 @@ final class UserSignUpForm extends StatelessWidget {
             final firstName = _textField(
               context: context,
               key: Key('firstNameField-$_semanticId'),
+              controller: _firstNameController,
               label: firstNameLabel,
               placeholder: l10n.userSignUpFirstNamePlaceholder,
               required: true,
-              errorText: firstNameError,
+              errorText: widget.firstNameError,
               keyboardType: TextInputType.name,
               autofillHints: const [AutofillHints.givenName],
-              onChanged: onFirstNameChanged,
+              onChanged: widget.onFirstNameChanged,
             );
             final lastName = _textField(
               context: context,
               key: Key('lastNameField-$_semanticId'),
+              controller: _lastNameController,
               label: lastNameLabel,
               placeholder: l10n.userSignUpLastNamePlaceholder,
               required: true,
-              errorText: lastNameError,
+              errorText: widget.lastNameError,
               keyboardType: TextInputType.name,
               autofillHints: const [AutofillHints.familyName],
-              onChanged: onLastNameChanged,
+              onChanged: widget.onLastNameChanged,
             );
             final email = _textField(
               context: context,
               key: Key('emailField-$_semanticId'),
+              controller: _emailController,
               label: l10n.userSignUpEmailLabel,
               placeholder: l10n.userSignUpEmailPlaceholder,
               required: true,
-              errorText: emailError,
+              errorText: widget.emailError,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
-              onChanged: onEmailChanged,
+              onChanged: widget.onEmailChanged,
             );
             final age = _textField(
               context: context,
               key: Key('ageField-$_semanticId'),
+              controller: _ageController,
               label: l10n.userSignUpAgeLabel,
               placeholder: l10n.userSignUpAgePlaceholder,
               required: true,
-              errorText: ageError,
+              errorText: widget.ageError,
               keyboardType: TextInputType.number,
               inputFormatters: const [_AsciiDigitsOnlyFormatter()],
-              onChanged: onAgeChanged,
+              onChanged: widget.onAgeChanged,
             );
             final genderField = _dropdownField(
               context: context,
               key: Key('genderField-$_semanticId'),
               label: l10n.userSignUpGenderLabel,
               placeholder: l10n.userSignUpGenderPlaceholder,
-              value: gender,
+              value: widget.gender,
               options: genderOptions,
-              onChanged: onGenderChanged,
+              onChanged: widget.onGenderChanged,
             );
             final countryField = _requiresCountry
                 ? SearchableCountryDropdown(
@@ -219,10 +308,10 @@ final class UserSignUpForm extends StatelessWidget {
                     ),
                     placeholder: l10n.userSignUpCountryPlaceholder,
                     noResultsLabel: l10n.userSignUpCountryNoResults,
-                    errorText: countryError,
-                    value: country,
+                    errorText: widget.countryError,
+                    value: widget.country,
                     options: countryOptions,
-                    onChanged: onCountryChanged,
+                    onChanged: widget.onCountryChanged,
                   )
                 : null;
 
@@ -260,23 +349,24 @@ final class UserSignUpForm extends StatelessWidget {
         _textField(
           context: context,
           key: Key('usageReasonField-$_semanticId'),
+          controller: _usageReasonController,
           label: usageReasonLabel,
           placeholder: l10n.userSignUpUsageReasonPlaceholder,
           minLines: 5,
           maxLines: 7,
           textInputAction: TextInputAction.newline,
           multiline: true,
-          onChanged: onUsageReasonChanged,
+          onChanged: widget.onUsageReasonChanged,
         ),
         const SizedBox(height: 20),
         UserSignUpMarketingConsent(
           semanticId: _semanticId,
           label: marketingCopy,
-          value: marketingConsent,
-          onChanged: onMarketingConsentChanged,
+          value: widget.marketingConsent,
+          onChanged: widget.onMarketingConsentChanged,
         ),
         SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 40 : 64),
-        if (hasSubmissionFailure) ...[
+        if (widget.hasSubmissionFailure) ...[
           Semantics(
             key: Key('userSignUpSubmissionFailure-$_semanticId'),
             container: true,
@@ -288,7 +378,7 @@ final class UserSignUpForm extends StatelessWidget {
           ),
           const SizedBox(height: 12),
         ],
-        if (isSubmitting) ...[
+        if (widget.isSubmitting) ...[
           Semantics(
             key: Key('userSignUpSubmissionProgress-$_semanticId'),
             container: true,
@@ -309,6 +399,7 @@ final class UserSignUpForm extends StatelessWidget {
   Widget _textField({
     required BuildContext context,
     required Key key,
+    required TextEditingController controller,
     required String label,
     required String placeholder,
     required ValueChanged<String> onChanged,
@@ -328,6 +419,7 @@ final class UserSignUpForm extends StatelessWidget {
 
     return BrandedFormTextField(
       fieldKey: key,
+      controller: controller,
       label: label,
       semanticLabel: semanticLabel,
       hint: placeholder,
@@ -390,7 +482,9 @@ final class UserSignUpForm extends StatelessWidget {
     buttonKey: Key('userSignUpSubmit-$_semanticId'),
     arrowKey: Key('userSignUpSubmitArrow-$_semanticId'),
     label: label,
-    onPressed: isSubmitting || submissionSucceeded ? null : onSubmit,
+    onPressed: widget.isSubmitting || widget.submissionSucceeded
+        ? null
+        : widget.onSubmit,
     disabledBackgroundColor: AppColors.warmOrange.withValues(alpha: 0.45),
   );
 

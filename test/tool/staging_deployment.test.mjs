@@ -44,6 +44,11 @@ test('payment enablement is explicit, sandbox-only, and never defaults', () => {
   for (const name of Object.keys(environment)) {
     assert.throws(() => paymentConfiguration({ ...environment, [name]: '' }), /Missing staging configuration/);
   }
+  assert.throws(() => paymentConfiguration({
+    ...environment,
+    STRIPE_SANDBOX_RESTRICTED_KEY: '',
+    STRIPE_SECRET_KEY: environment.STRIPE_SANDBOX_RESTRICTED_KEY,
+  }), /Missing staging configuration: STRIPE_SANDBOX_RESTRICTED_KEY/);
   for (const value of ['yes', 'TRUE', ' true ', '0']) {
     assert.throws(() => paymentConfiguration({ ...environment, STAGING_PAYMENT_CREATION_ENABLED: value }));
   }
@@ -70,6 +75,10 @@ test('preflight reads only the three existing staging identities with their own 
       project === 'staging-site-worker' ? 'Bearer site-token' : 'Bearer api-token',
     ]));
     assert.equal(statSync(resolve(directory, 'staging-payment-secrets.json')).mode & 0o777, 0o600);
+    assert.deepEqual(JSON.parse(readFileSync(resolve(directory, 'staging-payment-secrets.json'), 'utf8')), {
+      STRIPE_SECRET_KEY: environment.STRIPE_SANDBOX_RESTRICTED_KEY,
+      PURCHASE_REFERENCE_SECRET: environment.STAGING_PURCHASE_REFERENCE_SECRET,
+    });
     for (const project of Object.keys(targets)) {
       const config = readFileSync(resolve(directory, `${project}.json`), 'utf8');
       assert.ok(!config.includes(environment.STRIPE_SANDBOX_RESTRICTED_KEY));

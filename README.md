@@ -181,7 +181,7 @@ on Chrome in debug mode through the committed configurations:
   `localhost:8788`; the **Fun App Landing + Local Mock Workers** compound starts
   Flutter and both isolated Workers without contacting HubSpot or Stripe.
 - **Fun App Landing — Production** selects the production first-party Venue
-  source and same-origin payment verification boundary without loading `.env`.
+  source and fixed `https://funapp.world` payment boundary without loading `.env`.
   Registration remains deferred, so the purchase flow cannot start, and the
   payment Worker separately defaults creation to disabled.
 
@@ -194,9 +194,9 @@ puro flutter run -d chrome -t lib/main_prod.dart
 
 The explicit entrypoints select the dependency environment. Development uses
 `lib/main_dev.dart` and its deterministic fake source; production uses
-`lib/main_prod.dart` and sends same-origin requests. A local production browser
-run resolves `/api/venue-interest` to localhost and therefore does not reach
-the deployed Worker. Use development for local form behavior, or test the
+`lib/main_prod.dart` and sends current-origin Venue requests. A local production
+browser run resolves `/api/venue-interest` to localhost and therefore does not
+reach the deployed Worker. Use development for local form behavior, or test the
 production data source with its deterministic request-target seam.
 
 Build the production entrypoint locally without runtime defines:
@@ -229,7 +229,7 @@ production declaration for `funapp.world`.
 | Local direct HubSpot testing | Explicit browser-to-HubSpot testing for Here & Now and Founding Friend only. | `puro flutter run -d chrome -t lib/main_dev.dart --dart-define-from-file=.env --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot` | **Fun App Landing — Development (Direct HubSpot)** | Flutter-selected localhost. | Copy `.env.example` to ignored `.env` and set the public portal and two registration form IDs. No private token belongs in Flutter. |
 | Local mocked registration Worker | Exercise first-party registration serialization, validation, rate limiting, and deterministic responses without starting payment. | Start `npm run dev` in `cloudflare/venue-interest-worker`, then run `lib/main_dev.dart` on port `7357` with `.env` and `FUN_APP_REGISTRATION_TRANSPORT=local_worker`. | **Fun App Landing + Local Mock Worker** compound; its Flutter child is **Development (Local Registration Worker)**. | Flutter at `http://localhost:7357`; registration Worker at `http://localhost:8787`. | Copy the registration `.dev.vars.example` to ignored `.dev.vars` and root `.env.example` to ignored `.env`. |
 | Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Local Mock Workers** compound; its Flutter child is **Development (Local Workers)**. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
-| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Same-origin API URLs resolve to localhost, not deployed Workers. Registrations remain deferred and payment creation cannot start. |
+| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
 | Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
 | Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate then deploy the site and both staging API Workers through one workflow. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
 | Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Production registration and payment creation remain disabled. |
@@ -256,7 +256,7 @@ The standalone Worker commands are also supported execution modes:
 | Local direct HubSpot testing | In-memory fake success | Direct public HubSpot Forms API | **Real** development-selected forms | Deferred/fail-closed | Unavailable | **Can create HubSpot form records** when a developer submits | Cannot change production infrastructure, but supplied IDs may identify real HubSpot forms | Implemented; use only for explicitly authorized tests. |
 | Local mocked registration Worker | In-memory fake success | Local registration Worker | Mocked, no upstream call | Deferred/fail-closed | Unavailable | No | No | Implemented; deterministic. |
 | Local mocked Worker integration | In-memory fake success | Local registration Worker | Mocked, no upstream call | Local payment Worker | Mocked, no upstream call | No | No | Implemented; deterministic. |
-| Production-mode local run | Same-origin localhost request | Deferred/fail-closed | Registration unavailable | Same-origin localhost request boundary | Unavailable unless an operator separately proxies it | No during build; ordinary localhost has no deployed API routes | No | Implemented; provider paths normally unavailable locally. |
+| Production-mode local run | Same-origin localhost request | Deferred/fail-closed | Registration unavailable | Fixed `https://funapp.world` payment endpoints, subject to browser CORS | Production payment service boundary | No during build; runtime payment routes can attempt production requests; registration remains deferred | Payment requests target production, not a local mock | Use local mocked Worker integration for payment development. |
 | Staging artifact build | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No | No | Implemented build path; artifact is not deployed. |
 | Hosted staging | In-memory fake success; no staging Venue API route | `funapp-venue-interest-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Operational sandbox Checkout and verification after secret rotation were confirmed by the operator on 2026-10-31; not rechecked by this implementation. |
 | Hosted production | Existing `funapp-venue-interest` route may submit to HubSpot | Deferred/fail-closed in Flutter; registration routes remain unattached/disabled | Real for the existing Venue contract only | Repository boundary exists, but creation is disabled and no production payment route is approved | Live payment unavailable | Existing Venue submissions can create HubSpot records; no registration or payment activation is introduced here | This is production | Existing hosting/Worker behavior preserved. |
@@ -360,6 +360,12 @@ managed outside source control):
 | Secret | `CLOUDFLARE_WORKERS_API_TOKEN` | Existing least-privilege token limited to the two staging API Workers, including settings read and code deployment. No permissions are broadened automatically. |
 | Secret | `STRIPE_SANDBOX_RESTRICTED_KEY` | Restricted key beginning `rk_test_`; the workflow rejects live or standard secret keys. |
 | Secret | `STAGING_PURCHASE_REFERENCE_SECRET` | Independent random value of at least 32 characters, never shared with production. |
+
+`STRIPE_SANDBOX_RESTRICTED_KEY` is the canonical GitHub staging secret name;
+deployment maps it to the Worker's `STRIPE_SECRET_KEY` binding. If the GitHub
+environment currently uses `STRIPE_SECRET_KEY`, manually copy the existing
+sandbox restricted credential to the canonical name before deployment. This
+naming correction requires no credential rotation; there is no fallback alias.
 
 `STAGING_PAYMENT_CREATION_ENABLED` is required on every deployment. Missing,
 blank, or malformed values fail preflight before any Worker is changed; an
