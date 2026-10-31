@@ -3,13 +3,15 @@ name: PR Checks
 on:
   pull_request:
     branches:
+      - dev
       - main
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pr-checks-${{ github.event.pull_request.number }}
+  group: checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -47,6 +49,11 @@ jobs:
       - name: Validate staging Worker bundle
         run: npm run wrangler:validate:staging
 
+      - name: Test staging deployment safety and Wrangler upload metadata
+        env:
+          WORKER_PROJECT: venue-interest-worker
+        run: node --test ../../test/tool/staging_deployment.test.mjs
+
   payment-worker:
     name: Payment Worker checks
     runs-on: ubuntu-latest
@@ -81,7 +88,13 @@ jobs:
       - name: Validate staging Worker bundle
         run: npm run wrangler:validate:staging
 
+      - name: Test staging deployment safety and Wrangler upload metadata
+        env:
+          WORKER_PROJECT: founding-friend-payment-worker
+        run: node --test ../../test/tool/staging_deployment.test.mjs
+
   quality:
+    name: Flutter and staging site checks
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -189,3 +202,20 @@ jobs:
       - name: Validate staging Static Assets Worker bundle
         working-directory: cloudflare/staging-site-worker
         run: npm run wrangler:validate
+
+      - name: Test staging deployment safety and Wrangler upload metadata
+        env:
+          WORKER_PROJECT: staging-site-worker
+        run: node --test test/tool/staging_deployment.test.mjs
+
+      - name: Verify staging artifact identity
+        run: bash tool/verify_staging_artifact.sh
+
+      - name: Upload validated staging artifact for dev deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        uses: actions/upload-artifact@v7
+        with:
+          name: staging-web-${{ github.sha }}
+          path: build/web
+          if-no-files-found: error
+          retention-days: 1

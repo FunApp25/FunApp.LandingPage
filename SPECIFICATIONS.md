@@ -33,8 +33,11 @@ The repository also prepares an isolated staging composition for
 `https://staging.funapp.world`. Staging keeps Venue submissions deterministic
 and local to Flutter, sends Here & Now and Founding Friend registration to a
 staging-only no-I/O Worker entrypoint, and sends payment requests to a separate
-Worker pinned to Stripe sandbox mode. Staging infrastructure, credentials,
-routes, DNS, Access policy, and deployments remain external and unconfigured.
+Worker pinned to Stripe sandbox mode. The operator confirmed on 2026-10-31
+that staging resources and GitHub environment configuration exist and sandbox
+Checkout plus payment verification passed after purchase-reference secret
+rotation. Hosted state is managed externally and was not reverified by the CI
+implementation.
 
 ## 2. Decision model
 
@@ -145,8 +148,10 @@ Current implementation is evidence of repository state, not automatically a perm
   entrypoint accepts only the two exact payment paths on the staging host,
   requires `STRIPE_EXPECTED_LIVEMODE=false`, fixes the public origin to staging,
   and rejects non-restricted or non-sandbox Stripe keys before provider I/O. The
-  environment uses an invalid fail-closed Price/tax placeholder until the
-  workflow supplies reviewed sandbox values, and defaults creation to false.
+  source environment retains fail-closed Price/tax placeholders and a disabled
+  creation default for local validation. Automatic deployment removes those
+  defaults and explicitly supplies reviewed sandbox environment values, including
+  required creation enablement; automatic tax remains disabled.
   Its rate-limit namespace is distinct from production and registration.
 - Staging hosting uses the independent Cloudflare Workers Static Assets project
   in `cloudflare/staging-site-worker/`, deploying with Worker identity
@@ -995,15 +1000,15 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `deploy-founding-friend-payment-worker.yml` workflow. It validates before
   deployment, configures no route, and defaults
   `PAYMENT_CREATION_ENABLED` to false. No live Stripe Product/Price or key,
-  Cloudflare secret, route, GitHub Environment value, or deployment has been
-  created. A sandbox Product, Price, and restricted key were created manually
-  outside this repository, but are not stored or currently verified here. Later
+  production Cloudflare secret, production payment route, or live deployment is
+  introduced. The operator reports that the isolated sandbox staging integration
+  is operational; its credentials are not stored in this repository. Later
   production setup requires `STRIPE_PRICE_ID`,
   `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
   `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
   `PURCHASE_REFERENCE_SECRET`, the source-declared rate-limit binding, exact
   payment endpoint route attachment, and controlled Stripe/Cloudflare review.
-- Pull requests targeting `main` run the staging site Worker's typechecking,
+- Pull requests targeting `dev` or `main` run the staging site Worker's typechecking,
   tests, and dry-run validation, both API Worker projects' typechecking, tests,
   and root/staging dry-run validation, plus Flutter formatting, generation,
   analysis, full-suite coverage, and production/staging compile checks.
@@ -1018,52 +1023,85 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   review-only legal Markdown files from `build/web`. The production artifact
   does not publish those draft source documents as static assets.
 - Only pushes to `main` and manual dispatches run the production Pages
-  deployment. The `dev` branch has no automatic deployment workflow or Pages
-  environment.
-- Three staging workflows are `workflow_dispatch` only, require an explicit
-  confirmation input, and use the GitHub `staging` Environment. They deploy the
-  separate `funapp-landing-staging` Static Assets Worker, registration Worker
-  `--env staging`, or payment Worker `--env staging`; no push or pull-request
-  event invokes them. The site Worker has public `workers.dev` and preview URLs
-  disabled and declares neither a Custom Domain nor a route. The payment
-  workflow accepts only a restricted `rk_test_` key, pins expected live mode to
-  false, and derives creation enablement from an explicit manual checkbox that
-  defaults to false.
-- Staging Wrangler configurations declare all non-inherited variables and
-  rate-limit bindings. Namespace IDs `2001` and `2002` are source-selected
-  staging values; an operator must confirm account-wide uniqueness before
-  deployment. Neither staging environment declares a route, so code deployment
-  alone cannot attach to a hostname.
+  deployment. Its `github-pages` environment remains unchanged. Production
+  Worker deployment workflows remain manual-only and no live Stripe payment
+  activation is introduced.
+- Pushes to `dev`, including PR merges, run `deploy-staging-site.yml` (**Deploy
+  Staging**). It calls the credential-free `pr_checks.yml` via `workflow_call`
+  and requires every validation job to succeed before its sole publishing job
+  may enter the GitHub `staging` environment. That environment is restricted to
+  `dev`; GitHub `production` is restricted to `main`.
+- PR events target `dev` and `main` and validate only. They never reference the
+  staging environment, inherit deployment secrets, or invoke a deployment job.
+  Stable PR check names are **Worker checks**, **Payment Worker checks**, and
+  **Flutter and staging site checks**. No path filter skips these checks.
+- The three prior staging workflows are consolidated into one push-only
+  workflow; the individual manual staging API deployment workflows and payment
+  enablement checkbox are retired. The publishing job uses a shared concurrency
+  lock without cancelling an active publish and checks the revision against
+  current `dev` HEAD under that lock, rejecting superseded queued jobs/reruns.
+- The staging site artifact comes from the successful validation run for that
+  revision. It is prepared with the existing tool and checked before upload and
+  again after download. Flutter builds never receive deployment credentials.
+  Both API Workers publish before the site; publishing is sequential, not atomic.
+- Preflight validates the complete existing environment configuration and reads
+  settings for all three existing staging identities with their respective
+  tokens before any publish. Denied reads, missing resources/configuration, or
+  malformed payment values fail without provisioning resources or widening
+  token permissions. Generated configs hard-code the selected staging identities
+  and entrypoints and do not include any routes or Custom Domains.
+- `keep_vars` alone preserves only plain/JSON variables, not every binding.
+  Generated configs use Wrangler `unsafe.metadata.keep_bindings` with every
+  currently deployed binding type plus plain/JSON and encrypted-secret types.
+  They omit source rate-limit declarations so deployed namespaces/limits and
+  other dashboard bindings survive. Tests inspect the locked Wrangler upload
+  metadata. Source defaults remain useful for dry-run checks; they are not
+  deployed over working dashboard configuration. Dashboard settings must remain
+  stable during the short preflight/publish interval.
+- Required staging variables are `CLOUDFLARE_ACCOUNT_ID`,
+  `STAGING_PAYMENT_CREATION_ENABLED`, `STRIPE_SANDBOX_PRICE_ID`, and
+  `STRIPE_SANDBOX_AUTOMATIC_TAX_ENABLED`. Required secrets are
+  `CLOUDFLARE_STAGING_SITE_API_TOKEN`, `CLOUDFLARE_WORKERS_API_TOKEN`,
+  `STRIPE_SANDBOX_RESTRICTED_KEY`, and `STAGING_PURCHASE_REFERENCE_SECRET`.
+  The site token remains distinct from the two-API-Worker token. Existing
+  least-privilege credentials need settings read and deployment access to their
+  respective Workers, with no added DNS, route, or Access permissions.
+- `STAGING_PAYMENT_CREATION_ENABLED` is a required exact boolean string and is
+  explicitly mapped to `PAYMENT_CREATION_ENABLED`, with no silent fallback.
+  The current environment has sandbox creation enabled. Automatic tax must
+  remain false, expected live mode is pinned false, the origin is fixed to
+  staging, and the key must be restricted/sandbox. The five public payment
+  variables are supplied explicitly; neither Price/tax placeholders nor the
+  source disabled default are carried into deployment.
+- Both existing encrypted payment secrets are supplied atomically with code
+  using `--secrets-file` from a mode-0600 `RUNNER_TEMP` file, cleaned on every
+  outcome. Secrets are not written to source, web bundles, artifacts, or logs.
+  Rotations must keep GitHub and Cloudflare synchronized.
 - The staging site uses `build/web` as its Static Assets directory with SPA
   fallback. Its script runs first for `/api` and `/api/*` and returns `404`,
   preventing an absent or mistyped API Route from returning the SPA document
   with `200`.
 - The exact local staging site sequence is `puro flutter build web -t
   lib/main_staging.dart`, `puro dart run
-  tool/prepare_staging_release_artifact.dart`, then from
-  `cloudflare/staging-site-worker/`, `npm ci`, `npm run typecheck`, `npm test`,
-  and `npm run wrangler:validate`. The authorized manual deploy command from
-  that directory is `npx wrangler deploy`; the repository does not run it
-  automatically.
-- The GitHub `staging` Environment uses `CLOUDFLARE_ACCOUNT_ID` and the distinct
-  `CLOUDFLARE_STAGING_SITE_API_TOKEN` for the site. Initial Worker creation
-  requires a staging-account-scoped Workers product Admin token; after creation
-  it must be rotated to an Editor token scoped to `funapp-landing-staging`.
-  That token receives no DNS, route, or Access permission. The existing
-  `CLOUDFLARE_WORKERS_API_TOKEN` remains for the two staging API Workers. Their
-  first deployments likewise require a staging-account-scoped Workers product
-  Admin token because neither identity exists; after both are created it must
-  be rotated to Editor access limited to those two Workers.
-- Intended dashboard-managed staging routes are only
+  tool/prepare_staging_release_artifact.dart`, `bash
+  tool/verify_staging_artifact.sh`, then from `cloudflare/staging-site-worker/`,
+  `npm ci`, `npm run typecheck`, `npm test`, and `npm run wrangler:validate`.
+  These commands validate only. Automatic publishing uses generated staging
+  configs after complete preflight, rather than deploying source placeholders.
+- A normal rollback reverts code through a PR to `dev`, then validates and
+  republishes with current environment secrets. For an emergency version rollback,
+  disable the staging workflow, cancel queued runs, let any active publish
+  settle, and restore known-good versions on the affected staging Workers in
+  Cloudflare. Review version-bound variables/secrets first: an older version may
+  restore pre-rotation secrets. See the README operational procedure. No
+  rollback automatically changes routing or production resources.
+- Dashboard-managed staging routes remain only
   `staging.funapp.world/api/registrations/*` to the staging registration Worker
   and `staging.funapp.world/api/founding-friend-payments/*` to the staging
-  payment Worker. The site Worker Custom Domain, Cloudflare-created DNS record
-  and certificate, those routes, and hostname-based Access must be configured
-  manually in the documented order. First deploy the unreachable site Worker,
-  enable Worker-level Access for all of its traffic, rotate the bootstrap token,
-  add `staging.funapp.world` as its dashboard-managed Custom Domain, then create
-  a hostname-based self-hosted Access application for the exact hostname with
-  no Path value before adding the two API Routes. Hostname-based Access is
+  payment Worker. The existing site Worker Custom Domain, Cloudflare-created DNS record
+  and certificate, those routes, and hostname-based Access remain externally
+  managed and must be preserved. The Access application must cover the exact
+  hostname with no Path value. Hostname-based Access is
   required to cover requests handled by all three Workers; site-Worker Access
   alone does not cover the separate API Workers. No staging route belongs on
   `funapp.world`, and the existing

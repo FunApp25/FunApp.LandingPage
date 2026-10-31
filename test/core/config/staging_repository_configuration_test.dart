@@ -131,50 +131,59 @@ void main() {
     );
   });
 
-  test('staging workflows are manual-only and hard-code staging targets', () {
-    final expectations = <String, List<String>>{
-      '.github/workflows/deploy-staging-site.yml': [
-        'workflow_dispatch:',
-        'environment: staging',
-        'CLOUDFLARE_STAGING_SITE_API_TOKEN',
-        'workingDirectory: cloudflare/staging-site-worker',
-        'command: deploy',
-        '-t lib/main_staging.dart',
-      ],
-      '.github/workflows/deploy-staging-registration-worker.yml': [
-        'workflow_dispatch:',
-        'environment: staging',
-        'command: deploy --env staging',
-        'funapp-venue-interest-staging',
-      ],
-      '.github/workflows/deploy-staging-payment-worker.yml': [
-        'workflow_dispatch:',
-        'environment: staging',
-        'command: deploy --env staging',
-        "STRIPE_EXPECTED_LIVEMODE: 'false'",
-        'STRIPE_SANDBOX_RESTRICTED_KEY',
-      ],
-    };
+  test('PR validation has no deployment credentials or environment', () {
+    final workflow = File(
+      '.github/workflows/pr_checks.yml',
+    ).readAsStringSync();
 
-    for (final entry in expectations.entries) {
-      final workflow = File(entry.key).readAsStringSync();
-      for (final expected in entry.value) {
-        expect(workflow, contains(expected), reason: entry.key);
-      }
-      expect(
-        workflow,
-        isNot(matches(RegExp(r'^\s*(push|pull_request):', multiLine: true))),
-        reason: entry.key,
-      );
-      expect(workflow, isNot(contains('environment: production')));
-      expect(workflow, isNot(contains('funapp.world/api/venue-interest')));
-    }
+    expect(workflow, contains('pull_request:'));
+    expect(workflow, contains('      - dev'));
+    expect(workflow, contains('      - main'));
+    expect(workflow, contains('workflow_call:'));
+    expect(workflow, contains('contents: read'));
+    expect(workflow, isNot(contains('secrets.')));
+    expect(workflow, isNot(contains('environment: staging')));
+    expect(workflow, isNot(contains('wrangler-action')));
+  });
 
-    final siteWorkflow = File(
+  test('staging publishing requires successful checks and a dev push', () {
+    final workflow = File(
       '.github/workflows/deploy-staging-site.yml',
     ).readAsStringSync();
-    expect(siteWorkflow, isNot(contains('pages deploy')));
-    expect(siteWorkflow, isNot(contains('CLOUDFLARE_PAGES_API_TOKEN')));
+
+    for (final expected in [
+      'push:',
+      '      - dev',
+      'uses: ./.github/workflows/pr_checks.yml',
+      'needs: checks',
+      "if: github.event_name == 'push' && github.ref == 'refs/heads/dev'",
+      'environment: staging',
+      'group: funapp-staging-deployment',
+      'cancel-in-progress: false',
+      'git ls-remote --exit-code origin refs/heads/dev',
+      'CLOUDFLARE_STAGING_SITE_API_TOKEN',
+      'CLOUDFLARE_WORKERS_API_TOKEN',
+      'vars.STAGING_PAYMENT_CREATION_ENABLED',
+      'vars.STRIPE_SANDBOX_PRICE_ID',
+      'secrets.STRIPE_SANDBOX_RESTRICTED_KEY',
+      'secrets.STAGING_PURCHASE_REFERENCE_SECRET',
+      'node tool/prepare_staging_deployment.mjs',
+      'bash tool/verify_staging_artifact.sh',
+    ]) {
+      expect(workflow, contains(expected));
+    }
+    expect(workflow, isNot(contains('workflow_dispatch:')));
+    expect(workflow, isNot(contains('pull_request:')));
+    expect(workflow, isNot(contains('environment: production')));
+    expect(workflow, isNot(contains('enable_payment_creation')));
+    expect(workflow, isNot(contains('pages deploy')));
+    expect(workflow, isNot(contains('funapp.world/api/venue-interest')));
+    for (final retired in [
+      '.github/workflows/deploy-staging-registration-worker.yml',
+      '.github/workflows/deploy-staging-payment-worker.yml',
+    ]) {
+      expect(File(retired).existsSync(), false);
+    }
   });
 
   test('staging artifact preparation removes production host metadata', () {
