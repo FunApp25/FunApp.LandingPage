@@ -142,14 +142,86 @@ void main() {
     expect(workflow, contains('workflow_call:'));
     expect(workflow, contains('contents: read'));
     expect(workflow, isNot(contains('secrets.')));
+    expect(workflow, isNot(contains('secrets:')));
     expect(workflow, isNot(contains('environment: staging')));
     expect(workflow, isNot(contains('wrangler-action')));
   });
 
-  test('staging publishing requires successful checks and a dev push', () {
+  test('staging diagnostic replaces publishing on validated dev pushes', () {
     final workflow = File(
       '.github/workflows/deploy-staging-site.yml',
     ).readAsStringSync();
+    final jobs = workflow.split('\njobs:\n').last;
+    expect(
+      RegExp(
+        r'^  ([A-Za-z_][A-Za-z0-9_-]*):$',
+        multiLine: true,
+      ).allMatches(jobs).map((match) => match.group(1)).toList(),
+      ['checks', 'diagnostic', 'deploy'],
+    );
+    final diagnostic = jobs
+        .split('\n  diagnostic:\n')
+        .last
+        .split(
+          '\n  deploy:\n',
+        )
+        .first;
+    final deploy = jobs.split('\n  deploy:\n').last;
+    expect(
+      deploy,
+      contains(
+        r'    if: ${{ false }}'
+        '\n',
+      ),
+    );
+    expect(deploy, contains('needs: checks'));
+    expect(deploy, contains('group: funapp-staging-deployment'));
+    expect(deploy, contains('git ls-remote --exit-code origin refs/heads/dev'));
+    expect(
+      diagnostic,
+      contains(
+        "    if: github.event_name == 'push' && "
+        "github.ref == 'refs/heads/dev'\n",
+      ),
+    );
+    expect(diagnostic, contains('needs: checks'));
+    expect(diagnostic, contains('environment: staging'));
+    expect(diagnostic, contains('group: funapp-staging-deployment'));
+    expect(diagnostic, contains('cancel-in-progress: false'));
+    expect(diagnostic, contains('persist-credentials: false'));
+    expect(diagnostic, contains(r'${{ vars.CLOUDFLARE_ACCOUNT_ID }}'));
+    expect(
+      RegExp(r'\$\{\{ secrets\.([A-Z_]+) \}\}')
+          .allMatches(diagnostic)
+          .map((match) => match.group(1))
+          .toList(),
+      ['CLOUDFLARE_WORKERS_API_TOKEN'],
+    );
+    expect(
+      RegExp(
+        r'^        run: (.+)$',
+        multiLine: true,
+      ).allMatches(diagnostic).map((match) => match.group(1)).toList(),
+      ['node tool/staging_cloudflare_diagnostic.mjs'],
+    );
+    expect(diagnostic, isNot(contains('wrangler')));
+    expect(diagnostic, isNot(contains('artifact')));
+    expect(workflow, contains('permissions:\n  contents: read\n\n'));
+
+    final checks = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    final artifactUpload = checks
+        .split(
+          '- name: Upload validated staging artifact for dev deployment\n',
+        )
+        .last;
+    expect(
+      artifactUpload,
+      contains(
+        r'        if: ${{ false }}'
+        '\n',
+      ),
+    );
+    expect(checks, contains('staging_cloudflare_diagnostic.test.mjs'));
 
     for (final expected in [
       'push:',
@@ -178,6 +250,7 @@ void main() {
     expect(workflow, isNot(contains('enable_payment_creation')));
     expect(workflow, isNot(contains('pages deploy')));
     expect(workflow, isNot(contains('funapp.world/api/venue-interest')));
+    expect(workflow, isNot(contains('secrets: inherit')));
     for (final retired in [
       '.github/workflows/deploy-staging-registration-worker.yml',
       '.github/workflows/deploy-staging-payment-worker.yml',

@@ -231,7 +231,7 @@ production declaration for `funapp.world`.
 | Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Local Mock Workers** compound; its Flutter child is **Development (Local Workers)**. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
 | Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
 | Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
-| Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate then deploy the site and both staging API Workers through one workflow. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
+| Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate and run read-only Cloudflare diagnostics; staging publishing is temporarily disabled. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
 | Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Production registration and payment creation remain disabled. |
 
 The standalone Worker commands are also supported execution modes:
@@ -274,7 +274,7 @@ The standalone Worker commands are also supported execution modes:
 | Push a commit to `main` | `deploy.yml` regenerates, analyzes, tests, and builds production. | **Deploys production GitHub Pages** | Existing production behavior is intentionally preserved. It does not deploy either Worker or staging. |
 | Manually dispatch `deploy.yml` | Same production validation/build. | **Deploys production GitHub Pages** | Production action; unrelated to staging. |
 | Manually dispatch either existing production Worker workflow | Validates the selected root Worker. | **Deploys that production Worker identity** | Uses GitHub `production`; no routes are changed. These are not staging commands. |
-| Push a commit to `dev` (including a PR merge) | Reuses every `pr_checks.yml` validation, including production/staging builds and all three Worker suites. | **Deploys staging only after all checks succeed** | `deploy-staging-site.yml` uses GitHub `staging`, rejects superseded revisions, deploys both staging API Workers, then publishes the validated staging site artifact. |
+| Push a commit to `dev` (including a PR merge) | Reuses every `pr_checks.yml` validation, including production/staging builds and all three Worker suites. | **Nothing; staging publishing and staging web artifact upload are explicitly disabled** | `deploy-staging-site.yml` runs read-only payment Worker metadata diagnostics after validation, using GitHub `staging` and the existing API Worker token. |
 
 The staging workflow has no manual or PR deployment trigger. The former
 individual staging API deployment workflows have been retired so there is one
@@ -392,16 +392,45 @@ npm run wrangler:validate
 ```
 
 The **Deploy Staging** workflow (`deploy-staging-site.yml`) runs on pushes to
-`dev` only. It calls the same credential-free checks used by PRs and deploys
-only after every check succeeds. The Flutter job builds `lib/main_staging.dart`,
-prepares and verifies its isolated metadata, and uploads that run's artifact.
-The deployment job downloads that exact artifact; it does not rebuild Flutter
-with credentials present. Required-check names for PR branch protection are
-**Worker checks**, **Payment Worker checks**, and **Flutter and staging site
-checks**. There are no path filters that silently skip these checks.
+`dev` only and calls the same credential-free checks used by PRs. **Temporary
+diagnostic state:** the entire `deploy` job and the staging web artifact upload
+in `pr_checks.yml` have literal `if: ${{ false }}` conditions. No staging Worker,
+secret, or site asset can be published by this revision. Builds, tests, and
+credential-free Wrangler dry runs remain enabled, as does coverage upload.
+Required-check names for PR branch protection remain **Worker checks**,
+**Payment Worker checks**, and **Flutter and staging site checks**.
 
-Publishing is serialized without cancelling an active deployment. A dev-HEAD
-comparison under that lock rejects stale reruns and jobs queued out of order.
+After checks pass, the `diagnostic` job enters GitHub `staging`, using only
+`CLOUDFLARE_ACCOUNT_ID` and the existing `CLOUDFLARE_WORKERS_API_TOKEN`. It holds
+the same `funapp-staging-deployment` lock with `cancel-in-progress: false`.
+`tool/staging_cloudflare_diagnostic.mjs` makes seven fixed Cloudflare API GETs:
+service metadata first, then bindings, routes, Custom Domain records, subdomain,
+environment, and schedules for `funapp-founding-friend-payment-staging`, using
+the service's actual internal environment. No local dotenv or alternate token
+is used. Redirects are rejected; each request/body read has a 30-second timeout,
+with no retries. An unusable service lookup stops the probes; otherwise all six
+are attempted even if one fails.
+
+Each diagnostic line is JSON containing only `endpoint`, `http_status`,
+`cloudflare_error_codes` (nonnegative integer codes), and `cf_ray` (a validated
+identifier or null). No bodies, error messages, environment names, account IDs,
+bindings, or credentials are logged. Missing credentials and transport failures
+use null status; malformed responses retain the received status. Exit code 1
+means at least one lookup failed or was unusable; exit code 0 means all succeeded.
+Run mocked diagnostics with `node --test test/tool/staging_cloudflare_diagnostic.test.mjs`;
+run deployment safety tests with `node --test test/tool/staging_deployment.test.mjs`.
+
+Restoration requires a separate reviewed repair: remove the diagnostic job,
+restore the dev-push conditions on both disabled paths, and update the temporary
+safety assertions and this documentation. Reverting this change wholesale would
+re-enable publishing. Existing queued/active runs from older revisions are not
+disabled by this file change and are not cancelled by the shared lock.
+
+The retained publishing path below is inactive until that restoration. It
+downloads the exact validated artifact without rebuilding Flutter with
+credentials present. Publishing is serialized without cancelling an active
+deployment. A dev-HEAD comparison under that lock rejects stale reruns and jobs
+queued out of order.
 A push arriving during publishing waits for the active deployment to finish.
 Both API Workers publish before the site. The three deployments are sequential,
 not atomic; a later failure can leave a partial staging release.
@@ -448,7 +477,7 @@ and secrets already exist, and sandbox Checkout plus payment verification passed
 after purchase-reference secret rotation. This implementation does not repeat
 that hosted verification or modify external configuration.
 
-Before enabling this change through the normal review/merge process:
+Before restoring publishing through a separate reviewed repair:
 
 1. Retain GitHub `staging` restricted to `dev`, `production` restricted to `main`,
    and the existing `github-pages` environment. Add the three check names above
