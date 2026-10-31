@@ -20,6 +20,7 @@ final class BrandedFormDropdown<T> extends StatelessWidget {
     required this.options,
     required this.onChanged,
     this.validator,
+    this.errorText,
     this.required = false,
     this.caretKey,
     this.optionKeys = const {},
@@ -57,6 +58,9 @@ final class BrandedFormDropdown<T> extends StatelessWidget {
 
   /// Optional form validation callback.
   final String? Function(T?)? validator;
+
+  /// Optional externally coordinated validation error.
+  final String? errorText;
 
   /// Whether to append a visible required marker.
   final bool required;
@@ -110,6 +114,7 @@ final class BrandedFormDropdown<T> extends StatelessWidget {
               dropdownColor: AppColors.lightForeground,
               style: inputStyle,
               decoration: InputDecoration(
+                errorText: errorText,
                 filled: true,
                 fillColor: AppColors.lightForeground,
                 isDense: true,

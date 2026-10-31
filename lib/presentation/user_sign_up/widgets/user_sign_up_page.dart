@@ -13,40 +13,27 @@ import 'package:fun_app_landing_page/presentation/landing/sections/header/landin
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/utils/open_user_sign_up_experience.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form_region.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
 
 /// Shared branded page shell for the two prospective-user forms.
-final class UserSignUpPage extends StatefulWidget {
+final class UserSignUpPage extends StatelessWidget {
   /// Creates a presentation-only sign-up page.
   const UserSignUpPage({
     required this.experience,
-    this.onSubmit,
     this.showConfirmedSuccess = false,
+    this.contentOverride,
     super.key,
   });
 
   /// Determines the approved copy and field surface.
   final UserSignUpExperience experience;
 
-  /// Optional test/development submission seam; absent in production.
-  final UserSignUpSubmit? onSubmit;
-
-  /// Injected confirmed-success state for Here & Now previews/tests only.
+  /// Confirmed success from the selected application workflow.
   final bool showConfirmedSuccess;
 
-  @override
-  State<UserSignUpPage> createState() => _UserSignUpPageState();
-}
-
-final class _UserSignUpPageState extends State<UserSignUpPage> {
-  final _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+  /// Optional workflow-specific content rendered inside the branded card.
+  final Widget? contentOverride;
 
   void _openLandingSection(
     BuildContext context,
@@ -57,12 +44,10 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final showsConfirmedSuccess =
-        widget.experience == UserSignUpExperience.hereAndNow &&
-        widget.showConfirmedSuccess;
+    final showsConfirmedSuccess = showConfirmedSuccess;
 
     return Scaffold(
-      key: Key('userSignUpPage-${widget.experience.name}'),
+      key: Key('userSignUpPage-${experience.name}'),
       backgroundColor: AppColors.lightForeground,
       body: SafeArea(
         child: Column(
@@ -96,13 +81,12 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
             Expanded(
               child: ViewportFooterScrollView(
                 scrollKey: Key(
-                  'userSignUpScrollView-${widget.experience.name}',
+                  'userSignUpScrollView-${experience.name}',
                 ),
-                controller: _scrollController,
                 content: _UserSignUpMain(
-                  experience: widget.experience,
-                  onSubmit: widget.onSubmit,
+                  experience: experience,
                   showConfirmedSuccess: showsConfirmedSuccess,
+                  contentOverride: contentOverride,
                 ),
                 footer: LandingFooter(
                   onLogoSelected: () => _openLandingSection(
@@ -140,13 +124,13 @@ final class _UserSignUpPageState extends State<UserSignUpPage> {
 final class _UserSignUpMain extends StatelessWidget {
   const _UserSignUpMain({
     required this.experience,
-    required this.onSubmit,
     required this.showConfirmedSuccess,
+    required this.contentOverride,
   });
 
   final UserSignUpExperience experience;
-  final UserSignUpSubmit? onSubmit;
   final bool showConfirmedSuccess;
+  final Widget? contentOverride;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -175,36 +159,40 @@ final class _UserSignUpMain extends StatelessWidget {
               color: AppColors.beigeAccent,
               borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             ),
-            child: showConfirmedSuccess
-                ? UserSignUpSuccess(mobile: mobile)
-                : Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      mobile ? 16 : 40,
-                      mobile ? 80 : 128,
-                      mobile ? 16 : 40,
-                      mobile ? 80 : 128,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        key: Key('userSignUpContent-${experience.name}'),
-                        constraints: const BoxConstraints(maxWidth: 1016),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _UserSignUpIntroduction(
-                              experience: experience,
-                              mobile: mobile,
-                            ),
-                            SizedBox(height: mobile ? 40 : 64),
-                            UserSignUpForm(
-                              experience: experience,
-                              onSubmit: onSubmit,
-                            ),
-                          ],
+            child:
+                contentOverride ??
+                (showConfirmedSuccess
+                    ? UserSignUpSuccess(
+                        experience: experience,
+                        mobile: mobile,
+                      )
+                    : Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          mobile ? 16 : 40,
+                          mobile ? 80 : 128,
+                          mobile ? 16 : 40,
+                          mobile ? 80 : 128,
                         ),
-                      ),
-                    ),
-                  ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            key: Key('userSignUpContent-${experience.name}'),
+                            constraints: const BoxConstraints(maxWidth: 1016),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _UserSignUpIntroduction(
+                                  experience: experience,
+                                  mobile: mobile,
+                                ),
+                                SizedBox(height: mobile ? 40 : 64),
+                                UserSignUpFormRegion(
+                                  experience: experience,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )),
           ),
         ),
       );

@@ -3,6 +3,9 @@ enum AppEnvironment {
   /// Local development with deterministic development data sources.
   development,
 
+  /// Hosted staging with isolated first-party Worker integrations.
+  staging,
+
   /// Production composition with real-provider data sources.
   production,
 }

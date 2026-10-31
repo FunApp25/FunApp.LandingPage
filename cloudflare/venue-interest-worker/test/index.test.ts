@@ -7,6 +7,7 @@ import {
 } from '../src/index';
 
 const endpoint = 'https://funapp.world/api/venue-interest';
+const localEndpoint = 'http://localhost:8787/api/venue-interest';
 const testEnv: Env = {
   HUBSPOT_PORTAL_ID: 'test-portal',
   HUBSPOT_FORM_GUID: '00000000-0000-0000-0000-000000000000',
@@ -22,6 +23,62 @@ const minimalVenueInterest = {
 };
 
 describe('POST /api/venue-interest', () => {
+  it.each([
+    [
+      'only the established binding',
+      { HUBSPOT_FORM_GUID: '11111111-1111-1111-1111-111111111111' },
+      '11111111-1111-1111-1111-111111111111',
+    ],
+    [
+      'only the optional alias',
+      { HUBSPOT_VENUE_FORM_GUID: '22222222-2222-2222-2222-222222222222' },
+      '22222222-2222-2222-2222-222222222222',
+    ],
+    [
+      'identical bindings',
+      {
+        HUBSPOT_FORM_GUID: '33333333-3333-3333-3333-333333333333',
+        HUBSPOT_VENUE_FORM_GUID: '33333333-3333-3333-3333-333333333333',
+      },
+      '33333333-3333-3333-3333-333333333333',
+    ],
+    [
+      'conflicting bindings',
+      {
+        HUBSPOT_FORM_GUID: '44444444-4444-4444-4444-444444444444',
+        HUBSPOT_VENUE_FORM_GUID: '55555555-5555-5555-5555-555555555555',
+      },
+      '44444444-4444-4444-4444-444444444444',
+    ],
+  ])('uses the expected Venue form with %s', async (_, formBindings, expectedGuid) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      { HUBSPOT_PORTAL_ID: 'test-portal', ...formBindings },
+      upstreamFetch,
+    );
+
+    expect(response.status).toBe(204);
+    expect(upstreamFetch).toHaveBeenCalledWith(
+      new URL(
+        `https://api.hsforms.com/submissions/v3/integration/submit/test-portal/${expectedGuid}`,
+      ),
+      expect.any(Object),
+    );
+  });
+
+  it('fails closed when both Venue form bindings are missing', async () => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      { HUBSPOT_PORTAL_ID: 'test-portal' },
+      upstreamFetch,
+    );
+
+    await expectError(response, 500, 'unexpected');
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
   it('maps a valid full submission to the exact HubSpot payload', async () => {
     let capturedInput: RequestInfo | URL | undefined;
     let capturedInit: RequestInit | undefined;
@@ -229,6 +286,47 @@ describe('POST /api/venue-interest', () => {
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['missing mock settings', {}],
+    ['only the local origin', { LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'http://localhost:7357' }],
+    ['only the mock scenario', { HUBSPOT_MOCK_SCENARIO: 'success' }],
+    [
+      'an invalid local origin',
+      {
+        LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'https://funapp.world',
+        HUBSPOT_MOCK_SCENARIO: 'success',
+      },
+    ],
+  ])('fails closed locally with %s without provider I/O', async (_, mockEnv) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      { ...testEnv, ...mockEnv },
+      upstreamFetch,
+      localEndpoint,
+    );
+
+    await expectError(response, 500, 'unexpected');
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
+  it('serves a valid local Venue mock without provider I/O', async () => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      {
+        ...testEnv,
+        LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'http://localhost:7357',
+        HUBSPOT_MOCK_SCENARIO: 'success',
+      },
+      upstreamFetch,
+      localEndpoint,
+    );
+
+    expect(response.status).toBe(204);
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
   it('maps HubSpot 200 to 204 without exposing its response body', async () => {
     const response = await post(
       minimalVenueInterest,
@@ -336,6 +434,23 @@ async function post(
     }),
     upstreamFetch,
     submissionTimeoutMs,
+  );
+}
+
+async function postWithEnv(
+  body: Record<string, unknown>,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+  requestEndpoint = endpoint,
+): Promise<Response> {
+  return handleVenueInterestRequest(
+    new Request(requestEndpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
+    }),
+    env,
+    { upstreamFetch },
   );
 }
 

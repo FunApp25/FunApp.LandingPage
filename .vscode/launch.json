@@ -10,12 +10,84 @@
       "flutterMode": "debug"
     },
     {
+      "name": "Fun App Landing — Development (Direct HubSpot)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define-from-file=.env",
+        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot"
+      ]
+    },
+    {
+      "name": "Fun App Landing — Development (Local Registration Worker)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--web-port=7357",
+        "--dart-define-from-file=.env",
+        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker"
+      ]
+    },
+    {
+      "name": "Fun App Landing — Development (Local Workers)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--web-port=7357",
+        "--dart-define-from-file=.env",
+        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker",
+        "--dart-define=FUN_APP_PAYMENT_TRANSPORT=local_worker"
+      ]
+    },
+    {
+      "name": "Fun App Worker — Local Mock",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/cloudflare/venue-interest-worker"
+    },
+    {
+      "name": "Fun App Payment Worker — Local Mock",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "npm run dev:mock",
+      "cwd": "${workspaceFolder}/cloudflare/founding-friend-payment-worker"
+    },
+    {
       "name": "Fun App Landing — Production",
       "request": "launch",
       "type": "dart",
       "program": "lib/main_prod.dart",
       "deviceId": "chrome",
       "flutterMode": "debug"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Fun App Landing + Local Mock Worker",
+      "configurations": [
+        "Fun App Worker — Local Mock",
+        "Fun App Landing — Development (Local Registration Worker)"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Fun App Landing + Local Mock Workers",
+      "configurations": [
+        "Fun App Worker — Local Mock",
+        "Fun App Payment Worker — Local Mock",
+        "Fun App Landing — Development (Local Workers)"
+      ],
+      "stopAll": true
     }
   ]
 }

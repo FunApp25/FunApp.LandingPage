@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
-import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -30,15 +29,11 @@ void configureBundledGoogleFonts() {
 /// Configures dependencies and starts the Fun App landing-page application.
 Future<void> bootstrapApp({
   required AppEnvironment environment,
-  ReleaseConfiguration releaseConfiguration =
-      const ReleaseConfiguration.fromEnvironment(),
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
   configureBundledGoogleFonts();
   configureDependencies(environment);
   runApp(
-    FunAppLandingPageApp(
-      releaseConfiguration: releaseConfiguration,
-    ),
+    const FunAppLandingPageApp(),
   );
 }

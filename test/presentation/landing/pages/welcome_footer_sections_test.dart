@@ -376,13 +376,13 @@ void main() {
     expect(logoRect.left, contentRect.left);
     expect(dividerRect.width, 1360);
     expect(dividerRect.top - navigationRect.bottom, 72);
-    expect(legalRect.top - dividerRect.bottom, 71);
+    expect(legalRect.top - dividerRect.bottom, 77);
     expect(legalRect.center.dy, closeTo(emailRect.center.dy, 0.01));
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    'shows five functional legal controls in the approved order',
+    'shows only the approved Privacy legal control',
     (
       tester,
     ) async {
@@ -390,28 +390,21 @@ void main() {
       await pumpLandingApp(tester);
 
       final footer = find.byType(LandingFooter);
-      for (final label in const [
-        'Privacy Policy',
-        'Terms of Use',
-        'Refund & Cancellation Policy',
-        'Cookie Policy',
-        'Cookie Banner',
-      ]) {
-        expect(
-          find.descendant(of: footer, matching: find.text(label)),
-          findsOneWidget,
-        );
-      }
+      expect(
+        find.descendant(of: footer, matching: find.text('Privacy Policy')),
+        findsOneWidget,
+      );
+      final privacy = find.byKey(const Key('footerPrivacyNoticeLink'));
+      final data = tester.getSemantics(privacy).getSemanticsData();
+      expect(data.flagsCollection.isLink, isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
       for (final key in const [
-        Key('footerPrivacyNoticeLink'),
         Key('footerTermsLink'),
         Key('footerRefundsLink'),
         Key('footerCookiePolicyLink'),
         Key('footerCookieBannerLink'),
       ]) {
-        final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
-        expect(data.flagsCollection.isLink, isTrue);
-        expect(data.hasAction(SemanticsAction.tap), isTrue);
+        expect(find.byKey(key), findsNothing);
       }
     },
   );

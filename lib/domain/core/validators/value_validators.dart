@@ -12,6 +12,9 @@ final _websiteHostRegex = RegExp(
 final _numericStringRegex = RegExp(r'^[0-9]+$');
 final _integerStringRegex = RegExp(r'^-?[0-9]+$');
 
+/// Largest integer that can be serialized exactly by JavaScript runtimes.
+const javaScriptMaxSafeInteger = 9007199254740991;
+
 /// Validates that [input] contains non-whitespace content without changing it.
 Either<ValueFailure<String>, String> validateRequiredString(String input) {
   if (input.trim().isNotEmpty) {
@@ -85,6 +88,26 @@ Either<ValueFailure<int>, int> validateInteger(String input) {
     return left(ValueFailure.invalidNumericInput(failedValue: input));
   }
 }
+
+/// Requires non-blank input before parsing a base-ten integer.
+Either<ValueFailure<int>, int> validateRequiredInteger(String input) {
+  if (input.trim().isEmpty) {
+    return left(ValueFailure.emptyString(failedValue: input));
+  } else {
+    return validateInteger(input);
+  }
+}
+
+/// Requires an integer that Flutter Web can serialize without precision loss.
+Either<ValueFailure<int>, int> validateRequiredJavaScriptSafeInteger(
+  String input,
+) => validateRequiredInteger(input).flatMap((value) {
+  if (value >= -javaScriptMaxSafeInteger && value <= javaScriptMaxSafeInteger) {
+    return right(value);
+  } else {
+    return left(ValueFailure.invalidNumericInput(failedValue: input));
+  }
+});
 
 /// Validates that [input] is at least one.
 Either<ValueFailure<int>, int> validatePositiveInteger(int input) {

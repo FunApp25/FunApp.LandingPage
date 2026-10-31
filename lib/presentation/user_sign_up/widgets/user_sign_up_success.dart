@@ -7,11 +7,19 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/landing_footer.dart';
 import 'package:fun_app_landing_page/presentation/landing/shared/widgets/section_eyebrow.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 
-/// Confirmed Here & Now submission presentation for injected safe states.
+/// Confirmed registration-interest presentation for application success.
 final class UserSignUpSuccess extends StatefulWidget {
-  /// Creates the branded Here & Now confirmation.
-  const UserSignUpSuccess({required this.mobile, super.key});
+  /// Creates the branded confirmation for [experience].
+  const UserSignUpSuccess({
+    required this.experience,
+    required this.mobile,
+    super.key,
+  });
+
+  /// Registration workflow whose submission was confirmed.
+  final UserSignUpExperience experience;
 
   /// Whether the page uses its mobile composition.
   final bool mobile;
@@ -53,14 +61,27 @@ final class _UserSignUpSuccessState extends State<UserSignUpSuccess> {
       height: widget.mobile ? 46 / 36 : 70 / 60,
       letterSpacing: widget.mobile ? -1.08 : -1.8,
     );
-    final emphasis = l10n.userSignUpHereAndNowSuccessHeadingEmphasis;
-    final heading = l10n.userSignUpHereAndNowSuccessHeading;
+    final (:heading, :emphasis, :body) = switch (widget.experience) {
+      UserSignUpExperience.hereAndNow => (
+        heading: l10n.userSignUpHereAndNowSuccessHeading,
+        emphasis: l10n.userSignUpHereAndNowSuccessHeadingEmphasis,
+        body: l10n.userSignUpHereAndNowSuccessBody,
+      ),
+      UserSignUpExperience.foundingFriend => (
+        heading:
+            '${l10n.venueSuccessHeadingLeading} '
+            '${l10n.venueSuccessHeadingEmphasis}',
+        emphasis: l10n.venueSuccessHeadingEmphasis,
+        body: null,
+      ),
+    };
     final leading = heading.endsWith(emphasis)
         ? heading.substring(0, heading.length - emphasis.length)
         : heading;
+    final semanticId = widget.experience.name;
 
     return ConstrainedBox(
-      key: const Key('hereAndNowSuccess'),
+      key: Key('${semanticId}Success'),
       constraints: BoxConstraints(minHeight: widget.mobile ? 426 : 552),
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -90,7 +111,7 @@ final class _UserSignUpSuccessState extends State<UserSignUpSuccess> {
                 ),
                 const SizedBox(height: 14),
                 Focus(
-                  key: const Key('hereAndNowSuccessHeadingFocus'),
+                  key: Key('${semanticId}SuccessHeadingFocus'),
                   focusNode: _headingFocusNode,
                   onFocusChange: (hasFocus) {
                     if (mounted && hasFocus != _headingHasFocus) {
@@ -98,7 +119,7 @@ final class _UserSignUpSuccessState extends State<UserSignUpSuccess> {
                     }
                   },
                   child: Semantics(
-                    key: const Key('hereAndNowSuccessHeadingSemantics'),
+                    key: Key('${semanticId}SuccessHeadingSemantics'),
                     container: true,
                     header: true,
                     liveRegion: true,
@@ -114,36 +135,38 @@ final class _UserSignUpSuccessState extends State<UserSignUpSuccess> {
                           TextSpan(text: emphasis, style: emphasisStyle),
                         ],
                       ),
-                      key: const Key('hereAndNowSuccessHeading'),
+                      key: Key('${semanticId}SuccessHeading'),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-                SizedBox(height: widget.mobile ? 14 : 16),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
-                    child: Text(
-                      l10n.userSignUpHereAndNowSuccessBody,
-                      key: const Key('hereAndNowSuccessBody'),
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodyFontStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        height: 26 / 18,
-                        letterSpacing: 0.36,
-                        color: AppColors.bodyGray,
+                if (body != null) ...[
+                  SizedBox(height: widget.mobile ? 14 : 16),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 460),
+                      child: Text(
+                        body,
+                        key: Key('${semanticId}SuccessBody'),
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyFontStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          height: 26 / 18,
+                          letterSpacing: 0.36,
+                          color: AppColors.bodyGray,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
                 SizedBox(height: widget.mobile ? 16 : 24),
-                const Center(
+                Center(
                   child: FooterEmail(
                     email: LandingFooter.contactEmail,
-                    semanticKey: Key('hereAndNowSuccessEmailSemantics'),
-                    envelopeKey: Key('hereAndNowSuccessEnvelope'),
-                    textKey: Key('hereAndNowSuccessEmailText'),
+                    semanticKey: Key('${semanticId}SuccessEmailSemantics'),
+                    envelopeKey: Key('${semanticId}SuccessEnvelope'),
+                    textKey: Key('${semanticId}SuccessEmailText'),
                   ),
                 ),
               ],

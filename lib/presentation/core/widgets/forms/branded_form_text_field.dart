@@ -9,10 +9,10 @@ final class BrandedFormTextField extends StatelessWidget {
   /// Creates a branded single-line or multiline form field.
   const BrandedFormTextField({
     required this.fieldKey,
-    required this.controller,
     required this.label,
     required this.semanticLabel,
     required this.hint,
+    this.controller,
     this.onChanged,
     this.validator,
     this.errorText,
@@ -31,8 +31,10 @@ final class BrandedFormTextField extends StatelessWidget {
   /// Stable key applied to the editable control.
   final Key fieldKey;
 
-  /// Caller-owned draft controller.
-  final TextEditingController controller;
+  /// Optional caller-owned draft controller.
+  ///
+  /// When omitted, Flutter owns the field's controller lifecycle.
+  final TextEditingController? controller;
 
   /// Visible field label.
   final String label;

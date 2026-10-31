@@ -1,0 +1,120 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Validation
+    uses: ./.github/workflows/pr_checks.yml
+
+  deploy:
+    name: Deploy staging site and API Workers
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+    concurrency:
+      group: funapp-staging-deployment
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+      WRANGLER_LOG_SANITIZE: 'true'
+      CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: 'false'
+
+    steps:
+      - name: Checkout validated revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/*/package-lock.json
+
+      - name: Download this run's validated staging artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: staging-web-${{ github.sha }}
+          path: build/web
+
+      - name: Verify staging artifact identity
+        run: bash tool/verify_staging_artifact.sh
+
+      - name: Install locked deployment tools
+        run: |
+          npm ci --prefix cloudflare/staging-site-worker
+          npm ci --prefix cloudflare/venue-interest-worker
+          npm ci --prefix cloudflare/founding-friend-payment-worker
+
+      - name: Preflight all existing staging Workers and payment configuration
+        env:
+          CLOUDFLARE_STAGING_SITE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_SITE_API_TOKEN }}
+          CLOUDFLARE_WORKERS_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+          STAGING_PAYMENT_CREATION_ENABLED: ${{ vars.STAGING_PAYMENT_CREATION_ENABLED }}
+          STRIPE_SANDBOX_PRICE_ID: ${{ vars.STRIPE_SANDBOX_PRICE_ID }}
+          STRIPE_SANDBOX_AUTOMATIC_TAX_ENABLED: ${{ vars.STRIPE_SANDBOX_AUTOMATIC_TAX_ENABLED }}
+          STRIPE_SANDBOX_RESTRICTED_KEY: ${{ secrets.STRIPE_SANDBOX_RESTRICTED_KEY }}
+          STAGING_PURCHASE_REFERENCE_SECRET: ${{ secrets.STAGING_PURCHASE_REFERENCE_SECRET }}
+        run: node tool/prepare_staging_deployment.mjs
+
+      - name: Validate generated deployment configurations without credentials
+        run: |
+          for project in staging-site-worker venue-interest-worker founding-friend-payment-worker; do
+            (cd "cloudflare/$project" && npx --no-install wrangler deploy --dry-run --env="" --config "$RUNNER_TEMP/$project.json")
+          done
+
+      # The shared lock serializes publishing; this also rejects stale reruns and unordered queued jobs.
+      - name: Check revision is still dev HEAD
+        id: revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest=$(git ls-remote --exit-code origin refs/heads/dev | cut -f1)
+          if [[ "$latest" == "$GITHUB_SHA" ]]; then
+            echo 'current=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Skipping superseded staging revision.'
+          fi
+
+      - name: Deploy staging registration Worker
+        if: steps.revision.outputs.current == 'true'
+        working-directory: cloudflare/venue-interest-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+        run: npx --no-install wrangler deploy --env="" --config "$RUNNER_TEMP/venue-interest-worker.json"
+
+      - name: Deploy staging sandbox payment Worker
+        if: steps.revision.outputs.current == 'true'
+        working-directory: cloudflare/founding-friend-payment-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
+        run: >-
+          npx --no-install wrangler deploy --env=""
+          --config "$RUNNER_TEMP/founding-friend-payment-worker.json"
+          --secrets-file "$RUNNER_TEMP/staging-payment-secrets.json"
+
+      - name: Deploy staging site
+        if: steps.revision.outputs.current == 'true'
+        working-directory: cloudflare/staging-site-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_SITE_API_TOKEN }}
+        run: npx --no-install wrangler deploy --env="" --config "$RUNNER_TEMP/staging-site-worker.json"
+
+      - name: Remove temporary deployment files
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/staging-payment-secrets.json" \
+            "$RUNNER_TEMP/staging-site-worker.json" \
+            "$RUNNER_TEMP/venue-interest-worker.json" \
+            "$RUNNER_TEMP/founding-friend-payment-worker.json"
