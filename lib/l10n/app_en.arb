@@ -108,22 +108,6 @@
   "@venuePageIntroSecond": {
     "description": "Second introductory paragraph on the dedicated Venue sign-up page."
   },
-  "venueLeadDialogTitle": "Tell us about your venue",
-  "@venueLeadDialogTitle": {
-    "description": "Title of the functional venue-interest dialog."
-  },
-  "venueLeadDialogBody": "Share your venue and contact details to start the conversation.",
-  "@venueLeadDialogBody": {
-    "description": "Supporting text above the venue-interest form."
-  },
-  "venueLeadVenueDetailsHeading": "Venue details",
-  "@venueLeadVenueDetailsHeading": {
-    "description": "Heading above the venue fields."
-  },
-  "venueLeadContactDetailsHeading": "Contact details",
-  "@venueLeadContactDetailsHeading": {
-    "description": "Heading above the venue contact fields."
-  },
   "venueLeadRequiredFieldLabel": "{field} (required)",
   "@venueLeadRequiredFieldLabel": {
     "description": "Accessible and visible label for a required venue form field.",
@@ -277,18 +261,6 @@
   "venueLeadSubmissionFailure": "We couldn't submit the form right now. Please try again later.",
   "@venueLeadSubmissionFailure": {
     "description": "Generic retry-later message after an operational venue submission failure."
-  },
-  "venueLeadSuccessTitle": "Form Submitted",
-  "@venueLeadSuccessTitle": {
-    "description": "Heading for the venue-interest submission confirmation."
-  },
-  "venueLeadSuccessBody": "Thank you for reaching out, we'll be in touch shortly.",
-  "@venueLeadSuccessBody": {
-    "description": "Body of the venue-interest submission confirmation."
-  },
-  "venueLeadSuccessSignOff": "The Fun App team.",
-  "@venueLeadSuccessSignOff": {
-    "description": "Sign-off of the venue-interest submission confirmation."
   },
   "venueSuccessEyebrow": "The Fun App team",
   "@venueSuccessEyebrow": {

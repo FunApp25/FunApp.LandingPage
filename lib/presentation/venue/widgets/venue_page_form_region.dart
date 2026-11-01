@@ -32,8 +32,6 @@ final class VenuePageFormRegion extends StatelessWidget {
               VenueLeadForm(
                 state: state,
                 onPrivacyNoticeSelected: onPrivacyNoticeSelected,
-                showIntroduction: false,
-                alignWithVenuePageDesign: true,
               ),
               LayoutBuilder(
                 builder: (context, constraints) => SizedBox(
@@ -42,14 +40,10 @@ final class VenuePageFormRegion extends StatelessWidget {
               ),
               VenueLeadActionFooter(
                 isSubmitting: state.isSubmitting,
-                submissionSucceeded: false,
                 hasSubmissionFailure: submissionFailure != null,
-                onClose: null,
                 onSubmit: () => context.read<VenueLeadFormBloc>().add(
                   const VenueLeadFormEvent.submitted(),
                 ),
-                constrainFailureHeight: false,
-                alignWithVenuePageDesign: true,
               ),
             ],
           );

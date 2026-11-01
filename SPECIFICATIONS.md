@@ -562,10 +562,10 @@ capabilities as implemented.
   is cleared when switching away. Venue count and capacity controls accept
   digits only while domain validation still enforces positive integers.
   The conditional venue count expands and collapses with reduced-motion support,
-  and its visible label is "Number of venues" in English.
-  The venue information group and text inputs retain their established styling
-  while the routed page shell is aligned separately. Detailed form-control
-  restyling remains deferred to the dedicated Venue form pass.
+  and its visible label is "If chain, number of venues" in English.
+  The routed form uses shared branded fields and an optional chain dropdown,
+  with responsive rows and the presentation-local privacy acknowledgement.
+  The obsolete Venue dialog and its alternate form presentation are removed.
 - Generated Auto Route, Freezed, and Injectable source is regenerated locally
   and in CI and remains uncommitted.
 - `VenueInterestRequest` is a data-layer first-party request model. It emits
