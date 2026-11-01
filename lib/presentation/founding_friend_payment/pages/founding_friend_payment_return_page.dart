@@ -63,6 +63,7 @@ final class FoundingFriendPaymentReturnPage extends StatelessWidget {
         dependencies?.onFoundingFriendCheckoutRedirect ??
         redirectToCheckout;
     return MultiBlocProvider(
+      key: ValueKey(opaqueSessionId),
       providers: [
         BlocProvider(
           create: (_) => blocFactory()

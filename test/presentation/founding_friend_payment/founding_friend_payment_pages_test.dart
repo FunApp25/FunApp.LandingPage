@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -11,7 +13,10 @@ import 'package:fun_app_landing_page/application/founding_friend_payment/foundin
 import 'package:fun_app_landing_page/application/founding_friend_payment/founding_friend_payment_status_bloc.dart';
 import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
 import 'package:fun_app_landing_page/core/config/app_environment.dart';
+import 'package:fun_app_landing_page/core/config/founding_friend_payment_config.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/worker_founding_friend_payment_data_source.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/founding_friend_payment_repository.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/founding_friend_checkout.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/founding_friend_payment_verification.dart';
@@ -21,6 +26,8 @@ import 'package:fun_app_landing_page/domain/founding_friend_payment/pending_foun
 import 'package:fun_app_landing_page/domain/user_registration/entities/founding_friend_registration.dart';
 import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/founding_friend_payment/pages/founding_friend_payment_cancelled_page.dart';
@@ -39,6 +46,276 @@ void main() {
     ),
     sessionId: 'cs_test_abcdefghijklmnopqrstuvwxyz123456',
   );
+
+  testWidgets(
+    'query navigation preserves the same Session and reload rechecks',
+    (
+      tester,
+    ) async {
+      final router = AppRouter();
+      addTearDown(router.dispose);
+      final repository = _RecoveryRepository([], [
+        right(
+          const FoundingFriendPaymentVerification(
+            status: FoundingFriendPaymentStatus.confirmed,
+            purchaseReference: 'FF-1234567890ABCDEF',
+          ),
+        ),
+        right(
+          const FoundingFriendPaymentVerification(
+            status: FoundingFriendPaymentStatus.pending,
+          ),
+        ),
+        right(
+          const FoundingFriendPaymentVerification(
+            status: FoundingFriendPaymentStatus.pending,
+          ),
+        ),
+      ]);
+      final blocs = <FoundingFriendPaymentStatusBloc>[];
+      final path = '/founding-friend/payment?session_id=${checkout.sessionId}';
+      final app = AppRouteDependencies(
+        createFoundingFriendPaymentStatusBloc: () {
+          final bloc = FoundingFriendPaymentStatusBloc(
+            repository: repository,
+            pendingStore: _PendingStore(),
+          );
+          blocs.add(bloc);
+          return bloc;
+        },
+        child: MaterialApp.router(
+          theme: appTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router.config(
+            deepLinkBuilder: (_) => DeepLink.path(path),
+          ),
+        ),
+      );
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+      expect(find.text('Payment confirmed'), findsOneWidget);
+      await router.navigatePath(path);
+      await tester.pumpAndSettle();
+      expect(blocs, hasLength(1));
+      expect(repository.verifications, [checkout.sessionId]);
+
+      await router.navigatePath('${path}Other');
+      await tester.pumpAndSettle();
+      expect(router.currentUrl, '${path}Other');
+      expect(blocs.first.isClosed, isTrue);
+      expect(find.text('Payment pending'), findsOneWidget);
+      expect(find.text('Payment confirmed'), findsNothing);
+      expect(find.text('FF-1234567890ABCDEF'), findsNothing);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+      expect(blocs, hasLength(3));
+      expect(repository.verifications, [
+        checkout.sessionId,
+        '${checkout.sessionId}Other',
+        '${checkout.sessionId}Other',
+      ]);
+      expect(find.text('Payment pending'), findsOneWidget);
+    },
+  );
+
+  for (final initialStatus in [
+    FoundingFriendPaymentStatus.confirmed,
+    FoundingFriendPaymentStatus.pending,
+  ]) {
+    testWidgets('route Session change isolates $initialStatus state', (
+      tester,
+    ) async {
+      final session = ValueNotifier<String?>(checkout.sessionId);
+      addTearDown(session.dispose);
+      final response =
+          Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+      final repository = _RecoveryRepository([], [
+        right(
+          FoundingFriendPaymentVerification(
+            status: initialStatus,
+            purchaseReference:
+                initialStatus == FoundingFriendPaymentStatus.confirmed
+                ? 'FF-1234567890ABCDEF'
+                : null,
+          ),
+        ),
+        response.future,
+      ]);
+      final blocs = <FoundingFriendPaymentStatusBloc>[];
+      final checkoutBlocs = <FoundingFriendCheckoutBloc>[];
+      await _pump(
+        tester,
+        ValueListenableBuilder<String?>(
+          valueListenable: session,
+          builder: (context, value, child) => FoundingFriendPaymentReturnPage(
+            sessionId: value,
+            createBloc: () {
+              final bloc = FoundingFriendPaymentStatusBloc(
+                repository: repository,
+                pendingStore: _PendingStore(),
+              );
+              blocs.add(bloc);
+              return bloc;
+            },
+            createCheckoutBloc: () {
+              final bloc = FoundingFriendCheckoutBloc(
+                repository: repository,
+                pendingStore: _PendingStore(),
+              );
+              checkoutBlocs.add(bloc);
+              return bloc;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          initialStatus == FoundingFriendPaymentStatus.confirmed
+              ? 'Payment confirmed'
+              : 'Payment pending',
+        ),
+        findsOneWidget,
+      );
+      session.value = '${checkout.sessionId}Other';
+      await tester.pump();
+      await tester.pump();
+      expect(repository.verifications, [
+        checkout.sessionId,
+        '${checkout.sessionId}Other',
+      ]);
+      expect(blocs.first.isClosed, isTrue);
+      expect(checkoutBlocs.first.isClosed, isTrue);
+      expect(find.text('Verifying your payment'), findsOneWidget);
+      expect(find.text('Payment confirmed'), findsNothing);
+      expect(find.text('Payment pending'), findsNothing);
+      expect(find.text('FF-1234567890ABCDEF'), findsNothing);
+      response.complete(
+        right(
+          const FoundingFriendPaymentVerification(
+            status: FoundingFriendPaymentStatus.confirmed,
+            purchaseReference: 'FF-FEDCBA0987654321',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('FF-FEDCBA0987654321'), findsOneWidget);
+      expect(find.text('FF-1234567890ABCDEF'), findsNothing);
+    });
+  }
+
+  testWidgets('late verification after a Session change is discarded', (
+    tester,
+  ) async {
+    final session = ValueNotifier<String?>(checkout.sessionId);
+    addTearDown(session.dispose);
+    final oldResponse =
+        Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+    final repository = _RecoveryRepository([], [
+      oldResponse.future,
+      right(
+        const FoundingFriendPaymentVerification(
+          status: FoundingFriendPaymentStatus.pending,
+        ),
+      ),
+    ]);
+    final pending = PendingFoundingFriendPayment(
+      email: 'founder@example.com',
+      attemptId: attemptId,
+      sessionId: checkout.sessionId,
+    );
+    final store = _PendingStore()..save(pending);
+    await _pump(
+      tester,
+      ValueListenableBuilder<String?>(
+        valueListenable: session,
+        builder: (context, value, child) => FoundingFriendPaymentReturnPage(
+          sessionId: value,
+          createBloc: () => FoundingFriendPaymentStatusBloc(
+            repository: repository,
+            pendingStore: store,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Verifying your payment'), findsOneWidget);
+    session.value = '${checkout.sessionId}Other';
+    await tester.pumpAndSettle();
+    expect(find.text('Payment pending'), findsOneWidget);
+    oldResponse.complete(
+      right(
+        const FoundingFriendPaymentVerification(
+          status: FoundingFriendPaymentStatus.confirmed,
+          purchaseReference: 'FF-1234567890ABCDEF',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(repository.verifications, [
+      checkout.sessionId,
+      '${checkout.sessionId}Other',
+    ]);
+    expect(find.text('Payment pending'), findsOneWidget);
+    expect(find.text('Payment confirmed'), findsNothing);
+    expect(find.text('FF-1234567890ABCDEF'), findsNothing);
+    expect(store.read(), same(pending));
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final invalidSession in ['invalid', '', null]) {
+    testWidgets(
+      'invalid or missing Session replaces confirmation: $invalidSession',
+      (
+        tester,
+      ) async {
+        var requests = 0;
+        final client = MockClient((request) async {
+          requests++;
+          expect(jsonDecode(request.body), {'sessionId': checkout.sessionId});
+          return http.Response(
+            jsonEncode({
+              'status': 'confirmed',
+              'purchaseReference': 'FF-1234567890ABCDEF',
+            }),
+            200,
+          );
+        });
+        addTearDown(client.close);
+        final repository = FoundingFriendPaymentRepository(
+          WorkerFoundingFriendPaymentDataSource(
+            client: client,
+            config: FoundingFriendPaymentConfig.production(),
+          ),
+        );
+        final session = ValueNotifier<String?>(checkout.sessionId);
+        addTearDown(session.dispose);
+        await _pump(
+          tester,
+          ValueListenableBuilder<String?>(
+            valueListenable: session,
+            builder: (context, value, child) => FoundingFriendPaymentReturnPage(
+              sessionId: value,
+              createBloc: () => FoundingFriendPaymentStatusBloc(
+                repository: repository,
+                pendingStore: _PendingStore(),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Payment confirmed'), findsOneWidget);
+        session.value = invalidSession;
+        await tester.pumpAndSettle();
+        expect(find.text('Unable to verify payment'), findsOneWidget);
+        expect(find.text('Payment confirmed'), findsNothing);
+        expect(find.text('FF-1234567890ABCDEF'), findsNothing);
+        expect(requests, 1);
+      },
+    );
+  }
 
   testWidgets(
     'registration transitions to Checkout and payment retry does not resubmit',
@@ -511,6 +788,7 @@ void main() {
       ..value = const PendingFoundingFriendPayment(
         email: 'founder@example.com',
         attemptId: attemptId,
+        sessionId: 'cs_test_abcdefghijklmnopqrstuvwxyz123456',
       );
     await _pump(
       tester,

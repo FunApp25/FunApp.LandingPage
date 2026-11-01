@@ -56,6 +56,45 @@ Future<FoundingFriendCheckoutState> _dispatch(
 }
 
 void main() {
+  for (final storedSession in [_session, _newSession, null]) {
+    test('recovery clears only the verified Session: $storedSession', () async {
+      final verification =
+          Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+      final repository = _PaymentRepository([], [verification.future]);
+      final store = _store();
+      final bloc = FoundingFriendCheckoutBloc(
+        repository: repository,
+        pendingStore: store,
+      );
+      addTearDown(bloc.close);
+      final finished = _dispatch(bloc);
+      await bloc.stream.firstWhere(
+        (state) => state.phase == FoundingFriendCheckoutPhase.verifying,
+      );
+      final current = PendingFoundingFriendPayment(
+        email: _email,
+        attemptId: _replacement,
+        sessionId: storedSession,
+      );
+      store.save(current);
+      verification.complete(
+        right(
+          const FoundingFriendPaymentVerification(
+            status: FoundingFriendPaymentStatus.confirmed,
+            purchaseReference: 'FF-1234567890ABCDEF',
+          ),
+        ),
+      );
+      expect(
+        (await finished).paymentStatus?.phase,
+        FoundingFriendPaymentStatusPhase.confirmed,
+      );
+      expect(store.read(), storedSession == _session ? isNull : same(current));
+      expect(repository.creates, isEmpty);
+      expect(repository.verifications, [_session]);
+    });
+  }
+
   test(
     'registration stores the Session before redirect; starts only once',
     () async {

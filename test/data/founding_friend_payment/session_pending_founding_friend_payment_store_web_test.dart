@@ -4,8 +4,14 @@ library;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/application/founding_friend_payment/founding_friend_payment_status_bloc.dart';
+import 'package:fun_app_landing_page/core/config/founding_friend_payment_config.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/worker_founding_friend_payment_data_source.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/founding_friend_payment_repository.dart';
 import 'package:fun_app_landing_page/data/founding_friend_payment/session_pending_founding_friend_payment_store.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/pending_founding_friend_payment.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:web/web.dart' as web;
 
 void main() {
@@ -19,6 +25,57 @@ void main() {
 
   setUp(store.clear);
   tearDown(store.clear);
+
+  for (final storedSession in [
+    pending.sessionId,
+    '${pending.sessionId}Other',
+    null,
+  ]) {
+    test(
+      'paid verification respects browser storage ownership: $storedSession',
+      () async {
+        store.save(
+          PendingFoundingFriendPayment(
+            email: pending.email,
+            attemptId: pending.attemptId,
+            sessionId: storedSession,
+          ),
+        );
+        final before = web.window.sessionStorage.getItem(key);
+        final client = MockClient(
+          (_) async => http.Response(
+            jsonEncode({
+              'status': 'confirmed',
+              'purchaseReference': 'FF-1234567890ABCDEF',
+            }),
+            200,
+          ),
+        );
+        addTearDown(client.close);
+        final bloc = FoundingFriendPaymentStatusBloc(
+          repository: FoundingFriendPaymentRepository(
+            WorkerFoundingFriendPaymentDataSource(
+              client: client,
+              config: FoundingFriendPaymentConfig.production(),
+            ),
+          ),
+          pendingStore: store,
+        );
+        addTearDown(bloc.close);
+        final confirmed = bloc.stream.firstWhere(
+          (state) => state.phase == FoundingFriendPaymentStatusPhase.confirmed,
+        );
+        bloc.add(
+          FoundingFriendPaymentVerificationRequested(pending.sessionId!),
+        );
+        await confirmed;
+        expect(
+          web.window.sessionStorage.getItem(key),
+          storedSession == pending.sessionId ? isNull : before,
+        );
+      },
+    );
+  }
 
   test('Session survives a new store instance in the same browser tab', () {
     store.save(pending);

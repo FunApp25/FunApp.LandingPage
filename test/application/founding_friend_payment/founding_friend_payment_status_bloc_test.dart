@@ -53,30 +53,40 @@ void main() {
     );
   }
 
-  test(
-    'paid verification clears pending state and retains reference',
-    () async {
-      final store = _PendingStore()..hasValue = true;
-      final bloc = FoundingFriendPaymentStatusBloc(
-        repository: _VerificationRepository(
-          right(
-            const FoundingFriendPaymentVerification(
-              status: FoundingFriendPaymentStatus.confirmed,
-              purchaseReference: 'FF-1234567890ABCDEF',
+  for (final storedSession in [sessionId, '${sessionId}Other', null]) {
+    test(
+      'paid verification clears only its own pending Session: $storedSession',
+      () async {
+        final pending = PendingFoundingFriendPayment(
+          email: 'founder@example.com',
+          attemptId: '123e4567-e89b-42d3-a456-426614174000',
+          sessionId: storedSession,
+        );
+        final store = _PendingStore()..save(pending);
+        final bloc = FoundingFriendPaymentStatusBloc(
+          repository: _VerificationRepository(
+            right(
+              const FoundingFriendPaymentVerification(
+                status: FoundingFriendPaymentStatus.confirmed,
+                purchaseReference: 'FF-1234567890ABCDEF',
+              ),
             ),
           ),
-        ),
-        pendingStore: store,
-      )..add(const FoundingFriendPaymentVerificationRequested(sessionId));
-      final result = await bloc.stream.firstWhere(
-        (state) => state.phase == FoundingFriendPaymentStatusPhase.confirmed,
-      );
+          pendingStore: store,
+        )..add(const FoundingFriendPaymentVerificationRequested(sessionId));
+        final result = await bloc.stream.firstWhere(
+          (state) => state.phase == FoundingFriendPaymentStatusPhase.confirmed,
+        );
 
-      expect(result.purchaseReference, 'FF-1234567890ABCDEF');
-      expect(store.hasValue, isFalse);
-      await bloc.close();
-    },
-  );
+        expect(result.purchaseReference, 'FF-1234567890ABCDEF');
+        expect(
+          store.value,
+          storedSession == sessionId ? isNull : same(pending),
+        );
+        await bloc.close();
+      },
+    );
+  }
 
   blocTest<FoundingFriendPaymentStatusBloc, FoundingFriendPaymentStatusState>(
     'provider failure becomes retryable unable-to-verify state',
@@ -124,14 +134,14 @@ final class _VerificationRepository
 
 final class _PendingStore
     implements PendingFoundingFriendPaymentStoreInterface {
-  bool hasValue = false;
+  PendingFoundingFriendPayment? value;
 
   @override
-  void clear() => hasValue = false;
+  void clear() => value = null;
 
   @override
-  PendingFoundingFriendPayment? read() => null;
+  PendingFoundingFriendPayment? read() => value;
 
   @override
-  void save(PendingFoundingFriendPayment payment) => hasValue = true;
+  void save(PendingFoundingFriendPayment payment) => value = payment;
 }

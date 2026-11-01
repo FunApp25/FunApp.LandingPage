@@ -346,7 +346,8 @@ final class FoundingFriendCheckoutBloc
             );
           }
         } else {
-          if (verification.status == FoundingFriendPaymentStatus.confirmed) {
+          if (verification.status == FoundingFriendPaymentStatus.confirmed &&
+              _pendingStore.read()?.sessionId == pending.sessionId) {
             _pendingStore.clear();
           }
           emit(
