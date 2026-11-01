@@ -72,6 +72,59 @@ void main() {
       });
     }
 
+    testWidgets('$semanticId gender selection preserves keyboard traversal', (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(390, 2000));
+      await _pumpPage(
+        tester,
+        foundingFriend ? const FoundingFriendPage() : const HereAndNowPage(),
+      );
+      final gender = find.byKey(Key('genderField-$semanticId'));
+      await tester.tap(gender);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Woman').last);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(Key('usageReasonField-$semanticId')),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .focusNode
+            .hasPrimaryFocus,
+        isTrue,
+      );
+      for (var i = 0; i < 2; i++) {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+      }
+      expect(
+        tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(
+                  Key(
+                    foundingFriend
+                        ? 'countryField-$semanticId'
+                        : 'ageField-$semanticId',
+                  ),
+                ),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .focusNode
+            .hasPrimaryFocus,
+        isTrue,
+      );
+    });
+
     testWidgets(
       '$semanticId retains rendered drafts across responsive changes',
       (

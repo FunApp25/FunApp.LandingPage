@@ -60,6 +60,72 @@ void main() {
     });
   }
 
+  testWidgets(
+    'chain selection retains Tab and Shift+Tab order as count appears',
+    (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(390, 2000));
+      await _pumpDirectVenuePage(tester);
+      final menu = find.byKey(const Key('venueLeadChainStatusMenu'));
+      final fieldState = tester.state(menu);
+      for (final chain in [true, false, true]) {
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find
+              .byKey(
+                Key(
+                  chain
+                      ? 'venueChainPartOfChainOption'
+                      : 'venueChainIndependentOption',
+                ),
+              )
+              .last,
+        );
+        await tester.pumpAndSettle();
+        expect(tester.state(menu), same(fieldState));
+        expect(
+          find.byKey(const Key('venueLeadVenueCountField')),
+          chain ? findsOneWidget : findsNothing,
+        );
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pumpAndSettle();
+        final next = tester.widget<EditableText>(
+          find.descendant(
+            of: find.byKey(
+              Key(
+                chain
+                    ? 'venueLeadVenueCountField'
+                    : 'venueLeadVenueCapacityField',
+              ),
+            ),
+            matching: find.byType(EditableText),
+          ),
+        );
+        expect(next.focusNode.hasPrimaryFocus, isTrue);
+        for (var i = 0; i < 2; i++) {
+          await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+          await tester.pumpAndSettle();
+        }
+        expect(
+          tester
+              .widget<EditableText>(
+                find.descendant(
+                  of: find.byKey(const Key('venueLeadVenueTypeField')),
+                  matching: find.byType(EditableText),
+                ),
+              )
+              .focusNode
+              .hasPrimaryFocus,
+          isTrue,
+        );
+      }
+    },
+  );
+
   const eyebrow =
       'LIFE IS TOUGH FOR PEOPLE. LIFE IS TOUGH FOR VENUES. FUN APP IS '
       'ARRIVING TO HELP.';
