@@ -34,8 +34,9 @@ export function paymentConfiguration(env) {
   if (!/^rk_test_[A-Za-z0-9]+$/.test(env.STRIPE_SANDBOX_RESTRICTED_KEY)) {
     throw new Error('STRIPE_SANDBOX_RESTRICTED_KEY must be a sandbox restricted key');
   }
-  if (env.STAGING_PURCHASE_REFERENCE_SECRET.length < 32) {
-    throw new Error('STAGING_PURCHASE_REFERENCE_SECRET must contain at least 32 characters');
+  if (env.STAGING_PURCHASE_REFERENCE_SECRET.length < 32 ||
+      /[\r\n]/.test(env.STAGING_PURCHASE_REFERENCE_SECRET)) {
+    throw new Error('STAGING_PURCHASE_REFERENCE_SECRET must contain at least 32 characters and no CR/LF');
   }
   return {
     PAYMENT_CREATION_ENABLED: env.STAGING_PAYMENT_CREATION_ENABLED,

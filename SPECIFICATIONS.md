@@ -822,6 +822,13 @@ capabilities as implemented.
   use a 10-second Worker deadline. Errors remain provider-neutral, and neither
   boundary logs or returns emails, names, request bodies, billing/payment
   details, Checkout URLs, credentials, or complete provider responses.
+- Staging Checkout-creation HTTP 500 responses log only the response's generated
+  request ID, a fixed allowlisted execution stage, and either
+  `configuration_invalid` or `runtime_unexpected`. Exception messages/stacks,
+  attempt IDs, purchase references, headers, cookies, and sensitive values are
+  excluded. Only the staging entrypoint supplies this logger; production,
+  verification, successful creation, and other HTTP statuses emit no additional
+  diagnostics. Logging failure cannot change the payment response or contract.
 - Payment creation is enabled only when `PAYMENT_CREATION_ENABLED` is exactly
   `true`. Production also requires a valid server-only Stripe key, configured
   tax-inclusive Price, declared expected live/test mode, exact
@@ -1020,8 +1027,11 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   deployment, configures no route, and defaults
   `PAYMENT_CREATION_ENABLED` to false. No live Stripe Product/Price or key,
   production Cloudflare secret, production payment route, or live deployment is
-  introduced. The operator reports that the isolated sandbox staging integration
-  is operational; its credentials are not stored in this repository. Later
+  introduced. The operator previously reported successful sandbox staging
+  payment verification. On 2026-11-01, the operator reports Checkout creation
+  returning HTTP 500 before Stripe I/O; the deployed cause remains unconfirmed.
+  The staging failure diagnostics are implemented and tested locally, without
+  deployment. Staging credentials are not stored in this repository. Later
   production setup requires `STRIPE_PRICE_ID`,
   `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
   `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
@@ -1121,8 +1131,11 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   using `--secrets-file` from a mode-0600 `RUNNER_TEMP` file, cleaned on every
   outcome. Secrets are not written to source, web bundles, artifacts, or logs.
   Canonical mappings remain `STRIPE_SANDBOX_RESTRICTED_KEY` → `STRIPE_SECRET_KEY`
-  and `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET`. Operators
-  must privately verify the existing values agree before the first restored run;
+  and `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET`.
+  Preflight and runtime both require a purchase-reference secret of at least
+  32 characters without CR/LF; invalid preflight values fail before metadata
+  reads or deployment-file writes. Operators must privately verify the existing
+  values agree before the first restored run;
   existence of both secret names does not establish synchronization. No rotation
   is part of the repair.
 - The staging site uses `build/web` as its Static Assets directory with SPA
