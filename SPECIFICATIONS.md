@@ -1046,52 +1046,54 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   Worker deployment workflows remain manual-only and no live Stripe payment
   activation is introduced.
 - Pushes to `dev`, including PR merges, run `deploy-staging-site.yml` (**Deploy
-  Staging**). It calls the credential-free `pr_checks.yml` via `workflow_call`.
-  Temporarily, staging publishing is disabled with literal `if: ${{ false }}`
-  conditions on the entire retained `deploy` job and the staging web artifact
-  upload. Validation, coverage upload, builds, and credential-free Wrangler dry
-  runs remain enabled. No Worker code, secrets, or site assets are published.
-- After all checks succeed, a dev-push-only `diagnostic` job enters GitHub
-  `staging` with only the existing `CLOUDFLARE_WORKERS_API_TOKEN` and
-  `CLOUDFLARE_ACCOUNT_ID`. It shares the `funapp-staging-deployment` lock with
-  `cancel-in-progress: false`. GitHub `staging` remains restricted to `dev`;
-  GitHub `production` remains restricted to `main`.
-- The temporary diagnostic uses only fixed Cloudflare API GET endpoints for
-  `funapp-founding-friend-payment-staging`: service metadata, then environment
-  bindings/routes, Custom Domain records, subdomain, environment metadata, and
-  schedules, using `result.default_environment.environment`. No credentials are
-  created or retrieved locally. Requests reject redirects and time out after
-  30 seconds including body reads, without retries. An unusable service lookup
-  stops further requests; otherwise all six probes run despite individual errors.
-  JSON output contains only endpoint category, HTTP status (null when absent),
-  numeric `errors[].code`, and a validated CF-Ray identifier (or null). Bodies,
-  error messages, bindings, credentials, and other metadata are never logged.
-  A failed/unusable lookup exits 1, including malformed responses or missing
-  credentials. Mock tests cover these cases without live API calls.
-- Restoring publishing requires a separate reviewed repair that removes the
-  diagnostic job, restores both dev-push conditions, and updates the temporary
-  safety assertions and documentation. Retained deployment requirements below
-  apply upon restoration. Older queued/active runs use their own revisions and
-  are not disabled or cancelled by this change.
+  Staging**), calling credential-free `pr_checks.yml` through `workflow_call`.
+  After all checks pass, the publishing job enters GitHub `staging`; staging
+  artifact upload is enabled only on dev pushes. No temporary diagnostic job
+  remains. GitHub `staging` stays restricted to `dev`, and `production` to `main`.
+- Staging alone installs `tool/staging-wrangler/` with `npm ci`. Its lock pins
+  Wrangler 4.155.0 and its postinstall applies the route-category backport from
+  cloudflare/workers-sdk PR #16531, revision
+  `416ed05ea788852c9c06784c370d77603ee10936`. Exact original and patched bundle
+  SHA-256 checks, no-fuzz patching, and invocation-time version/hash validation
+  fail closed on incompatible tools. There is no mutable prerelease fetch or
+  maintained fork. All staging publishes, generated-config dry runs, and upload
+  tests use this same wrapper. Production tooling/workflows are unchanged.
+- The fix omits route/Custom Domain metadata reads only when those categories
+  are absent from deployment; explicitly configured categories still require
+  authorization. Versions upload does not compare unrelated routes. Normal
+  metadata, configuration-diff safeguards, and Worker identity checks remain.
+  As checked on 2026-11-01, upstream PR #16531 is open and stable 4.156.0 still
+  contains the unconditional reads. Remove the backport only after verifying a
+  stable implementation and upstream tests, pinning it, and passing CLI
+  permission/strict-diff/identity and upload-preservation regressions.
 - PR events target `dev` and `main` and validate only. They never reference the
   staging environment, inherit deployment secrets, or invoke a deployment job.
   Stable PR check names are **Worker checks**, **Payment Worker checks**, and
   **Flutter and staging site checks**. No path filter skips these checks.
 - The three prior staging workflows are consolidated into one push-only
   workflow; the individual manual staging API deployment workflows and payment
-  enablement checkbox are retired. The retained publishing job uses a shared
-  concurrency lock without cancelling an active publish and checks the revision against
-  current `dev` HEAD under that lock, rejecting superseded queued jobs/reruns.
-- On restoration, the staging site artifact comes from the successful validation
-  run for that revision. It is prepared with the existing tool and checked before upload and
+  enablement checkbox are retired. The publishing job uses a shared
+  concurrency lock without cancelling an active publish and checks the revision
+  against current `dev` HEAD under that lock, rejecting superseded queued jobs/reruns.
+- The staging site artifact comes from the successful validation run for that
+  revision. It is prepared with the existing tool and checked before upload and
   again after download. Flutter builds never receive deployment credentials.
   Both API Workers publish before the site; publishing is sequential, not atomic.
-- Preflight validates the complete existing environment configuration and reads
-  settings for all three existing staging identities with their respective
-  tokens before any publish. Denied reads, missing resources/configuration, or
-  malformed payment values fail without provisioning resources or widening
-  token permissions. Generated configs hard-code the selected staging identities
-  and entrypoints and do not include any routes or Custom Domains.
+- Read-only preflight validates complete environment configuration and all three
+  existing staging identities with their own tokens before writing deployable
+  files or publishing. Required GETs cover service identity; actual internal
+  environment bindings, subdomain and metadata; script schedules, settings and
+  deployments; and Worker metadata used by trigger publishing. Multi-version
+  deployments also require their version reads. Payment secret-name reads reject
+  collisions with public variables. Required deployed binding types, registration
+  mock enablement, and consistent settings/environment inventories are checked.
+  No route or Custom Domain metadata permission is required. Requests reject
+  redirects, have 30-second deadlines including body reads, and never log bodies,
+  configuration values, or credentials. Denied reads, missing identities or
+  malformed required data fail before any publish without provisioning resources
+  or broadening permissions. Successful reads cannot guarantee write access or
+  atomic publication. Generated configs retain fixed staging identities and
+  entrypoints with no routes or Custom Domains.
 - `keep_vars` alone preserves only plain/JSON variables, not every binding.
   Generated configs use Wrangler `unsafe.metadata.keep_bindings` with every
   currently deployed binding type plus plain/JSON and encrypted-secret types.
@@ -1106,8 +1108,8 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `CLOUDFLARE_STAGING_SITE_API_TOKEN`, `CLOUDFLARE_WORKERS_API_TOKEN`,
   `STRIPE_SANDBOX_RESTRICTED_KEY`, and `STAGING_PURCHASE_REFERENCE_SECRET`.
   The site token remains distinct from the two-API-Worker token. Existing
-  least-privilege credentials need settings read and deployment access to their
-  respective Workers, with no added DNS, route, or Access permissions.
+  least-privilege credentials need required metadata read and deployment access
+  to their respective Workers, with no added DNS, route, or Access permissions.
 - `STAGING_PAYMENT_CREATION_ENABLED` is a required exact boolean string and is
   explicitly mapped to `PAYMENT_CREATION_ENABLED`, with no silent fallback.
   The current environment has sandbox creation enabled. Automatic tax must
@@ -1118,7 +1120,11 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
 - Both existing encrypted payment secrets are supplied atomically with code
   using `--secrets-file` from a mode-0600 `RUNNER_TEMP` file, cleaned on every
   outcome. Secrets are not written to source, web bundles, artifacts, or logs.
-  Rotations must keep GitHub and Cloudflare synchronized.
+  Canonical mappings remain `STRIPE_SANDBOX_RESTRICTED_KEY` → `STRIPE_SECRET_KEY`
+  and `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET`. Operators
+  must privately verify the existing values agree before the first restored run;
+  existence of both secret names does not establish synchronization. No rotation
+  is part of the repair.
 - The staging site uses `build/web` as its Static Assets directory with SPA
   fallback. Its script runs first for `/api` and `/api/*` and returns `404`,
   preventing an absent or mistyped API Route from returning the SPA document
@@ -1130,9 +1136,8 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `npm ci`, `npm run typecheck`, `npm test`, and `npm run wrangler:validate`.
   These commands validate only. Automatic publishing uses generated staging
   configs after complete preflight, rather than deploying source placeholders.
-- After publishing is restored, a normal rollback reverts code through a PR to
-  `dev`, then validates and republishes with current environment secrets. For an
-  emergency version rollback,
+- A normal rollback reverts code through a PR to `dev`, then validates and
+  republishes with current environment secrets. For an emergency version rollback,
   disable the staging workflow, cancel queued runs, let any active publish
   settle, and restore known-good versions on the affected staging Workers in
   Cloudflare. Review version-bound variables/secrets first: an older version may

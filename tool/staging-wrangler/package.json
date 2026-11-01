@@ -1,0 +1,11 @@
+{
+  "name": "funapp-staging-wrangler",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "node patch.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.155.0"
+  }
+}

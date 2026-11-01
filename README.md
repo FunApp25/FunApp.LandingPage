@@ -231,7 +231,7 @@ production declaration for `funapp.world`.
 | Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Local Mock Workers** compound; its Flutter child is **Development (Local Workers)**. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
 | Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
 | Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
-| Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate and run read-only Cloudflare diagnostics; staging publishing is temporarily disabled. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
+| Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate, then automatically publish the two staging API Workers and staging site. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
 | Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Production registration and payment creation remain disabled. |
 
 The standalone Worker commands are also supported execution modes:
@@ -274,7 +274,7 @@ The standalone Worker commands are also supported execution modes:
 | Push a commit to `main` | `deploy.yml` regenerates, analyzes, tests, and builds production. | **Deploys production GitHub Pages** | Existing production behavior is intentionally preserved. It does not deploy either Worker or staging. |
 | Manually dispatch `deploy.yml` | Same production validation/build. | **Deploys production GitHub Pages** | Production action; unrelated to staging. |
 | Manually dispatch either existing production Worker workflow | Validates the selected root Worker. | **Deploys that production Worker identity** | Uses GitHub `production`; no routes are changed. These are not staging commands. |
-| Push a commit to `dev` (including a PR merge) | Reuses every `pr_checks.yml` validation, including production/staging builds and all three Worker suites. | **Nothing; staging publishing and staging web artifact upload are explicitly disabled** | `deploy-staging-site.yml` runs read-only payment Worker metadata diagnostics after validation, using GitHub `staging` and the existing API Worker token. |
+| Push a commit to `dev` (including a PR merge) | Reuses every `pr_checks.yml` validation, including production/staging builds and all three Worker suites. | **Deploys staging registration, sandbox payment, then site** | `deploy-staging-site.yml` uses GitHub `staging` after all checks pass, complete read-only preflight, and the dev-HEAD check under the publishing lock. |
 
 The staging workflow has no manual or PR deployment trigger. The former
 individual staging API deployment workflows have been retired so there is one
@@ -392,56 +392,73 @@ npm run wrangler:validate
 ```
 
 The **Deploy Staging** workflow (`deploy-staging-site.yml`) runs on pushes to
-`dev` only and calls the same credential-free checks used by PRs. **Temporary
-diagnostic state:** the entire `deploy` job and the staging web artifact upload
-in `pr_checks.yml` have literal `if: ${{ false }}` conditions. No staging Worker,
-secret, or site asset can be published by this revision. Builds, tests, and
-credential-free Wrangler dry runs remain enabled, as does coverage upload.
-Required-check names for PR branch protection remain **Worker checks**,
-**Payment Worker checks**, and **Flutter and staging site checks**.
+`dev` only and calls the same credential-free checks used by PRs. Required-check
+names remain **Worker checks**, **Payment Worker checks**, and **Flutter and
+staging site checks**. PRs targeting `dev` or `main` validate only, without the
+staging Environment or deployment credentials. Staging artifact upload is enabled
+only for dev pushes; coverage upload remains available to PRs.
 
-After checks pass, the `diagnostic` job enters GitHub `staging`, using only
-`CLOUDFLARE_ACCOUNT_ID` and the existing `CLOUDFLARE_WORKERS_API_TOKEN`. It holds
-the same `funapp-staging-deployment` lock with `cancel-in-progress: false`.
-`tool/staging_cloudflare_diagnostic.mjs` makes seven fixed Cloudflare API GETs:
-service metadata first, then bindings, routes, Custom Domain records, subdomain,
-environment, and schedules for `funapp-founding-friend-payment-staging`, using
-the service's actual internal environment. No local dotenv or alternate token
-is used. Redirects are rejected; each request/body read has a 30-second timeout,
-with no retries. An unusable service lookup stops the probes; otherwise all six
-are attempted even if one fails.
+After all checks pass, the deployment job enters GitHub `staging` and downloads
+that run's validated staging artifact without rebuilding Flutter with credentials.
+Publishing holds `funapp-staging-deployment` with `cancel-in-progress: false`.
+The dev-HEAD check under that lock rejects superseded revisions and stale reruns.
+A newer push waits for an active publish to finish. Order remains registration,
+sandbox payment, then site. These sequential deployments are not atomic: a later
+failure can still leave a partial release.
 
-Each diagnostic line is JSON containing only `endpoint`, `http_status`,
-`cloudflare_error_codes` (nonnegative integer codes), and `cf_ray` (a validated
-identifier or null). No bodies, error messages, environment names, account IDs,
-bindings, or credentials are logged. Missing credentials and transport failures
-use null status; malformed responses retain the received status. Exit code 1
-means at least one lookup failed or was unusable; exit code 0 means all succeeded.
-Run mocked diagnostics with `node --test test/tool/staging_cloudflare_diagnostic.test.mjs`;
-run deployment safety tests with `node --test test/tool/staging_deployment.test.mjs`.
+`tool/staging-wrangler/` is the isolated staging deployment toolchain. Install it
+with `npm ci --prefix tool/staging-wrangler`; invoke it with
+`node tool/staging-wrangler/wrangler.mjs` from the repository root. All staging
+publishing, generated-config dry runs, and upload-metadata tests use this wrapper.
+Existing production Worker dependencies and workflows are unchanged.
 
-Restoration requires a separate reviewed repair: remove the diagnostic job,
-restore the dev-push conditions on both disabled paths, and update the temporary
-safety assertions and this documentation. Reverting this change wholesale would
-re-enable publishing. Existing queued/active runs from older revisions are not
-disabled by this file change and are not cancelled by the shared lock.
+The package locks Wrangler **4.155.0** with npm integrity checks. Its postinstall
+backports [workers-sdk PR #16531](https://github.com/cloudflare/workers-sdk/pull/16531)
+from immutable revision
+[`416ed05ea788852c9c06784c370d77603ee10936`](https://github.com/cloudflare/workers-sdk/commit/416ed05ea788852c9c06784c370d77603ee10936).
+The checked-in patch requires the exact original bundle SHA-256, applies without
+fuzz, and verifies the resulting SHA-256. Every wrapper invocation verifies the
+installed version and patched bundle. A different version, changed bundle, or
+reapplied patch fails closed; reinstall with `npm ci`. No mutable prerelease build
+or maintained fork is used.
 
-The retained publishing path below is inactive until that restoration. It
-downloads the exact validated artifact without rebuilding Flutter with
-credentials present. Publishing is serialized without cancelling an active
-deployment. A dev-HEAD comparison under that lock rejects stale reruns and jobs
-queued out of order.
-A push arriving during publishing waits for the active deployment to finish.
-Both API Workers publish before the site. The three deployments are sequential,
-not atomic; a later failure can leave a partial staging release.
+The backport limits dashboard-origin metadata reads to route categories actually
+being deployed. With no local routes/Custom Domains it queries neither endpoint;
+configured categories still require their metadata permissions. Versions upload
+omits unrelated routes from its comparison. Binding/environment checks,
+configuration diffs, and Worker identity validation remain active. As verified
+on 2026-11-01, PR #16531 is open and stable 4.156.0 still has the defect. Remove
+the backport only after inspecting a stable release's implementation and upstream
+tests, pinning it in this isolated toolchain, and passing the local CLI permission,
+strict-diff, identity, and upload-preservation regressions.
 
-`tool/prepare_staging_deployment.mjs` first validates every required setting,
-then reads `/workers/scripts/<staging-worker>/settings` for all three existing
-identities using their respective tokens. Missing resources or denied reads
-fail before deployment; the workflow never creates replacement resources or
-broadens permissions. It writes temporary configs containing only public
-payment settings, absolute staging entrypoints/assets, and preservation
-metadata. Current dashboard variable values are not copied into files or logs.
+`tool/prepare_staging_deployment.mjs` validates the complete environment before
+writing any deployment files. For all three existing identities and their own
+tokens it reads service metadata, the service's actual internal environment's
+bindings/subdomain/environment metadata, script schedules/settings/deployments,
+and Worker metadata (`/workers/workers/<name>`) used by trigger publishing.
+A multi-version current deployment also requires its version metadata reads.
+Payment deployment additionally checks secret names for conflicts with public
+variables. Preflight checks required binding types (including rate limiters,
+site assets, registration mock enablement, and encrypted payment secrets) and
+consistent settings/environment binding inventories. It never queries routes or
+Custom Domains, follows redirects, publishes, or logs provider bodies/values.
+Denied or unusable required reads fail before any Worker publishes. Successful
+reads reduce partial-release risk; they do not prove write permission or make
+the release atomic.
+
+Run regressions after preparing the staging artifact:
+
+```bash
+npm ci --prefix tool/staging-wrangler
+node --test test/tool/staging_wrangler.test.mjs test/tool/staging_deployment.test.mjs
+```
+
+The CLI tests use a loopback mock API with denied route/domain endpoints; they
+perform no authenticated Cloudflare verification or actual deployment.
+Temporary generated configs contain public payment settings, absolute staging
+entrypoints/assets, and preservation metadata. Dashboard variable values are not
+copied into files or logs.
 
 Wrangler reconciliation is deliberate:
 
@@ -467,8 +484,8 @@ Wrangler reconciliation is deliberate:
 
 Keep dashboard configuration stable during a deployment: binding types added
 after preflight are outside its preservation snapshot. The `unsafe.metadata`
-interface is version-sensitive; the locked Wrangler versions are unchanged and
-CI tests its output. Changes to those versions require rerunning these tests.
+interface is version-sensitive; CI tests the exact fixed staging tool output.
+Changing that tool requires rerunning these tests.
 
 ### Operational configuration and rollback
 
@@ -477,20 +494,28 @@ and secrets already exist, and sandbox Checkout plus payment verification passed
 after purchase-reference secret rotation. This implementation does not repeat
 that hosted verification or modify external configuration.
 
-Before restoring publishing through a separate reviewed repair:
+Before the first restored hosted deployment:
 
 1. Retain GitHub `staging` restricted to `dev`, `production` restricted to `main`,
    and the existing `github-pages` environment. Add the three check names above
    to branch protection when desired; this task does not change protection rules.
-2. Confirm the existing tokens can read settings and deploy only their intended
-   Workers. A denied read must be investigated without automatically expanding
-   token permissions. No new credential or bootstrap Admin token is needed.
+2. Confirm the existing tokens can read all required preflight metadata and
+   deploy only their intended Workers. Investigate denied reads without
+   automatically expanding token permissions. No new credential or bootstrap Admin token is needed.
 3. Preserve the site Custom Domain, the two API Routes, unique rate-limit
    namespaces, and hostname-wide Cloudflare Access. Confirm Access covers all
    three Workers and the return from Stripe Checkout.
 4. Keep the payment creation variable explicitly enabled, the existing sandbox
    Price/key and rotated purchase-reference secret synchronized, and automatic
-   tax disabled. Review the first authorized hosted run and sandbox smoke test.
+   tax disabled. Existence of both GitHub and Cloudflare secret names does not
+   prove equal values. Privately verify the canonical mappings
+   `STRIPE_SANDBOX_RESTRICTED_KEY` → `STRIPE_SECRET_KEY` and
+   `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET` against
+   the operator's existing source of truth before `--secrets-file` overwrites
+   either binding; never print values. No rotation is part of this repair.
+5. Review the first authorized hosted run and sandbox smoke test. Registration
+   may already have a newer version from failed runs while payment/site remain
+   older; confirm all three version IDs after the successful run.
 
 For a code rollback, revert the offending change through a PR to `dev`; merging
 it runs the same validation and republishes all three staging components using
@@ -937,9 +962,10 @@ repository's active domain declaration and is copied into the Flutter artifact.
 
 Keep commits small and focused, preserve the documented decision status, and
 run verification appropriate to the files changed before requesting review.
-For staging automation changes, install each Worker's locked dependencies,
-prepare the staging artifact, and run `node --test
+For staging automation changes, install each Worker's locked dependencies and
+the isolated staging tool with `npm ci --prefix tool/staging-wrangler`, prepare
+the staging artifact, and run `node --test test/tool/staging_wrangler.test.mjs
 test/tool/staging_deployment.test.mjs` from the repository root. This suite uses
-mock settings responses and Wrangler dry runs, with no provider credentials or
+mock metadata responses, the actual CLI against a loopback API, and Wrangler dry runs, with no provider credentials or
 deployments. PRs to either long-lived branch validate only; a merge into `dev`
 starts automatic staging deployment after those checks pass.
