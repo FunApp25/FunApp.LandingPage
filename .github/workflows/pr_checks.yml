@@ -137,6 +137,11 @@ jobs:
       - name: Test with coverage
         run: flutter test --coverage
 
+      - name: Test browser payment session storage
+        run: >-
+          flutter test --platform chrome
+          test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
+
       - name: Upload coverage
         uses: actions/upload-artifact@v7
         with:

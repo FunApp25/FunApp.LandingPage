@@ -604,6 +604,7 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
+puro flutter test --platform chrome test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
 puro flutter build web -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
 ```
@@ -967,7 +968,8 @@ dependency boundaries.
 
 Pull requests targeting `dev` or `main` run all three Worker projects'
 typechecking, tests, and Wrangler dry runs plus Flutter formatting, generation,
-analysis, full-suite coverage, and production/staging builds through the
+analysis, full-suite coverage, focused Chrome session-storage tests, and
+production/staging builds through the
 read-only `PR Checks` workflow. These checks have no staging environment or
 Cloudflare/Stripe credentials and cannot deploy. Pushes to `dev` reuse these
 checks, then automatically deploy only staging through **Deploy Staging**.

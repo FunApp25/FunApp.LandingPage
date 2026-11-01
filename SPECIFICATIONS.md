@@ -1040,7 +1040,8 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
 - Pull requests targeting `dev` or `main` run the staging site Worker's typechecking,
   tests, and dry-run validation, both API Worker projects' typechecking, tests,
   and root/staging dry-run validation, plus Flutter formatting, generation,
-  analysis, full-suite coverage, and production/staging compile checks.
+  analysis, full-suite coverage, focused Chrome session-storage tests, and
+  production/staging compile checks.
   Pull-request checks do not deploy; pushes to `main` remain the production
   Pages deployment trigger.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.

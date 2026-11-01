@@ -147,6 +147,33 @@ void main() {
     expect(workflow, isNot(contains('wrangler-action')));
   });
 
+  test('required Flutter check runs focused Chrome storage tests', () {
+    final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    final quality = workflow.split('\n  quality:\n').last;
+    const stepName = '      - name: Test browser payment session storage\n';
+    expect(quality, contains(stepName));
+    final browserStep = quality
+        .split(stepName)
+        .last
+        .split('\n      - name:')
+        .first;
+    expect(browserStep, contains('flutter test --platform chrome'));
+    expect(
+      browserStep,
+      contains(
+        'test/data/founding_friend_payment/'
+        'session_pending_founding_friend_payment_store_web_test.dart',
+      ),
+    );
+    for (final bypass in ['continue-on-error', 'if:', '||', '--coverage']) {
+      expect(browserStep, isNot(contains(bypass)));
+    }
+    expect(quality, isNot(contains('continue-on-error')));
+    expect(quality, contains('run: flutter test --coverage'));
+    expect(quality, contains('threshold=90'));
+    expect(quality, contains("' coverage/lcov.info"));
+  });
+
   test('validated dev pushes publish staging with the isolated fixed tool', () {
     final workflow = File(
       '.github/workflows/deploy-staging-site.yml',
