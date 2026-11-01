@@ -42,6 +42,36 @@ void main() {
   for (final foundingFriend in [false, true]) {
     final semanticId = foundingFriend ? 'foundingFriend' : 'hereAndNow';
 
+    for (final width in [390.0, 1440.0]) {
+      testWidgets('$semanticId Next advances one field at $width px', (
+        tester,
+      ) async {
+        setTestSurface(tester, Size(width, 1000));
+        await _pumpPage(
+          tester,
+          foundingFriend ? const FoundingFriendPage() : const HereAndNowPage(),
+        );
+        for (final fields in [
+          ('firstName', 'lastName'),
+          ('lastName', 'email'),
+          ('email', 'age'),
+        ]) {
+          await tester.showKeyboard(
+            find.byKey(Key('${fields.$1}Field-$semanticId')),
+          );
+          await tester.testTextInput.receiveAction(TextInputAction.next);
+          await tester.pumpAndSettle();
+          final next = tester.widget<EditableText>(
+            find.descendant(
+              of: find.byKey(Key('${fields.$2}Field-$semanticId')),
+              matching: find.byType(EditableText),
+            ),
+          );
+          expect(next.focusNode.hasPrimaryFocus, isTrue);
+        }
+      });
+    }
+
     testWidgets(
       '$semanticId retains rendered drafts across responsive changes',
       (

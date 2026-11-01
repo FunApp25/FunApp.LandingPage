@@ -33,6 +33,33 @@ import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_intro
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final width in [390.0, 1440.0]) {
+    testWidgets('Venue Next advances one field at $width px', (tester) async {
+      setTestSurface(tester, Size(width, 1000));
+      await _pumpDirectVenuePage(tester);
+      for (final fields in [
+        ('VenueName', 'VenueType'),
+        ('FirstName', 'LastName'),
+        ('LastName', 'Role'),
+        ('Role', 'Email'),
+        ('Email', 'PhoneNumber'),
+      ]) {
+        await tester.showKeyboard(
+          find.byKey(Key('venueLead${fields.$1}Field')),
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.next);
+        await tester.pumpAndSettle();
+        final next = tester.widget<EditableText>(
+          find.descendant(
+            of: find.byKey(Key('venueLead${fields.$2}Field')),
+            matching: find.byType(EditableText),
+          ),
+        );
+        expect(next.focusNode.hasPrimaryFocus, isTrue);
+      }
+    });
+  }
+
   const eyebrow =
       'LIFE IS TOUGH FOR PEOPLE. LIFE IS TOUGH FOR VENUES. FUN APP IS '
       'ARRIVING TO HELP.';

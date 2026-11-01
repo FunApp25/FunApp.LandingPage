@@ -129,12 +129,6 @@ final class BrandedFormTextField extends StatelessWidget {
       errorBorder: errorBorder,
       focusedErrorBorder: errorBorder,
     );
-    void handleSubmitted(String value) {
-      if (textInputAction == TextInputAction.next) {
-        FocusScope.of(context).nextFocus();
-      }
-    }
-
     final field = validator == null
         ? TextField(
             key: fieldKey,
@@ -149,7 +143,6 @@ final class BrandedFormTextField extends StatelessWidget {
             maxLines: maxLines,
             textInputAction: textInputAction,
             onChanged: onChanged,
-            onSubmitted: handleSubmitted,
           )
         : TextFormField(
             key: fieldKey,
@@ -165,7 +158,6 @@ final class BrandedFormTextField extends StatelessWidget {
             maxLines: maxLines,
             textInputAction: textInputAction,
             onChanged: onChanged,
-            onFieldSubmitted: handleSubmitted,
           );
 
     return Semantics(
