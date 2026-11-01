@@ -49,6 +49,9 @@ jobs:
       - name: Validate staging Worker bundle
         run: npm run wrangler:validate:staging
 
+      - name: Install fixed staging deployment tool
+        run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
       - name: Test staging deployment safety and Wrangler upload metadata
         env:
           WORKER_PROJECT: venue-interest-worker
@@ -88,10 +91,13 @@ jobs:
       - name: Validate staging Worker bundle
         run: npm run wrangler:validate:staging
 
+      - name: Install fixed staging deployment tool
+        run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
       - name: Test staging deployment safety and Wrangler upload metadata
         env:
           WORKER_PROJECT: founding-friend-payment-worker
-        run: node --test ../../test/tool/staging_deployment.test.mjs ../../test/tool/staging_cloudflare_diagnostic.test.mjs
+        run: node --test ../../test/tool/staging_deployment.test.mjs
 
   quality:
     name: Flutter and staging site checks
@@ -203,17 +209,19 @@ jobs:
         working-directory: cloudflare/staging-site-worker
         run: npm run wrangler:validate
 
+      - name: Install fixed staging deployment tool
+        run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
       - name: Test staging deployment safety and Wrangler upload metadata
         env:
           WORKER_PROJECT: staging-site-worker
-        run: node --test test/tool/staging_deployment.test.mjs
+        run: node --test test/tool/staging_deployment.test.mjs test/tool/staging_wrangler.test.mjs
 
       - name: Verify staging artifact identity
         run: bash tool/verify_staging_artifact.sh
 
       - name: Upload validated staging artifact for dev deployment
-        # Restore alongside the staging publishing job in a reviewed repair PR.
-        if: ${{ false }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: actions/upload-artifact@v7
         with:
           name: staging-web-${{ github.sha }}

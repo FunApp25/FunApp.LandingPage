@@ -13,39 +13,10 @@ jobs:
     name: Validation
     uses: ./.github/workflows/pr_checks.yml
 
-  diagnostic:
-    name: Read-only staging Cloudflare diagnostic
-    needs: checks
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    environment: staging
-    concurrency:
-      group: funapp-staging-deployment
-      cancel-in-progress: false
-    steps:
-      - name: Checkout validated revision
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '22'
-
-      - name: Read payment Worker metadata statuses
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_WORKERS_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
-        run: node tool/staging_cloudflare_diagnostic.mjs
-
   deploy:
     name: Deploy staging site and API Workers
     needs: checks
-    # Temporary diagnostic only. Restore the dev-push condition in a reviewed repair PR.
-    if: ${{ false }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: staging
@@ -69,7 +40,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: cloudflare/*/package-lock.json
+          cache-dependency-path: tool/staging-wrangler/package-lock.json
 
       - name: Download this run's validated staging artifact
         uses: actions/download-artifact@v8
@@ -81,10 +52,7 @@ jobs:
         run: bash tool/verify_staging_artifact.sh
 
       - name: Install locked deployment tools
-        run: |
-          npm ci --prefix cloudflare/staging-site-worker
-          npm ci --prefix cloudflare/venue-interest-worker
-          npm ci --prefix cloudflare/founding-friend-payment-worker
+        run: npm ci --prefix tool/staging-wrangler
 
       - name: Preflight all existing staging Workers and payment configuration
         env:
@@ -100,7 +68,7 @@ jobs:
       - name: Validate generated deployment configurations without credentials
         run: |
           for project in staging-site-worker venue-interest-worker founding-friend-payment-worker; do
-            (cd "cloudflare/$project" && npx --no-install wrangler deploy --dry-run --env="" --config "$RUNNER_TEMP/$project.json")
+            (cd "cloudflare/$project" && node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" deploy --dry-run --env="" --config "$RUNNER_TEMP/$project.json")
           done
 
       # The shared lock serializes publishing; this also rejects stale reruns and unordered queued jobs.
@@ -121,7 +89,7 @@ jobs:
         working-directory: cloudflare/venue-interest-worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
-        run: npx --no-install wrangler deploy --env="" --config "$RUNNER_TEMP/venue-interest-worker.json"
+        run: node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" deploy --env="" --config "$RUNNER_TEMP/venue-interest-worker.json"
 
       - name: Deploy staging sandbox payment Worker
         if: steps.revision.outputs.current == 'true'
@@ -129,7 +97,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_API_TOKEN }}
         run: >-
-          npx --no-install wrangler deploy --env=""
+          node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" deploy --env=""
           --config "$RUNNER_TEMP/founding-friend-payment-worker.json"
           --secrets-file "$RUNNER_TEMP/staging-payment-secrets.json"
 
@@ -138,7 +106,7 @@ jobs:
         working-directory: cloudflare/staging-site-worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_STAGING_SITE_API_TOKEN }}
-        run: npx --no-install wrangler deploy --env="" --config "$RUNNER_TEMP/staging-site-worker.json"
+        run: node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" deploy --env="" --config "$RUNNER_TEMP/staging-site-worker.json"
 
       - name: Remove temporary deployment files
         if: always()

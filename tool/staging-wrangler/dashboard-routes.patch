@@ -1,0 +1,74 @@
+--- cli.js
++++ cli.js
+@@ -181254,5 +181254,11 @@
+ // ../deploy-helpers/src/deploy/helpers/download-worker-config.ts
+-async function fetchWorkerConfig(complianceConfig, accountId, workerName, environment) {
++async function fetchWorkerConfig(complianceConfig, accountId, workerName, environment, localRoutes) {
++  const fetchRoutes = localRoutes === void 0 || localRoutes.some(
++    (route) => typeof route === "string" || !route.custom_domain
++  );
++  const fetchCustomDomains = localRoutes === void 0 || localRoutes.some(
++    (route) => typeof route !== "string" && route.custom_domain
++  );
+   const [
+     bindings2,
+     routes,
+@@ -181265,14 +181271,14 @@
+       complianceConfig,
+       `/accounts/${accountId}/workers/services/${workerName}/environments/${environment}/bindings`
+     ),
+-    fetchResult(
++    fetchRoutes ? fetchResult(
+       complianceConfig,
+       `/accounts/${accountId}/workers/services/${workerName}/environments/${environment}/routes?show_zonename=true`
+-    ),
+-    fetchResult(
++    ) : Promise.resolve([]),
++    fetchCustomDomains ? fetchResult(
+       complianceConfig,
+       `/accounts/${accountId}/workers/domains/records?page=0&per_page=5&service=${workerName}&environment=${environment}`
+-    ),
++    ) : Promise.resolve([]),
+     fetchResult(
+       complianceConfig,
+       `/accounts/${accountId}/workers/services/${workerName}/environments/${environment}/subdomain`
+@@ -181300,7 +181306,7 @@
+     cronTriggers
+   };
+ }
+-async function downloadWorkerConfig(complianceConfig, workerName, environment, entrypoint, accountId) {
++async function downloadWorkerConfig(complianceConfig, workerName, environment, entrypoint, accountId, localRoutes) {
+   const {
+     bindings: bindings2,
+     routes,
+@@ -181312,7 +181318,8 @@
+     complianceConfig,
+     accountId,
+     workerName,
+-    environment
++    environment,
++    localRoutes
+   );
+   return constructWranglerConfig({
+     name: workerName,
+@@ -181679,13 +181686,18 @@
+         );
+       }
+       if (script.last_deployed_from === "dash") {
+-        const remoteWorkerConfig = await downloadWorkerConfig(
++        const localRoutes = props.command === "deploy" ? props.routes : [];
++        const downloadedWorkerConfig = await downloadWorkerConfig(
+           config2,
+           name2,
+           serviceMetaData.default_environment.environment,
+           props.entry.file,
+-          accountId
++          accountId,
++          localRoutes
+         );
++        const remoteWorkerConfig = props.command === "versions upload"
++          ? { ...downloadedWorkerConfig, routes: void 0 }
++          : downloadedWorkerConfig;
+         const configForDiff = props.command === "deploy" ? {
+           ...config2,
+           // We also want to include all the routes used for deployment

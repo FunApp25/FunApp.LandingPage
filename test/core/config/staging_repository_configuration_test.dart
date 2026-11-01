@@ -147,7 +147,7 @@ void main() {
     expect(workflow, isNot(contains('wrangler-action')));
   });
 
-  test('staging diagnostic replaces publishing on validated dev pushes', () {
+  test('validated dev pushes publish staging with the isolated fixed tool', () {
     final workflow = File(
       '.github/workflows/deploy-staging-site.yml',
     ).readAsStringSync();
@@ -157,55 +157,28 @@ void main() {
         r'^  ([A-Za-z_][A-Za-z0-9_-]*):$',
         multiLine: true,
       ).allMatches(jobs).map((match) => match.group(1)).toList(),
-      ['checks', 'diagnostic', 'deploy'],
+      ['checks', 'deploy'],
     );
-    final diagnostic = jobs
-        .split('\n  diagnostic:\n')
-        .last
-        .split(
-          '\n  deploy:\n',
-        )
-        .first;
     final deploy = jobs.split('\n  deploy:\n').last;
     expect(
       deploy,
-      contains(
-        r'    if: ${{ false }}'
-        '\n',
-      ),
-    );
-    expect(deploy, contains('needs: checks'));
-    expect(deploy, contains('group: funapp-staging-deployment'));
-    expect(deploy, contains('git ls-remote --exit-code origin refs/heads/dev'));
-    expect(
-      diagnostic,
       contains(
         "    if: github.event_name == 'push' && "
         "github.ref == 'refs/heads/dev'\n",
       ),
     );
-    expect(diagnostic, contains('needs: checks'));
-    expect(diagnostic, contains('environment: staging'));
-    expect(diagnostic, contains('group: funapp-staging-deployment'));
-    expect(diagnostic, contains('cancel-in-progress: false'));
-    expect(diagnostic, contains('persist-credentials: false'));
-    expect(diagnostic, contains(r'${{ vars.CLOUDFLARE_ACCOUNT_ID }}'));
+    expect(deploy, contains('npm ci --prefix tool/staging-wrangler'));
+    expect(deploy, isNot(contains('npx --no-install wrangler')));
     expect(
-      RegExp(r'\$\{\{ secrets\.([A-Z_]+) \}\}')
-          .allMatches(diagnostic)
-          .map((match) => match.group(1))
-          .toList(),
-      ['CLOUDFLARE_WORKERS_API_TOKEN'],
+      RegExp('tool/staging-wrangler/wrangler.mjs').allMatches(deploy),
+      hasLength(4),
     );
     expect(
-      RegExp(
-        r'^        run: (.+)$',
-        multiLine: true,
-      ).allMatches(diagnostic).map((match) => match.group(1)).toList(),
-      ['node tool/staging_cloudflare_diagnostic.mjs'],
+      RegExp("if: steps.revision.outputs.current == 'true'").allMatches(deploy),
+      hasLength(3),
     );
-    expect(diagnostic, isNot(contains('wrangler')));
-    expect(diagnostic, isNot(contains('artifact')));
+    expect(workflow, isNot(contains('diagnostic')));
+    expect(workflow, isNot(contains(r'${{ false }}')));
     expect(workflow, contains('permissions:\n  contents: read\n\n'));
 
     final checks = File('.github/workflows/pr_checks.yml').readAsStringSync();
@@ -217,11 +190,15 @@ void main() {
     expect(
       artifactUpload,
       contains(
-        r'        if: ${{ false }}'
-        '\n',
+        "if: github.event_name == 'push' && github.ref == 'refs/heads/dev'",
       ),
     );
-    expect(checks, contains('staging_cloudflare_diagnostic.test.mjs'));
+    expect(checks, isNot(contains('diagnostic')));
+    expect(checks, contains('staging_wrangler.test.mjs'));
+    expect(
+      RegExp('npm ci --prefix').allMatches(checks),
+      hasLength(3),
+    );
 
     for (final expected in [
       'push:',
