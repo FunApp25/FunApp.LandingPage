@@ -16,8 +16,11 @@ const foundingFriendCheckoutCreationEndpointPath =
 const foundingFriendCheckoutVerificationEndpointPath =
     '/api/founding-friend-payments/checkout-sessions/verify';
 
-/// Maximum duration of one payment Worker request.
-const defaultFoundingFriendPaymentTimeout = Duration(seconds: 15);
+/// Allows two sequential 10-second Stripe calls plus transport overhead.
+const defaultFoundingFriendCheckoutCreationTimeout = Duration(seconds: 25);
+
+/// Allows one 10-second Stripe lookup plus transport overhead.
+const defaultFoundingFriendCheckoutVerificationTimeout = Duration(seconds: 15);
 
 /// First-party Worker payment transport with strict response validation.
 final class WorkerFoundingFriendPaymentDataSource
@@ -26,20 +29,31 @@ final class WorkerFoundingFriendPaymentDataSource
   factory WorkerFoundingFriendPaymentDataSource({
     required http.Client client,
     required FoundingFriendPaymentConfig config,
-    Duration timeout = defaultFoundingFriendPaymentTimeout,
-  }) => WorkerFoundingFriendPaymentDataSource._(client, config, timeout);
+    Duration creationTimeout = defaultFoundingFriendCheckoutCreationTimeout,
+    Duration verificationTimeout =
+        defaultFoundingFriendCheckoutVerificationTimeout,
+  }) => WorkerFoundingFriendPaymentDataSource._(
+    client,
+    config,
+    creationTimeout,
+    verificationTimeout,
+  );
 
   const WorkerFoundingFriendPaymentDataSource._(
     this._client,
     this._config,
-    this.timeout,
+    this.creationTimeout,
+    this.verificationTimeout,
   );
 
   final http.Client _client;
   final FoundingFriendPaymentConfig _config;
 
-  /// Abort deadline for each request.
-  final Duration timeout;
+  /// Abort deadline for creation, including response-body consumption.
+  final Duration creationTimeout;
+
+  /// Independent verification deadline, including response-body consumption.
+  final Duration verificationTimeout;
 
   @override
   Future<FoundingFriendCheckout> createCheckout({
@@ -50,6 +64,7 @@ final class WorkerFoundingFriendPaymentDataSource
       foundingFriendCheckoutCreationEndpointPath,
       {'email': email, 'attemptId': attemptId},
       expectedStatus: 201,
+      timeout: creationTimeout,
     );
     if (!_hasOnlyKeys(body, {'checkoutUrl', 'sessionId', 'requestId'})) {
       throw const FoundingFriendPaymentUnexpectedException();
@@ -82,6 +97,7 @@ final class WorkerFoundingFriendPaymentDataSource
       foundingFriendCheckoutVerificationEndpointPath,
       {'sessionId': sessionId},
       expectedStatus: 200,
+      timeout: verificationTimeout,
     );
     if (!_hasOnlyKeys(body, {
       'status',
@@ -124,6 +140,7 @@ final class WorkerFoundingFriendPaymentDataSource
     String path,
     Map<String, String> payload, {
     required int expectedStatus,
+    required Duration timeout,
   }) async {
     final abortCompleter = Completer<void>();
     final timer = Timer(timeout, abortCompleter.complete);

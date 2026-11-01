@@ -818,8 +818,13 @@ capabilities as implemented.
   backend will later verify a qualifying payment against its verified email.
 - Flutter accepts Checkout redirects only from exact HTTPS
   `checkout.stripe.com`, or from its exact configured loopback origin in local
-  mock mode. Payment requests use a 15-second browser deadline; Stripe requests
-  use a 10-second Worker deadline. Errors remain provider-neutral, and neither
+  mock mode. Checkout creation uses a 25-second browser deadline for two
+  sequential Stripe calls with independent 10-second Worker deadlines and
+  5 seconds of transport/processing allowance. Verification retains its separate
+  15-second browser deadline for one Stripe lookup. These deadlines include
+  response-body reads; a browser abort does not prove that Stripe creation was
+  cancelled, so ambiguous failures retain the original attempt for recovery.
+  Errors remain provider-neutral, and neither
   boundary logs or returns emails, names, request bodies, billing/payment
   details, Checkout URLs, credentials, or complete provider responses.
 - Staging Checkout-creation HTTP 500 responses log only the response's generated

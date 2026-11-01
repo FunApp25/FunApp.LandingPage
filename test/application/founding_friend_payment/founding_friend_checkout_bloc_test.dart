@@ -1,15 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/founding_friend_payment/founding_friend_checkout_bloc.dart';
 import 'package:fun_app_landing_page/application/founding_friend_payment/founding_friend_payment_status_bloc.dart';
+import 'package:fun_app_landing_page/core/config/founding_friend_payment_config.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/worker_founding_friend_payment_data_source.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/founding_friend_payment_repository.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/founding_friend_checkout.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/founding_friend_payment_verification.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/pending_founding_friend_payment.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/founding_friend_payment_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/pending_founding_friend_payment_store_interface.dart';
+import 'package:http/http.dart' as http;
 
 const _attempt = '123e4567-e89b-42d3-a456-426614174000';
 const _replacement = 'd9428888-122b-4c5f-8e6a-cc2eeb112233';
@@ -56,6 +61,56 @@ Future<FoundingFriendCheckoutState> _dispatch(
 }
 
 void main() {
+  testWidgets('creation timeout preserves the attempt for verified replay', (
+    tester,
+  ) async {
+    final client = _LostCreationResponseClient();
+    final store = _PendingStore();
+    var attempts = 0;
+    final bloc = FoundingFriendCheckoutBloc(
+      repository: FoundingFriendPaymentRepository(
+        WorkerFoundingFriendPaymentDataSource(
+          client: client,
+          config: FoundingFriendPaymentConfig.production(),
+        ),
+      ),
+      pendingStore: store,
+      createAttemptId: () {
+        attempts++;
+        return _attempt;
+      },
+    );
+    addTearDown(bloc.close);
+    final failed = _dispatch(
+      bloc,
+      const FoundingFriendRegistrationConfirmed(_email),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 24));
+    expect(bloc.state.phase, FoundingFriendCheckoutPhase.preparing);
+    bloc.add(const FoundingFriendCheckoutRetryRequested());
+    await tester.pump();
+    expect(client.creations, hasLength(1));
+    await tester.pump(const Duration(seconds: 1));
+    expect((await failed).failure, const AppFailure.serviceUnavailable());
+    expect(store.read()?.attemptId, _attempt);
+    expect(store.read()?.sessionId, isNull);
+
+    final recovered = _dispatch(bloc);
+    await tester.pump();
+    expect((await recovered).checkout?.sessionId, _session);
+    expect(client.creations, [
+      {'email': _email, 'attemptId': _attempt},
+      {'email': _email, 'attemptId': _attempt},
+    ]);
+    expect(client.verifications, [
+      {'sessionId': _session},
+    ]);
+    expect(store.read()?.sessionId, _session);
+    expect(store.read()?.attemptId, _attempt);
+    expect(attempts, 1);
+  });
+
   for (final storedSession in [_session, _newSession, null]) {
     test('recovery clears only the verified Session: $storedSession', () async {
       final verification =
@@ -601,6 +656,39 @@ void main() {
       ),
     );
   });
+}
+
+final class _LostCreationResponseClient extends http.BaseClient {
+  final List<Object?> creations = [];
+  final List<Object?> verifications = [];
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final paymentRequest = request as http.AbortableRequest;
+    final payload = jsonDecode(paymentRequest.body);
+    final verification =
+        request.url.path == foundingFriendCheckoutVerificationEndpointPath;
+    if (verification) {
+      verifications.add(payload);
+    } else {
+      creations.add(payload);
+      if (creations.length == 1) {
+        // Stripe created the Session, but the browser never received it.
+        await paymentRequest.abortTrigger;
+        throw http.RequestAbortedException(request.url);
+      }
+    }
+    final body = verification
+        ? {'status': 'pending', 'canResumeCheckout': true}
+        : {
+            'checkoutUrl': 'https://checkout.stripe.com/c/pay/safe',
+            'sessionId': _session,
+          };
+    return http.StreamedResponse(
+      Stream.value(utf8.encode(jsonEncode(body))),
+      verification ? 200 : 201,
+    );
+  }
 }
 
 final class _PaymentRepository

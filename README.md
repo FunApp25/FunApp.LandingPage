@@ -835,6 +835,12 @@ exactly-once behavior.
 The Worker accepts JSON bodies up to 4 KiB, exact schemas only, a strict public
 application origin, abortable 10-second Stripe requests, exact
 `checkout.stripe.com` redirects, and a required Cloudflare rate-limit binding.
+Flutter gives Checkout creation 25 seconds for the sequential Price lookup and
+Session creation, including 5 seconds of transport/processing allowance beyond
+the two independent Stripe deadlines. Verification keeps a separate 15-second
+deadline for one lookup. Deadlines include response-body reads. Browser aborts
+can leave creation ambiguous; retry retains the same attempt for idempotent
+recovery.
 It performs no operational logging of emails, names, request bodies, Checkout
 URLs, payment details, credentials, or provider responses. Local mock settings
 are rejected outside loopback execution. `PAYMENT_CREATION_ENABLED` must be
