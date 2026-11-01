@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   type Env,
@@ -1211,4 +1211,125 @@ describe('Adaptive Pricing creation contract', () => {
     });
     expect(response.status).toBe(502);
   });
+});
+
+describe('staging Checkout diagnostic contract', () => {
+  const errorLog = vi.fn();
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(errorLog);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    errorLog.mockClear();
+  });
+
+  it('preserves successful Checkout requests, response shape and retry behavior', async () => {
+    const requests: RequestInit[] = [];
+    const upstreamFetch = vi.fn(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (input.toString().includes('/v1/prices/')) {
+          return Response.json(validPrice());
+        }
+        requests.push(init!);
+        const body = new URLSearchParams(init?.body as string);
+        return Response.json(
+          validCreatedSession(body.get('client_reference_id')),
+        );
+      },
+    );
+    const env = productionEnv({
+      PUBLIC_APP_ORIGIN: 'https://staging.funapp.world',
+      PURCHASE_REFERENCE_SECRET: 'x'.repeat(32),
+    });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await handleStagingRequest(
+        createRequest('https://staging.funapp.world'),
+        env,
+        {
+          upstreamFetch,
+          paymentRateLimiter: acceptingRateLimiter,
+        },
+      );
+      expect(response.status).toBe(201);
+      expect(await response.json()).toEqual({
+        checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_safe',
+        sessionId,
+        requestId: expect.stringMatching(/^[a-f0-9-]{36}$/),
+      });
+    }
+    expect(upstreamFetch).toHaveBeenCalledTimes(4);
+    expect(requests[0]?.body).toBe(requests[1]?.body);
+    const body = new URLSearchParams(requests[0]?.body as string);
+    expect(body.get('line_items[0][price]')).toBe('price_test249gbp');
+    expect(body.get('line_items[0][quantity]')).toBe('1');
+    expect(body.get('mode')).toBe('payment');
+    expect(body.get('customer_email')).toBe(email);
+    expect(body.get('customer_creation')).toBe('always');
+    expect(body.get('automatic_tax[enabled]')).toBe('false');
+    expect(body.get('success_url')).toBe(
+      'https://staging.funapp.world/#/founding-friend/payment?session_id={CHECKOUT_SESSION_ID}',
+    );
+    expect(body.get('cancel_url')).toBe(
+      'https://staging.funapp.world/#/founding-friend/payment/cancelled',
+    );
+    expect(body.has('adaptive_pricing[enabled]')).toBe(false);
+    for (const request of requests) {
+      expect(new Headers(request.headers).get('idempotency-key')).toBe(
+        `founding-friend-checkout-v1-${attemptId}`,
+      );
+      expect(new Headers(request.headers).get('stripe-version')).toBe(
+        '2026-08-26.dahlia',
+      );
+    }
+    expect(errorLog).not.toHaveBeenCalled();
+  });
+
+  it.each(['stripe_price_lookup', 'stripe_session_creation'] as const)(
+    'identifies unexpected %s response handling failures',
+    async (stage) => {
+      const upstreamFetch = vi.fn(async (input: RequestInfo | URL) => {
+        if (
+          input.toString().includes('/v1/prices/') &&
+          stage === 'stripe_session_creation'
+        ) {
+          return Response.json(validPrice());
+        }
+        return Response.json(null);
+      });
+      const response = await handleStagingRequest(
+        createRequest('https://staging.funapp.world'),
+        productionEnv({ PUBLIC_APP_ORIGIN: 'https://staging.funapp.world' }),
+        { upstreamFetch, paymentRateLimiter: acceptingRateLimiter },
+      );
+      expect(response.status).toBe(500);
+      const body = (await response.json()) as { error: { requestId: string } };
+      expect(errorLog).toHaveBeenCalledExactlyOnceWith(
+        JSON.stringify({
+          requestId: body.error.requestId,
+          stage,
+          category: 'runtime_unexpected',
+        }),
+      );
+      expect(upstreamFetch).toHaveBeenCalledTimes(
+        stage === 'stripe_price_lookup' ? 1 : 2,
+      );
+    },
+  );
+
+  it.each([400, 429, 500])(
+    'preserves Stripe HTTP %s classification without a 500 diagnostic',
+    async (status) => {
+      const response = await handleStagingRequest(
+        createRequest('https://staging.funapp.world'),
+        productionEnv({ PUBLIC_APP_ORIGIN: 'https://staging.funapp.world' }),
+        {
+          upstreamFetch: async () =>
+            new Response('synthetic-private-provider-body', { status }),
+          paymentRateLimiter: acceptingRateLimiter,
+        },
+      );
+      expect(response.status).toBe(status === 400 ? 502 : 503);
+      expect(errorLog).not.toHaveBeenCalled();
+    },
+  );
 });

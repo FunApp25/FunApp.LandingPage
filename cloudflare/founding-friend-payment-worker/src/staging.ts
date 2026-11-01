@@ -1,5 +1,6 @@
 import {
   handleRequest,
+  type CheckoutFailureDiagnostic,
   type Env,
   type WorkerDependencies,
 } from './index';
@@ -29,15 +30,32 @@ export async function handleStagingRequest(
   }
 
   const secretKey = env.STRIPE_SECRET_KEY;
-  if (
-    env.STRIPE_EXPECTED_LIVEMODE !== 'false' ||
-    env.PUBLIC_APP_ORIGIN !== stagingOrigin ||
-    (secretKey !== undefined && !/^rk_test_[A-Za-z0-9]+$/.test(secretKey))
+  let invalidStage: CheckoutFailureDiagnostic['stage'] | null = null;
+  if (env.STRIPE_EXPECTED_LIVEMODE !== 'false') {
+    invalidStage = 'staging_livemode';
+  } else if (env.PUBLIC_APP_ORIGIN !== stagingOrigin) {
+    invalidStage = 'staging_origin';
+  } else if (
+    secretKey !== undefined &&
+    !/^rk_test_[A-Za-z0-9]+$/.test(secretKey)
   ) {
-    return stagingErrorResponse(500, 'unexpected');
+    invalidStage = 'staging_stripe_key';
+  }
+  const reportFailure =
+    url.pathname === '/api/founding-friend-payments/checkout-sessions'
+      ? reportCheckoutFailure
+      : undefined;
+  if (invalidStage !== null) {
+    const requestId = crypto.randomUUID();
+    reportFailure?.({
+      requestId,
+      stage: invalidStage,
+      category: 'configuration_invalid',
+    });
+    return stagingErrorResponse(500, 'unexpected', requestId);
   }
 
-  return handleRequest(request, env, dependencies);
+  return handleRequest(request, env, dependencies, reportFailure);
 }
 
 const worker = {
@@ -48,9 +66,25 @@ const worker = {
 
 export default worker;
 
-function stagingErrorResponse(status: number, code: string): Response {
+function reportCheckoutFailure({
+  requestId,
+  stage,
+  category,
+}: CheckoutFailureDiagnostic): void {
+  try {
+    console.error(JSON.stringify({ requestId, stage, category }));
+  } catch {
+    // Diagnostics must not change the payment response if the logging sink fails.
+  }
+}
+
+function stagingErrorResponse(
+  status: number,
+  code: string,
+  requestId = crypto.randomUUID(),
+): Response {
   return Response.json(
-    { error: { code, requestId: crypto.randomUUID() } },
+    { error: { code, requestId } },
     {
       status,
       headers: {

@@ -79,6 +79,46 @@ function metadataResponse(url) {
   assert.fail(`Unexpected metadata request: ${url}`);
 }
 
+test('purchase-reference preflight rejects invalid secrets before reads or file writes', async () => {
+  const directory = mkdtempSync(resolve(tmpdir(), 'staging-invalid-secret-'));
+  try {
+    for (const secret of [
+      undefined,
+      '',
+      'x'.repeat(31),
+      `${'x'.repeat(32)}\n`,
+      `\r${'x'.repeat(32)}`,
+      `${'x'.repeat(32)}\r\n`,
+      `${'x'.repeat(16)}\n${'x'.repeat(16)}`,
+    ]) {
+      let reads = 0;
+      await assert.rejects(
+        prepareDeployment(
+          {
+            ...environment,
+            RUNNER_TEMP: directory,
+            STAGING_PURCHASE_REFERENCE_SECRET: secret,
+          },
+          async () => {
+            reads += 1;
+            throw new Error('Must not read metadata');
+          },
+        ),
+      );
+      assert.equal(reads, 0);
+      assert.deepEqual(readdirSync(directory), []);
+    }
+    assert.doesNotThrow(() =>
+      paymentConfiguration({
+        ...environment,
+        STAGING_PURCHASE_REFERENCE_SECRET: 'x'.repeat(32),
+      }),
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 const requiredPaths = (worker, project) => [
   `services/${worker}`,
   `services/${worker}/environments/actual-environment/bindings`,

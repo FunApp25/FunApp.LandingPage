@@ -441,8 +441,11 @@ A multi-version current deployment also requires its version metadata reads.
 Payment deployment additionally checks secret names for conflicts with public
 variables. Preflight checks required binding types (including rate limiters,
 site assets, registration mock enablement, and encrypted payment secrets) and
-consistent settings/environment binding inventories. It never queries routes or
-Custom Domains, follows redirects, publishes, or logs provider bodies/values.
+consistent settings/environment binding inventories. The purchase-reference
+secret must contain at least 32 characters and no CR/LF, matching runtime
+validation; invalid values fail before metadata reads or deployment-file writes.
+Preflight never queries routes or Custom Domains, follows redirects, publishes,
+or logs provider bodies/values.
 Denied or unusable required reads fail before any Worker publishes. Successful
 reads reduce partial-release risk; they do not prove write permission or make
 the release atomic.
@@ -771,6 +774,30 @@ Run the browser storage regression separately from the normal Flutter suite:
 puro flutter test --platform chrome \
   test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
 ```
+
+Staging Checkout-creation HTTP 500 responses emit one JSON diagnostic containing
+only the response's generated `requestId`, a fixed `stage`, and a fixed
+`category`. Match `error.requestId` from the response to the Worker console
+record. Categories are `configuration_invalid` and `runtime_unexpected`; no
+exception messages, stacks, request/response bodies, headers, cookies, emails,
+purchase references, attempt IDs, or secret values are logged. Only the staging
+entrypoint supplies the logger; production emits no additional diagnostics,
+including when reached through a staging hostname. A logging failure does not
+change the response. Successes, verification, and existing 400/404/405/429/502/503
+outcomes emit no additional diagnostics.
+
+Allowlisted execution stages are:
+
+| Stage | Operation |
+| --- | --- |
+| `staging_livemode`, `staging_origin`, `staging_stripe_key` | Staging environment guards |
+| `mock_configuration`, `payment_availability`, `rate_limiter` | Configuration before request processing |
+| `request_validation` | Read and validate the bounded request |
+| `app_origin`, `automatic_tax`, `purchase_reference_secret` | Checkout configuration validation |
+| `purchase_reference_hmac` | HMAC key import, signing, and reference preparation |
+| `stripe_configuration` | Stripe key, Price ID, and expected-mode validation |
+| `stripe_price_lookup` | Retrieve and validate the Stripe Price |
+| `stripe_session_creation` | Prepare, create, and validate the Checkout Session |
 
 Install and validate the payment Worker independently:
 

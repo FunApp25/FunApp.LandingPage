@@ -26,6 +26,26 @@ export interface WorkerDependencies {
   paymentRateLimiter?: RateLimiter;
 }
 
+export interface CheckoutFailureDiagnostic {
+  requestId: string;
+  stage:
+    | 'staging_livemode'
+    | 'staging_origin'
+    | 'staging_stripe_key'
+    | 'mock_configuration'
+    | 'payment_availability'
+    | 'rate_limiter'
+    | 'request_validation'
+    | 'app_origin'
+    | 'automatic_tax'
+    | 'purchase_reference_secret'
+    | 'purchase_reference_hmac'
+    | 'stripe_configuration'
+    | 'stripe_price_lookup'
+    | 'stripe_session_creation';
+  category: 'configuration_invalid' | 'runtime_unexpected';
+}
+
 type MockScenario =
   | 'created'
   | 'paid'
@@ -148,11 +168,24 @@ export async function handleRequest(
   request: Request,
   env: Env,
   dependencies: WorkerDependencies = {},
+  reportCheckoutFailure?: (diagnostic: CheckoutFailureDiagnostic) => void,
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
   const url = new URL(request.url);
   const endpoint = endpointForPath(url.pathname);
   const corsHeaders = localDevelopmentCorsHeaders(request, env, url);
+  const execution: { stage: CheckoutFailureDiagnostic['stage'] } = {
+    stage: 'mock_configuration',
+  };
+
+  function unexpectedResponse(
+    category: CheckoutFailureDiagnostic['category'],
+  ): Response {
+    if (endpoint === 'create') {
+      reportCheckoutFailure?.({ requestId, stage: execution.stage, category });
+    }
+    return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+  }
 
   if (endpoint === null) {
     return errorResponse(404, 'not_found', requestId);
@@ -170,10 +203,11 @@ export async function handleRequest(
 
   const mockConfiguration = mockConfigurationFor(env, url);
   if (mockConfiguration === 'invalid') {
-    return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+    return unexpectedResponse('configuration_invalid');
   }
 
   if (endpoint === 'create') {
+    execution.stage = 'payment_availability';
     const availability = creationAvailability(env.PAYMENT_CREATION_ENABLED);
     if (availability === 'disabled') {
       return errorResponse(
@@ -184,14 +218,15 @@ export async function handleRequest(
         corsHeaders,
       );
     } else if (availability === 'invalid') {
-      return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+      return unexpectedResponse('configuration_invalid');
     }
   }
 
+  execution.stage = 'rate_limiter';
   const rateLimiter =
     dependencies.paymentRateLimiter ?? env.PAYMENT_RATE_LIMITER;
   if (rateLimiter === undefined) {
-    return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+    return unexpectedResponse('configuration_invalid');
   }
 
   try {
@@ -215,6 +250,7 @@ export async function handleRequest(
     return errorResponse(400, 'invalid_request', requestId, {}, corsHeaders);
   }
 
+  execution.stage = 'request_validation';
   try {
     const body = await readLimitedBody(request);
     if (endpoint === 'create') {
@@ -226,6 +262,7 @@ export async function handleRequest(
         mockConfiguration,
         requestId,
         corsHeaders,
+        execution,
       );
     } else {
       const input = parseVerifyRequest(body, mockConfiguration === 'valid');
@@ -246,7 +283,7 @@ export async function handleRequest(
     ) {
       return errorResponse(400, 'invalid_request', requestId, {}, corsHeaders);
     } else if (error instanceof StripeConfigurationError) {
-      return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+      return unexpectedResponse('configuration_invalid');
     } else if (error instanceof StripeProviderError) {
       const status = error.kind === 'unavailable' ? 503 : 502;
       const code =
@@ -255,7 +292,7 @@ export async function handleRequest(
           : 'provider_validation_failed';
       return errorResponse(status, code, requestId, {}, corsHeaders);
     } else {
-      return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+      return unexpectedResponse('runtime_unexpected');
     }
   }
 }
@@ -275,14 +312,20 @@ async function createCheckoutSession(
   mockConfiguration: 'valid' | 'absent',
   requestId: string,
   corsHeaders: Headers | null,
+  execution: { stage: CheckoutFailureDiagnostic['stage'] },
 ): Promise<Response> {
+  execution.stage = 'app_origin';
   const appOrigin = validatedAppOrigin(env, mockConfiguration === 'valid');
+  execution.stage = 'automatic_tax';
   const automaticTaxEnabled = requiredAutomaticTaxEnabled(
     env.STRIPE_AUTOMATIC_TAX_ENABLED,
   );
+  execution.stage = 'purchase_reference_secret';
+  const referenceSecret = requiredSecret(env.PURCHASE_REFERENCE_SECRET);
+  execution.stage = 'purchase_reference_hmac';
   const purchaseReference = await createPurchaseReference(
     input.attemptId,
-    requiredSecret(env.PURCHASE_REFERENCE_SECRET),
+    referenceSecret,
   );
   const integrationSuffix = integrationIdentifierSuffix(purchaseReference);
 
@@ -312,7 +355,9 @@ async function createCheckoutSession(
     );
   }
 
+  execution.stage = 'stripe_configuration';
   const config = productionStripeConfig(env, appOrigin);
+  execution.stage = 'stripe_price_lookup';
   const price = await stripeJson<StripePrice>(
     `/v1/prices/${encodeURIComponent(config.priceId)}`,
     { method: 'GET' },
@@ -321,6 +366,7 @@ async function createCheckoutSession(
   );
   assertValidPrice(price, config);
 
+  execution.stage = 'stripe_session_creation';
   const successUrl =
     `${appOrigin.origin}/#/founding-friend/payment` +
     '?session_id={CHECKOUT_SESSION_ID}';
