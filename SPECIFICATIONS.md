@@ -984,11 +984,13 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web -t lib/main_dev.dart
-puro flutter build web -t lib/main_staging.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_dev.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart
 puro dart run tool/prepare_staging_release_artifact.dart
-puro flutter build web -t lib/main_prod.dart
+puro dart run tool/verify_web_resources.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 
 cd cloudflare/staging-site-worker
 npm ci
@@ -1159,9 +1161,10 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   fallback. Its script runs first for `/api` and `/api/*` and returns `404`,
   preventing an absent or mistyped API Route from returning the SPA document
   with `200`.
-- The exact local staging site sequence is `puro flutter build web -t
-  lib/main_staging.dart`, `puro dart run
-  tool/prepare_staging_release_artifact.dart`, `bash
+- The exact local staging site sequence is
+  `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`,
+  `puro dart run tool/prepare_staging_release_artifact.dart`,
+  `puro dart run tool/verify_web_resources.dart`, `bash
   tool/verify_staging_artifact.sh`, then from `cloudflare/staging-site-worker/`,
   `npm ci`, `npm run typecheck`, `npm test`, and `npm run wrangler:validate`.
   These commands validate only. Automatic publishing uses generated staging
@@ -1185,6 +1188,21 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `funapp.world`, and the existing
   `funapp.world/api/venue-interest` route is unchanged.
 - The production artifact is `build/web`.
+- Every staging/production Flutter build uses `--no-web-resources-cdn`; the
+  generated loader selects same-origin `canvaskit/` resources. The declared
+  genuine Roboto Regular asset supplies the engine default font with its
+  Apache 2.0 license and bootstrap license registration. Application Manrope
+  and Instrument Serif typography remains unchanged. Artifact checks require
+  both CanvasKit variants and the local Roboto manifest entry and license.
+  Renderer files keep host cache revalidation rather than immutable caching.
+  Existing Static Assets routing and exact-artifact deployment are unchanged.
+- Dynamic glyph fallback remains enabled at Flutter's default
+  `https://fonts.gstatic.com/s/`; local renderer/default-font loading does not
+  mean all fonts are self-hosted. Manrope and Roboto cover all characters in
+  the four current UI catalogs. Instrument Serif lacks Belarusian glyphs and
+  continues to use engine fallback. Arbitrary input, emoji, or future copy can
+  still require remote fonts; an incomplete local fallback URL must not replace
+  this working behavior.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
 - Production builds include the canonical Privacy Notice asset and remove the
   three review-only Markdown files during artifact preparation; protected

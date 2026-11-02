@@ -50,13 +50,16 @@ jobs:
 
       - name: Build site
         run: >-
-          flutter build web
+          flutter build web --no-web-resources-cdn
           -t lib/main_prod.dart
 
       - name: Remove review-only legal assets
         run: >-
           dart run
           tool/prepare_intermediate_release_artifact.dart
+
+      - name: Verify local web resources
+        run: dart run tool/verify_web_resources.dart
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

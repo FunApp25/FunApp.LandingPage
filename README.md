@@ -86,8 +86,24 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 - Google Fonts typography remains implemented through `google_fonts`, but its
   required Manrope and Instrument Serif files are bundled under `assets/fonts/`.
   Runtime font fetching is disabled in the common bootstrap. When adding a
-  family, weight, or style, add its correctly named official font file and OFL
-  license asset, then keep the bootstrap license registration in sync.
+  family, weight, or style, add its correctly named official font file and
+  applicable license asset, then keep the bootstrap license registration in sync.
+- Release builds use `--no-web-resources-cdn` to load CanvasKit from the site's
+  own `canvaskit/` directory. The engine's default Roboto Regular is declared in
+  `pubspec.yaml` and bundled with its Apache 2.0 license; Manrope and Instrument
+  Serif remain the application fonts. Roboto is the unmodified font from the
+  pinned Flutter 3.47.2 SDK (`engine/src/flutter/txt/third_party/fonts/`, SHA-256
+  `79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95`).
+  Default Roboto loading is separate from dynamic glyph fallback: unsupported
+  characters (including user-entered scripts or emoji) may still request fonts
+  from `fonts.gstatic.com`. No `fontFallbackBaseUrl` override or fallback
+  disabling is applied. Instrument Serif lacks Belarusian glyphs; the existing
+  engine fallback remains available, and bundled Manrope and Roboto cover the
+  four current UI catalogs. This is not complete font self-hosting.
+  Keep the renderer flag in every release command and run
+  `puro dart run tool/verify_web_resources.dart` after artifact preparation.
+  CanvasKit filenames are not version-hashed: retain host cache revalidation;
+  do not add an immutable cache policy to `canvaskit/`.
 - Flutter localization supports complete application-UI catalogs for English,
   Spanish, Welsh, and Belarusian, with English as the source and unsupported-
   locale fallback language. The canonical Privacy Notice legal document
@@ -202,8 +218,9 @@ production data source with its deterministic request-target seam.
 Build the production entrypoint locally without runtime defines:
 
 ```bash
-puro flutter build web -t lib/main_prod.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 ```
 
 The second command removes the three review-only legal Markdown files from the
@@ -225,12 +242,12 @@ production declaration for `funapp.world`.
 
 | Environment or mode | Purpose | Flutter entrypoint or build command | VS Code/VSCodium | Website location | Configuration and preparation |
 | --- | --- | --- | --- | --- | --- |
-| Local fake development | Default UI work with no registration or payment I/O. Venue submissions are deterministic local success; user registration and payment fail closed. | `puro flutter run -d chrome -t lib/main_dev.dart`; build-only: `puro flutter build web -t lib/main_dev.dart` | **Fun App Landing — Development (Fake Repositories)**; this is the first/default Run choice. | Flutter-selected localhost; build output is `build/web`. | No `.env`, Worker, HubSpot, Stripe, Cloudflare, or GitHub preparation. |
+| Local fake development | Default UI work with no registration or payment I/O. Venue submissions are deterministic local success; user registration and payment fail closed. | `puro flutter run -d chrome -t lib/main_dev.dart`; build-only: `puro flutter build web --no-web-resources-cdn -t lib/main_dev.dart` | **Fun App Landing — Development (Fake Repositories)**; this is the first/default Run choice. | Flutter-selected localhost; build output is `build/web`. | No `.env`, Worker, HubSpot, Stripe, Cloudflare, or GitHub preparation. |
 | Local direct HubSpot testing | Explicit browser-to-HubSpot testing for Here & Now and Founding Friend only. | `puro flutter run -d chrome -t lib/main_dev.dart --dart-define-from-file=.env --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot` | **Fun App Landing — Development (Direct HubSpot)** | Flutter-selected localhost. | Copy `.env.example` to ignored `.env` and set the public portal and two registration form IDs. No private token belongs in Flutter. |
 | Local mocked registration Worker | Exercise first-party registration serialization, validation, rate limiting, and deterministic responses without starting payment. | Start `npm run dev` in `cloudflare/venue-interest-worker`, then run `lib/main_dev.dart` on port `7357` with `.env` and `FUN_APP_REGISTRATION_TRANSPORT=local_worker`. | **Fun App Landing + Local Mock Worker** compound; its Flutter child is **Development (Local Registration Worker)**. | Flutter at `http://localhost:7357`; registration Worker at `http://localhost:8787`. | Copy the registration `.dev.vars.example` to ignored `.dev.vars` and root `.env.example` to ignored `.env`. |
 | Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Local Mock Workers** compound; its Flutter child is **Development (Local Workers)**. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
-| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
-| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
+| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
+| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
 | Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate, then automatically publish the two staging API Workers and staging site. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
 | Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Production registration and payment creation remain disabled. |
 
@@ -268,7 +285,7 @@ The standalone Worker commands are also supported execution modes:
 | Press Run in VSCodium | Starts only the selected launch configuration. The first/default choice is fake development. | Nothing | The selected name states whether it is fake, direct HubSpot, local registration, both local Workers, or production-mode local. |
 | Start **Landing + Local Mock Worker** | Starts Flutter plus the registration mock. | Nothing | Localhost only; payment remains deferred. |
 | Start **Landing + Local Mock Workers** | Starts Flutter plus both deterministic Workers. | Nothing | Localhost only; no HubSpot or Stripe request. |
-| Run any local `flutter build web` command | Compiles the selected entrypoint into `build/web`. | Nothing | Build commands perform no provider I/O. Run the matching artifact preparation command before upload. |
+| Run any local `flutter build web --no-web-resources-cdn` command | Compiles the selected entrypoint into `build/web`. | Nothing | Build commands perform no provider I/O. Run the matching artifact preparation command before upload. |
 | Push a feature branch other than `dev` or `main` | No repository workflow is triggered solely by the push. | Nothing | No staging Worker uses Cloudflare Git integration or an automatic repository trigger. |
 | Open or update a PR targeting `dev` or `main` | `pr_checks.yml` formats, generates, analyzes, tests, dry-runs the site Worker and both API Workers, and builds production plus staging artifacts. | Nothing | Hosted CI validation only. |
 | Push a commit to `main` | `deploy.yml` regenerates, analyzes, tests, and builds production. | **Deploys production GitHub Pages** | Existing production behavior is intentionally preserved. It does not deploy either Worker or staging. |
@@ -381,8 +398,9 @@ remain ignored.
 Build and validate locally without deployment:
 
 ```bash
-puro flutter build web -t lib/main_staging.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart
 puro dart run tool/prepare_staging_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 bash tool/verify_staging_artifact.sh
 cd cloudflare/staging-site-worker
 npm ci
@@ -605,8 +623,9 @@ puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
 puro flutter test --platform chrome test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
-puro flutter build web -t lib/main_prod.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 ```
 
 Validation limits and length semantics are documented in
@@ -618,6 +637,24 @@ The test suite covers domain validation, Venue and prospective-user form
 orchestration, the Founding Friend Checkout and payment-verification lifecycle,
 the user sign-up widgets, and the active landing surface's branding,
 localization, theme, interactions, and responsive viewport contracts.
+
+A07 local release measurements (2026-11-02, Flutter 3.47.2, headless Chrome):
+fresh-cache landing screenshots were byte-identical before/after for `en`,
+`es`, `cy`, and `be` at 390px and 1440px. Startup changed from three Google
+resource requests across two external origins to zero external requests in
+those eight cases; updated builds rendered with Google resource hosts blocked.
+The prepared production artifact grew from 50,656,659 to 50,840,645 bytes
+(+183,986); the existing 37,851,412-byte renderer directory was unchanged.
+Roboto and its license add 183,098 bytes. Summing each artifact file compressed
+with gzip level 9 gives 21,264,454 versus 21,358,688 bytes (+94,234); this is a
+local size comparison, not a hosted transfer measurement. The observed desktop
+startup transfer was 12,194,588 versus 16,237,542 bytes: the temporary local
+server served renderer files uncompressed while Google's CDN compressed them,
+so that transfer increase does not predict production performance. Hosted
+compression, cache behavior, and deployment remain unverified. Dynamic fallback
+for additional scripts/emoji remains an external dependency: typing synthetic
+emoji and Han characters into the local form successfully fetched Noto Color
+Emoji and Noto Sans SC from `fonts.gstatic.com`. No form was submitted.
 
 ## Cloudflare Worker development
 

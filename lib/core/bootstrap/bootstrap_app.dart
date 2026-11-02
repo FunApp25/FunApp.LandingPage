@@ -15,6 +15,12 @@ void configureBundledGoogleFonts() {
   GoogleFonts.config.allowRuntimeFetching = false;
 
   LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString(
+      'assets/fonts/roboto/LICENSE.txt',
+    );
+    yield LicenseEntryWithLineBreaks(<String>['Roboto'], license);
+  });
+  LicenseRegistry.addLicense(() async* {
     final license = await rootBundle.loadString(_manropeLicenseAssetPath);
     yield LicenseEntryWithLineBreaks(<String>['Manrope'], license);
   });

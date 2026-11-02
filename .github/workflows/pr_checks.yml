@@ -173,7 +173,7 @@ jobs:
 
       - name: Build production site
         run: >-
-          flutter build web
+          flutter build web --no-web-resources-cdn
           -t lib/main_prod.dart
 
       - name: Prepare production artifact
@@ -181,15 +181,21 @@ jobs:
           dart run
           tool/prepare_intermediate_release_artifact.dart
 
+      - name: Verify production web resources
+        run: dart run tool/verify_web_resources.dart
+
       - name: Build staging site
         run: >-
-          flutter build web
+          flutter build web --no-web-resources-cdn
           -t lib/main_staging.dart
 
       - name: Prepare staging artifact
         run: >-
           dart run
           tool/prepare_staging_release_artifact.dart
+
+      - name: Verify staging web resources
+        run: dart run tool/verify_web_resources.dart
 
       - name: Set up Node.js for staging site Worker
         uses: actions/setup-node@v7

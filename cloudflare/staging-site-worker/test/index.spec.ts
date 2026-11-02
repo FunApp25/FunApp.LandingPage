@@ -24,7 +24,16 @@ describe('staging site Worker', () => {
     },
   );
 
-  it.each(['/', '/main.dart.js', '/venues', '/apiary'])(
+  it.each([
+    '/',
+    '/main.dart.js',
+    '/venues',
+    '/apiary',
+    '/canvaskit/canvaskit.js',
+    '/canvaskit/canvaskit.wasm',
+    '/canvaskit/chromium/canvaskit.wasm',
+    '/assets/assets/fonts/roboto/Roboto-Regular.ttf',
+  ])(
     'delegates non-API path %s to Static Assets',
     async (path) => {
       const assets = assetsBinding();

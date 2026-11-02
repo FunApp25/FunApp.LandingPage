@@ -4,6 +4,33 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('production and staging builds retain local web resources', () {
+    for (final path in [
+      '.github/workflows/deploy.yml',
+      '.github/workflows/pr_checks.yml',
+    ]) {
+      final workflow = File(path).readAsStringSync();
+      final builds = RegExp(r'flutter build web[^\n]*').allMatches(workflow);
+      expect(builds, isNotEmpty, reason: path);
+      for (final build in builds) {
+        expect(
+          build.group(0),
+          contains('--no-web-resources-cdn'),
+          reason: path,
+        );
+      }
+      expect(
+        workflow,
+        contains('tool/verify_web_resources.dart'),
+        reason: path,
+      );
+    }
+    final deploy = File(
+      '.github/workflows/deploy-staging-site.yml',
+    ).readAsStringSync();
+    expect(deploy, isNot(contains('flutter build web')));
+  });
+
   test('Wrangler keeps production and staging Worker identities isolated', () {
     final site = _readJsonc(
       'cloudflare/staging-site-worker/wrangler.jsonc',
