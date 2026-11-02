@@ -609,6 +609,11 @@ puro flutter build web -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
 ```
 
+Validation limits and length semantics are documented in
+[SPECIFICATIONS.md, user input](SPECIFICATIONS.md#8-user-input-and-future-backend-direction).
+Founding Friend email is checked before registration against the existing
+254-unit Checkout limit; Venue text and quantities match its Worker contract.
+
 The test suite covers domain validation, Venue and prospective-user form
 orchestration, the Founding Friend Checkout and payment-verification lifecycle,
 the user sign-up widgets, and the active landing surface's branding,

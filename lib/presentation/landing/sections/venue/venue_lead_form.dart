@@ -1,8 +1,9 @@
+import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
-import 'package:fun_app_landing_page/domain/core/value_objects/value_object.dart';
+import 'package:fun_app_landing_page/domain/core/failures/value_failure.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/venue/venue_chain_status_control.dart';
@@ -80,7 +81,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
           ),
           hint: l10n.venueLeadVenueNamePlaceholder,
           required: true,
-          error: _errorFor(lead.venueName),
+          error: _errorFor(lead.venueNameValidation),
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
             VenueLeadFormEvent.venueNameChanged(value),
           ),
@@ -93,7 +94,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
             l10n.venueLeadVenueTypeLabel,
           ),
           hint: l10n.venueLeadVenueTypePlaceholder,
-          error: lead.venueType.fold(() => null, _errorFor),
+          error: _errorFor(lead.venueTypeValidation),
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
             VenueLeadFormEvent.venueTypeChanged(value),
           ),
@@ -115,7 +116,10 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
             l10n.venueLeadVenueCountLabel,
           ),
           hint: l10n.venueLeadVenueCountPlaceholder,
-          error: lead.venueCount.fold(() => null, _errorFor),
+          error: lead.venueCount.fold(
+            () => null,
+            (value) => _errorFor(value.value, quantity: true),
+          ),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
@@ -130,7 +134,10 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
             l10n.venueLeadVenueCapacityLabel,
           ),
           hint: l10n.venueLeadVenueCapacityPlaceholder,
-          error: lead.venueCapacity.fold(() => null, _errorFor),
+          error: lead.venueCapacity.fold(
+            () => null,
+            (value) => _errorFor(value.value, quantity: true),
+          ),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
@@ -146,7 +153,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
           ),
           hint: l10n.venueLeadWebsitePlaceholder,
           required: true,
-          error: _errorFor(lead.website),
+          error: _errorFor(lead.websiteValidation),
           keyboardType: TextInputType.url,
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
             VenueLeadFormEvent.websiteChanged(value),
@@ -161,7 +168,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
           ),
           hint: l10n.venueLeadFirstNamePlaceholder,
           required: true,
-          error: _errorFor(lead.firstName),
+          error: _errorFor(lead.firstNameValidation),
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
             VenueLeadFormEvent.firstNameChanged(value),
           ),
@@ -175,7 +182,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
           ),
           hint: l10n.venueLeadLastNamePlaceholder,
           required: true,
-          error: _errorFor(lead.lastName),
+          error: _errorFor(lead.lastNameValidation),
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
             VenueLeadFormEvent.lastNameChanged(value),
           ),
@@ -189,7 +196,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
           ),
           hint: l10n.venueLeadRolePlaceholder,
           required: true,
-          error: _errorFor(lead.role),
+          error: _errorFor(lead.roleValidation),
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
             VenueLeadFormEvent.roleChanged(value),
           ),
@@ -203,7 +210,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
           ),
           hint: l10n.venueLeadEmailPlaceholder,
           required: true,
-          error: _errorFor(lead.email),
+          error: _errorFor(lead.emailValidation),
           keyboardType: TextInputType.emailAddress,
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
             VenueLeadFormEvent.emailChanged(value),
@@ -217,7 +224,7 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
             l10n.venueLeadPhoneNumberLabel,
           ),
           hint: l10n.venueLeadPhoneNumberPlaceholder,
-          error: lead.phoneNumber.fold(() => null, _errorFor),
+          error: _errorFor(lead.phoneNumberValidation),
           keyboardType: TextInputType.phone,
           textInputAction: TextInputAction.done,
           onChanged: (value) => context.read<VenueLeadFormBloc>().add(
@@ -371,9 +378,16 @@ final class _VenueLeadFormState extends State<VenueLeadForm> {
 
   static const _fieldGap = SizedBox(height: 16);
 
-  String? _errorFor<T>(ValueObject<T> value) {
+  String? _errorFor<T>(
+    Either<ValueFailure<dynamic>, T> value, {
+    bool quantity = false,
+  }) {
     if (widget.state.hasAttemptedSubmit) {
-      return venueLeadValidationMessage(context.l10n, value);
+      return venueLeadValidationMessage(
+        context.l10n,
+        value,
+        quantity: quantity,
+      );
     } else {
       return null;
     }

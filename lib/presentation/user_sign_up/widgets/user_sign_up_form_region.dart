@@ -59,16 +59,22 @@ final class UserSignUpFormRegion extends StatelessWidget {
       submissionSucceeded: result.success,
       hasSubmissionFailure: result.failure,
       firstNameError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.firstName)
+          ? userSignUpValidationMessage(
+              context.l10n,
+              registration.firstName.value,
+            )
           : null,
       lastNameError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.lastName)
+          ? userSignUpValidationMessage(
+              context.l10n,
+              registration.lastName.value,
+            )
           : null,
       emailError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.email)
+          ? userSignUpValidationMessage(context.l10n, registration.email.value)
           : null,
       ageError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.age)
+          ? userSignUpValidationMessage(context.l10n, registration.age.value)
           : null,
       countryError: null,
       onFirstNameChanged: (value) => context
@@ -124,19 +130,31 @@ final class UserSignUpFormRegion extends StatelessWidget {
       submissionSucceeded: result.success,
       hasSubmissionFailure: result.failure,
       firstNameError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.firstName)
+          ? userSignUpValidationMessage(
+              context.l10n,
+              registration.firstName.value,
+            )
           : null,
       lastNameError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.lastName)
+          ? userSignUpValidationMessage(
+              context.l10n,
+              registration.lastName.value,
+            )
           : null,
       emailError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.email)
+          ? userSignUpValidationMessage(
+              context.l10n,
+              registration.emailValidation,
+            )
           : null,
       ageError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.age)
+          ? userSignUpValidationMessage(context.l10n, registration.age.value)
           : null,
       countryError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.country)
+          ? userSignUpValidationMessage(
+              context.l10n,
+              registration.country.value,
+            )
           : null,
       onFirstNameChanged: (value) => context
           .read<FoundingFriendRegistrationFormBloc>()

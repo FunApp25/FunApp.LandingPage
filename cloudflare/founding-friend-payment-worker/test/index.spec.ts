@@ -22,6 +22,32 @@ const acceptingRateLimiter: RateLimiter = {
 };
 
 describe('Founding Friend payment Worker', () => {
+  it.each([
+    ['first.last+tag@EXAMPLE.com', true],
+    ['person@xn--bcher-kva.example', true],
+    [`a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(60)}`, true],
+    [`a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(61)}`, false],
+    [`a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(62)}.test`, false],
+    ['person@bücher.example', false],
+    ['δοκιμή@example.com', false],
+    [' person@example.com ', false],
+  ])('Checkout email compatibility %#', async (address, valid) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(async (input, init) => {
+      if (input.toString().includes('/v1/prices/')) {
+        return Response.json(validPrice());
+      } else {
+        const body = new URLSearchParams(init?.body as string);
+        expect(body.get('customer_email')).toBe(address);
+        return Response.json(validCreatedSession(body.get('client_reference_id')));
+      }
+    });
+    const request = createRequest('https://payment.example', { email: address, attemptId });
+    expect(new TextEncoder().encode(await request.clone().text()).length).toBeLessThan(4 * 1024);
+    const response = await handleRequest(request, productionEnv(), { upstreamFetch, paymentRateLimiter: acceptingRateLimiter });
+    expect(response.status).toBe(valid ? 201 : 400);
+    expect(upstreamFetch).toHaveBeenCalledTimes(valid ? 2 : 0);
+  });
+
   it('fails closed without provider I/O when creation is disabled', async () => {
     const upstreamFetch = vi.fn();
     const response = await handleRequest(

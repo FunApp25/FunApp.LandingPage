@@ -24,6 +24,90 @@ const minimalVenueInterest = {
 
 describe('POST /api/venue-interest', () => {
   it.each([
+    ['ASCII maximum', 'a'.repeat(512), 204],
+    ['ASCII over maximum', 'a'.repeat(513), 400],
+    ['empty', '', 400],
+    ['whitespace', ' '.repeat(512), 400],
+    ['multibyte maximum', '界'.repeat(512), 204],
+    ['multibyte over maximum', '界'.repeat(513), 400],
+    ['surrogate-pair maximum', '😀'.repeat(256), 204],
+    ['surrogate-pair over maximum', '😀'.repeat(256) + 'a', 400],
+    ['combining sequence', 'e\u0301'.repeat(256), 204],
+    ['international whitespace preserved', '  Café Київ 東京  ', 204],
+  ])('venue name boundary: %s', async (_, venueName, status) => {
+    const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await post({ ...minimalVenueInterest, venueName }, upstream);
+    expect(response.status).toBe(status);
+    if (status === 204) {
+      const sent = JSON.parse(upstream.mock.calls[0]?.[1]?.body as string);
+      expect(sent.fields).toContainEqual({ name: 'your_venue_s_name', value: venueName });
+    } else {
+      expect(upstream).not.toHaveBeenCalled();
+    }
+  });
+
+  it.each([1, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 1, 0, -1, 1.5, 'many', 1e100])(
+    'quantity boundary %s', async (quantity) => {
+      const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+      const response = await post({ ...minimalVenueInterest, chainStatus: 'Part of chain', venueCount: quantity, venueCapacity: quantity }, upstream);
+      const valid = typeof quantity === 'number' && Number.isSafeInteger(quantity) && quantity > 0;
+      expect(response.status).toBe(valid ? 204 : 400);
+      if (valid) {
+        const sent = JSON.parse(upstream.mock.calls[0]?.[1]?.body as string);
+        expect(sent.fields).toContainEqual({ name: 'if_chain__number_of_venues', value: String(quantity) });
+        expect(sent.fields).toContainEqual({ name: 'your_venue_s_capacity', value: String(quantity) });
+      } else {
+        expect(upstream).not.toHaveBeenCalled();
+      }
+    },
+  );
+
+  it.each(['venueType', 'firstName', 'lastName', 'role'])('preserves the existing %s limit', async (field) => {
+    for (const length of [256, 257]) {
+      const response = await post({ ...minimalVenueInterest, [field]: '界'.repeat(length) }, successfulUpstreamFetch);
+      expect(response.status).toBe(length === 256 ? 204 : 400);
+    }
+  });
+
+  it.each([320, 321])('Venue email boundary %s', async (length) => {
+    const email = `${'a'.repeat(64)}@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(length === 320 ? 63 : 59)}${length === 321 ? '.test' : ''}`;
+    expect(email.length).toBe(length);
+    expect((await post({ ...minimalVenueInterest, email }, successfulUpstreamFetch)).status).toBe(length === 320 ? 204 : 400);
+  });
+
+  it('accepts simultaneous multibyte text maxima below the UTF-8 body limit', async () => {
+    const body = {
+      ...minimalVenueInterest,
+      venueName: '界'.repeat(512),
+      venueType: '界'.repeat(256),
+      firstName: '界'.repeat(256),
+      lastName: '界'.repeat(256),
+      role: '界'.repeat(256),
+      website: 'example.com/' + '界'.repeat(2048 - 12),
+      phoneNumber: '0'.repeat(64),
+      chainStatus: 'Part of chain',
+      venueCount: Number.MAX_SAFE_INTEGER,
+      venueCapacity: Number.MAX_SAFE_INTEGER,
+    };
+    expect(new TextEncoder().encode(JSON.stringify(body)).length).toBeLessThan(16 * 1024);
+    expect((await post(body, successfulUpstreamFetch)).status).toBe(204);
+    expect((await post({ ...body, website: body.website + 'a' }, successfulUpstreamFetch)).status).toBe(400);
+    expect((await post({ ...body, phoneNumber: body.phoneNumber + '0' }, successfulUpstreamFetch)).status).toBe(400);
+  });
+
+  it('counts UTF-8 body bytes independently of string length', async () => {
+    const body = JSON.stringify({ ...minimalVenueInterest, venueName: '界'.repeat(6000) });
+    expect(body.length).toBeLessThan(16 * 1024);
+    expect(new TextEncoder().encode(body).length).toBeGreaterThan(16 * 1024);
+    const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await rawRequest(new Request(endpoint, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body,
+    }), upstream);
+    expect(response.status).toBe(400);
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
+  it.each([
     [
       'only the established binding',
       { HUBSPOT_FORM_GUID: '11111111-1111-1111-1111-111111111111' },

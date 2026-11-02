@@ -13,6 +13,7 @@ import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venu
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
+import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
@@ -33,6 +34,44 @@ import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_intro
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final language in ['en', 'es', 'cy', 'be']) {
+    testWidgets('Venue boundary feedback is localized in $language', (
+      tester,
+    ) async {
+      tester.binding.platformDispatcher.localesTestValue = [Locale(language)];
+      addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+      final l10n = lookupAppLocalizations(Locale(language));
+      final repository = _ControlledVenueLeadRepository();
+      setTestSurface(tester, const Size(390, 1000));
+      await _pumpDirectVenuePage(tester, repository: repository);
+      await _fillRequiredVenuePageFields(tester);
+      final name = find.byKey(const Key('venueLeadVenueNameField'));
+      final capacity = find.byKey(const Key('venueLeadVenueCapacityField'));
+      await tester.enterText(name, 'a' * 513);
+      await tester.enterText(capacity, '9007199254740992');
+      await tester.pumpAndSettle();
+      await _tapVenuePageSubmit(tester);
+      expect(repository.submittedLeads, isEmpty);
+      expect(find.text(l10n.validationMaxLength(512)), findsOneWidget);
+      expect(
+        find.text(l10n.venueLeadValidationQuantity('9007199254740991')),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<TextField>(name).controller!.text,
+        'a' * 513,
+      );
+      await tester.enterText(name, '界' * 512);
+      await tester.enterText(capacity, '9007199254740991');
+      await tester.pumpAndSettle();
+      await _tapVenuePageSubmit(tester);
+      expect(repository.submittedLeads, hasLength(1));
+      repository.completeNext(right(unit));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final width in [390.0, 1440.0]) {
     testWidgets('Venue Next advances one field at $width px', (tester) async {
       setTestSurface(tester, Size(width, 1000));

@@ -39,6 +39,59 @@ import 'package:http/testing.dart';
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final language in ['en', 'es', 'cy', 'be']) {
+    testWidgets(
+      'Founding Friend email limit feedback is localized in $language',
+      (tester) async {
+        final l10n = lookupAppLocalizations(Locale(language));
+        final repository = _FoundingFriendRepository(result: right(unit));
+        setTestSurface(tester, const Size(390, 1000));
+        final bloc = FoundingFriendRegistrationFormBloc(repository);
+        await _pumpPage(
+          tester,
+          FoundingFriendPage(createBloc: () => bloc),
+          locale: Locale(language),
+        );
+        for (final (name, value) in [
+          ('firstName', 'Taylor'),
+          ('lastName', 'Jones'),
+          ('age', '31'),
+        ]) {
+          await tester.enterText(
+            find.byKey(Key('${name}Field-foundingFriend')),
+            value,
+          );
+        }
+        bloc.add(
+          const FoundingFriendRegistrationFormEvent.countryChanged(
+            'Afghanistan',
+          ),
+        );
+        await tester.pump();
+        final field = find.byKey(const Key('emailField-foundingFriend'));
+        for (final length in [255, 261]) {
+          final email =
+              'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.'
+              '${'e' * (length == 255 ? 61 : 62)}'
+              "${length == 261 ? '.test' : ''}";
+          await tester.enterText(field, email);
+          await _tapSubmit(tester, 'foundingFriend');
+          expect(find.text(l10n.validationMaxLength(254)), findsOneWidget);
+          expect(repository.submissions, isEmpty);
+          expect(
+            _inputController(tester, 'email', 'foundingFriend').text,
+            email,
+          );
+        }
+        final email = 'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 60}';
+        await tester.enterText(field, email);
+        await _tapSubmit(tester, 'foundingFriend');
+        expect(repository.submissions.single.email.getOrCrash(), email);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   for (final foundingFriend in [false, true]) {
     final semanticId = foundingFriend ? 'foundingFriend' : 'hereAndNow';
 

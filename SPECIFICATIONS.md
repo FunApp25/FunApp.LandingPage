@@ -502,6 +502,16 @@ capabilities as implemented.
   invent an age threshold. Presentation exposes those application-coordinated
   errors after a submit attempt. This validation is usability only and does
   not authorize production collection without matching backend validation.
+- Founding Friend domain validation additionally caps email at 254 UTF-16 code
+  units before registration so the unchanged Checkout preparation contract can
+  accept it. Structural validation and original casing/whitespace are preserved;
+  Here & Now and the shared email value object retain their broader contract.
+- Venue domain validation matches existing Worker text limits in UTF-16 code
+  units (`String.length` in Dart and JavaScript): venue name 512, venue type,
+  contact first/last name and role 256, website 2048, email 320, phone 64.
+  The form reports length errors without truncating or normalizing text.
+  The Worker retains its separate 16 KiB UTF-8 JSON body limit; Checkout retains
+  its 4 KiB limit. Field length is distinct from encoded request size.
 - Current live HubSpot contact properties are `firstname`, `lastname`,
   `email`, `age`, `gender`, `country`, `usage_reason`, and
   `marketing_consent`. Gender stores `Man`, `Woman`, `Non-binary`, or
@@ -551,7 +561,8 @@ capabilities as implemented.
 - Domain validation does not trim, lowercase, rewrite, or otherwise normalize
   submitted text. Phone numbers are stored as strings, preserve leading zeroes,
   and, when present, accept decimal digits only. Venue count and venue capacity
-  are optional positive integral quantities with no established upper bound.
+  are optional positive integers from 1 through 9007199254740991, matching
+  the Worker JavaScript-safe integer contract.
 - `VenueLead` requires venue name, website, contact first name, contact last
   name, role, and email. Venue type, independent/chain status, venue count,
   venue capacity, and phone number are optional.

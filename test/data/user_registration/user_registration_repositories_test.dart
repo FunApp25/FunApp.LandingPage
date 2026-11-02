@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/core/config/development_registration_transport.dart';
+import 'package:fun_app_landing_page/core/config/founding_friend_payment_config.dart';
+import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/worker_founding_friend_payment_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/user_registration_data_source_exception.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/user_registration_data_source_interface.dart';
+import 'package:fun_app_landing_page/data/user_registration/data_sources/worker_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/founding_friend_registration_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/here_and_now_registration_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/models/founding_friend_registration_dto.dart';
@@ -13,8 +19,86 @@ import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_
 import 'package:fun_app_landing_page/domain/core/value_objects/personal_name.dart';
 import 'package:fun_app_landing_page/domain/user_registration/entities/founding_friend_registration.dart';
 import 'package:fun_app_landing_page/domain/user_registration/entities/here_and_now_registration.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 void main() {
+  test(
+    '254-unit email passes registration and Checkout serialization unchanged',
+    () async {
+      final email = 'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 60}';
+      expect(email.length, 254);
+      final requests = <http.Request>[];
+      final client = MockClient((request) async {
+        requests.add(request);
+        if (request.url.path.contains('/registrations/')) {
+          return http.Response('', 204);
+        } else {
+          return http.Response(
+            jsonEncode({
+              'checkoutUrl': 'https://checkout.stripe.com/c/pay/safe',
+              'sessionId': 'cs_test_abcdefghijklmnopqrstuvwxyz123456',
+            }),
+            201,
+          );
+        }
+      });
+      final registration = _foundingFriendRegistration().copyWith(
+        email: EmailAddress(email),
+      );
+      final result = await FoundingFriendRegistrationRepository(
+        WorkerUserRegistrationDataSource(
+          client: client,
+          config: LocalRegistrationWorkerConfig(
+            baseUrl: 'http://localhost:8787',
+          ),
+        ),
+      ).submitFoundingFriendRegistration(registration);
+      expect(result.isRight(), isTrue);
+      await WorkerFoundingFriendPaymentDataSource(
+        client: client,
+        config: FoundingFriendPaymentConfig(
+          baseUrl: 'http://localhost:8788',
+          allowLocalMockCheckoutUrls: true,
+          localCheckoutOrigin: 'http://localhost:7357',
+        ),
+      ).createCheckout(
+        email: registration.emailValidation.getOrElse(
+          () => throw StateError('invalid'),
+        ),
+        attemptId: '123e4567-e89b-42d3-a456-426614174000',
+      );
+      expect(requests, hasLength(2));
+      for (final request in requests) {
+        expect(
+          (jsonDecode(request.body) as Map<String, dynamic>)['email'],
+          email,
+        );
+        expect(request.bodyBytes.length, lessThan(4 * 1024));
+      }
+    },
+  );
+
+  for (final length in [255, 261]) {
+    test(
+      'Founding Friend rejects $length-unit email before data-source I/O',
+      () async {
+        final email =
+            'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.'
+            '${'e' * (length == 255 ? 61 : 62)}'
+            "${length == 261 ? '.test' : ''}";
+        expect(email.length, length);
+        final source = _DataSource();
+        final registration = _foundingFriendRegistration().copyWith(
+          email: EmailAddress(email),
+        );
+        await FoundingFriendRegistrationRepository(source)
+            .submitFoundingFriendRegistration(registration);
+        expect(source.calls, 0);
+      },
+    );
+  }
+
   late _DataSource dataSource;
 
   setUp(() {

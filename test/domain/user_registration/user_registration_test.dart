@@ -8,6 +8,48 @@ import 'package:fun_app_landing_page/domain/user_registration/entities/founding_
 import 'package:fun_app_landing_page/domain/user_registration/entities/here_and_now_registration.dart';
 
 void main() {
+  for (final (email, valid) in [
+    ('first.last+tag@EXAMPLE.com', true),
+    ('person@xn--bcher-kva.example', true),
+    ('a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 60}', true),
+    ('a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 61}', false),
+    ('a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 62}.test', false),
+    ('person@bücher.example', false),
+    ('δοκιμή@example.com', false),
+    (' person@example.com ', false),
+  ]) {
+    test('Founding Friend email ${email.length} units is valid: $valid', () {
+      final address = EmailAddress(email);
+      final registration = FoundingFriendRegistration.empty().copyWith(
+        firstName: PersonalName('界'),
+        lastName: PersonalName('Jones'),
+        email: address,
+        age: Age('0'),
+        country: NonEmptySingleLineText('United Kingdom'),
+      );
+      expect(registration.emailValidation.isRight(), valid);
+      expect(registration.isValid, valid);
+      if (email.length > 254) {
+        expect(address.isValid(), isTrue);
+        expect(
+          HereAndNowRegistration.empty()
+              .copyWith(
+                firstName: registration.firstName,
+                lastName: registration.lastName,
+                email: address,
+                age: registration.age,
+              )
+              .isValid,
+          isTrue,
+        );
+      }
+      expect(
+        address.value.fold((failure) => failure.failedValue, (value) => value),
+        email,
+      );
+    });
+  }
+
   group('Age', () {
     test(
       'accepts integer input without inventing an eligibility threshold',
