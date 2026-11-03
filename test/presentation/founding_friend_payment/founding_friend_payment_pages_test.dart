@@ -47,6 +47,96 @@ void main() {
     sessionId: 'cs_test_abcdefghijklmnopqrstuvwxyz123456',
   );
 
+  for (final delayedCreation in [false, true]) {
+    testWidgets('Session change discards late Checkout '
+        '${delayedCreation ? 'creation' : 'verification'}', (tester) async {
+      final session = ValueNotifier<String?>(checkout.sessionId);
+      addTearDown(session.dispose);
+      final verification =
+          Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+      final creation = Completer<Either<AppFailure, FoundingFriendCheckout>>();
+      const expired = FoundingFriendPaymentVerification(
+        status: FoundingFriendPaymentStatus.expired,
+      );
+      final repository = _RecoveryRepository(
+        delayedCreation ? [creation.future] : [],
+        [
+          right(expired),
+          if (delayedCreation) right(expired) else verification.future,
+          right(
+            const FoundingFriendPaymentVerification(
+              status: FoundingFriendPaymentStatus.pending,
+            ),
+          ),
+        ],
+      );
+      final store = _PendingStore()
+        ..save(
+          PendingFoundingFriendPayment(
+            email: 'founder@example.com',
+            attemptId: attemptId,
+            sessionId: checkout.sessionId,
+          ),
+        );
+      final blocs = <FoundingFriendCheckoutBloc>[];
+      await _pump(
+        tester,
+        ValueListenableBuilder<String?>(
+          valueListenable: session,
+          builder: (context, value, child) => FoundingFriendPaymentReturnPage(
+            sessionId: value,
+            createBloc: () => FoundingFriendPaymentStatusBloc(
+              repository: repository,
+              pendingStore: store,
+            ),
+            createCheckoutBloc: () {
+              final bloc = FoundingFriendCheckoutBloc(
+                repository: repository,
+                pendingStore: store,
+              );
+              blocs.add(bloc);
+              return bloc;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final retry = find.byKey(const Key('foundingFriendExpiredCheckoutRetry'));
+      await tester.ensureVisible(retry);
+      await tester.tap(retry);
+      await tester.pump();
+      await tester.pump();
+      expect(
+        blocs.first.state.phase,
+        delayedCreation
+            ? FoundingFriendCheckoutPhase.preparing
+            : FoundingFriendCheckoutPhase.verifying,
+      );
+      session.value = '${checkout.sessionId}Other';
+      await tester.pumpAndSettle();
+      expect(blocs.first.isClosed, isTrue);
+      final newer = PendingFoundingFriendPayment(
+        email: 'newer@example.com',
+        attemptId: 'd9428888-122b-4c5f-8e6a-cc2eeb112233',
+        sessionId: session.value,
+      );
+      store.save(newer);
+      final creationsBefore = repository.creates.length;
+      final verificationsBefore = repository.verifications.length;
+      if (delayedCreation) {
+        creation.complete(right(checkout));
+      } else {
+        verification.complete(right(expired));
+      }
+      await tester.pumpAndSettle();
+      expect(store.read(), same(newer));
+      expect(repository.creates, hasLength(creationsBefore));
+      expect(repository.verifications, hasLength(verificationsBefore));
+      expect(find.text('Payment pending'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'query navigation preserves the same Session and reload rechecks',
     (

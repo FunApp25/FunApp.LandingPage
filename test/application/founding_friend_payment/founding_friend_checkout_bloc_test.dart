@@ -61,6 +61,137 @@ Future<FoundingFriendCheckoutState> _dispatch(
 }
 
 void main() {
+  for (final disposed in [false, true]) {
+    for (final verification in [_expired, _open]) {
+      test('late ${verification.status} recovery preserves newer storage '
+          '(disposed=$disposed)', () async {
+        final response =
+            Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+        final repository = _PaymentRepository([], [response.future]);
+        final store = _store();
+        final bloc = FoundingFriendCheckoutBloc(
+          repository: repository,
+          pendingStore: store,
+        )..add(const FoundingFriendCheckoutRetryRequested());
+        await bloc.stream.firstWhere(
+          (state) => state.phase == FoundingFriendCheckoutPhase.verifying,
+        );
+        if (disposed) {
+          await bloc.close();
+        } else {
+          addTearDown(bloc.close);
+        }
+        const newer = PendingFoundingFriendPayment(
+          email: _email,
+          attemptId: _replacement,
+          sessionId: _newSession,
+        );
+        store.save(newer);
+        response.complete(right(verification));
+        await Future<void>.delayed(Duration.zero);
+        expect(store.read(), same(newer));
+        expect(repository.creates, isEmpty);
+        expect(repository.verifications, [_session]);
+        if (!disposed) {
+          expect(
+            bloc.state.phase,
+            FoundingFriendCheckoutPhase.recoveryUnavailable,
+          );
+        }
+      });
+    }
+
+    test(
+      'late creation preserves newer storage (disposed=$disposed)',
+      () async {
+        final response =
+            Completer<Either<AppFailure, FoundingFriendCheckout>>();
+        final repository = _PaymentRepository([response.future]);
+        final store = _store(session: null);
+        final bloc = FoundingFriendCheckoutBloc(
+          repository: repository,
+          pendingStore: store,
+        )..add(const FoundingFriendCheckoutRetryRequested());
+        await bloc.stream.firstWhere(
+          (state) => state.phase == FoundingFriendCheckoutPhase.preparing,
+        );
+        if (disposed) {
+          await bloc.close();
+        } else {
+          addTearDown(bloc.close);
+        }
+        const newer = PendingFoundingFriendPayment(
+          email: _email,
+          attemptId: _replacement,
+          sessionId: _newSession,
+        );
+        store.save(newer);
+        response.complete(right(_checkout(_session)));
+        await Future<void>.delayed(Duration.zero);
+        expect(store.read(), same(newer));
+        expect(repository.creates, [_attempt]);
+        expect(repository.verifications, isEmpty);
+        if (!disposed) {
+          expect(
+            bloc.state.phase,
+            FoundingFriendCheckoutPhase.recoveryUnavailable,
+          );
+        }
+      },
+    );
+  }
+
+  test(
+    'disposed confirmed verification does not clear matching storage',
+    () async {
+      final response =
+          Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+      final repository = _PaymentRepository([], [response.future]);
+      final store = _store();
+      final pending = store.read();
+      final bloc = FoundingFriendCheckoutBloc(
+        repository: repository,
+        pendingStore: store,
+      )..add(const FoundingFriendCheckoutRetryRequested());
+      await bloc.stream.firstWhere(
+        (state) => state.phase == FoundingFriendCheckoutPhase.verifying,
+      );
+      await bloc.close();
+      response.complete(
+        right(
+          const FoundingFriendPaymentVerification(
+            status: FoundingFriendPaymentStatus.confirmed,
+            purchaseReference: 'FF-1234567890ABCDEF',
+          ),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(store.read(), same(pending));
+      expect(repository.creates, isEmpty);
+    },
+  );
+
+  test(
+    'initial Checkout continues when browser storage is unavailable',
+    () async {
+      final repository = _PaymentRepository([right(_checkout(_session))]);
+      final bloc = FoundingFriendCheckoutBloc(
+        repository: repository,
+        pendingStore: _UnavailablePendingStore(),
+        createAttemptId: () => _attempt,
+      );
+      addTearDown(bloc.close);
+      expect(
+        (await _dispatch(
+          bloc,
+          const FoundingFriendRegistrationConfirmed(_email),
+        )).phase,
+        FoundingFriendCheckoutPhase.ready,
+      );
+      expect(repository.creates, [_attempt]);
+    },
+  );
+
   testWidgets('creation timeout preserves the attempt for verified replay', (
     tester,
   ) async {
@@ -732,4 +863,14 @@ final class _PendingStore
   PendingFoundingFriendPayment? read() => value;
   @override
   void save(PendingFoundingFriendPayment payment) => value = payment;
+}
+
+final class _UnavailablePendingStore
+    implements PendingFoundingFriendPaymentStoreInterface {
+  @override
+  PendingFoundingFriendPayment? read() => null;
+  @override
+  void save(PendingFoundingFriendPayment payment) {}
+  @override
+  void clear() {}
 }

@@ -850,6 +850,10 @@ capabilities as implemented.
   Errors remain provider-neutral, and neither
   boundary logs or returns emails, names, request bodies, billing/payment
   details, Checkout URLs, credentials, or complete provider responses.
+- Checkout recovery rejects disposed asynchronous completions before storage
+  changes or follow-up calls. A newer stored attempt or Session takes precedence
+  over an older workflow; browser storage unavailability still permits the
+  active Checkout to continue.
 - Staging Checkout-creation HTTP 500 responses log only the response's generated
   request ID, a fixed allowlisted execution stage, and either
   `configuration_invalid` or `runtime_unexpected`. Exception messages/stacks,

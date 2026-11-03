@@ -233,12 +233,39 @@ final class FoundingFriendCheckoutBloc
     }
   }
 
+  bool _canContinue(
+    PendingFoundingFriendPayment pending,
+    Emitter<FoundingFriendCheckoutState> emit,
+  ) {
+    if (emit.isDone) {
+      return false;
+    } else {
+      final current = _pendingStore.read();
+      // Unavailable storage must not prevent the active Checkout.
+      final ownsPending =
+          current == null ||
+          (current.attemptId == pending.attemptId &&
+              current.sessionId == pending.sessionId);
+      if (!ownsPending) {
+        emit(
+          const FoundingFriendCheckoutState(
+            phase: FoundingFriendCheckoutPhase.recoveryUnavailable,
+          ),
+        );
+      }
+      return ownsPending;
+    }
+  }
+
   Future<void> _prepare(
     PendingFoundingFriendPayment pending,
     Emitter<FoundingFriendCheckoutState> emit, {
     bool verify = false,
     bool allowRotation = true,
   }) async {
+    if (!_canContinue(pending, emit)) {
+      return;
+    }
     emit(
       const FoundingFriendCheckoutState(
         phase: FoundingFriendCheckoutPhase.preparing,
@@ -248,6 +275,9 @@ final class FoundingFriendCheckoutBloc
       email: pending.email,
       attemptId: pending.attemptId,
     );
+    if (!_canContinue(pending, emit)) {
+      return;
+    }
     await result.fold(
       (failure) async => emit(
         FoundingFriendCheckoutState(
@@ -299,6 +329,9 @@ final class FoundingFriendCheckoutBloc
     FoundingFriendCheckout? checkout,
     bool allowRotation = true,
   }) async {
+    if (!_canContinue(pending, emit)) {
+      return;
+    }
     emit(
       const FoundingFriendCheckoutState(
         phase: FoundingFriendCheckoutPhase.verifying,
@@ -308,6 +341,9 @@ final class FoundingFriendCheckoutBloc
       ),
     );
     final result = await _repository.verifyCheckout(pending.sessionId!);
+    if (emit.isDone) {
+      return;
+    }
     await result.fold(
       (failure) async => emit(
         FoundingFriendCheckoutState(
@@ -321,6 +357,9 @@ final class FoundingFriendCheckoutBloc
       (verification) async {
         if (verification.status == FoundingFriendPaymentStatus.expired &&
             allowRotation) {
+          if (!_canContinue(pending, emit)) {
+            return;
+          }
           final replacement = PendingFoundingFriendPayment(
             email: pending.email,
             attemptId: _createAttemptId(),
@@ -330,6 +369,9 @@ final class FoundingFriendCheckoutBloc
           await _prepare(replacement, emit, verify: true, allowRotation: false);
         } else if (verification.status == FoundingFriendPaymentStatus.pending &&
             verification.canResumeCheckout) {
+          if (!_canContinue(pending, emit)) {
+            return;
+          }
           if (checkout == null) {
             await _prepare(
               pending,
