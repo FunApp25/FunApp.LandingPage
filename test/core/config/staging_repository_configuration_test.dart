@@ -201,6 +201,48 @@ void main() {
     expect(quality, contains("' coverage/lcov.info"));
   });
 
+  test('deployment test matrix runs common safety once and every upload', () {
+    final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    final jobs = workflow.split('\njobs:\n').last;
+    for (final entry in {
+      'worker': 'venue-interest-worker',
+      'payment-worker': 'founding-friend-payment-worker',
+      'quality': 'staging-site-worker',
+    }.entries) {
+      final job = jobs
+          .split('\n  ${entry.key}:\n')
+          .last
+          .split(
+            RegExp(r'\n  [\w-]+:\n'),
+          )
+          .first;
+      expect(job, contains('WORKER_PROJECT: ${entry.value}'));
+      expect(
+        RegExp('staging_deployment.test.mjs').allMatches(job),
+        hasLength(1),
+      );
+      if (entry.key == 'quality') {
+        expect(job, isNot(contains('--test-name-pattern')));
+        expect(job, contains('test/tool/staging_wrangler.test.mjs'));
+      } else {
+        expect(
+          job,
+          contains("node --test --test-name-pattern='^${entry.value}:'"),
+        );
+        expect(job, isNot(contains('staging_wrangler.test.mjs')));
+      }
+      for (final bypass in ['continue-on-error', '||']) {
+        expect(job, isNot(contains(bypass)));
+      }
+      final uploadStep = job
+          .split('          WORKER_PROJECT: ${entry.value}\n')
+          .first
+          .split('      - name:')
+          .last;
+      expect(uploadStep, isNot(contains('if:')));
+    }
+  });
+
   test('validated dev pushes publish staging with the isolated fixed tool', () {
     final workflow = File(
       '.github/workflows/deploy-staging-site.yml',

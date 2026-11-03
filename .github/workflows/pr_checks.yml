@@ -52,10 +52,12 @@ jobs:
       - name: Install fixed staging deployment tool
         run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
 
-      - name: Test staging deployment safety and Wrangler upload metadata
+      - name: Test venue-interest-worker staging Wrangler upload metadata
         env:
           WORKER_PROJECT: venue-interest-worker
-        run: node --test ../../test/tool/staging_deployment.test.mjs
+        run: >-
+          node --test --test-name-pattern='^venue-interest-worker:'
+          ../../test/tool/staging_deployment.test.mjs
 
   payment-worker:
     name: Payment Worker checks
@@ -94,10 +96,12 @@ jobs:
       - name: Install fixed staging deployment tool
         run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
 
-      - name: Test staging deployment safety and Wrangler upload metadata
+      - name: Test founding-friend-payment-worker staging Wrangler upload metadata
         env:
           WORKER_PROJECT: founding-friend-payment-worker
-        run: node --test ../../test/tool/staging_deployment.test.mjs
+        run: >-
+          node --test --test-name-pattern='^founding-friend-payment-worker:'
+          ../../test/tool/staging_deployment.test.mjs
 
   quality:
     name: Flutter and staging site checks
@@ -223,6 +227,7 @@ jobs:
       - name: Install fixed staging deployment tool
         run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
 
+      # Common deployment safety and Wrangler backport tests run once in this required job.
       - name: Test staging deployment safety and Wrangler upload metadata
         env:
           WORKER_PROJECT: staging-site-worker

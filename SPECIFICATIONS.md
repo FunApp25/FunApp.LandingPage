@@ -33,11 +33,13 @@ The repository also prepares an isolated staging composition for
 `https://staging.funapp.world`. Staging keeps Venue submissions deterministic
 and local to Flutter, sends Here & Now and Founding Friend registration to a
 staging-only no-I/O Worker entrypoint, and sends payment requests to a separate
-Worker pinned to Stripe sandbox mode. The operator confirmed on 2026-10-31
-that staging resources and GitHub environment configuration exist and sandbox
-Checkout plus payment verification passed after purchase-reference secret
-rotation. Hosted state is managed externally and was not reverified by the CI
-implementation.
+Worker pinned to Stripe sandbox mode. Automated staging deployment succeeded;
+the operator reports successful registration, sandbox Checkout, and payment
+verification after correcting the purchase-reference secret behind the historical
+Checkout HTTP 500. See the [staging operational status in README](README.md#operational-configuration-and-rollback)
+for the verified GitHub run, incident history, and the distinction between deployed
+code and local audit changes. These runtime results have not been independently
+repeated in this audit.
 
 ## 2. Decision model
 
@@ -1055,11 +1057,11 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   deployment, configures no route, and defaults
   `PAYMENT_CREATION_ENABLED` to false. No live Stripe Product/Price or key,
   production Cloudflare secret, production payment route, or live deployment is
-  introduced. The operator previously reported successful sandbox staging
-  payment verification. On 2026-11-01, the operator reports Checkout creation
-  returning HTTP 500 before Stripe I/O; the deployed cause remains unconfirmed.
-  The staging failure diagnostics are implemented and tested locally, without
-  deployment. Staging credentials are not stored in this repository. Later
+  introduced. The historical staging Checkout HTTP 500 is resolved according to
+  the operator; current evidence and local undeployed changes are recorded in
+  [README's operational status](README.md#operational-configuration-and-rollback).
+  Staging credentials are not stored in this repository. Stripe live-account
+  approval and approved legal documentation remain outstanding. Later
   production setup requires `STRIPE_PRICE_ID`,
   `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
   `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
@@ -1069,7 +1071,11 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   tests, and dry-run validation, both API Worker projects' typechecking, tests,
   and root/staging dry-run validation, plus Flutter formatting, generation,
   analysis, full-suite coverage, focused Chrome session-storage tests, and
-  production/staging compile checks.
+  production/staging compile checks. Common deployment-safety tests and Wrangler
+  backport regressions execute once in **Flutter and staging site checks**, with
+  the site upload test. Each API Worker job runs only its own upload-metadata
+  test from the deployment suite; all three checks remain required validation
+  jobs without failure suppression.
   Pull-request checks do not deploy; pushes to `main` remain the production
   Pages deployment trigger.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.

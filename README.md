@@ -275,7 +275,7 @@ The standalone Worker commands are also supported execution modes:
 | Local mocked Worker integration | In-memory fake success | Local registration Worker | Mocked, no upstream call | Local payment Worker | Mocked, no upstream call | No | No | Implemented; deterministic. |
 | Production-mode local run | Same-origin localhost request | Deferred/fail-closed | Registration unavailable | Fixed `https://funapp.world` payment endpoints, subject to browser CORS | Production payment service boundary | No during build; runtime payment routes can attempt production requests; registration remains deferred | Payment requests target production, not a local mock | Use local mocked Worker integration for payment development. |
 | Staging artifact build | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No | No | Implemented build path; artifact is not deployed. |
-| Hosted staging | In-memory fake success; no staging Venue API route | `funapp-venue-interest-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Operational sandbox Checkout and verification after secret rotation were confirmed by the operator on 2026-10-31; not rechecked by this implementation. |
+| Hosted staging | In-memory fake success; no staging Venue API route | `funapp-venue-interest-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Automated deployment verified; registration, sandbox Checkout and verification reported successful by the operator. See [operational status](#operational-configuration-and-rollback). |
 | Hosted production | Existing `funapp-venue-interest` route may submit to HubSpot | Deferred/fail-closed in Flutter; registration routes remain unattached/disabled | Real for the existing Venue contract only | Repository boundary exists, but creation is disabled and no production payment route is approved | Live payment unavailable | Existing Venue submissions can create HubSpot records; no registration or payment activation is introduced here | This is production | Existing hosting/Worker behavior preserved. |
 
 ### Trigger matrix
@@ -413,7 +413,10 @@ The **Deploy Staging** workflow (`deploy-staging-site.yml`) runs on pushes to
 `dev` only and calls the same credential-free checks used by PRs. Required-check
 names remain **Worker checks**, **Payment Worker checks**, and **Flutter and
 staging site checks**. PRs targeting `dev` or `main` validate only, without the
-staging Environment or deployment credentials. Staging artifact upload is enabled
+staging Environment or deployment credentials. Common deployment-safety tests and
+Wrangler backport regressions run once in **Flutter and staging site checks**;
+each API Worker job filters the deployment suite to its own upload-metadata test.
+The site upload-metadata test runs with the common tests. Staging artifact upload is enabled
 only for dev pushes; coverage upload remains available to PRs.
 
 After all checks pass, the deployment job enters GitHub `staging` and downloads
@@ -510,33 +513,45 @@ Changing that tool requires rerunning these tests.
 
 ### Operational configuration and rollback
 
-The operator reports the three Workers, GitHub environments, staging variables
-and secrets already exist, and sandbox Checkout plus payment verification passed
-after purchase-reference secret rotation. This implementation does not repeat
-that hosted verification or modify external configuration.
+As verified on 2026-11-03, [Deploy Staging run 41300396058, attempt 2](https://github.com/FunApp25/FunApp.LandingPage/actions/runs/41300396058/attempts/2)
+succeeded on 2026-11-01 for `dev` revision
+`83c5c2a775d15feda56db2dfc4a9cb24d2ab4a4a`. GitHub records successful
+preflight, artifact verification, and registration, sandbox payment, and site
+deployment steps. This is deployment evidence, not a fresh browser or provider
+test.
 
-Before the first restored hosted deployment:
+The Checkout-creation HTTP 500 reported on 2026-11-01 is a historical incident.
+The operator reports it was resolved by correcting the staging purchase-reference
+secret, and that registration, Stripe sandbox Checkout, and payment verification
+subsequently passed. These runtime results are operator-reported, not independently
+repeated in this audit. Registration remains mocked without HubSpot I/O; payment
+uses Stripe sandbox only. The staging diagnostics remain available for future
+failures; the incident is not a current unresolved blocker.
+
+The `general_audit` changes after that deployed revision, including the local
+audit fixes and A08 image optimizations, are not covered by that deployment
+evidence. The A09/A10 CI and documentation edits are also local and undeployed.
+Production registration and payment creation remain disabled. Stripe live-account
+approval, approved legal documentation, and the separate production configuration
+and controlled verification described below remain outstanding. No live production
+payment verification is claimed.
+
+For subsequent deployments:
 
 1. Retain GitHub `staging` restricted to `dev`, `production` restricted to `main`,
-   and the existing `github-pages` environment. Add the three check names above
-   to branch protection when desired; this task does not change protection rules.
-2. Confirm the existing tokens can read all required preflight metadata and
-   deploy only their intended Workers. Investigate denied reads without
-   automatically expanding token permissions. No new credential or bootstrap Admin token is needed.
-3. Preserve the site Custom Domain, the two API Routes, unique rate-limit
-   namespaces, and hostname-wide Cloudflare Access. Confirm Access covers all
-   three Workers and the return from Stripe Checkout.
-4. Keep the payment creation variable explicitly enabled, the existing sandbox
-   Price/key and rotated purchase-reference secret synchronized, and automatic
-   tax disabled. Existence of both GitHub and Cloudflare secret names does not
-   prove equal values. Privately verify the canonical mappings
+   and the existing `github-pages` environment and required checks.
+2. Preserve least-privilege token access, the site Custom Domain, the two API
+   Routes, unique rate-limit namespaces, and hostname-wide Cloudflare Access,
+   including the Stripe Checkout return path.
+3. Keep payment enablement explicit, automatic tax disabled, and sandbox
+   configuration synchronized. Preserve the canonical mappings
    `STRIPE_SANDBOX_RESTRICTED_KEY` → `STRIPE_SECRET_KEY` and
-   `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET` against
-   the operator's existing source of truth before `--secrets-file` overwrites
-   either binding; never print values. No rotation is part of this repair.
-5. Review the first authorized hosted run and sandbox smoke test. Registration
-   may already have a newer version from failed runs while payment/site remain
-   older; confirm all three version IDs after the successful run.
+   `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET`.
+   Secret-name existence does not prove equal values; privately check against
+   the operator's source of truth when configuration changes, never print values.
+4. Review the hosted run and all three deployed versions, then perform an
+   authorized sandbox smoke test. A later deployment failure can still leave
+   components at different revisions because publishing is sequential.
 
 For a code rollback, revert the offending change through a PR to `dev`; merging
 it runs the same validation and republishes all three staging components using
@@ -975,12 +990,10 @@ external setup requires Cloudflare Environment variables
 `CLOUDFLARE_ACCOUNT_ID`; Cloudflare/GitHub secrets `STRIPE_SECRET_KEY`
 (prefer a least-privilege restricted key), `PURCHASE_REFERENCE_SECRET`, and
 `CLOUDFLARE_API_TOKEN`; a unique rate-limit namespace for source ID `1002`;
-and exact route attachment for the two payment paths. A Stripe sandbox Product,
-Price, and restricted key are maintained outside the repository; the operator
-reports successful staging Checkout and verification after secret rotation.
-This CI implementation does not repeat that hosted verification. This change
-creates no live Stripe resource, credential, secret, route, binding, GitHub
-Environment value, or deployment.
+and exact route attachment for the two payment paths. Stripe sandbox resources
+are maintained outside the repository; see the [staging operational status](#operational-configuration-and-rollback)
+for deployment evidence and operator-reported sandbox results. Live-account
+approval and approved legal documentation remain production blockers.
 
 Before activation, approve the tax treatment and then set
 `STRIPE_AUTOMATIC_TAX_ENABLED` deliberately. Enabling it also requires the
