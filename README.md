@@ -651,6 +651,10 @@ Validation feedback wraps fully at narrow widths and enlarged text scales.
 Checkout recovery ignores disposed completions and preserves newer stored
 attempts before writing storage or starting another request.
 
+The approved cancellation FAQ asks for 48 hours' notice for the ongoing
+Here & Now subscription. Its existing Founding Friend 14-day purchase refund
+statement remains unchanged; no pending legal document is modified.
+
 The test suite covers domain validation, Venue and prospective-user form
 orchestration, the Founding Friend Checkout and payment-verification lifecycle,
 the user sign-up widgets, and the active landing surface's branding,

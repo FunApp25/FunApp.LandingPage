@@ -742,7 +742,7 @@
   "@landingFaqCancelAnswer1": {
     "description": "First paragraph answering the cancellation question."
   },
-  "landingFaqCancelAnswer2": "You can cancel your free membership or Here & Now subscription at any point. We just ask that you give 14 days’ notice so that Fun App can keep all its administration in-line.",
+  "landingFaqCancelAnswer2": "You can cancel your free membership or Here & Now subscription at any point. We just ask that you give 48 hours’ notice so that Fun App can keep all its administration in-line.",
   "@landingFaqCancelAnswer2": {
     "description": "Second paragraph answering the cancellation question."
   },
@@ -890,7 +890,7 @@
   "@landingFaqGroupsQuestion": {
     "description": "FAQ question about saving profiles into groups."
   },
-  "landingFaqGroupsAnswer1": "Fun App is built around doing different things with different people. You might have someone you love running with, someone you visit galleries with, and someone who will actually discuss the book instead of saying, “Yeah, I started it.”",
+  "landingFaqGroupsAnswer1": "Fun App is built around doing different things with different people. You might have someone you love running with, someone you visit galleries with and someone who will actually discuss the book instead of saying “Yeah, I started it.”",
   "@landingFaqGroupsAnswer1": {
     "description": "First paragraph answering the saved groups question."
   },
@@ -902,7 +902,7 @@
   "@landingFaqHarassmentQuestion": {
     "description": "FAQ question about harassment and hate speech."
   },
-  "landingFaqHarassmentAnswer1": "Fun App has no tolerance for harassment, threats, discriminatory abuse, or hate speech targeting people based on identity or protected characteristics.",
+  "landingFaqHarassmentAnswer1": "Fun App has no tolerance for harassment, threats, discriminatory abuse or hate speech targeting people based on identity or protected characteristics.",
   "@landingFaqHarassmentAnswer1": {
     "description": "First paragraph answering the harassment question."
   },

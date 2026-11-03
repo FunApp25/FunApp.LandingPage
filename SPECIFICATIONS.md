@@ -457,6 +457,10 @@ Cookie Policy, and Cookie Banner remain inaccessible until their approval and
 release requirements are resolved; their presence establishes no consent
 behavior.
 
+The cancellation FAQ asks for 48 hours' notice for the ongoing Here & Now
+subscription; the existing Founding Friend
+14-day purchase refund statement remains unchanged.
+
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.
