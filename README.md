@@ -656,6 +656,67 @@ for additional scripts/emoji remains an external dependency: typing synthetic
 emoji and Han characters into the local form successfully fetched Noto Color
 Emoji and Noto Sans SC from `fonts.gstatic.com`. No form was submitted.
 
+A08 photography uses WebP at quality 95 (cwebp 1.6.0), with lossless alpha
+encoding and the same sRGB interpretation, composition, cropping, semantics,
+and responsive breakpoints. Hero retains separate mobile/desktop assets, and
+Connection retains its source dimensions. The two promotional images use
+Flutter's standard 1×/2× asset variants: their maximum painted size is 673 × 410,
+so DPR 1 uses that resolution while DPR 2/3 retain the original 1346 × 820 files.
+No custom selection code or new build dependency is needed. Original PNGs remain
+in Git history at `cb7f977` and are removed from active asset directories.
+
+| Photography | Original pixels / PNG bytes | DPR 1 WebP pixels / bytes | DPR 2/3 WebP pixels / bytes |
+| --- | --- | --- | --- |
+| Mobile Hero | 864 × 878 / 660,012 | 864 × 878 / 92,378 | Same |
+| Desktop Hero | 1412 × 1434 / 1,525,413 | 1412 × 1434 / 195,972 | Same |
+| Connection | 1360 × 614 / 1,404,150 | 1360 × 614 / 187,270 | Same |
+| Founding Friends | 1346 × 820 / 1,463,719 | 673 × 410 / 66,616 | 1346 × 820 / 205,750 |
+| Venue | 1346 × 820 / 1,613,807 | 673 × 410 / 80,674 | 1346 × 820 / 265,450 |
+
+Reproduce full-resolution conversions from original PNGs outside active assets:
+
+```bash
+cwebp -q 95 -m 6 -sharp_yuv -alpha_q 100 -exact -metadata icc input.png -o output.webp
+```
+
+For the two 1× promotional assets, use the same command without `-exact` and
+add `-resize 673 0`; keep the full-resolution outputs under `2.0x/`. Existing
+directory declarations include these variants.
+Benchmarks also covered PNG recompression, lossless WebP, quality 90, and
+half-size quality-95 WebP. Quality 95 retains more photographic detail than
+quality 90 while saving 84–87% at unchanged resolution. Further dimension cuts
+were rejected to preserve existing high-density sharpness. AVIF was not
+selected because its engine/browser support matrix was not established.
+
+The 390px DPR-1 photography payload drops from 5,141,688 to 426,938 bytes
+(91.7%); desktop DPR 1 drops from 6,007,089 to 530,532 bytes (91.2%). At DPR 2/3,
+payloads are 750,848 and 854,442 bytes respectively. Four-byte decoded RGBA
+estimates fall from 15,204,288 to 8,581,968 bytes on mobile DPR 1 and from
+20,269,152 to 13,646,832 on desktop DPR 1: a 6,622,320-byte reduction. DPR 2/3
+decoded sizes remain unchanged. These estimates exclude temporary copies and
+GPU storage; they are not browser heap/peak-memory measurements.
+The prepared production artifact drops from 50,840,646 to 45,268,073 bytes
+(5,572,573 bytes smaller), including both promotional resolutions.
+
+Local release checks on 2026-11-02 covered all four locales at 320/390/1440px
+and DPR 1/2/3, plus 599/600/1024px breakpoint cases (39 cold-load cases).
+Whole-page scrolling captures at DPR 1 retained matching page dimensions and
+composition; representative DPR-3 scrolling and photo-detail comparisons also
+passed. Every case fetched exactly four photos at startup and selected the
+expected promotional resolution, with no console/network failures. These are
+headless desktop simulations, not physical mobile tests. A controlled 390px
+DPR-1 pair used fresh caches, no HTTP compression, 6 Mbps and 80 ms latency:
+photography request durations changed from approximately 4.2–7.7 seconds to
+1.2–1.4 seconds; total startup transfer was 15,371,390 versus 10,656,879 bytes.
+First-frame time remained approximately 13.5 seconds in both runs because the
+unchanged renderer/application payload dominated this uncompressed simulation.
+No hosted performance or browser peak-memory result is claimed.
+
+Sections remain eager: the three below-fold images still download 334,560 bytes
+at DPR 1 (658,470 at DPR 2/3). Deferring them would require a separate viewport
+policy in the current `SingleChildScrollView`/`Column` composition. It remains
+a potential future optimization; no lazy-loading framework is added.
+
 ## Cloudflare Worker development
 
 `cloudflare/venue-interest-worker/` is the isolated TypeScript project for the

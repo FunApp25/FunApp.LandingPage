@@ -315,6 +315,16 @@ clipping rather than geometric distortion. Founding Friends artwork remains
 anchored to the trailing edge, while venue artwork remains anchored to the
 leading edge.
 
+Landing photography is encoded as quality-95 WebP with sRGB colors and
+lossless alpha encoding. Hero keeps its distinct mobile/desktop compositions;
+Hero and Connection retain source dimensions. Founding Friends and Venue use
+673 × 410 main assets with original-resolution 1346 × 820 `2.0x/` variants,
+selected by Flutter's standard density-aware asset resolution. Their maximum
+painted dimensions are 673 × 410, so DPR 1 has lower transfer/decoded costs
+while DPR 2/3 retains the existing source resolution. PNG originals remain in
+Git history and are not bundled. Aspect ratios, logical dimensions, cropping,
+semantic labels, breakpoints, and eager section loading remain unchanged.
+
 Below a 600px outer viewport width, Founding Friends and Venue use vertical,
 centered promotional cards with 16px internal horizontal bounds, an 80px
 content/artwork rhythm, and full-width visual-only CTAs. Their artwork
