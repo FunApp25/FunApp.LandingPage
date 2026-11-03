@@ -4,6 +4,7 @@ import 'dart:ui' show CheckedState;
 import 'package:auto_route/auto_route.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,6 +91,93 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+  }
+
+  for (final locale in AppLocalizations.supportedLocales) {
+    for (final width in [320.0, 390.0]) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets(
+          'complete validation feedback at $width px, $scale scale, $locale',
+          (tester) async {
+            setTestSurface(tester, Size(width, 1000));
+            final bloc = FoundingFriendRegistrationFormBloc(
+              _FoundingFriendRepository(),
+            );
+            await _pumpPage(
+              tester,
+              FoundingFriendPage(createBloc: () => bloc),
+              locale: locale,
+              textScaleFactor: scale,
+            );
+            final email = find.byKey(const Key('emailField-foundingFriend'));
+            await tester.enterText(
+              email,
+              'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 61}',
+            );
+            final focus = tester
+                .widget<EditableText>(
+                  find.descendant(
+                    of: email,
+                    matching: find.byType(EditableText),
+                  ),
+                )
+                .focusNode;
+            bloc.add(const FoundingFriendRegistrationFormEvent.submitted());
+            await tester.pumpAndSettle();
+            final message = lookupAppLocalizations(locale)
+                .validationMaxLength(254);
+            final error = find.text(message);
+            final paragraph = tester.renderObject<RenderParagraph>(error);
+            expect(paragraph.didExceedMaxLines, isFalse);
+            expect(paragraph.maxLines, isNull);
+            final painter = TextPainter(
+              text: paragraph.text,
+              textScaler: paragraph.textScaler,
+              textDirection: TextDirection.ltr,
+            )..layout(maxWidth: paragraph.size.width);
+            expect(paragraph.size.height, closeTo(painter.height, 0.01));
+            painter.dispose();
+            expect(tester.getRect(error).left, greaterThanOrEqualTo(0));
+            expect(tester.getRect(error).right, lessThanOrEqualTo(width));
+            expect(
+              tester.getRect(error).bottom,
+              lessThan(
+                tester
+                    .getTopLeft(
+                      find.byKey(const Key('ageField-foundingFriend')),
+                    )
+                    .dy,
+              ),
+            );
+            expect(
+              tester
+                  .widget<EditableText>(
+                    find.descendant(
+                      of: email,
+                      matching: find.byType(EditableText),
+                    ),
+                  )
+                  .focusNode,
+              same(focus),
+            );
+            final submit = find.byKey(
+              const Key('userSignUpSubmit-foundingFriend'),
+            );
+            final scrollable = find
+                .ancestor(of: submit, matching: find.byType(Scrollable))
+                .first;
+            await tester.scrollUntilVisible(
+              submit,
+              300,
+              scrollable: scrollable,
+            );
+            await tester.pumpAndSettle();
+            expect(submit.hitTestable(), findsOneWidget);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
   }
 
   for (final foundingFriend in [false, true]) {

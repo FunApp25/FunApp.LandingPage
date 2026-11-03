@@ -99,17 +99,24 @@ final class BrandedFormTextField extends StatelessWidget {
       color: AppColors.bodyGray,
     );
 
+    final errorStyle = AppTextStyles.bodyFontStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      height: 16 / 12,
+      color: AppColors.cherryRed,
+    );
+    Widget buildError(String message) => Text(
+      message,
+      style: errorStyle,
+      softWrap: true,
+      overflow: TextOverflow.visible,
+    );
+
     final decoration = InputDecoration(
       hintText: hint,
       hintStyle: inputStyle,
-      errorText: errorText,
-      errorMaxLines: 3,
-      errorStyle: AppTextStyles.bodyFontStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        height: 16 / 12,
-        color: AppColors.cherryRed,
-      ),
+      error: errorText == null ? null : buildError(errorText!),
+      errorStyle: errorStyle,
       filled: true,
       fillColor: AppColors.lightForeground,
       isDense: true,
@@ -154,6 +161,7 @@ final class BrandedFormTextField extends StatelessWidget {
             inputFormatters: inputFormatters,
             autofillHints: autofillHints,
             validator: validator,
+            errorBuilder: (context, error) => buildError(error),
             minLines: minLines,
             maxLines: maxLines,
             textInputAction: textInputAction,

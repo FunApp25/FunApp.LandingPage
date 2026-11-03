@@ -647,6 +647,7 @@ Validation limits and length semantics are documented in
 [SPECIFICATIONS.md, user input](SPECIFICATIONS.md#8-user-input-and-future-backend-direction).
 Founding Friend email is checked before registration against the existing
 254-unit Checkout limit; Venue text and quantities match its Worker contract.
+Validation feedback wraps fully at narrow widths and enlarged text scales.
 Checkout recovery ignores disposed completions and preserves newer stored
 attempts before writing storage or starting another request.
 

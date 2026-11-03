@@ -853,7 +853,8 @@ capabilities as implemented.
 - Checkout recovery rejects disposed asynchronous completions before storage
   changes or follow-up calls. A newer stored attempt or Session takes precedence
   over an older workflow; browser storage unavailability still permits the
-  active Checkout to continue.
+  active Checkout to continue. Public form text-field validation messages wrap
+  completely and expand at narrow widths and increased text scales.
 - Staging Checkout-creation HTTP 500 responses log only the response's generated
   request ID, a fixed allowlisted execution stage, and either
   `configuration_invalid` or `runtime_unexpected`. Exception messages/stacks,
