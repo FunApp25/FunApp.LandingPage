@@ -575,6 +575,14 @@ Product terminology keeps `Fun App`, `Here & Now`, `Founding Friend`,
 `Safe Guard`, and `Footprint` unchanged. Generic terms such as Membership,
 Venue, and Waitlist are localized. Country option labels use Unicode CLDR
 translations while their stored integration values remain unchanged.
+Each catalog's country rows are ordered by the displayed localized name using
+locale collation. Preserve that order when updating countries; full-ICU Node.js
+tests check all four locales, including accents and Welsh digraphs. Chrome tests
+check dropdown ordering changes, search, selection, and keyboard interaction.
+Changing locale updates the order without changing the selected canonical value.
+This also preserves Welsh ordering in browsers whose `Intl.Collator` falls back
+to English. Run `node --test test/tool/country_ordering.test.mjs` after editing
+country catalogs.
 
 Regenerate localization output after changing an ARB file:
 
@@ -637,7 +645,9 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter test --platform chrome test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
+puro flutter test --platform chrome \
+  test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart \
+  test/presentation/user_sign_up/country_ordering_web_test.dart
 puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
 puro dart run tool/verify_web_resources.dart
@@ -1097,8 +1107,8 @@ dependency boundaries.
 
 Pull requests targeting `dev` or `main` run all three Worker projects'
 typechecking, tests, and Wrangler dry runs plus Flutter formatting, generation,
-analysis, full-suite coverage, focused Chrome session-storage tests, and
-production/staging builds through the
+analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
+and production/staging builds through the
 read-only `PR Checks` workflow. These checks have no staging environment or
 Cloudflare/Stripe credentials and cannot deploy. Pushes to `dev` reuse these
 checks, then automatically deploy only staging through **Deploy Staging**.

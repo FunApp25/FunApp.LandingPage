@@ -177,7 +177,8 @@ void main() {
   test('required Flutter check runs focused Chrome storage tests', () {
     final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
     final quality = workflow.split('\n  quality:\n').last;
-    const stepName = '      - name: Test browser payment session storage\n';
+    const stepName =
+        '      - name: Test browser payment storage and country ordering\n';
     expect(quality, contains(stepName));
     final browserStep = quality
         .split(stepName)
@@ -192,10 +193,18 @@ void main() {
         'session_pending_founding_friend_payment_store_web_test.dart',
       ),
     );
+    expect(
+      browserStep,
+      contains('test/presentation/user_sign_up/country_ordering_web_test.dart'),
+    );
     for (final bypass in ['continue-on-error', 'if:', '||', '--coverage']) {
       expect(browserStep, isNot(contains(bypass)));
     }
     expect(quality, isNot(contains('continue-on-error')));
+    expect(
+      quality,
+      contains('run: node --test test/tool/country_ordering.test.mjs'),
+    );
     expect(quality, contains('run: flutter test --coverage'));
     expect(quality, contains('threshold=90'));
     expect(quality, contains("' coverage/lcov.info"));

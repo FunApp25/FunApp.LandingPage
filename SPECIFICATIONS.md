@@ -535,6 +535,11 @@ capabilities as implemented.
   live `country` property label/value set captured in the English localization
   source rather than a shortened list. Its localized labels are searchable by
   case-insensitive partial name while selection retains the stable live value.
+  Each locale's catalog orders countries by the displayed name using locale
+  collation, including accents and Welsh digraphs. Changing locale selects that
+  catalog's ordering; filtering preserves it. Full-ICU Node.js tests protect
+  collation independently of browsers that lack Welsh collation data. Chrome
+  tests cover locale changes and interaction. All 254 canonical values remain.
 - Development integration references portal `149114580`, Here & Now form
   `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
   `39f027d9-e786-4768-b532-54ed44e1f718`. The identifiers are public and are
@@ -1079,8 +1084,8 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
 - Pull requests targeting `dev` or `main` run the staging site Worker's typechecking,
   tests, and dry-run validation, both API Worker projects' typechecking, tests,
   and root/staging dry-run validation, plus Flutter formatting, generation,
-  analysis, full-suite coverage, focused Chrome session-storage tests, and
-  production/staging compile checks. Common deployment-safety tests and Wrangler
+  analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
+  and production/staging compile checks. Common deployment-safety tests and Wrangler
   backport regressions execute once in **Flutter and staging site checks**, with
   the site upload test. Each API Worker job runs only its own upload-metadata
   test from the deployment suite; all three checks remain required validation

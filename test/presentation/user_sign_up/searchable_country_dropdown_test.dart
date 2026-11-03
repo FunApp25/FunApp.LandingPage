@@ -111,6 +111,59 @@ void main() {
     }
   }
 
+  testWidgets(
+    'locale changes rebuild ordering while retaining canonical selection',
+    (tester) async {
+      final firstValues = <String, String>{
+        'en': 'Afghanistan',
+        'es': 'Afghanistan',
+        'cy': 'Afghanistan',
+        'be': 'United Arab Emirates',
+      };
+      Object? state;
+      List<String>? previousOrder;
+      for (final language in firstValues.keys) {
+        await _pumpDropdown(
+          tester,
+          locale: Locale(language),
+          value: "Cote d'Ivoire",
+        );
+        state ??= tester.state(_field);
+        expect(tester.state(_field), same(state));
+        final menu = tester.widget<DropdownMenu<String>>(_field);
+        final values = menu.dropdownMenuEntries
+            .map((entry) => entry.value)
+            .toList();
+        expect(values.first, firstValues[language]);
+        expect(values.toSet(), hasLength(254));
+        if (previousOrder != null) {
+          expect(values, isNot(orderedEquals(previousOrder)));
+        }
+        previousOrder = values;
+        final selected = menu.dropdownMenuEntries.singleWhere(
+          (entry) => entry.value == "Cote d'Ivoire",
+        );
+        expect(
+          tester.widget<EditableText>(_editableText).controller.text,
+          selected.label,
+        );
+        final query = selected.label.substring(0, 2);
+        final filtered = menu.filterCallback!(menu.dropdownMenuEntries, query);
+        expect(
+          filtered.map((entry) => entry.value),
+          orderedEquals(
+            menu.dropdownMenuEntries
+                .where(
+                  (entry) =>
+                      entry.label.toLowerCase().contains(query.toLowerCase()),
+                )
+                .map((entry) => entry.value),
+          ),
+        );
+      }
+    },
+  );
+
   testWidgets('external selection, clear and locale updates synchronize text', (
     tester,
   ) async {
