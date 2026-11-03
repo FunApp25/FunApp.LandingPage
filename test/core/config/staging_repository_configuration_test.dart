@@ -4,6 +4,33 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('production and staging builds retain local web resources', () {
+    for (final path in [
+      '.github/workflows/deploy.yml',
+      '.github/workflows/pr_checks.yml',
+    ]) {
+      final workflow = File(path).readAsStringSync();
+      final builds = RegExp(r'flutter build web[^\n]*').allMatches(workflow);
+      expect(builds, isNotEmpty, reason: path);
+      for (final build in builds) {
+        expect(
+          build.group(0),
+          contains('--no-web-resources-cdn'),
+          reason: path,
+        );
+      }
+      expect(
+        workflow,
+        contains('tool/verify_web_resources.dart'),
+        reason: path,
+      );
+    }
+    final deploy = File(
+      '.github/workflows/deploy-staging-site.yml',
+    ).readAsStringSync();
+    expect(deploy, isNot(contains('flutter build web')));
+  });
+
   test('Wrangler keeps production and staging Worker identities isolated', () {
     final site = _readJsonc(
       'cloudflare/staging-site-worker/wrangler.jsonc',
@@ -145,6 +172,84 @@ void main() {
     expect(workflow, isNot(contains('secrets:')));
     expect(workflow, isNot(contains('environment: staging')));
     expect(workflow, isNot(contains('wrangler-action')));
+  });
+
+  test('required Flutter check runs focused Chrome storage tests', () {
+    final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    final quality = workflow.split('\n  quality:\n').last;
+    const stepName =
+        '      - name: Test browser payment storage and country ordering\n';
+    expect(quality, contains(stepName));
+    final browserStep = quality
+        .split(stepName)
+        .last
+        .split('\n      - name:')
+        .first;
+    expect(browserStep, contains('flutter test --platform chrome'));
+    expect(
+      browserStep,
+      contains(
+        'test/data/founding_friend_payment/'
+        'session_pending_founding_friend_payment_store_web_test.dart',
+      ),
+    );
+    expect(
+      browserStep,
+      contains('test/presentation/user_sign_up/country_ordering_web_test.dart'),
+    );
+    for (final bypass in ['continue-on-error', 'if:', '||', '--coverage']) {
+      expect(browserStep, isNot(contains(bypass)));
+    }
+    expect(quality, isNot(contains('continue-on-error')));
+    expect(
+      quality,
+      contains('run: node --test test/tool/country_ordering.test.mjs'),
+    );
+    expect(quality, contains('run: flutter test --coverage'));
+    expect(quality, contains('threshold=90'));
+    expect(quality, contains("' coverage/lcov.info"));
+  });
+
+  test('deployment test matrix runs common safety once and every upload', () {
+    final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    final jobs = workflow.split('\njobs:\n').last;
+    for (final entry in {
+      'worker': 'venue-interest-worker',
+      'payment-worker': 'founding-friend-payment-worker',
+      'quality': 'staging-site-worker',
+    }.entries) {
+      final job = jobs
+          .split('\n  ${entry.key}:\n')
+          .last
+          .split(
+            RegExp(r'\n  [\w-]+:\n'),
+          )
+          .first;
+      expect(job, contains('WORKER_PROJECT: ${entry.value}'));
+      expect(
+        RegExp('staging_deployment.test.mjs').allMatches(job),
+        hasLength(1),
+      );
+      if (entry.key == 'quality') {
+        expect(job, isNot(contains('--test-name-pattern')));
+        expect(job, contains('test/tool/staging_wrangler.test.mjs'));
+      } else {
+        expect(
+          job,
+          contains("node --test --test-name-pattern='^${entry.value}:'"),
+        );
+        expect(job, isNot(contains('staging_wrangler.test.mjs')));
+      }
+      for (final bypass in ['continue-on-error', '||']) {
+        expect(job, isNot(contains(bypass)));
+      }
+      final uploadStep = job
+          .split('          WORKER_PROJECT: ${entry.value}\n')
+          .first
+          .split('      - name:')
+          .last;
+      expect(uploadStep, isNot(contains('if:')));
+    }
   });
 
   test('validated dev pushes publish staging with the isolated fixed tool', () {

@@ -33,11 +33,13 @@ The repository also prepares an isolated staging composition for
 `https://staging.funapp.world`. Staging keeps Venue submissions deterministic
 and local to Flutter, sends Here & Now and Founding Friend registration to a
 staging-only no-I/O Worker entrypoint, and sends payment requests to a separate
-Worker pinned to Stripe sandbox mode. The operator confirmed on 2026-10-31
-that staging resources and GitHub environment configuration exist and sandbox
-Checkout plus payment verification passed after purchase-reference secret
-rotation. Hosted state is managed externally and was not reverified by the CI
-implementation.
+Worker pinned to Stripe sandbox mode. Automated staging deployment succeeded;
+the operator reports successful registration, sandbox Checkout, and payment
+verification after correcting the purchase-reference secret behind the historical
+Checkout HTTP 500. See the [staging operational status in README](README.md#operational-configuration-and-rollback)
+for the verified GitHub run, incident history, and the distinction between deployed
+code and local audit changes. These runtime results have not been independently
+repeated in this audit.
 
 ## 2. Decision model
 
@@ -315,6 +317,16 @@ clipping rather than geometric distortion. Founding Friends artwork remains
 anchored to the trailing edge, while venue artwork remains anchored to the
 leading edge.
 
+Landing photography is encoded as quality-95 WebP with sRGB colors and
+lossless alpha encoding. Hero keeps its distinct mobile/desktop compositions;
+Hero and Connection retain source dimensions. Founding Friends and Venue use
+673 × 410 main assets with original-resolution 1346 × 820 `2.0x/` variants,
+selected by Flutter's standard density-aware asset resolution. Their maximum
+painted dimensions are 673 × 410, so DPR 1 has lower transfer/decoded costs
+while DPR 2/3 retains the existing source resolution. PNG originals remain in
+Git history and are not bundled. Aspect ratios, logical dimensions, cropping,
+semantic labels, breakpoints, and eager section loading remain unchanged.
+
 Below a 600px outer viewport width, Founding Friends and Venue use vertical,
 centered promotional cards with 16px internal horizontal bounds, an 80px
 content/artwork rhythm, and full-width visual-only CTAs. Their artwork
@@ -445,6 +457,10 @@ Cookie Policy, and Cookie Banner remain inaccessible until their approval and
 release requirements are resolved; their presence establishes no consent
 behavior.
 
+The cancellation FAQ asks for 48 hours' notice for the ongoing Here & Now
+subscription; the existing Founding Friend
+14-day purchase refund statement remains unchanged.
+
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
 remaining items start collapsed. Expanding one item does not collapse another.
@@ -502,6 +518,16 @@ capabilities as implemented.
   invent an age threshold. Presentation exposes those application-coordinated
   errors after a submit attempt. This validation is usability only and does
   not authorize production collection without matching backend validation.
+- Founding Friend domain validation additionally caps email at 254 UTF-16 code
+  units before registration so the unchanged Checkout preparation contract can
+  accept it. Structural validation and original casing/whitespace are preserved;
+  Here & Now and the shared email value object retain their broader contract.
+- Venue domain validation matches existing Worker text limits in UTF-16 code
+  units (`String.length` in Dart and JavaScript): venue name 512, venue type,
+  contact first/last name and role 256, website 2048, email 320, phone 64.
+  The form reports length errors without truncating or normalizing text.
+  The Worker retains its separate 16 KiB UTF-8 JSON body limit; Checkout retains
+  its 4 KiB limit. Field length is distinct from encoded request size.
 - Current live HubSpot contact properties are `firstname`, `lastname`,
   `email`, `age`, `gender`, `country`, `usage_reason`, and
   `marketing_consent`. Gender stores `Man`, `Woman`, `Non-binary`, or
@@ -509,6 +535,11 @@ capabilities as implemented.
   live `country` property label/value set captured in the English localization
   source rather than a shortened list. Its localized labels are searchable by
   case-insensitive partial name while selection retains the stable live value.
+  Each locale's catalog orders countries by the displayed name using locale
+  collation, including accents and Welsh digraphs. Changing locale selects that
+  catalog's ordering; filtering preserves it. Full-ICU Node.js tests protect
+  collation independently of browsers that lack Welsh collation data. Chrome
+  tests cover locale changes and interaction. All 254 canonical values remain.
 - Development integration references portal `149114580`, Here & Now form
   `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
   `39f027d9-e786-4768-b532-54ed44e1f718`. The identifiers are public and are
@@ -551,7 +582,8 @@ capabilities as implemented.
 - Domain validation does not trim, lowercase, rewrite, or otherwise normalize
   submitted text. Phone numbers are stored as strings, preserve leading zeroes,
   and, when present, accept decimal digits only. Venue count and venue capacity
-  are optional positive integral quantities with no established upper bound.
+  are optional positive integers from 1 through 9007199254740991, matching
+  the Worker JavaScript-safe integer contract.
 - `VenueLead` requires venue name, website, contact first name, contact last
   name, role, and email. Venue type, independent/chain status, venue count,
   venue capacity, and phone number are optional.
@@ -562,10 +594,10 @@ capabilities as implemented.
   is cleared when switching away. Venue count and capacity controls accept
   digits only while domain validation still enforces positive integers.
   The conditional venue count expands and collapses with reduced-motion support,
-  and its visible label is "Number of venues" in English.
-  The venue information group and text inputs retain their established styling
-  while the routed page shell is aligned separately. Detailed form-control
-  restyling remains deferred to the dedicated Venue form pass.
+  and its visible label is "If chain, number of venues" in English.
+  The routed form uses shared branded fields and an optional chain dropdown,
+  with responsive rows and the presentation-local privacy acknowledgement.
+  The obsolete Venue dialog and its alternate form presentation are removed.
 - Generated Auto Route, Freezed, and Injectable source is regenerated locally
   and in CI and remains uncommitted.
 - `VenueInterestRequest` is a data-layer first-party request model. It emits
@@ -818,10 +850,20 @@ capabilities as implemented.
   backend will later verify a qualifying payment against its verified email.
 - Flutter accepts Checkout redirects only from exact HTTPS
   `checkout.stripe.com`, or from its exact configured loopback origin in local
-  mock mode. Payment requests use a 15-second browser deadline; Stripe requests
-  use a 10-second Worker deadline. Errors remain provider-neutral, and neither
+  mock mode. Checkout creation uses a 25-second browser deadline for two
+  sequential Stripe calls with independent 10-second Worker deadlines and
+  5 seconds of transport/processing allowance. Verification retains its separate
+  15-second browser deadline for one Stripe lookup. These deadlines include
+  response-body reads; a browser abort does not prove that Stripe creation was
+  cancelled, so ambiguous failures retain the original attempt for recovery.
+  Errors remain provider-neutral, and neither
   boundary logs or returns emails, names, request bodies, billing/payment
   details, Checkout URLs, credentials, or complete provider responses.
+- Checkout recovery rejects disposed asynchronous completions before storage
+  changes or follow-up calls. A newer stored attempt or Session takes precedence
+  over an older workflow; browser storage unavailability still permits the
+  active Checkout to continue. Public form text-field validation messages wrap
+  completely and expand at narrow widths and increased text scales.
 - Staging Checkout-creation HTTP 500 responses log only the response's generated
   request ID, a fixed allowlisted execution stage, and either
   `configuration_invalid` or `runtime_unexpected`. Exception messages/stacks,
@@ -968,11 +1010,13 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web -t lib/main_dev.dart
-puro flutter build web -t lib/main_staging.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_dev.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart
 puro dart run tool/prepare_staging_release_artifact.dart
-puro flutter build web -t lib/main_prod.dart
+puro dart run tool/verify_web_resources.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 
 cd cloudflare/staging-site-worker
 npm ci
@@ -1027,11 +1071,11 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   deployment, configures no route, and defaults
   `PAYMENT_CREATION_ENABLED` to false. No live Stripe Product/Price or key,
   production Cloudflare secret, production payment route, or live deployment is
-  introduced. The operator previously reported successful sandbox staging
-  payment verification. On 2026-11-01, the operator reports Checkout creation
-  returning HTTP 500 before Stripe I/O; the deployed cause remains unconfirmed.
-  The staging failure diagnostics are implemented and tested locally, without
-  deployment. Staging credentials are not stored in this repository. Later
+  introduced. The historical staging Checkout HTTP 500 is resolved according to
+  the operator; current evidence and local undeployed changes are recorded in
+  [README's operational status](README.md#operational-configuration-and-rollback).
+  Staging credentials are not stored in this repository. Stripe live-account
+  approval and approved legal documentation remain outstanding. Later
   production setup requires `STRIPE_PRICE_ID`,
   `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
   `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
@@ -1040,7 +1084,12 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
 - Pull requests targeting `dev` or `main` run the staging site Worker's typechecking,
   tests, and dry-run validation, both API Worker projects' typechecking, tests,
   and root/staging dry-run validation, plus Flutter formatting, generation,
-  analysis, full-suite coverage, and production/staging compile checks.
+  analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
+  and production/staging compile checks. Common deployment-safety tests and Wrangler
+  backport regressions execute once in **Flutter and staging site checks**, with
+  the site upload test. Each API Worker job runs only its own upload-metadata
+  test from the deployment suite; all three checks remain required validation
+  jobs without failure suppression.
   Pull-request checks do not deploy; pushes to `main` remain the production
   Pages deployment trigger.
 - The production custom domain is `https://funapp.world` and uses root `/` deployment.
@@ -1142,9 +1191,10 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   fallback. Its script runs first for `/api` and `/api/*` and returns `404`,
   preventing an absent or mistyped API Route from returning the SPA document
   with `200`.
-- The exact local staging site sequence is `puro flutter build web -t
-  lib/main_staging.dart`, `puro dart run
-  tool/prepare_staging_release_artifact.dart`, `bash
+- The exact local staging site sequence is
+  `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`,
+  `puro dart run tool/prepare_staging_release_artifact.dart`,
+  `puro dart run tool/verify_web_resources.dart`, `bash
   tool/verify_staging_artifact.sh`, then from `cloudflare/staging-site-worker/`,
   `npm ci`, `npm run typecheck`, `npm test`, and `npm run wrangler:validate`.
   These commands validate only. Automatic publishing uses generated staging
@@ -1168,6 +1218,21 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `funapp.world`, and the existing
   `funapp.world/api/venue-interest` route is unchanged.
 - The production artifact is `build/web`.
+- Every staging/production Flutter build uses `--no-web-resources-cdn`; the
+  generated loader selects same-origin `canvaskit/` resources. The declared
+  genuine Roboto Regular asset supplies the engine default font with its
+  Apache 2.0 license and bootstrap license registration. Application Manrope
+  and Instrument Serif typography remains unchanged. Artifact checks require
+  both CanvasKit variants and the local Roboto manifest entry and license.
+  Renderer files keep host cache revalidation rather than immutable caching.
+  Existing Static Assets routing and exact-artifact deployment are unchanged.
+- Dynamic glyph fallback remains enabled at Flutter's default
+  `https://fonts.gstatic.com/s/`; local renderer/default-font loading does not
+  mean all fonts are self-hosted. Manrope and Roboto cover all characters in
+  the four current UI catalogs. Instrument Serif lacks Belarusian glyphs and
+  continues to use engine fallback. Arbitrary input, emoji, or future copy can
+  still require remote fonts; an incomplete local fallback URL must not replace
+  this working behavior.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
 - Production builds include the canonical Privacy Notice asset and remove the
   three review-only Markdown files during artifact preparation; protected

@@ -86,8 +86,24 @@ application is a Flutter Web-only project deployed through GitHub Pages.
 - Google Fonts typography remains implemented through `google_fonts`, but its
   required Manrope and Instrument Serif files are bundled under `assets/fonts/`.
   Runtime font fetching is disabled in the common bootstrap. When adding a
-  family, weight, or style, add its correctly named official font file and OFL
-  license asset, then keep the bootstrap license registration in sync.
+  family, weight, or style, add its correctly named official font file and
+  applicable license asset, then keep the bootstrap license registration in sync.
+- Release builds use `--no-web-resources-cdn` to load CanvasKit from the site's
+  own `canvaskit/` directory. The engine's default Roboto Regular is declared in
+  `pubspec.yaml` and bundled with its Apache 2.0 license; Manrope and Instrument
+  Serif remain the application fonts. Roboto is the unmodified font from the
+  pinned Flutter 3.47.2 SDK (`engine/src/flutter/txt/third_party/fonts/`, SHA-256
+  `79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95`).
+  Default Roboto loading is separate from dynamic glyph fallback: unsupported
+  characters (including user-entered scripts or emoji) may still request fonts
+  from `fonts.gstatic.com`. No `fontFallbackBaseUrl` override or fallback
+  disabling is applied. Instrument Serif lacks Belarusian glyphs; the existing
+  engine fallback remains available, and bundled Manrope and Roboto cover the
+  four current UI catalogs. This is not complete font self-hosting.
+  Keep the renderer flag in every release command and run
+  `puro dart run tool/verify_web_resources.dart` after artifact preparation.
+  CanvasKit filenames are not version-hashed: retain host cache revalidation;
+  do not add an immutable cache policy to `canvaskit/`.
 - Flutter localization supports complete application-UI catalogs for English,
   Spanish, Welsh, and Belarusian, with English as the source and unsupported-
   locale fallback language. The canonical Privacy Notice legal document
@@ -202,8 +218,9 @@ production data source with its deterministic request-target seam.
 Build the production entrypoint locally without runtime defines:
 
 ```bash
-puro flutter build web -t lib/main_prod.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 ```
 
 The second command removes the three review-only legal Markdown files from the
@@ -225,12 +242,12 @@ production declaration for `funapp.world`.
 
 | Environment or mode | Purpose | Flutter entrypoint or build command | VS Code/VSCodium | Website location | Configuration and preparation |
 | --- | --- | --- | --- | --- | --- |
-| Local fake development | Default UI work with no registration or payment I/O. Venue submissions are deterministic local success; user registration and payment fail closed. | `puro flutter run -d chrome -t lib/main_dev.dart`; build-only: `puro flutter build web -t lib/main_dev.dart` | **Fun App Landing — Development (Fake Repositories)**; this is the first/default Run choice. | Flutter-selected localhost; build output is `build/web`. | No `.env`, Worker, HubSpot, Stripe, Cloudflare, or GitHub preparation. |
+| Local fake development | Default UI work with no registration or payment I/O. Venue submissions are deterministic local success; user registration and payment fail closed. | `puro flutter run -d chrome -t lib/main_dev.dart`; build-only: `puro flutter build web --no-web-resources-cdn -t lib/main_dev.dart` | **Fun App Landing — Development (Fake Repositories)**; this is the first/default Run choice. | Flutter-selected localhost; build output is `build/web`. | No `.env`, Worker, HubSpot, Stripe, Cloudflare, or GitHub preparation. |
 | Local direct HubSpot testing | Explicit browser-to-HubSpot testing for Here & Now and Founding Friend only. | `puro flutter run -d chrome -t lib/main_dev.dart --dart-define-from-file=.env --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot` | **Fun App Landing — Development (Direct HubSpot)** | Flutter-selected localhost. | Copy `.env.example` to ignored `.env` and set the public portal and two registration form IDs. No private token belongs in Flutter. |
 | Local mocked registration Worker | Exercise first-party registration serialization, validation, rate limiting, and deterministic responses without starting payment. | Start `npm run dev` in `cloudflare/venue-interest-worker`, then run `lib/main_dev.dart` on port `7357` with `.env` and `FUN_APP_REGISTRATION_TRANSPORT=local_worker`. | **Fun App Landing + Local Mock Worker** compound; its Flutter child is **Development (Local Registration Worker)**. | Flutter at `http://localhost:7357`; registration Worker at `http://localhost:8787`. | Copy the registration `.dev.vars.example` to ignored `.dev.vars` and root `.env.example` to ignored `.env`. |
 | Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Local Mock Workers** compound; its Flutter child is **Development (Local Workers)**. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
-| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
-| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
+| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
+| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
 | Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate, then automatically publish the two staging API Workers and staging site. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
 | Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Production registration and payment creation remain disabled. |
 
@@ -258,7 +275,7 @@ The standalone Worker commands are also supported execution modes:
 | Local mocked Worker integration | In-memory fake success | Local registration Worker | Mocked, no upstream call | Local payment Worker | Mocked, no upstream call | No | No | Implemented; deterministic. |
 | Production-mode local run | Same-origin localhost request | Deferred/fail-closed | Registration unavailable | Fixed `https://funapp.world` payment endpoints, subject to browser CORS | Production payment service boundary | No during build; runtime payment routes can attempt production requests; registration remains deferred | Payment requests target production, not a local mock | Use local mocked Worker integration for payment development. |
 | Staging artifact build | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No | No | Implemented build path; artifact is not deployed. |
-| Hosted staging | In-memory fake success; no staging Venue API route | `funapp-venue-interest-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Operational sandbox Checkout and verification after secret rotation were confirmed by the operator on 2026-10-31; not rechecked by this implementation. |
+| Hosted staging | In-memory fake success; no staging Venue API route | `funapp-venue-interest-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Automated deployment verified; registration, sandbox Checkout and verification reported successful by the operator. See [operational status](#operational-configuration-and-rollback). |
 | Hosted production | Existing `funapp-venue-interest` route may submit to HubSpot | Deferred/fail-closed in Flutter; registration routes remain unattached/disabled | Real for the existing Venue contract only | Repository boundary exists, but creation is disabled and no production payment route is approved | Live payment unavailable | Existing Venue submissions can create HubSpot records; no registration or payment activation is introduced here | This is production | Existing hosting/Worker behavior preserved. |
 
 ### Trigger matrix
@@ -268,7 +285,7 @@ The standalone Worker commands are also supported execution modes:
 | Press Run in VSCodium | Starts only the selected launch configuration. The first/default choice is fake development. | Nothing | The selected name states whether it is fake, direct HubSpot, local registration, both local Workers, or production-mode local. |
 | Start **Landing + Local Mock Worker** | Starts Flutter plus the registration mock. | Nothing | Localhost only; payment remains deferred. |
 | Start **Landing + Local Mock Workers** | Starts Flutter plus both deterministic Workers. | Nothing | Localhost only; no HubSpot or Stripe request. |
-| Run any local `flutter build web` command | Compiles the selected entrypoint into `build/web`. | Nothing | Build commands perform no provider I/O. Run the matching artifact preparation command before upload. |
+| Run any local `flutter build web --no-web-resources-cdn` command | Compiles the selected entrypoint into `build/web`. | Nothing | Build commands perform no provider I/O. Run the matching artifact preparation command before upload. |
 | Push a feature branch other than `dev` or `main` | No repository workflow is triggered solely by the push. | Nothing | No staging Worker uses Cloudflare Git integration or an automatic repository trigger. |
 | Open or update a PR targeting `dev` or `main` | `pr_checks.yml` formats, generates, analyzes, tests, dry-runs the site Worker and both API Workers, and builds production plus staging artifacts. | Nothing | Hosted CI validation only. |
 | Push a commit to `main` | `deploy.yml` regenerates, analyzes, tests, and builds production. | **Deploys production GitHub Pages** | Existing production behavior is intentionally preserved. It does not deploy either Worker or staging. |
@@ -381,8 +398,9 @@ remain ignored.
 Build and validate locally without deployment:
 
 ```bash
-puro flutter build web -t lib/main_staging.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart
 puro dart run tool/prepare_staging_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 bash tool/verify_staging_artifact.sh
 cd cloudflare/staging-site-worker
 npm ci
@@ -395,7 +413,10 @@ The **Deploy Staging** workflow (`deploy-staging-site.yml`) runs on pushes to
 `dev` only and calls the same credential-free checks used by PRs. Required-check
 names remain **Worker checks**, **Payment Worker checks**, and **Flutter and
 staging site checks**. PRs targeting `dev` or `main` validate only, without the
-staging Environment or deployment credentials. Staging artifact upload is enabled
+staging Environment or deployment credentials. Common deployment-safety tests and
+Wrangler backport regressions run once in **Flutter and staging site checks**;
+each API Worker job filters the deployment suite to its own upload-metadata test.
+The site upload-metadata test runs with the common tests. Staging artifact upload is enabled
 only for dev pushes; coverage upload remains available to PRs.
 
 After all checks pass, the deployment job enters GitHub `staging` and downloads
@@ -492,33 +513,45 @@ Changing that tool requires rerunning these tests.
 
 ### Operational configuration and rollback
 
-The operator reports the three Workers, GitHub environments, staging variables
-and secrets already exist, and sandbox Checkout plus payment verification passed
-after purchase-reference secret rotation. This implementation does not repeat
-that hosted verification or modify external configuration.
+As verified on 2026-11-03, [Deploy Staging run 41300396058, attempt 2](https://github.com/FunApp25/FunApp.LandingPage/actions/runs/41300396058/attempts/2)
+succeeded on 2026-11-01 for `dev` revision
+`83c5c2a775d15feda56db2dfc4a9cb24d2ab4a4a`. GitHub records successful
+preflight, artifact verification, and registration, sandbox payment, and site
+deployment steps. This is deployment evidence, not a fresh browser or provider
+test.
 
-Before the first restored hosted deployment:
+The Checkout-creation HTTP 500 reported on 2026-11-01 is a historical incident.
+The operator reports it was resolved by correcting the staging purchase-reference
+secret, and that registration, Stripe sandbox Checkout, and payment verification
+subsequently passed. These runtime results are operator-reported, not independently
+repeated in this audit. Registration remains mocked without HubSpot I/O; payment
+uses Stripe sandbox only. The staging diagnostics remain available for future
+failures; the incident is not a current unresolved blocker.
+
+The `general_audit` changes after that deployed revision, including the local
+audit fixes and A08 image optimizations, are not covered by that deployment
+evidence. The A09/A10 CI and documentation edits are also local and undeployed.
+Production registration and payment creation remain disabled. Stripe live-account
+approval, approved legal documentation, and the separate production configuration
+and controlled verification described below remain outstanding. No live production
+payment verification is claimed.
+
+For subsequent deployments:
 
 1. Retain GitHub `staging` restricted to `dev`, `production` restricted to `main`,
-   and the existing `github-pages` environment. Add the three check names above
-   to branch protection when desired; this task does not change protection rules.
-2. Confirm the existing tokens can read all required preflight metadata and
-   deploy only their intended Workers. Investigate denied reads without
-   automatically expanding token permissions. No new credential or bootstrap Admin token is needed.
-3. Preserve the site Custom Domain, the two API Routes, unique rate-limit
-   namespaces, and hostname-wide Cloudflare Access. Confirm Access covers all
-   three Workers and the return from Stripe Checkout.
-4. Keep the payment creation variable explicitly enabled, the existing sandbox
-   Price/key and rotated purchase-reference secret synchronized, and automatic
-   tax disabled. Existence of both GitHub and Cloudflare secret names does not
-   prove equal values. Privately verify the canonical mappings
+   and the existing `github-pages` environment and required checks.
+2. Preserve least-privilege token access, the site Custom Domain, the two API
+   Routes, unique rate-limit namespaces, and hostname-wide Cloudflare Access,
+   including the Stripe Checkout return path.
+3. Keep payment enablement explicit, automatic tax disabled, and sandbox
+   configuration synchronized. Preserve the canonical mappings
    `STRIPE_SANDBOX_RESTRICTED_KEY` → `STRIPE_SECRET_KEY` and
-   `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET` against
-   the operator's existing source of truth before `--secrets-file` overwrites
-   either binding; never print values. No rotation is part of this repair.
-5. Review the first authorized hosted run and sandbox smoke test. Registration
-   may already have a newer version from failed runs while payment/site remain
-   older; confirm all three version IDs after the successful run.
+   `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET`.
+   Secret-name existence does not prove equal values; privately check against
+   the operator's source of truth when configuration changes, never print values.
+4. Review the hosted run and all three deployed versions, then perform an
+   authorized sandbox smoke test. A later deployment failure can still leave
+   components at different revisions because publishing is sequential.
 
 For a code rollback, revert the offending change through a PR to `dev`; merging
 it runs the same validation and republishes all three staging components using
@@ -542,6 +575,14 @@ Product terminology keeps `Fun App`, `Here & Now`, `Founding Friend`,
 `Safe Guard`, and `Footprint` unchanged. Generic terms such as Membership,
 Venue, and Waitlist are localized. Country option labels use Unicode CLDR
 translations while their stored integration values remain unchanged.
+Each catalog's country rows are ordered by the displayed localized name using
+locale collation. Preserve that order when updating countries; full-ICU Node.js
+tests check all four locales, including accents and Welsh digraphs. Chrome tests
+check dropdown ordering changes, search, selection, and keyboard interaction.
+Changing locale updates the order without changing the selected canonical value.
+This also preserves Welsh ordering in browsers whose `Intl.Collator` falls back
+to English. Run `node --test test/tool/country_ordering.test.mjs` after editing
+country catalogs.
 
 Regenerate localization output after changing an ARB file:
 
@@ -604,14 +645,109 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web -t lib/main_prod.dart
+puro flutter test --platform chrome \
+  test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart \
+  test/presentation/user_sign_up/country_ordering_web_test.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
 ```
+
+Validation limits and length semantics are documented in
+[SPECIFICATIONS.md, user input](SPECIFICATIONS.md#8-user-input-and-future-backend-direction).
+Founding Friend email is checked before registration against the existing
+254-unit Checkout limit; Venue text and quantities match its Worker contract.
+Validation feedback wraps fully at narrow widths and enlarged text scales.
+Checkout recovery ignores disposed completions and preserves newer stored
+attempts before writing storage or starting another request.
+
+The approved cancellation FAQ asks for 48 hours' notice for the ongoing
+Here & Now subscription. Its existing Founding Friend 14-day purchase refund
+statement remains unchanged; no pending legal document is modified.
 
 The test suite covers domain validation, Venue and prospective-user form
 orchestration, the Founding Friend Checkout and payment-verification lifecycle,
 the user sign-up widgets, and the active landing surface's branding,
 localization, theme, interactions, and responsive viewport contracts.
+
+A07 local release measurements (2026-11-02, Flutter 3.47.2, headless Chrome):
+fresh-cache landing screenshots were byte-identical before/after for `en`,
+`es`, `cy`, and `be` at 390px and 1440px. Startup changed from three Google
+resource requests across two external origins to zero external requests in
+those eight cases; updated builds rendered with Google resource hosts blocked.
+The prepared production artifact grew from 50,656,659 to 50,840,645 bytes
+(+183,986); the existing 37,851,412-byte renderer directory was unchanged.
+Roboto and its license add 183,098 bytes. Summing each artifact file compressed
+with gzip level 9 gives 21,264,454 versus 21,358,688 bytes (+94,234); this is a
+local size comparison, not a hosted transfer measurement. The observed desktop
+startup transfer was 12,194,588 versus 16,237,542 bytes: the temporary local
+server served renderer files uncompressed while Google's CDN compressed them,
+so that transfer increase does not predict production performance. Hosted
+compression, cache behavior, and deployment remain unverified. Dynamic fallback
+for additional scripts/emoji remains an external dependency: typing synthetic
+emoji and Han characters into the local form successfully fetched Noto Color
+Emoji and Noto Sans SC from `fonts.gstatic.com`. No form was submitted.
+
+A08 photography uses WebP at quality 95 (cwebp 1.6.0), with lossless alpha
+encoding and the same sRGB interpretation, composition, cropping, semantics,
+and responsive breakpoints. Hero retains separate mobile/desktop assets, and
+Connection retains its source dimensions. The two promotional images use
+Flutter's standard 1×/2× asset variants: their maximum painted size is 673 × 410,
+so DPR 1 uses that resolution while DPR 2/3 retain the original 1346 × 820 files.
+No custom selection code or new build dependency is needed. Original PNGs remain
+in Git history at `cb7f977` and are removed from active asset directories.
+
+| Photography | Original pixels / PNG bytes | DPR 1 WebP pixels / bytes | DPR 2/3 WebP pixels / bytes |
+| --- | --- | --- | --- |
+| Mobile Hero | 864 × 878 / 660,012 | 864 × 878 / 92,378 | Same |
+| Desktop Hero | 1412 × 1434 / 1,525,413 | 1412 × 1434 / 195,972 | Same |
+| Connection | 1360 × 614 / 1,404,150 | 1360 × 614 / 187,270 | Same |
+| Founding Friends | 1346 × 820 / 1,463,719 | 673 × 410 / 66,616 | 1346 × 820 / 205,750 |
+| Venue | 1346 × 820 / 1,613,807 | 673 × 410 / 80,674 | 1346 × 820 / 265,450 |
+
+Reproduce full-resolution conversions from original PNGs outside active assets:
+
+```bash
+cwebp -q 95 -m 6 -sharp_yuv -alpha_q 100 -exact -metadata icc input.png -o output.webp
+```
+
+For the two 1× promotional assets, use the same command without `-exact` and
+add `-resize 673 0`; keep the full-resolution outputs under `2.0x/`. Existing
+directory declarations include these variants.
+Benchmarks also covered PNG recompression, lossless WebP, quality 90, and
+half-size quality-95 WebP. Quality 95 retains more photographic detail than
+quality 90 while saving 84–87% at unchanged resolution. Further dimension cuts
+were rejected to preserve existing high-density sharpness. AVIF was not
+selected because its engine/browser support matrix was not established.
+
+The 390px DPR-1 photography payload drops from 5,141,688 to 426,938 bytes
+(91.7%); desktop DPR 1 drops from 6,007,089 to 530,532 bytes (91.2%). At DPR 2/3,
+payloads are 750,848 and 854,442 bytes respectively. Four-byte decoded RGBA
+estimates fall from 15,204,288 to 8,581,968 bytes on mobile DPR 1 and from
+20,269,152 to 13,646,832 on desktop DPR 1: a 6,622,320-byte reduction. DPR 2/3
+decoded sizes remain unchanged. These estimates exclude temporary copies and
+GPU storage; they are not browser heap/peak-memory measurements.
+The prepared production artifact drops from 50,840,646 to 45,268,073 bytes
+(5,572,573 bytes smaller), including both promotional resolutions.
+
+Local release checks on 2026-11-02 covered all four locales at 320/390/1440px
+and DPR 1/2/3, plus 599/600/1024px breakpoint cases (39 cold-load cases).
+Whole-page scrolling captures at DPR 1 retained matching page dimensions and
+composition; representative DPR-3 scrolling and photo-detail comparisons also
+passed. Every case fetched exactly four photos at startup and selected the
+expected promotional resolution, with no console/network failures. These are
+headless desktop simulations, not physical mobile tests. A controlled 390px
+DPR-1 pair used fresh caches, no HTTP compression, 6 Mbps and 80 ms latency:
+photography request durations changed from approximately 4.2–7.7 seconds to
+1.2–1.4 seconds; total startup transfer was 15,371,390 versus 10,656,879 bytes.
+First-frame time remained approximately 13.5 seconds in both runs because the
+unchanged renderer/application payload dominated this uncompressed simulation.
+No hosted performance or browser peak-memory result is claimed.
+
+Sections remain eager: the three below-fold images still download 334,560 bytes
+at DPR 1 (658,470 at DPR 2/3). Deferring them would require a separate viewport
+policy in the current `SingleChildScrollView`/`Column` composition. It remains
+a potential future optimization; no lazy-loading framework is added.
 
 ## Cloudflare Worker development
 
@@ -834,6 +970,12 @@ exactly-once behavior.
 The Worker accepts JSON bodies up to 4 KiB, exact schemas only, a strict public
 application origin, abortable 10-second Stripe requests, exact
 `checkout.stripe.com` redirects, and a required Cloudflare rate-limit binding.
+Flutter gives Checkout creation 25 seconds for the sequential Price lookup and
+Session creation, including 5 seconds of transport/processing allowance beyond
+the two independent Stripe deadlines. Verification keeps a separate 15-second
+deadline for one lookup. Deadlines include response-body reads. Browser aborts
+can leave creation ambiguous; retry retains the same attempt for idempotent
+recovery.
 It performs no operational logging of emails, names, request bodies, Checkout
 URLs, payment details, credentials, or provider responses. Local mock settings
 are rejected outside loopback execution. `PAYMENT_CREATION_ENABLED` must be
@@ -865,12 +1007,10 @@ external setup requires Cloudflare Environment variables
 `CLOUDFLARE_ACCOUNT_ID`; Cloudflare/GitHub secrets `STRIPE_SECRET_KEY`
 (prefer a least-privilege restricted key), `PURCHASE_REFERENCE_SECRET`, and
 `CLOUDFLARE_API_TOKEN`; a unique rate-limit namespace for source ID `1002`;
-and exact route attachment for the two payment paths. A Stripe sandbox Product,
-Price, and restricted key are maintained outside the repository; the operator
-reports successful staging Checkout and verification after secret rotation.
-This CI implementation does not repeat that hosted verification. This change
-creates no live Stripe resource, credential, secret, route, binding, GitHub
-Environment value, or deployment.
+and exact route attachment for the two payment paths. Stripe sandbox resources
+are maintained outside the repository; see the [staging operational status](#operational-configuration-and-rollback)
+for deployment evidence and operator-reported sandbox results. Live-account
+approval and approved legal documentation remain production blockers.
 
 Before activation, approve the tax treatment and then set
 `STRIPE_AUTOMATIC_TAX_ENABLED` deliberately. Enabling it also requires the
@@ -967,7 +1107,8 @@ dependency boundaries.
 
 Pull requests targeting `dev` or `main` run all three Worker projects'
 typechecking, tests, and Wrangler dry runs plus Flutter formatting, generation,
-analysis, full-suite coverage, and production/staging builds through the
+analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
+and production/staging builds through the
 read-only `PR Checks` workflow. These checks have no staging environment or
 Cloudflare/Stripe credentials and cannot deploy. Pushes to `dev` reuse these
 checks, then automatically deploy only staging through **Deploy Staging**.

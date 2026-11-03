@@ -16,6 +16,80 @@ void main() {
     localCheckoutOrigin: 'http://localhost:7357',
   );
 
+  for (final delays in [(9900, 0), (0, 9900), (9900, 9900)]) {
+    testWidgets(
+      'creation allows slow Price/Session calls $delays plus transport',
+      (tester) async {
+        final client = _DelayedResponseClient(
+          headersDelay: Duration(milliseconds: delays.$1 + delays.$2),
+          bodyDelay: const Duration(seconds: 4),
+          statusCode: 201,
+          body: {
+            'checkoutUrl': 'https://checkout.stripe.com/c/pay/safe',
+            'sessionId': 'cs_test_abcdefghijklmnopqrstuvwxyz123456',
+          },
+        );
+        final source = WorkerFoundingFriendPaymentDataSource(
+          client: client,
+          config: localConfig,
+        );
+        final result = source.createCheckout(
+          email: 'founder@example.com',
+          attemptId: '123e4567-e89b-42d3-a456-426614174000',
+        );
+        await tester.pump(client.headersDelay);
+        await tester.pump(client.bodyDelay);
+        expect(
+          (await result).sessionId,
+          'cs_test_abcdefghijklmnopqrstuvwxyz123456',
+        );
+        await tester.pump(const Duration(seconds: 25));
+        expect(client.abortObserved, isFalse);
+      },
+    );
+  }
+
+  for (final verification in [false, true]) {
+    for (final stalledBody in [false, true]) {
+      testWidgets(
+        'default verification=$verification body=$stalledBody deadline aborts',
+        (tester) async {
+          final client = stalledBody
+              ? _ResponseBodyTimeoutClient()
+              : _AbortAwareClient();
+          final source = WorkerFoundingFriendPaymentDataSource(
+            client: client,
+            config: localConfig,
+          );
+          final result = verification
+              ? source.verifyCheckout(
+                  'cs_test_abcdefghijklmnopqrstuvwxyz123456',
+                )
+              : source.createCheckout(
+                  email: 'founder@example.com',
+                  attemptId: '123e4567-e89b-42d3-a456-426614174000',
+                );
+          var completed = false;
+          final checked = expectLater(
+            result.whenComplete(() => completed = true),
+            throwsA(isA<FoundingFriendPaymentServiceUnavailableException>()),
+          );
+          final seconds = verification ? 15 : 25;
+          await tester.pump(Duration(seconds: seconds - 1));
+          expect(completed, isFalse);
+          await tester.pump(const Duration(seconds: 1));
+          await checked;
+          expect(
+            stalledBody
+                ? (client as _ResponseBodyTimeoutClient).abortObserved
+                : (client as _AbortAwareClient).abortObserved,
+            isTrue,
+          );
+        },
+      );
+    }
+  }
+
   test(
     'creates Checkout with only email and stable attempt identifier',
     () async {
@@ -180,7 +254,7 @@ void main() {
     final source = WorkerFoundingFriendPaymentDataSource(
       client: client,
       config: localConfig,
-      timeout: const Duration(milliseconds: 1),
+      verificationTimeout: const Duration(milliseconds: 1),
     );
     await expectLater(
       source.verifyCheckout('cs_test_abcdefghijklmnopqrstuvwxyz123456'),
@@ -206,7 +280,7 @@ void main() {
     final timedOut = WorkerFoundingFriendPaymentDataSource(
       client: timeoutClient,
       config: localConfig,
-      timeout: const Duration(milliseconds: 1),
+      creationTimeout: const Duration(milliseconds: 1),
     );
     await expectLater(
       timedOut.createCheckout(
@@ -221,7 +295,7 @@ void main() {
     final responseBodyTimedOut = WorkerFoundingFriendPaymentDataSource(
       client: responseBodyTimeoutClient,
       config: localConfig,
-      timeout: const Duration(milliseconds: 1),
+      creationTimeout: const Duration(milliseconds: 1),
     );
     await expectLater(
       responseBodyTimedOut.createCheckout(
@@ -244,6 +318,50 @@ final class _AbortAwareClient extends http.BaseClient {
     await abortable.abortTrigger;
     abortObserved = true;
     throw http.RequestAbortedException(request.url);
+  }
+}
+
+final class _DelayedResponseClient extends http.BaseClient {
+  _DelayedResponseClient({
+    required this.headersDelay,
+    required this.bodyDelay,
+    required this.statusCode,
+    required this.body,
+  });
+
+  final Duration headersDelay;
+  final Duration bodyDelay;
+  final int statusCode;
+  final Map<String, Object?> body;
+  bool abortObserved = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    final response = Completer<http.StreamedResponse>();
+    final controller = StreamController<List<int>>();
+    Timer? bodyTimer;
+    final headersTimer = Timer(headersDelay, () {
+      response.complete(http.StreamedResponse(controller.stream, statusCode));
+      bodyTimer = Timer(bodyDelay, () {
+        controller.add(utf8.encode(jsonEncode(body)));
+        unawaited(controller.close());
+      });
+    });
+    unawaited(
+      (request as http.AbortableRequest).abortTrigger!.then((_) {
+        abortObserved = true;
+        headersTimer.cancel();
+        bodyTimer?.cancel();
+        final error = http.RequestAbortedException(request.url);
+        if (response.isCompleted) {
+          controller.addError(error);
+          unawaited(controller.close());
+        } else {
+          response.completeError(error);
+        }
+      }),
+    );
+    return response.future;
   }
 }
 

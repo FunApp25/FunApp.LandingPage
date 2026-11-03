@@ -10,6 +10,66 @@ import 'package:fun_app_landing_page/domain/core/value_objects/website.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 
 void main() {
+  for (final (name, valid) in [
+    ('a' * 512, true),
+    ('a' * 513, false),
+    ('', false),
+    (' ' * 512, false),
+    ('界' * 512, true),
+    ('界' * 513, false),
+    ('😀' * 256, true),
+    ('${'😀' * 256}a', false),
+    ('e\u0301' * 256, true),
+    ('  Café Київ 東京  ', true),
+  ]) {
+    test('venue name boundary ${name.length} units is valid: $valid', () {
+      final lead = _validLead().copyWith(
+        venueName: NonEmptySingleLineText(name),
+      );
+      expect(lead.isValid, valid);
+      expect(lead.venueNameValidation.isRight(), valid);
+      if (valid) {
+        expect(lead.venueName.getOrCrash(), name);
+      }
+    });
+  }
+
+  test('related Venue text limits apply only within the Venue aggregate', () {
+    final lead = _validLead();
+    for (final length in [256, 257]) {
+      final text = '界' * length;
+      final valid = length == 256;
+      expect(
+        lead.copyWith(venueType: some(NonEmptySingleLineText(text))).isValid,
+        valid,
+      );
+      expect(lead.copyWith(firstName: PersonalName(text)).isValid, valid);
+      expect(lead.copyWith(lastName: PersonalName(text)).isValid, valid);
+      expect(lead.copyWith(role: NonEmptySingleLineText(text)).isValid, valid);
+      expect(PersonalName(text).isValid(), isTrue);
+      expect(NonEmptySingleLineText(text).isValid(), isTrue);
+    }
+    for (final length in [2048, 2049]) {
+      final website = 'example.com/${'界' * (length - 12)}';
+      expect(lead.copyWith(website: Website(website)).isValid, length == 2048);
+    }
+    for (final length in [320, 321]) {
+      final email =
+          '${'a' * 64}@${'b' * 63}.${'c' * 63}.${'d' * 63}.'
+          '${'e' * (length == 320 ? 63 : 59)}'
+          "${length == 321 ? '.test' : ''}";
+      expect(email.length, length);
+      expect(EmailAddress(email).isValid(), isTrue);
+      expect(lead.copyWith(email: EmailAddress(email)).isValid, length == 320);
+    }
+    for (final length in [64, 65]) {
+      expect(
+        lead.copyWith(phoneNumber: some(PhoneNumber('0' * length))).isValid,
+        length == 64,
+      );
+    }
+  });
+
   test('empty creates an invalid typed draft with no optional values', () {
     final lead = VenueLead.empty();
 

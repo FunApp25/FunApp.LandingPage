@@ -33,6 +33,23 @@ Either<ValueFailure<String>, String> validateSingleLine(String input) {
   }
 }
 
+/// Validates UTF-16 code units, matching JavaScript String.length.
+Either<ValueFailure<String>, String> validateMaxLength(
+  String input,
+  int maximumLength,
+) {
+  if (input.length <= maximumLength) {
+    return right(input);
+  } else {
+    return left(
+      ValueFailure.tooLong(
+        failedValue: input,
+        maximumLength: maximumLength,
+      ),
+    );
+  }
+}
+
 /// Validates the structural format of an email address.
 Either<ValueFailure<String>, String> validateEmail(String input) {
   final separatorIndex = input.indexOf('@');

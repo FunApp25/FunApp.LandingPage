@@ -4,6 +4,7 @@ import 'dart:ui' show CheckedState;
 import 'package:auto_route/auto_route.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,8 +40,231 @@ import 'package:http/testing.dart';
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final language in ['en', 'es', 'cy', 'be']) {
+    testWidgets(
+      'Founding Friend email limit feedback is localized in $language',
+      (tester) async {
+        final l10n = lookupAppLocalizations(Locale(language));
+        final repository = _FoundingFriendRepository(result: right(unit));
+        setTestSurface(tester, const Size(390, 1000));
+        final bloc = FoundingFriendRegistrationFormBloc(repository);
+        await _pumpPage(
+          tester,
+          FoundingFriendPage(createBloc: () => bloc),
+          locale: Locale(language),
+        );
+        for (final (name, value) in [
+          ('firstName', 'Taylor'),
+          ('lastName', 'Jones'),
+          ('age', '31'),
+        ]) {
+          await tester.enterText(
+            find.byKey(Key('${name}Field-foundingFriend')),
+            value,
+          );
+        }
+        bloc.add(
+          const FoundingFriendRegistrationFormEvent.countryChanged(
+            'Afghanistan',
+          ),
+        );
+        await tester.pump();
+        final field = find.byKey(const Key('emailField-foundingFriend'));
+        for (final length in [255, 261]) {
+          final email =
+              'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.'
+              '${'e' * (length == 255 ? 61 : 62)}'
+              "${length == 261 ? '.test' : ''}";
+          await tester.enterText(field, email);
+          await _tapSubmit(tester, 'foundingFriend');
+          expect(find.text(l10n.validationMaxLength(254)), findsOneWidget);
+          expect(repository.submissions, isEmpty);
+          expect(
+            _inputController(tester, 'email', 'foundingFriend').text,
+            email,
+          );
+        }
+        final email = 'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 60}';
+        await tester.enterText(field, email);
+        await _tapSubmit(tester, 'foundingFriend');
+        expect(repository.submissions.single.email.getOrCrash(), email);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final locale in AppLocalizations.supportedLocales) {
+    for (final width in [320.0, 390.0]) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets(
+          'complete validation feedback at $width px, $scale scale, $locale',
+          (tester) async {
+            setTestSurface(tester, Size(width, 1000));
+            final bloc = FoundingFriendRegistrationFormBloc(
+              _FoundingFriendRepository(),
+            );
+            await _pumpPage(
+              tester,
+              FoundingFriendPage(createBloc: () => bloc),
+              locale: locale,
+              textScaleFactor: scale,
+            );
+            final email = find.byKey(const Key('emailField-foundingFriend'));
+            await tester.enterText(
+              email,
+              'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 61}',
+            );
+            final focus = tester
+                .widget<EditableText>(
+                  find.descendant(
+                    of: email,
+                    matching: find.byType(EditableText),
+                  ),
+                )
+                .focusNode;
+            bloc.add(const FoundingFriendRegistrationFormEvent.submitted());
+            await tester.pumpAndSettle();
+            final message = lookupAppLocalizations(locale)
+                .validationMaxLength(254);
+            final error = find.text(message);
+            final paragraph = tester.renderObject<RenderParagraph>(error);
+            expect(paragraph.didExceedMaxLines, isFalse);
+            expect(paragraph.maxLines, isNull);
+            final painter = TextPainter(
+              text: paragraph.text,
+              textScaler: paragraph.textScaler,
+              textDirection: TextDirection.ltr,
+            )..layout(maxWidth: paragraph.size.width);
+            expect(paragraph.size.height, closeTo(painter.height, 0.01));
+            painter.dispose();
+            expect(tester.getRect(error).left, greaterThanOrEqualTo(0));
+            expect(tester.getRect(error).right, lessThanOrEqualTo(width));
+            expect(
+              tester.getRect(error).bottom,
+              lessThan(
+                tester
+                    .getTopLeft(
+                      find.byKey(const Key('ageField-foundingFriend')),
+                    )
+                    .dy,
+              ),
+            );
+            expect(
+              tester
+                  .widget<EditableText>(
+                    find.descendant(
+                      of: email,
+                      matching: find.byType(EditableText),
+                    ),
+                  )
+                  .focusNode,
+              same(focus),
+            );
+            final submit = find.byKey(
+              const Key('userSignUpSubmit-foundingFriend'),
+            );
+            final scrollable = find
+                .ancestor(of: submit, matching: find.byType(Scrollable))
+                .first;
+            await tester.scrollUntilVisible(
+              submit,
+              300,
+              scrollable: scrollable,
+            );
+            await tester.pumpAndSettle();
+            expect(submit.hitTestable(), findsOneWidget);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+  }
+
   for (final foundingFriend in [false, true]) {
     final semanticId = foundingFriend ? 'foundingFriend' : 'hereAndNow';
+
+    for (final width in [390.0, 1440.0]) {
+      testWidgets('$semanticId Next advances one field at $width px', (
+        tester,
+      ) async {
+        setTestSurface(tester, Size(width, 1000));
+        await _pumpPage(
+          tester,
+          foundingFriend ? const FoundingFriendPage() : const HereAndNowPage(),
+        );
+        for (final fields in [
+          ('firstName', 'lastName'),
+          ('lastName', 'email'),
+          ('email', 'age'),
+        ]) {
+          await tester.showKeyboard(
+            find.byKey(Key('${fields.$1}Field-$semanticId')),
+          );
+          await tester.testTextInput.receiveAction(TextInputAction.next);
+          await tester.pumpAndSettle();
+          final next = tester.widget<EditableText>(
+            find.descendant(
+              of: find.byKey(Key('${fields.$2}Field-$semanticId')),
+              matching: find.byType(EditableText),
+            ),
+          );
+          expect(next.focusNode.hasPrimaryFocus, isTrue);
+        }
+      });
+    }
+
+    testWidgets('$semanticId gender selection preserves keyboard traversal', (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(390, 2000));
+      await _pumpPage(
+        tester,
+        foundingFriend ? const FoundingFriendPage() : const HereAndNowPage(),
+      );
+      final gender = find.byKey(Key('genderField-$semanticId'));
+      await tester.tap(gender);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Woman').last);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(Key('usageReasonField-$semanticId')),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .focusNode
+            .hasPrimaryFocus,
+        isTrue,
+      );
+      for (var i = 0; i < 2; i++) {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+      }
+      expect(
+        tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(
+                  Key(
+                    foundingFriend
+                        ? 'countryField-$semanticId'
+                        : 'ageField-$semanticId',
+                  ),
+                ),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .focusNode
+            .hasPrimaryFocus,
+        isTrue,
+      );
+    });
 
     testWidgets(
       '$semanticId retains rendered drafts across responsive changes',

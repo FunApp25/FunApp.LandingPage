@@ -3,40 +3,24 @@ import 'package:fun_app_landing_page/presentation/core/extensions/build_context_
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
 
-/// Action and submission status kept visible below the scrolling venue form.
+/// Send action and submission status for the routed Venue form.
 final class VenueLeadActionFooter extends StatelessWidget {
-  /// Creates the current venue dialog action area.
+  /// Creates the Venue action area.
   const VenueLeadActionFooter({
     required this.isSubmitting,
-    required this.submissionSucceeded,
     required this.hasSubmissionFailure,
-    required this.onClose,
     required this.onSubmit,
-    this.constrainFailureHeight = true,
-    this.alignWithVenuePageDesign = false,
     super.key,
   });
 
   /// Whether a repository submission is in flight.
   final bool isSubmitting;
 
-  /// Whether the current draft was submitted successfully.
-  final bool submissionSucceeded;
-
   /// Whether the latest settled submission failed operationally.
   final bool hasSubmissionFailure;
 
-  /// Dismisses the successful dialog.
-  final VoidCallback? onClose;
-
   /// Dispatches a form submission attempt.
   final VoidCallback onSubmit;
-
-  /// Whether failure copy should flex within the legacy dialog footer.
-  final bool constrainFailureHeight;
-
-  /// Whether to use the approved routed Venue-page Send treatment.
-  final bool alignWithVenuePageDesign;
 
   @override
   Widget build(BuildContext context) {
@@ -46,50 +30,32 @@ final class VenueLeadActionFooter extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (submissionSucceeded)
-          FilledButton(
-            key: const Key('venueLeadSuccessCloseButton'),
-            onPressed: onClose,
-            child: Text(l10n.landingDialogClose),
-          )
-        else ...[
-          if (hasSubmissionFailure) ...[
-            if (constrainFailureHeight)
-              Flexible(child: _failureMessage(context))
-            else
-              _failureMessage(context),
-            const SizedBox(height: 12),
-          ],
-          if (isSubmitting) ...[
-            Semantics(
-              key: const Key('venueLeadSubmissionProgress'),
-              container: true,
-              liveRegion: true,
-              label: l10n.venueLeadSubmitting,
-              child: const LinearProgressIndicator(
-                color: AppColors.energeticPlum,
-                backgroundColor: AppColors.beigeAccent,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (alignWithVenuePageDesign)
-            BrandedFormActionButton(
-              buttonKey: const Key('venueLeadSubmitButton'),
-              arrowKey: const Key('venueLeadSubmitArrow'),
-              label: l10n.venueLeadSubmit,
-              onPressed: isSubmitting ? null : onSubmit,
-              disabledBackgroundColor: AppColors.warmOrange.withValues(
-                alpha: 0.45,
-              ),
-            )
-          else
-            FilledButton(
-              key: const Key('venueLeadSubmitButton'),
-              onPressed: isSubmitting ? null : onSubmit,
-              child: Text(l10n.venueLeadSubmit),
-            ),
+        if (hasSubmissionFailure) ...[
+          _failureMessage(context),
+          const SizedBox(height: 12),
         ],
+        if (isSubmitting) ...[
+          Semantics(
+            key: const Key('venueLeadSubmissionProgress'),
+            container: true,
+            liveRegion: true,
+            label: l10n.venueLeadSubmitting,
+            child: const LinearProgressIndicator(
+              color: AppColors.energeticPlum,
+              backgroundColor: AppColors.beigeAccent,
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        BrandedFormActionButton(
+          buttonKey: const Key('venueLeadSubmitButton'),
+          arrowKey: const Key('venueLeadSubmitArrow'),
+          label: l10n.venueLeadSubmit,
+          onPressed: isSubmitting ? null : onSubmit,
+          disabledBackgroundColor: AppColors.warmOrange.withValues(
+            alpha: 0.45,
+          ),
+        ),
       ],
     );
   }

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:fun_app_landing_page/domain/core/failures/value_failure.dart';
+import 'package:fun_app_landing_page/domain/core/validators/value_validators.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/age.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/email_address.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
@@ -37,12 +38,16 @@ abstract class FoundingFriendRegistration with _$FoundingFriendRegistration {
     marketingConsent: false,
   );
 
+  /// Validates the email against the downstream Checkout contract.
+  Either<ValueFailure<String>, String> get emailValidation =>
+      email.value.flatMap((value) => validateMaxLength(value, 254));
+
   /// The first validation failure in product-field order, when present.
   Option<ValueFailure<dynamic>> get failureOption {
     final failuresOrUnit = <Either<ValueFailure<dynamic>, Unit>>[
       firstName.failureOrUnit,
       lastName.failureOrUnit,
-      email.failureOrUnit,
+      emailValidation.map((_) => unit),
       age.failureOrUnit,
       country.failureOrUnit,
       gender.fold(

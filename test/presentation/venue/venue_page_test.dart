@@ -13,6 +13,7 @@ import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venu
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
+import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
@@ -33,6 +34,137 @@ import 'package:fun_app_landing_page/presentation/venue/widgets/venue_page_intro
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final language in ['en', 'es', 'cy', 'be']) {
+    testWidgets('Venue boundary feedback is localized in $language', (
+      tester,
+    ) async {
+      tester.binding.platformDispatcher.localesTestValue = [Locale(language)];
+      addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+      final l10n = lookupAppLocalizations(Locale(language));
+      final repository = _ControlledVenueLeadRepository();
+      setTestSurface(tester, const Size(390, 1000));
+      await _pumpDirectVenuePage(tester, repository: repository);
+      await _fillRequiredVenuePageFields(tester);
+      final name = find.byKey(const Key('venueLeadVenueNameField'));
+      final capacity = find.byKey(const Key('venueLeadVenueCapacityField'));
+      await tester.enterText(name, 'a' * 513);
+      await tester.enterText(capacity, '9007199254740992');
+      await tester.pumpAndSettle();
+      await _tapVenuePageSubmit(tester);
+      expect(repository.submittedLeads, isEmpty);
+      expect(find.text(l10n.validationMaxLength(512)), findsOneWidget);
+      expect(
+        find.text(l10n.venueLeadValidationQuantity('9007199254740991')),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<TextField>(name).controller!.text,
+        'a' * 513,
+      );
+      await tester.enterText(name, '界' * 512);
+      await tester.enterText(capacity, '9007199254740991');
+      await tester.pumpAndSettle();
+      await _tapVenuePageSubmit(tester);
+      expect(repository.submittedLeads, hasLength(1));
+      repository.completeNext(right(unit));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final width in [390.0, 1440.0]) {
+    testWidgets('Venue Next advances one field at $width px', (tester) async {
+      setTestSurface(tester, Size(width, 1000));
+      await _pumpDirectVenuePage(tester);
+      for (final fields in [
+        ('VenueName', 'VenueType'),
+        ('FirstName', 'LastName'),
+        ('LastName', 'Role'),
+        ('Role', 'Email'),
+        ('Email', 'PhoneNumber'),
+      ]) {
+        await tester.showKeyboard(
+          find.byKey(Key('venueLead${fields.$1}Field')),
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.next);
+        await tester.pumpAndSettle();
+        final next = tester.widget<EditableText>(
+          find.descendant(
+            of: find.byKey(Key('venueLead${fields.$2}Field')),
+            matching: find.byType(EditableText),
+          ),
+        );
+        expect(next.focusNode.hasPrimaryFocus, isTrue);
+      }
+    });
+  }
+
+  testWidgets(
+    'chain selection retains Tab and Shift+Tab order as count appears',
+    (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(390, 2000));
+      await _pumpDirectVenuePage(tester);
+      final menu = find.byKey(const Key('venueLeadChainStatusMenu'));
+      final fieldState = tester.state(menu);
+      for (final chain in [true, false, true]) {
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find
+              .byKey(
+                Key(
+                  chain
+                      ? 'venueChainPartOfChainOption'
+                      : 'venueChainIndependentOption',
+                ),
+              )
+              .last,
+        );
+        await tester.pumpAndSettle();
+        expect(tester.state(menu), same(fieldState));
+        expect(
+          find.byKey(const Key('venueLeadVenueCountField')),
+          chain ? findsOneWidget : findsNothing,
+        );
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pumpAndSettle();
+        final next = tester.widget<EditableText>(
+          find.descendant(
+            of: find.byKey(
+              Key(
+                chain
+                    ? 'venueLeadVenueCountField'
+                    : 'venueLeadVenueCapacityField',
+              ),
+            ),
+            matching: find.byType(EditableText),
+          ),
+        );
+        expect(next.focusNode.hasPrimaryFocus, isTrue);
+        for (var i = 0; i < 2; i++) {
+          await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+          await tester.pumpAndSettle();
+        }
+        expect(
+          tester
+              .widget<EditableText>(
+                find.descendant(
+                  of: find.byKey(const Key('venueLeadVenueTypeField')),
+                  matching: find.byType(EditableText),
+                ),
+              )
+              .focusNode
+              .hasPrimaryFocus,
+          isTrue,
+        );
+      }
+    },
+  );
+
   const eyebrow =
       'LIFE IS TOUGH FOR PEOPLE. LIFE IS TOUGH FOR VENUES. FUN APP IS '
       'ARRIVING TO HELP.';
@@ -67,6 +199,158 @@ void main() {
     expect(find.byType(LandingPage), findsOneWidget);
   });
 
+  testWidgets(
+    'approved disclosure and keyboard link preserve the Venue draft',
+    (
+      tester,
+    ) async {
+      const approvedDisclosure =
+          'By submitting this form, you acknowledge that Fun App will use the '
+          'information you provide to respond to your enquiry. Please see Fun '
+          "App's Privacy Notice for information about how it collects and "
+          'processes personal data.';
+      final semantics = tester.ensureSemantics();
+      final launched = <Uri>[];
+      setTestSurface(tester, const Size(390, 1000));
+      await _pumpDirectVenuePage(tester, onPrivacyNoticeLaunch: launched.add);
+      final name = find.byKey(const Key('venueLeadVenueNameField'));
+      await tester.enterText(name, 'Unsaved Venue Draft');
+      final disclosure = tester.widget<VenuePrivacyDisclosure>(
+        find.byType(VenuePrivacyDisclosure),
+      );
+      expect(disclosure.statement, approvedDisclosure);
+      expect(disclosure.privacyNoticeLabel, 'Privacy Notice');
+      final text = tester.widget<Text>(
+        find.descendant(
+          of: find.byKey(const Key('venuePrivacyDisclosure')),
+          matching: find.byType(Text),
+        ),
+      );
+      expect(
+        text.textSpan?.toPlainText(includeSemanticsLabels: false),
+        approvedDisclosure,
+      );
+      final link = find.byKey(const Key('venuePrivacyDisclosure'));
+      await tester.ensureVisible(link);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(link).dy,
+        greaterThan(
+          tester
+              .getBottomLeft(find.byKey(const Key('venueLeadPhoneNumberField')))
+              .dy,
+        ),
+      );
+      expect(
+        tester.getBottomLeft(link).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('venueLeadSubmitButton'))).dy,
+        ),
+      );
+      final linkSemantics = find.semantics.byLabel('Privacy Notice');
+      expect(
+        linkSemantics
+            .evaluate()
+            .single
+            .getSemanticsData()
+            .flagsCollection
+            .isLink,
+        isTrue,
+      );
+      for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.space]) {
+        Focus.of(tester.element(link)).requestFocus();
+        await tester.pump();
+        await tester.sendKeyEvent(key);
+        await tester.pump();
+      }
+      expect(launched, hasLength(2));
+      expect(launched.every((uri) => uri.fragment == '/privacy'), isTrue);
+      expect(find.byType(VenuePage), findsOneWidget);
+      expect(
+        tester.widget<TextField>(name).controller?.text,
+        'Unsaved Venue Draft',
+      );
+      semantics.dispose();
+    },
+  );
+
+  for (final reducedMotion in [false, true]) {
+    testWidgets(
+      'conditional quantities preserve input and focus with '
+      'reduced motion=$reducedMotion',
+      (
+        tester,
+      ) async {
+        tester.binding.platformDispatcher.accessibilityFeaturesTestValue =
+            FakeAccessibilityFeatures(disableAnimations: reducedMotion);
+        addTearDown(
+          tester.binding.platformDispatcher.clearAccessibilityFeaturesTestValue,
+        );
+        setTestSurface(tester, const Size(390, 1000));
+        await _pumpDirectVenuePage(tester);
+        final bloc = BlocProvider.of<VenueLeadFormBloc>(
+          tester.element(find.byKey(const Key('venueLeadForm'))),
+        );
+        final animation = find.byKey(const Key('venueLeadVenueCountAnimation'));
+        expect(animation, reducedMotion ? findsNothing : findsOneWidget);
+        final menu = find.byKey(const Key('venueLeadChainStatusMenu'));
+        await tester.ensureVisible(menu);
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('venueChainPartOfChainOption')).last,
+        );
+        await tester.pumpAndSettle();
+        for (final name in ['VenueCount', 'VenueCapacity']) {
+          final field = find.byKey(Key('venueLead${name}Field'));
+          await tester.enterText(field, 'a1.2- 3');
+          await tester.pump();
+          expect(tester.widget<TextField>(field).controller?.text, '123');
+          expect(
+            tester.widget<TextField>(field).keyboardType,
+            TextInputType.number,
+          );
+        }
+        expect(bloc.state.lead.venueCount.toNullable()?.getOrCrash(), 123);
+        expect(bloc.state.lead.venueCapacity.toNullable()?.getOrCrash(), 123);
+        final count = find.byKey(const Key('venueLeadVenueCountField'));
+        await tester.showKeyboard(count);
+        final countFocus = tester.widget<TextField>(count).focusNode!;
+        expect(countFocus.hasFocus, isTrue);
+        await tester.ensureVisible(menu);
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('venueChainIndependentOption')).last,
+        );
+        await tester.pumpAndSettle();
+        expect(count, findsNothing);
+        expect(countFocus.hasFocus, isFalse);
+        expect(bloc.state.lead.venueCount.isNone(), isTrue);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('scheme-less website passes Venue presentation unchanged', (
+    tester,
+  ) async {
+    final repository = _ControlledVenueLeadRepository();
+    await _pumpDirectVenuePage(tester, repository: repository);
+    await _fillRequiredVenuePageFields(tester);
+    await tester.enterText(
+      find.byKey(const Key('venueLeadWebsiteField')),
+      'test.com',
+    );
+    await tester.pumpAndSettle();
+    await _tapVenuePageSubmit(tester);
+    expect(repository.submittedLeads, hasLength(1));
+    expect(repository.submittedLeads.single.website.getOrCrash(), 'test.com');
+    repository.completeNext(right(unit));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('venueSuccessContent')), findsOneWidget);
+  });
+
   testWidgets('Venue page composes shared chrome and exact Figma intro', (
     tester,
   ) async {
@@ -86,7 +370,6 @@ void main() {
     expect(find.text(introFirst), findsOneWidget);
     expect(find.text(introSecond), findsOneWidget);
     expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
-    expect(find.byKey(const Key('venueLeadDialogTitle')), findsNothing);
     expect(find.byType(Checkbox), findsNothing);
     expect(find.byType(CheckboxListTile), findsNothing);
 
@@ -328,8 +611,9 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
+    final repository = _ControlledVenueLeadRepository();
     setTestSurface(tester, const Size(1440, 1200));
-    await _pumpDirectVenuePage(tester);
+    await _pumpDirectVenuePage(tester, repository: repository);
 
     expect(
       tester
@@ -347,6 +631,7 @@ void main() {
     );
     await _tapVenuePageSubmit(tester);
     expect(find.text('Required field'), findsNWidgets(6));
+    expect(repository.submittedLeads, isEmpty);
     expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
     expect(
       tester.getSize(find.byKey(const Key('venueLeadVenueNameField'))).height,
@@ -506,10 +791,6 @@ void main() {
       expect(find.byType(TextField), findsNothing);
       expect(find.byType(Checkbox), findsNothing);
       expect(find.byKey(const Key('venueLeadSubmitButton')), findsNothing);
-      expect(
-        find.byKey(const Key('venueLeadSuccessCloseButton')),
-        findsNothing,
-      );
       expect(find.text('Form Submitted'), findsNothing);
       expect(find.text('Close'), findsNothing);
 
@@ -571,33 +852,38 @@ void main() {
     },
   );
 
-  testWidgets('stale successful completion keeps the edited form visible', (
-    tester,
-  ) async {
-    final repository = _ControlledVenueLeadRepository();
-    await _pumpDirectVenuePage(tester, repository: repository);
-    await _fillRequiredVenuePageFields(tester);
-    await _tapVenuePageSubmit(tester);
+  for (final result in <Either<AppFailure, Unit>>[
+    right(unit),
+    left(const AppFailure.submissionRejected()),
+  ]) {
+    testWidgets('stale $result keeps the edited form visible', (
+      tester,
+    ) async {
+      final repository = _ControlledVenueLeadRepository();
+      await _pumpDirectVenuePage(tester, repository: repository);
+      await _fillRequiredVenuePageFields(tester);
+      await _tapVenuePageSubmit(tester);
 
-    await tester.enterText(
-      find.byKey(const Key('venueLeadVenueNameField')),
-      'Edited Venue',
-    );
-    repository.completeNext(right(unit));
-    await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('venueLeadVenueNameField')),
+        'Edited Venue',
+      );
+      repository.completeNext(result);
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
-    expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
-    expect(find.byKey(const Key('venueLeadSubmissionFailure')), findsNothing);
-    expect(repository.submittedLeads, hasLength(1));
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('venueLeadVenueNameField')))
-          .controller
-          ?.text,
-      'Edited Venue',
-    );
-  });
+      expect(find.byKey(const Key('venueSuccessContent')), findsNothing);
+      expect(find.byKey(const Key('venueLeadForm')), findsOneWidget);
+      expect(find.byKey(const Key('venueLeadSubmissionFailure')), findsNothing);
+      expect(repository.submittedLeads, hasLength(1));
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('venueLeadVenueNameField')))
+            .controller
+            ?.text,
+        'Edited Venue',
+      );
+    });
+  }
 
   testWidgets('Back and re-entry create a fresh Venue form lifecycle', (
     tester,

@@ -36,6 +36,13 @@ void main() {
   });
 
   test('country labels preserve every stored integration value', () {
+    for (final catalog in catalogs.values) {
+      final rows = (catalog['userSignUpCountryOptionsSource'] as String).split(
+        '\n',
+      );
+      expect(rows, hasLength(254));
+      expect(rows.map((row) => row.split('\t').first).toSet(), hasLength(254));
+    }
     final englishOptions = _countryOptions(
       englishMessages['userSignUpCountryOptionsSource']!,
     );
@@ -45,7 +52,7 @@ void main() {
       );
       expect(
         localizedOptions.keys,
-        orderedEquals(englishOptions.keys),
+        unorderedEquals(englishOptions.keys),
         reason: '$locale must preserve the HubSpot-compatible values',
       );
       expect(localizedOptions.values, everyElement(isNotEmpty));

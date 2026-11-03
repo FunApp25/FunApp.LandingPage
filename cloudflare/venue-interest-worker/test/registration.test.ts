@@ -46,6 +46,15 @@ const foundingFriendRegistration = {
 };
 
 describe('registration routes', () => {
+  it.each([254, 255, 261])('preserves broader registration email contract at %s units', async (length) => {
+    const email = `a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(length === 261 ? 62 : length - 194)}${length === 261 ? '.test' : ''}`;
+    expect(email.length).toBe(length);
+    for (const [endpoint, registration] of [[hereAndNowEndpoint, hereAndNowRegistration], [foundingFriendEndpoint, foundingFriendRegistration]] as const) {
+      const response = await post(endpoint, { ...registration, email }, async () => new Response(null, { status: 200 }));
+      expect(response.status).toBe(204);
+    }
+  });
+
   it('dispatches Here & Now to its server-selected form and exact mapping', async () => {
     let capturedInput: RequestInfo | URL | undefined;
     let capturedBody = '';

@@ -123,23 +123,26 @@ final class FoundingFriendPaymentStatusBloc
         ),
       );
       final result = await _repository.verifyCheckout(event.sessionId);
-      result.fold(
-        (failure) => emit(
-          FoundingFriendPaymentStatusState(
-            phase: FoundingFriendPaymentStatusPhase.unableToVerify,
-            failure: failure,
+      if (!emit.isDone) {
+        result.fold(
+          (failure) => emit(
+            FoundingFriendPaymentStatusState(
+              phase: FoundingFriendPaymentStatusPhase.unableToVerify,
+              failure: failure,
+            ),
           ),
-        ),
-        (verification) {
-          final status = FoundingFriendPaymentStatusState.verified(
-            verification,
-          );
-          if (status.phase == FoundingFriendPaymentStatusPhase.confirmed) {
-            _pendingStore.clear();
-          }
-          emit(status);
-        },
-      );
+          (verification) {
+            final status = FoundingFriendPaymentStatusState.verified(
+              verification,
+            );
+            if (status.phase == FoundingFriendPaymentStatusPhase.confirmed &&
+                _pendingStore.read()?.sessionId == event.sessionId) {
+              _pendingStore.clear();
+            }
+            emit(status);
+          },
+        );
+      }
     }
   }
 }

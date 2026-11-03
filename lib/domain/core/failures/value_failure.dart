@@ -17,6 +17,12 @@ sealed class ValueFailure<T> with _$ValueFailure<T> {
     required String failedValue,
   }) = MultiLineString<T>;
 
+  /// Creates a failure for text exceeding a UTF-16 code-unit limit.
+  const factory ValueFailure.tooLong({
+    required String failedValue,
+    required int maximumLength,
+  }) = TooLong<T>;
+
   /// Creates a failure for an invalid email address.
   const factory ValueFailure.invalidEmail({
     required String failedValue,

@@ -4,6 +4,29 @@ import 'package:fun_app_landing_page/domain/core/failures/value_failure.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/positive_integer.dart';
 
 void main() {
+  for (final (input, valid) in [
+    ('1', true),
+    ('9007199254740991', true),
+    ('9007199254740992', false),
+    ('9007199254740993', false),
+    ('999999999999999999999999999999999999999999', false),
+    ('', false),
+    (' ', false),
+    ('many', false),
+    ('-1', false),
+    ('0', false),
+    ('1.5', false),
+    ('1e3', false),
+  ]) {
+    test('quantity boundary $input is valid: $valid', () {
+      final quantity = PositiveInteger(input);
+      expect(quantity.isValid(), valid);
+      if (valid) {
+        expect(quantity.getOrCrash().toString(), input);
+      }
+    });
+  }
+
   test('parses a positive integral quantity', () {
     expect(
       PositiveInteger('42').value,

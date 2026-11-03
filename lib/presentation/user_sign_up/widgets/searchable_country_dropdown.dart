@@ -114,11 +114,6 @@ final class _SearchableCountryDropdownState
         DropdownMenuEntry<String>(
           value: option.value,
           label: option.label,
-          labelWidget: Text(
-            option.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
         ),
     ];
 

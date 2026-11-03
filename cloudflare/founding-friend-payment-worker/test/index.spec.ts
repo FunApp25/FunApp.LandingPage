@@ -22,6 +22,32 @@ const acceptingRateLimiter: RateLimiter = {
 };
 
 describe('Founding Friend payment Worker', () => {
+  it.each([
+    ['first.last+tag@EXAMPLE.com', true],
+    ['person@xn--bcher-kva.example', true],
+    [`a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(60)}`, true],
+    [`a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(61)}`, false],
+    [`a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(62)}.test`, false],
+    ['person@bücher.example', false],
+    ['δοκιμή@example.com', false],
+    [' person@example.com ', false],
+  ])('Checkout email compatibility %#', async (address, valid) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(async (input, init) => {
+      if (input.toString().includes('/v1/prices/')) {
+        return Response.json(validPrice());
+      } else {
+        const body = new URLSearchParams(init?.body as string);
+        expect(body.get('customer_email')).toBe(address);
+        return Response.json(validCreatedSession(body.get('client_reference_id')));
+      }
+    });
+    const request = createRequest('https://payment.example', { email: address, attemptId });
+    expect(new TextEncoder().encode(await request.clone().text()).length).toBeLessThan(4 * 1024);
+    const response = await handleRequest(request, productionEnv(), { upstreamFetch, paymentRateLimiter: acceptingRateLimiter });
+    expect(response.status).toBe(valid ? 201 : 400);
+    expect(upstreamFetch).toHaveBeenCalledTimes(valid ? 2 : 0);
+  });
+
   it('fails closed without provider I/O when creation is disabled', async () => {
     const upstreamFetch = vi.fn();
     const response = await handleRequest(
@@ -322,7 +348,7 @@ describe('Founding Friend payment Worker', () => {
     });
   });
 
-  it('uses stable purchase references, bodies and Stripe idempotency on retry', async () => {
+  it.each([false, true])('uses stable purchase references, bodies and Stripe idempotency on retry (lost response=%s)', async (loseResponse) => {
     const creates: RequestInit[] = [];
     const upstreamFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       if (input.toString().includes('/v1/prices/')) {
@@ -330,6 +356,9 @@ describe('Founding Friend payment Worker', () => {
       }
       creates.push(init ?? {});
       const body = new URLSearchParams(init?.body as string);
+      if (loseResponse && creates.length === 1) {
+        throw new TypeError('response lost after Session creation');
+      }
       return Response.json(
         validCreatedSession(body.get('client_reference_id'), {
           url: 'https://checkout.stripe.com/c/pay/cs_test_retry',
@@ -342,7 +371,7 @@ describe('Founding Friend payment Worker', () => {
         upstreamFetch,
         paymentRateLimiter: acceptingRateLimiter,
       });
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(loseResponse && index === 0 ? 503 : 201);
     }
 
     expect(creates).toHaveLength(2);
@@ -734,14 +763,60 @@ describe('Founding Friend payment Worker', () => {
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
-  it('classifies Stripe timeouts without exposing provider data', async () => {
+  it.each([
+    [9900, 0],
+    [0, 9900],
+    [9900, 9900],
+  ])('allows independent slow Price (%i ms) and Session (%i ms) calls', async (priceDelay, sessionDelay) => {
+    vi.useFakeTimers();
+    let priceStarted!: () => void;
+    const started = new Promise<void>((resolve) => { priceStarted = resolve; });
+    const upstreamFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const isPrice = input.toString().includes('/v1/prices/');
+      const response = isPrice
+        ? validPrice()
+        : validCreatedSession(new URLSearchParams(init?.body as string).get('client_reference_id'));
+      const delay = isPrice ? priceDelay : sessionDelay;
+      if (isPrice) priceStarted();
+      if (delay === 0) return Response.json(response);
+      return new Promise<Response>((resolve, reject) => {
+        const timer = setTimeout(() => resolve(Response.json(response)), delay);
+        init?.signal?.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(new DOMException('deadline', 'AbortError'));
+        });
+      });
+    });
+    try {
+      const pending = handleRequest(createRequest(), productionEnv(), {
+        upstreamFetch,
+        paymentRateLimiter: acceptingRateLimiter,
+      });
+      await started;
+      await vi.advanceTimersByTimeAsync(priceDelay);
+      await vi.advanceTimersByTimeAsync(sessionDelay);
+      const response = await pending;
+      expect(response.status).toBe(201);
+      expect(await response.json()).toMatchObject({ sessionId });
+      expect(upstreamFetch).toHaveBeenCalledTimes(2);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(['price', 'session'])('classifies Stripe %s timeouts without exposing provider data', async (stage) => {
     const upstreamFetch = vi.fn(
-      async (_input: RequestInfo | URL, init?: RequestInit) =>
-        new Promise<Response>((_resolve, reject) => {
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (stage === 'session' && input.toString().includes('/v1/prices/')) {
+          return Response.json(validPrice());
+        }
+        return new Promise<Response>((_resolve, reject) => {
           init?.signal?.addEventListener('abort', () => {
             reject(new DOMException('secret provider body', 'AbortError'));
           });
-        }),
+        });
+      },
     );
     const response = await handleRequest(createRequest(), productionEnv(), {
       upstreamFetch,

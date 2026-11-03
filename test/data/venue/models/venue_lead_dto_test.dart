@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fun_app_landing_page/data/venue/models/venue_interest_request.dart';
 import 'package:fun_app_landing_page/data/venue/models/venue_lead_dto.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/email_address.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
@@ -10,6 +13,29 @@ import 'package:fun_app_landing_page/domain/core/value_objects/website.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 
 void main() {
+  test('boundary values survive DTO and UTF-8 JSON without precision loss', () {
+    final name = '😀' * 256;
+    final lead = _validLead().copyWith(
+      venueName: NonEmptySingleLineText(name),
+      chainStatus: some(NonEmptySingleLineText('Part of chain')),
+      venueCount: some(PositiveInteger('9007199254740991')),
+      venueCapacity: some(PositiveInteger('1')),
+    );
+    expect(lead.isValid, isTrue);
+    final body = jsonEncode(
+      VenueInterestRequest.fromVenueLead(
+        VenueLeadDto.fromValidDomain(lead),
+      ).toJson(),
+    );
+    final decoded =
+        jsonDecode(utf8.decode(utf8.encode(body))) as Map<String, dynamic>;
+    expect(decoded['venueName'], name);
+    expect(decoded['venueCount'], 9007199254740991);
+    expect(decoded['venueCapacity'], 1);
+    expect(body, contains('"venueCount":9007199254740991'));
+    expect(utf8.encode(body).length, lessThan(16 * 1024));
+  });
+
   test('extracts validated required values and preserves optional absence', () {
     final dto = VenueLeadDto.fromValidDomain(_validLead());
 
