@@ -809,6 +809,8 @@ void main() {
         await tester.tap(checkoutRetry);
         await tester.pumpAndSettle();
         final retry = find.byKey(const Key('foundingFriendVerificationRetry'));
+        await Scrollable.ensureVisible(tester.element(retry), alignment: 0.5);
+        await tester.pumpAndSettle();
         final l10n = AppLocalizations.of(tester.element(retry));
         expect(
           find.text(l10n.foundingFriendPaymentUnableTitle),

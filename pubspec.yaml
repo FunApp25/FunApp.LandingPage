@@ -55,7 +55,6 @@ flutter:
     - assets/fonts/manrope/
     - assets/fonts/instrument_serif/
     - assets/fonts/roboto/LICENSE.txt
-    - assets/legal/
   fonts:
     - family: Roboto
       fonts:

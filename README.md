@@ -64,14 +64,11 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   [https://funapp.world/#/privacy](https://funapp.world/#/privacy). The Venue
   form's inline Privacy Notice link remains a new-tab link so a draft is
   preserved.
-  Its approved English legal copy lives in
-  `assets/legal/privacy_notice.md`. Footers show only
-  Privacy Policy. Terms, refunds/cancellations, Cookie Policy, and Cookie Banner
-  remain inaccessible through navigation and direct routes. Their source
-  documents remain unapproved and implement no consent behavior. Cookie Policy
-  renders the self-contained cookie section directly
-  from the approved Privacy Notice; approval of a standalone Cookie Policy and
-  any real cookie-consent solution remain unresolved. The
+  All five legal routes now load selected `en-GB` publications at runtime from
+  `https://legal.funapp.world/manifest.json`; the legal repository is the sole
+  content authority. The shared footer exposes Privacy Notice, Website Terms,
+  Founding Friend purchase terms, User Agreement, and Acceptable Use Policy.
+  Refund/cancellation and cookie placeholder routes remain restricted. The
   landing, form, success, Privacy, and legal-document shells share a
   viewport-aware scrolling layout: short content keeps the footer at the
   bottom of the viewport, while longer content and scaled text remain in the
@@ -106,9 +103,8 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   do not add an immutable cache policy to `canvaskit/`.
 - Flutter localization supports complete application-UI catalogs for English,
   Spanish, Welsh, and Belarusian, with English as the source and unsupported-
-  locale fallback language. The canonical Privacy Notice legal document
-  remains the approved English source pending separately approved legal
-  translations.
+  locale fallback language. Published legal documents remain English (`en-GB`); interface labels are
+  localized without translating legal prose.
 - Dart analysis follows the main Fun App Flutter project's
   `very_good_analysis` policy.
 - GitHub Pages builds Flutter directly through `subosito/flutter-action@v2`
@@ -176,7 +172,7 @@ transport sends no `legalConsentOptions`; independently verify each form's
 required fields and legal-consent settings in HubSpot before any authorized
 live test. Production registration submissions remain fail-closed even when
 these defines are present. Consent and age-eligibility decisions remain open.
-Draft legal routes remain restricted.
+Refund/cookie placeholder routes remain restricted.
 
 VS Code and VSCodium users can also launch either explicit Flutter entrypoint
 on Chrome in debug mode through the committed configurations:
@@ -223,12 +219,10 @@ puro dart run tool/prepare_intermediate_release_artifact.dart
 puro dart run tool/verify_web_resources.dart
 ```
 
-The second command removes the three review-only legal Markdown files from the
-production artifact and restores the production robots/header state if the
-same `build/web` directory previously held a staging artifact. It refuses to
-delete an unrecognized `_headers` file. The source legal files remain intact
-for review and testing, but their routes remain inaccessible in the public
-application.
+The second command rejects any bundled `assets/assets/legal` directory and
+restores production robots/header state if `build/web` previously held a staging
+artifact. It refuses to delete an unrecognized `_headers` file. No local legal
+Markdown is bundled; refund/cookie drafts remain inactive source references.
 
 ## Environment and execution guide
 
@@ -247,7 +241,7 @@ production declaration for `funapp.world`.
 | Local mocked registration Worker | Exercise first-party registration serialization, validation, rate limiting, and deterministic responses without starting payment. | Start `npm run dev` in `cloudflare/venue-interest-worker`, then run `lib/main_dev.dart` on port `7357` with `.env` and `FUN_APP_REGISTRATION_TRANSPORT=local_worker`. | **Fun App Landing + Local Mock Worker** compound; its Flutter child is **Development (Local Registration Worker)**. | Flutter at `http://localhost:7357`; registration Worker at `http://localhost:8787`. | Copy the registration `.dev.vars.example` to ignored `.dev.vars` and root `.env.example` to ignored `.env`. |
 | Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Local Mock Workers** compound; its Flutter child is **Development (Local Workers)**. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
 | Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
-| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME` and review-only legal assets and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
+| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME`, rejects bundled local legal assets, and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
 | Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate, then automatically publish the two staging API Workers and staging site. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
 | Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Production registration and payment creation remain disabled. |
 
@@ -596,10 +590,10 @@ Generated localization Dart files are local build inputs and are not committed.
 
 Flutter routing uses `auto_route` with generated typed route classes and
 `MaterialApp.router`. The public paths are `/`, `/venues`, `/privacy`,
-`/here-and-now`, `/founding-friend`, `/founding-friend/payment`, and
-`/founding-friend/payment/cancelled`; deployed URLs retain Flutter Web's hash
-form (for example, `/#/privacy`). Direct production visits to `/terms`,
-`/refunds`, `/cookies`, or `/cookie-banner` redirect to `/` without rendering
+`/terms`, `/founding-friend/purchase-terms`, `/user-agreement`,
+`/acceptable-use-policy`, `/here-and-now`, `/founding-friend`,
+`/founding-friend/payment`, and `/founding-friend/payment/cancelled`; deployed URLs retain Flutter Web's hash
+form (for example, `/#/privacy`). Visits to `/#/refunds`, `/#/cookies`, or `/#/cookie-banner` redirect to `/` without rendering
 the unfinished legal document. Unknown paths fall back to `/`. Direct-route
 loads do not synthesize a landing-page history entry, while in-app pushes,
 logo navigation, Back, and Forward are handled by Router 2. Landing-section
@@ -610,25 +604,69 @@ The generated `app_router.gr.dart` file is a local build input and remains
 uncommitted; regenerate it with the repository's standard `build_runner`
 command after changing route declarations or `@RoutePage` constructors.
 
-## Privacy Notice content and review-only legal pages
+## Published legal documents and release constraint
 
-`assets/legal/privacy_notice.md` is the canonical website representation of
-the currently approved Fun App Ltd Privacy Notice. Do not rewrite or translate
-its legal prose independently. Replace or update it only from a newly approved
-source document.
+The independent `FunApp.LegalDocumentation` repository owns content, metadata,
+versions and publication. The landing website reads only its public production
+manifest and selected JSON assets; PDFs use validated manifest references.
 
-The site exposes the notice through Flutter's GitHub-Pages-safe hash route:
+| Hash route | Publisher ID |
+| --- | --- |
+| `/#/privacy` | `privacy_notice` |
+| `/#/terms` | `terms_of_use` |
+| `/#/founding-friend/purchase-terms` | `founding_member_purchase_terms` |
+| `/#/user-agreement` | `user_agreement` |
+| `/#/acceptable-use-policy` | `acceptable_use_policy` |
 
-```text
-https://funapp.world/#/privacy
-```
+Each route resolves `active[id]["en-GB"]` and requires one matching entry.
+The data repository validates schema, metadata, timestamps, MIME, strict UTF-8,
+asset destinations and manifest/document hash equality. Hash equality is an
+identity consistency check, not an independent digest recomputation or signature.
+Requests reject redirects, share a 15-second deadline, and bound manifest/JSON
+bodies to 256 KiB/1 MiB. A missing or mismatched asset permits one fresh manifest
+resolution within that deadline. There is no persistent cache, guessed URL,
+background refresh or old bundled fallback. Browser HTTP caching follows the
+publisher's revalidation headers; one loaded snapshot remains stable per open
+route. Retry starts a fresh operation. A PDF link does not fetch or gate JSON;
+a removed PDF can report the service's 404 in its separate browser tab.
 
-During local development, append `#/privacy` to the root URL printed by
-`puro flutter run -d chrome -t lib/main_dev.dart`. The build bundles the legal
-Markdown asset directory declared in `pubspec.yaml`;
-`flutter_markdown_plus` renders every document through the shared branded
-shell, and the web link adapter handles only the approved `mailto:` contact
-links.
+The shared branded Markdown shell displays the exact title, version, English
+language, publication timestamp and effective timestamp, retaining published
+offsets. Only interface labels are localized. Legal text remains selectable;
+HTTPS/email links have focus and keyboard controls. Unsupported Markdown, raw
+HTML, images and unsafe links fail explicitly rather than dropping clauses.
+There is no arbitrary HTML execution. Browser link destinations are exposed
+through semantics. A scoped, app-lifetime listener prevents native anchor
+navigation from duplicating the existing Flutter callbacks, preserving new-tab
+form links and typed same-tab footer history. Current publications require paragraphs,
+headings, ordered/unordered lists, emphasis, autolinks and hard line breaks.
+
+**Release constraint:** all five initially selected documents have
+`effectiveAt: 2026-11-14T00:00:00+01:00` (13 November at 23:00 UTC), distinct
+from `publishedAt: 2026-11-08T11:57:22.034Z`. The page labels future-effective
+publications. Selection/publication does not establish current applicability.
+This feature branch prepares the pages; it does not authorize production
+replacement of the currently applicable notice before the effective-date
+transition is approved. If a prior applicable notice must remain available,
+obtain its authoritative source and a publication-contract decision: the public
+manifest exposes no prior applicable version. Never guess one or restore obsolete
+bundled wording as current authority. Payment/registration activation remains a
+separate approval.
+
+Here & Now links Privacy and Website Terms before submission. Founding Friend
+also links purchase terms before its automatic Checkout transition, with access
+retained in Checkout retry/cancellation presentation. These links are informational;
+they do not create acceptance, consent, eligibility rules or backend fields.
+Venue retains its optional presentation-only acknowledgement and new-tab link.
+
+`test/fixtures/legal/` contains exact public JSON responses captured on
+8 November 2026 solely for regression tests; it is not an application asset or
+runtime fallback. The refund/cookie drafts in `assets/legal/` remain unbundled
+references. Their routes still redirect home. Both artifact preparation tools
+reject accidentally bundled local legal material while preserving host metadata
+safeguards. A pre-integration build may retain a stale legal directory; build
+from a fresh `build/web` directory if the guard detects one. Roll back landing code through the existing release process, without
+silently making old legal wording current. Legal publication rollback is separate.
 
 Auto Route, Freezed, and Injectable sources are generated locally and remain
 uncommitted. Regenerate all generated Dart source after changing a route,
@@ -1010,7 +1048,7 @@ external setup requires Cloudflare Environment variables
 and exact route attachment for the two payment paths. Stripe sandbox resources
 are maintained outside the repository; see the [staging operational status](#operational-configuration-and-rollback)
 for deployment evidence and operator-reported sandbox results. Live-account
-approval and approved legal documentation remain production blockers.
+approval and approval of the legal applicability transition remain production blockers.
 
 Before activation, approve the tax treatment and then set
 `STRIPE_AUTOMATIC_TAX_ENABLED` deliberately. Enabling it also requires the
@@ -1057,7 +1095,7 @@ lib/presentation/landing/theme/ Shared landing typography and motion values
 assets/branding/             Shared Fun App logos and decorative brand shapes
 assets/landing/              Figma assets consumed by active landing sections
 assets/fonts/                Bundled Google Fonts files and OFL license assets
-assets/legal/                Approved canonical website legal content
+assets/legal/                Inactive, unbundled refund/cookie reference drafts
 test/                        Flutter widget tests for active behavior
 web/                         Flutter Web shell and web-root static inputs
 cloudflare/venue-interest-worker/ Existing first-party forms Worker
@@ -1108,7 +1146,7 @@ dependency boundaries.
 Pull requests targeting `dev` or `main` run all three Worker projects'
 typechecking, tests, and Wrangler dry runs plus Flutter formatting, generation,
 analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
-and production/staging builds through the
+legal-link browser navigation, and production/staging builds through the
 read-only `PR Checks` workflow. These checks have no staging environment or
 Cloudflare/Stripe credentials and cannot deploy. Pushes to `dev` reuse these
 checks, then automatically deploy only staging through **Deploy Staging**.
@@ -1119,7 +1157,7 @@ Hosted CI installs Flutter 3.47.2 directly through
 `subosito/flutter-action@v2`, then generates localizations and Dart sources,
 analyzes, tests, and explicitly builds `lib/main_prod.dart` without browser-side
 provider configuration. Local development continues to use Puro. The workflow
-then removes the three review-only legal Markdown assets before it uploads
+then rejects bundled local legal assets before it uploads
 `build/web` and deploys to
 [https://funapp.world](https://funapp.world).
 

@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_email.dart';
@@ -7,6 +11,7 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_logo_and_navigation.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer_navigation_item_data.dart';
 import 'package:fun_app_landing_page/presentation/landing/sections/footer/mobile_footer.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 
 /// Landing-page footer from Figma node `2262:1347`.
 final class LandingFooter extends StatelessWidget {
@@ -62,11 +67,42 @@ final class LandingFooter extends StatelessWidget {
         onSelected: onVenuesSelected,
       ),
     ];
+    void openDocument(PageRouteInfo route) {
+      if (context.router.current.name != route.routeName) {
+        unawaited(context.router.push(route));
+      }
+    }
+
     final legalItems = <FooterLegalItemData>[
       (
         semanticKey: const Key('footerPrivacyNoticeLink'),
-        label: context.l10n.landingFooterPrivacyPolicy,
+        url: Uri(fragment: LegalRoutes.privacy),
+        label: context.l10n.privacyNoticeNavigationLabel,
         onSelected: onPrivacyNoticeSelected,
+      ),
+      (
+        semanticKey: const Key('footerTermsLink'),
+        url: Uri(fragment: LegalRoutes.terms),
+        label: context.l10n.landingFooterTermsOfUse,
+        onSelected: () => openDocument(const TermsRoute()),
+      ),
+      (
+        semanticKey: const Key('footerPurchaseTermsLink'),
+        url: Uri(fragment: LegalRoutes.purchaseTerms),
+        label: context.l10n.legalPurchaseTermsLabel,
+        onSelected: () => openDocument(const PurchaseTermsRoute()),
+      ),
+      (
+        semanticKey: const Key('footerUserAgreementLink'),
+        url: Uri(fragment: LegalRoutes.userAgreement),
+        label: context.l10n.legalUserAgreementLabel,
+        onSelected: () => openDocument(const UserAgreementRoute()),
+      ),
+      (
+        semanticKey: const Key('footerAcceptableUsePolicyLink'),
+        url: Uri(fragment: LegalRoutes.acceptableUsePolicy),
+        label: context.l10n.legalAcceptableUsePolicyLabel,
+        onSelected: () => openDocument(const AcceptableUsePolicyRoute()),
       ),
     ];
     final isMobile = MediaQuery.sizeOf(context).width < 600;

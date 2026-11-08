@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
 /// Accessible footer link for an established or review-only legal route.
 final class FooterLegalLink extends StatefulWidget {
@@ -9,6 +10,7 @@ final class FooterLegalLink extends StatefulWidget {
   const FooterLegalLink({
     required this.semanticKey,
     required this.label,
+    required this.url,
     required this.onSelected,
     super.key,
   });
@@ -18,6 +20,9 @@ final class FooterLegalLink extends StatefulWidget {
 
   /// Localized visible and accessible label.
   final String label;
+
+  /// Browser-accessible destination for the link semantics.
+  final Uri url;
 
   /// Opens the established or explicitly review-only destination.
   final VoidCallback onSelected;
@@ -49,7 +54,9 @@ final class _FooterLegalLinkState extends State<FooterLegalLink> {
     return Semantics(
       key: widget.semanticKey,
       label: widget.label,
+      identifier: managedLegalLinkIdentifier,
       link: true,
+      linkUrl: widget.url,
       onTap: widget.onSelected,
       child: ExcludeSemantics(
         child: DecoratedBox(

@@ -7,6 +7,7 @@ import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_for
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_row.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
+import 'package:fun_app_landing_page/presentation/legal/widgets/legal_document_links.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchable_country_dropdown.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
@@ -391,6 +392,8 @@ final class _UserSignUpFormState extends State<UserSignUpForm> {
           ),
           const SizedBox(height: 12),
         ],
+        LegalDocumentLinks(includePurchaseTerms: _requiresCountry),
+        const SizedBox(height: 16),
         _submitButton(ctaLabel),
       ],
     );

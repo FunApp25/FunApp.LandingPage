@@ -37,7 +37,16 @@ final class AppRouter extends RootStackRouter {
     ),
     AutoRoute(page: VenueRoute.page, path: '/venues'),
     AutoRoute(page: PrivacyNoticeRoute.page, path: '/privacy'),
-    RedirectRoute(path: '/terms', redirectTo: '/'),
+    AutoRoute(page: TermsRoute.page, path: '/terms'),
+    AutoRoute(
+      page: PurchaseTermsRoute.page,
+      path: '/founding-friend/purchase-terms',
+    ),
+    AutoRoute(page: UserAgreementRoute.page, path: '/user-agreement'),
+    AutoRoute(
+      page: AcceptableUsePolicyRoute.page,
+      path: '/acceptable-use-policy',
+    ),
     RedirectRoute(path: '/refunds', redirectTo: '/'),
     RedirectRoute(path: '/cookies', redirectTo: '/'),
     RedirectRoute(path: '/cookie-banner', redirectTo: '/'),

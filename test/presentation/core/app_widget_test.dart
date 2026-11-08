@@ -17,7 +17,8 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
@@ -356,13 +357,12 @@ void main() {
     _expectRouteState(router, [LandingRoute.name], '/');
 
     for (final path in const [
-      LegalPlaceholderPage.termsRouteName,
-      LegalPlaceholderPage.cookiesRouteName,
+      LegalRoutes.cookies,
     ]) {
       expect(await tester.binding.handlePushRoute(path), isTrue);
       await tester.pumpAndSettle();
       _expectRouteState(router, [LandingRoute.name], '/');
-      expect(find.byType(LegalPlaceholderPage), findsNothing);
+      expect(find.byType(LegalDocumentPage), findsNothing);
     }
   });
 

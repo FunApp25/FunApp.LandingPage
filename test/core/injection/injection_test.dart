@@ -56,7 +56,7 @@ void main() {
       getIt<VenueLeadDataSourceInterface>(),
       isA<DevelopmentVenueLeadDataSource>(),
     );
-    expect(getIt.isRegistered<http.Client>(), isFalse);
+    expect(getIt.isRegistered<http.Client>(), isTrue);
     final bloc = getIt<VenueLeadFormBloc>();
     await bloc.close();
     expect(

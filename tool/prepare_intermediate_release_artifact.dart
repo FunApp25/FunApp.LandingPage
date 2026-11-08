@@ -1,28 +1,23 @@
 import 'dart:io';
 
-const _draftLegalAssetPaths = <String>[
-  'assets/assets/legal/cookie_banner.md',
-  'assets/assets/legal/refund_cancellation_policy.md',
-  'assets/assets/legal/terms_of_use.md',
-];
+const _legalAssetDirectory = 'assets/assets/legal';
 const _productionRobots = 'User-agent: *\nAllow: /\n';
 const _stagingHeaders = '/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n';
 
-/// Removes review-only legal documents from a compiled production artifact.
+/// Rejects local legal content and restores production artifact metadata.
 void main(List<String> arguments) {
   final artifactRoot = Directory(
     arguments.isEmpty ? 'build/web' : arguments.single,
   );
 
   if (artifactRoot.existsSync()) {
-    for (final relativePath in _draftLegalAssetPaths) {
-      final file = File('${artifactRoot.path}/$relativePath');
-      if (file.existsSync()) {
-        file.deleteSync();
-      } else {
-        stderr.writeln('Missing expected draft legal asset: ${file.path}');
-        exitCode = 1;
-      }
+    if (FileSystemEntity.typeSync(
+          '${artifactRoot.path}/$_legalAssetDirectory',
+          followLinks: false,
+        ) !=
+        FileSystemEntityType.notFound) {
+      stderr.writeln('Refusing to publish bundled local legal content.');
+      exitCode = 1;
     }
     File('${artifactRoot.path}/robots.txt')
         .writeAsStringSync(_productionRobots);

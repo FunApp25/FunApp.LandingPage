@@ -18,3 +18,10 @@ Uri privacyNoticeUrlFor(Uri base) => Uri(
 
 /// Opens an approved public destination in another browser context.
 void launchExternalLinkInNewTab(Uri uri) => launchExternalLinkInNewTabImpl(uri);
+
+/// Identifies links whose existing Flutter callbacks own browser navigation.
+const managedLegalLinkIdentifier = 'funapp-managed-legal-link';
+
+/// Prevents a semantics anchor from also replacing a form's current tab.
+void Function() installLegalLinkNavigation() =>
+    installLegalLinkNavigationImpl(managedLegalLinkIdentifier);
