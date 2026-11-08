@@ -196,7 +196,7 @@ Current implementation is evidence of repository state, not automatically a perm
 - Any future submitted marketing-consent contract, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
-- Approved Terms of Use, Refund & Cancellation Policy, and Cookie Policy copy,
+- Approved standalone Refund & Cancellation Policy and Cookie Policy copy,
   plus the production cookie-consent/preferences solution.
 
 ## 5. Repository shape

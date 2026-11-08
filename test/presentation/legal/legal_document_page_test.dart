@@ -315,7 +315,7 @@ void main() {
         addTearDown(
           tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
         );
-        await tester.pumpWidget(UniqueKeyedApp(key: UniqueKey()));
+        await tester.pumpWidget(FunAppLandingPageApp(key: UniqueKey()));
         await tester.pumpAndSettle();
         final form = tester.widget<UserSignUpForm>(find.byType(UserSignUpForm));
         expect(
@@ -344,10 +344,4 @@ void main() {
       }
     },
   );
-}
-
-class UniqueKeyedApp extends StatelessWidget {
-  const UniqueKeyedApp({super.key});
-  @override
-  Widget build(BuildContext context) => const FunAppLandingPageApp();
 }

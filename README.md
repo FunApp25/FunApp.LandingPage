@@ -685,7 +685,8 @@ puro flutter analyze
 puro flutter test
 puro flutter test --platform chrome \
   test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart \
-  test/presentation/user_sign_up/country_ordering_web_test.dart
+  test/presentation/user_sign_up/country_ordering_web_test.dart \
+  test/presentation/legal/legal_link_navigation_web_test.dart
 puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
 puro dart run tool/verify_web_resources.dart

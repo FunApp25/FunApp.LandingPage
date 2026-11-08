@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../tool/prepare_intermediate_release_artifact.dart' as production;
 
-const _draftLegalAssetPaths = <String>[
+const _obsoleteLegalAssetPaths = <String>[
   'assets/assets/legal/privacy_notice.md',
   'assets/assets/legal/cookie_banner.md',
   'assets/assets/legal/refund_cancellation_policy.md',
@@ -41,7 +41,7 @@ void main() {
       'User-agent: *\nAllow: /\n',
     );
     expect(File('${artifactRoot.path}/_headers').existsSync(), isFalse);
-    for (final relativePath in _draftLegalAssetPaths) {
+    for (final relativePath in _obsoleteLegalAssetPaths) {
       expect(File('${artifactRoot.path}/$relativePath').existsSync(), isFalse);
     }
   });
@@ -55,21 +55,19 @@ void main() {
     expect(exitCode, 1);
     expect(headers.existsSync(), isTrue);
   });
-  test(
-    'rejects obsolete and unexpected local legal assets without deleting them',
-    () {
-      for (final relativePath in [
-        ..._draftLegalAssetPaths,
-        'assets/assets/legal/unexpected.md',
-      ]) {
-        final file = File('${artifactRoot.path}/$relativePath');
-        file.parent.createSync(recursive: true);
-        file.writeAsStringSync('inactive reference');
-        production.main(<String>[artifactRoot.path]);
-        expect(exitCode, 1);
-        expect(file.readAsStringSync(), 'inactive reference');
-        file.deleteSync();
-      }
-    },
-  );
+  for (final relativePath in [
+    ..._obsoleteLegalAssetPaths,
+    'assets/assets/legal/unexpected.md',
+  ]) {
+    test('rejects $relativePath without deleting it', () {
+      final file = File('${artifactRoot.path}/$relativePath');
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('inactive reference');
+
+      production.main(<String>[artifactRoot.path]);
+
+      expect(exitCode, 1);
+      expect(file.readAsStringSync(), 'inactive reference');
+    });
+  }
 }

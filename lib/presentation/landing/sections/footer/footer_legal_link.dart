@@ -4,7 +4,7 @@ import 'package:fun_app_landing_page/presentation/landing/theme/landing_motion.d
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
-/// Accessible footer link for an established or review-only legal route.
+/// Accessible footer link for a published legal document.
 final class FooterLegalLink extends StatefulWidget {
   /// Creates a footer legal link.
   const FooterLegalLink({
@@ -24,7 +24,7 @@ final class FooterLegalLink extends StatefulWidget {
   /// Browser-accessible destination for the link semantics.
   final Uri url;
 
-  /// Opens the established or explicitly review-only destination.
+  /// Opens the published document destination.
   final VoidCallback onSelected;
 
   @override
