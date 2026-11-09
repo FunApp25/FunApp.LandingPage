@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
 import 'package:fun_app_landing_page/domain/legal/entities/legal_document.dart';
@@ -47,13 +48,51 @@ final class LegalDocumentPage extends StatefulWidget {
   State<LegalDocumentPage> createState() => _LegalDocumentPageState();
 }
 
-final class _LegalDocumentPageState extends State<LegalDocumentPage> {
+final class _LegalDocumentPageState extends State<LegalDocumentPage>
+    with AutoRouteAware {
   late Future<LegalDocument> _document;
+  AutoRouteObserver? _routeObserver;
 
   @override
   void initState() {
     super.initState();
     _document = _load();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final observer = context
+        .findAncestorWidgetOfExactType<RouterScope>()
+        ?.firstObserverOfType<AutoRouteObserver>();
+    if (observer != _routeObserver) {
+      _routeObserver?.unsubscribe(this);
+      _routeObserver = observer;
+      observer?.subscribe(this, context.routeData);
+    }
+  }
+
+  @override
+  void didPushNext() => _setTitle(context.l10n.appTitle);
+
+  @override
+  void didPop() => _setTitle(context.l10n.appTitle);
+
+  @override
+  void dispose() {
+    _routeObserver?.unsubscribe(this);
+    super.dispose();
+  }
+
+  void _setTitle(String title) {
+    unawaited(
+      SystemChrome.setApplicationSwitcherDescription(
+        ApplicationSwitcherDescription(
+          label: title,
+          primaryColor: AppColors.primary.toARGB32(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -100,70 +139,70 @@ final class _LegalDocumentPageState extends State<LegalDocumentPage> {
                 !snapshot.hasError
             ? snapshot.data
             : null;
-        return Title(
-          title:
-              '${document?.title ?? context.l10n.legalDocumentsLabel}'
-              ' | ${context.l10n.brandName}',
-          color: AppColors.primary,
-          child: Scaffold(
-            key: Key('legalDocumentPage-${widget.documentId.value}'),
-            backgroundColor: AppColors.lightForeground,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  LandingHeader(
-                    onLogoSelected: () =>
-                        openLandingSection(LandingSectionTarget.ourBelief),
-                    onOurBeliefSelected: () =>
-                        openLandingSection(LandingSectionTarget.ourBelief),
-                    onMembershipSelected: () =>
-                        openLandingSection(LandingSectionTarget.membership),
-                    onFoundingFriendsSelected: () => openLandingSection(
-                      LandingSectionTarget.foundingFriends,
+        // Reactivation rebuilds this dependency without reloading the snapshot.
+        if (ModalRoute.isCurrentOf(context) ?? true) {
+          _setTitle(
+            '${document?.title ?? context.l10n.legalDocumentsLabel}'
+            ' | ${context.l10n.brandName}',
+          );
+        }
+        return Scaffold(
+          key: Key('legalDocumentPage-${widget.documentId.value}'),
+          backgroundColor: AppColors.lightForeground,
+          body: SafeArea(
+            child: Column(
+              children: [
+                LandingHeader(
+                  onLogoSelected: () =>
+                      openLandingSection(LandingSectionTarget.ourBelief),
+                  onOurBeliefSelected: () =>
+                      openLandingSection(LandingSectionTarget.ourBelief),
+                  onMembershipSelected: () =>
+                      openLandingSection(LandingSectionTarget.membership),
+                  onFoundingFriendsSelected: () => openLandingSection(
+                    LandingSectionTarget.foundingFriends,
+                  ),
+                  onVenuesSelected: () =>
+                      openLandingSection(LandingSectionTarget.venues),
+                  onContactSelected: () => openUserSignUpExperience(
+                    context,
+                    UserSignUpExperience.hereAndNow,
+                  ),
+                ),
+                Expanded(
+                  child: ViewportFooterScrollView(
+                    scrollKey: const Key('legalDocumentScrollView'),
+                    content: _LegalDocumentCard(
+                      document: document,
+                      loading: snapshot.connectionState != ConnectionState.done,
+                      retry: _retry,
+                      onLinkLaunch: widget.onLinkLaunch,
+                      now: (widget.now ?? DateTime.now)(),
                     ),
-                    onVenuesSelected: () =>
-                        openLandingSection(LandingSectionTarget.venues),
-                    onContactSelected: () => openUserSignUpExperience(
-                      context,
-                      UserSignUpExperience.hereAndNow,
+                    footer: LandingFooter(
+                      onLogoSelected: () =>
+                          openLandingSection(LandingSectionTarget.ourBelief),
+                      onOurBeliefSelected: () =>
+                          openLandingSection(LandingSectionTarget.ourBelief),
+                      onMembershipSelected: () =>
+                          openLandingSection(LandingSectionTarget.membership),
+                      onFoundingFriendsSelected: () => openLandingSection(
+                        LandingSectionTarget.foundingFriends,
+                      ),
+                      onVenuesSelected: () =>
+                          openLandingSection(LandingSectionTarget.venues),
+                      onPrivacyNoticeSelected: () {
+                        if (widget.documentId !=
+                            LegalDocumentId.privacyNotice) {
+                          unawaited(
+                            context.router.push(PrivacyNoticeRoute()),
+                          );
+                        }
+                      },
                     ),
                   ),
-                  Expanded(
-                    child: ViewportFooterScrollView(
-                      scrollKey: const Key('legalDocumentScrollView'),
-                      content: _LegalDocumentCard(
-                        document: document,
-                        loading:
-                            snapshot.connectionState != ConnectionState.done,
-                        retry: _retry,
-                        onLinkLaunch: widget.onLinkLaunch,
-                        now: (widget.now ?? DateTime.now)(),
-                      ),
-                      footer: LandingFooter(
-                        onLogoSelected: () =>
-                            openLandingSection(LandingSectionTarget.ourBelief),
-                        onOurBeliefSelected: () =>
-                            openLandingSection(LandingSectionTarget.ourBelief),
-                        onMembershipSelected: () =>
-                            openLandingSection(LandingSectionTarget.membership),
-                        onFoundingFriendsSelected: () => openLandingSection(
-                          LandingSectionTarget.foundingFriends,
-                        ),
-                        onVenuesSelected: () =>
-                            openLandingSection(LandingSectionTarget.venues),
-                        onPrivacyNoticeSelected: () {
-                          if (widget.documentId !=
-                              LegalDocumentId.privacyNotice) {
-                            unawaited(
-                              context.router.push(PrivacyNoticeRoute()),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

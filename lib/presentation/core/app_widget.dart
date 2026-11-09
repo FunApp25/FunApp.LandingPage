@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
@@ -90,7 +91,10 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     localeListResolutionCallback: _resolveLocaleList,
-    routerConfig: _appRouter.config(includePrefixMatches: false),
+    routerConfig: _appRouter.config(
+      includePrefixMatches: false,
+      navigatorObservers: () => [AutoRouteObserver()],
+    ),
     builder: (context, child) => AppRouteDependencies(
       onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
       createVenueLeadFormBloc: widget.createVenueLeadFormBloc,
