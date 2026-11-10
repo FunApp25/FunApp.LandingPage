@@ -30,7 +30,9 @@ final class FoundingMemberCardGrid extends StatelessWidget {
       final cardWidth =
           (constraints.maxWidth - foundingMemberCardGap * (columns - 1)) /
           columns;
-      final cardHeight = foundingMemberCardHeightFor(context, cards, cardWidth);
+      final cardHeight = columns > 1
+          ? foundingMemberCardHeightFor(context, cards, cardWidth)
+          : null;
 
       return Column(
         key: Key('foundingMemberCardsColumns$columns'),
@@ -48,18 +50,13 @@ final class FoundingMemberCardGrid extends StatelessWidget {
               child: FoundingMemberCardRow(cards: cards.take(2).toList()),
             ),
             const SizedBox(height: foundingMemberCardGap),
-            FractionallySizedBox(
-              widthFactor: 0.5,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: foundingMemberCardGap / 4,
-                ),
-                child: SizedBox(
-                  height: cardHeight,
-                  child: FoundingMemberCardItem(
-                    card: cards[2],
-                    usesCoordinatedHeight: true,
-                  ),
+            Center(
+              child: SizedBox(
+                width: cardWidth,
+                height: cardHeight,
+                child: FoundingMemberCardItem(
+                  card: cards[2],
+                  usesCoordinatedHeight: true,
                 ),
               ),
             ),
