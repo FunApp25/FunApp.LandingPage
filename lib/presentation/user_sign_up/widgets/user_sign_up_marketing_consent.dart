@@ -32,6 +32,7 @@ final class UserSignUpMarketingConsent extends StatelessWidget {
     focusKey: Key('marketingConsentFocus-$semanticId'),
     visualKey: Key('marketingConsentVisual-$semanticId'),
     label: label,
+    crossAxisAlignment: CrossAxisAlignment.center,
     labelWidget: Text(
       label,
       style: AppTextStyles.bodyFontStyle(

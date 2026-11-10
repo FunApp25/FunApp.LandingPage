@@ -33,6 +33,7 @@ import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dar
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchable_country_dropdown.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -80,6 +81,14 @@ void main() {
                 matching: find.byType(InkWell),
               );
               expect(tester.getSize(control), const Size.square(44));
+              final labelCenter = tester.getCenter(find.text(label)).dy;
+              expect(tester.getCenter(control).dy, closeTo(labelCenter, 0.01));
+              expect(
+                tester
+                    .getCenter(find.byKey(Key('marketingConsentVisual-$id')))
+                    .dy,
+                closeTo(labelCenter, 0.01),
+              );
               await tester.ensureVisible(checkbox);
               tester
                   .widget<Focus>(find.byKey(Key('marketingConsentFocus-$id')))
@@ -127,6 +136,42 @@ void main() {
       );
     }
   }
+  testWidgets('single-line marketing labels remain vertically centered', (
+    tester,
+  ) async {
+    for (final width in [320.0, 1440.0]) {
+      for (final scale in [1.0, 2.0]) {
+        setTestSurface(tester, Size(width, 1000));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+              child: Scaffold(
+                body: UserSignUpMarketingConsent(
+                  semanticId: 'singleLine',
+                  label: 'Updates',
+                  value: false,
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        );
+        final label = find.text('Updates');
+        expect(tester.getSize(label).height, closeTo(28 * scale, 0.01));
+        expect(
+          tester
+              .getCenter(
+                find.byKey(const Key('marketingConsentVisual-singleLine')),
+              )
+              .dy,
+          closeTo(tester.getCenter(label).dy, 0.01),
+        );
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
   for (final language in ['en', 'es', 'cy', 'be']) {
     testWidgets(
       'Founding Friend email limit feedback is localized in $language',
