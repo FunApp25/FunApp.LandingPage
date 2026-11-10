@@ -42,7 +42,7 @@ void main() {
       expect(find.text(label), findsNWidgets(2));
     }
     expect(find.text(LandingFooter.contactEmail), findsOneWidget);
-    expect(find.text('Privacy Policy'), findsOneWidget);
+    expect(find.text('Privacy Notice'), findsOneWidget);
   });
 
   for (final example in const [
@@ -376,13 +376,13 @@ void main() {
     expect(logoRect.left, contentRect.left);
     expect(dividerRect.width, 1360);
     expect(dividerRect.top - navigationRect.bottom, 72);
-    expect(legalRect.top - dividerRect.bottom, 77);
+    expect(legalRect.top - dividerRect.bottom, 71);
     expect(legalRect.center.dy, closeTo(emailRect.center.dy, 0.01));
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    'shows only the approved Privacy legal control',
+    'shows the published legal controls',
     (
       tester,
     ) async {
@@ -391,15 +391,15 @@ void main() {
 
       final footer = find.byType(LandingFooter);
       expect(
-        find.descendant(of: footer, matching: find.text('Privacy Policy')),
+        find.descendant(of: footer, matching: find.text('Privacy Notice')),
         findsOneWidget,
       );
       final privacy = find.byKey(const Key('footerPrivacyNoticeLink'));
       final data = tester.getSemantics(privacy).getSemanticsData();
+      expect(data.linkUrl, Uri(fragment: '/privacy'));
       expect(data.flagsCollection.isLink, isTrue);
       expect(data.hasAction(SemanticsAction.tap), isTrue);
       for (final key in const [
-        Key('footerTermsLink'),
         Key('footerRefundsLink'),
         Key('footerCookiePolicyLink'),
         Key('footerCookieBannerLink'),
@@ -514,7 +514,7 @@ void main() {
     final privacyLink = tester
         .getSemantics(find.byKey(const Key('footerPrivacyNoticeLink')))
         .getSemanticsData();
-    expect(privacyLink.label, 'Privacy Policy');
+    expect(privacyLink.label, 'Privacy Notice');
     expect(privacyLink.flagsCollection.isLink, isTrue);
     expect(privacyLink.flagsCollection.isButton, isFalse);
     expect(privacyLink.hasAction(SemanticsAction.tap), isTrue);

@@ -9,6 +9,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
 import 'package:fun_app_landing_page/presentation/landing/theme/landing_text_styles.dart';
+import 'package:fun_app_landing_page/presentation/legal/widgets/legal_document_links.dart';
 
 /// Checkout preparation content shown only after confirmed registration.
 final class FoundingFriendCheckoutPanel extends StatelessWidget {
@@ -79,14 +80,18 @@ final class FoundingFriendCheckoutPanel extends StatelessWidget {
             title: title,
             body: body,
             busy: busy,
-            footer: showRetry
-                ? BrandedFormActionButton(
+            footer: Column(
+              children: [
+                const LegalDocumentLinks(includePurchaseTerms: true),
+                if (showRetry)
+                  BrandedFormActionButton(
                     buttonKey: const Key('foundingFriendCheckoutRetry'),
                     arrowKey: const Key('foundingFriendCheckoutRetryArrow'),
                     label: l10n.foundingFriendPaymentRetryCheckout,
                     onPressed: retry,
-                  )
-                : const SizedBox.shrink(),
+                  ),
+              ],
+            ),
           );
         },
       );

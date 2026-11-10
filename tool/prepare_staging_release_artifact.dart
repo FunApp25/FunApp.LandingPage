@@ -1,10 +1,6 @@
 import 'dart:io';
 
-const _draftLegalAssetPaths = <String>[
-  'assets/assets/legal/cookie_banner.md',
-  'assets/assets/legal/refund_cancellation_policy.md',
-  'assets/assets/legal/terms_of_use.md',
-];
+const _legalAssetDirectory = 'assets/assets/legal';
 const _productionRobotsMeta = '<meta name="robots" content="index, follow">';
 const _stagingRobotsMeta =
     '<meta name="robots" content="noindex, nofollow, noarchive">';
@@ -21,7 +17,7 @@ void main(List<String> arguments) {
   );
 
   if (artifactRoot.existsSync()) {
-    _removeReviewOnlyLegalAssets(artifactRoot);
+    _rejectLocalLegalAssets(artifactRoot);
     _removeProductionCustomDomain(artifactRoot);
     _prepareIndex(artifactRoot);
     _prepareRobots(artifactRoot);
@@ -32,15 +28,14 @@ void main(List<String> arguments) {
   }
 }
 
-void _removeReviewOnlyLegalAssets(Directory artifactRoot) {
-  for (final relativePath in _draftLegalAssetPaths) {
-    final file = File('${artifactRoot.path}/$relativePath');
-    if (file.existsSync()) {
-      file.deleteSync();
-    } else {
-      stderr.writeln('Missing expected draft legal asset: ${file.path}');
-      exitCode = 1;
-    }
+void _rejectLocalLegalAssets(Directory artifactRoot) {
+  if (FileSystemEntity.typeSync(
+        '${artifactRoot.path}/$_legalAssetDirectory',
+        followLinks: false,
+      ) !=
+      FileSystemEntityType.notFound) {
+    stderr.writeln('Refusing to publish bundled local legal content.');
+    exitCode = 1;
   }
 }
 

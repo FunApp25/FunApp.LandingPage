@@ -74,23 +74,26 @@ Current implementation is evidence of repository state, not automatically a perm
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
 - Flutter generated localization supports complete application-UI catalogs for
   English, Spanish, Welsh, and Belarusian; English is the source and the
-  fallback for unsupported locales. The canonical Privacy Notice legal prose
-  remains English until separately approved legal translations are supplied.
+  fallback for unsupported locales. Published legal prose remains English (`en-GB`) until the legal publisher
+  supplies approved translations.
 - GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
 - GitHub Pages builds Flutter directly through `subosito/flutter-action@v2` and
   publishes `build/web` from the repository root at base href `/`; local Flutter
   and Dart commands continue to use Puro.
-- The approved English Fun App Ltd Privacy Notice is hosted at
-  `https://funapp.world/#/privacy`. Its canonical website source is
-  `assets/legal/privacy_notice.md`; the hash route supports direct access,
-  refresh, and browser history without requiring a GitHub Pages rewrite.
-- Footers expose only Privacy Policy. Terms of Use, Refund & Cancellation
-  Policy, Cookie Policy, and Cookie Banner are hidden and their direct routes
-  redirect to `/`. Those documents remain English review-only documents that do
-  not save preferences or control cookies. Cookie Policy reuses the
-  self-contained cookie section from the canonical approved Privacy Notice
-  without duplicate legal copy. Approval of a standalone Cookie Policy remains
-  open.
+- Legal document content, versions, metadata and publication are owned solely by
+  `FunApp.LegalDocumentation`. Flutter resolves the public production manifest at
+  `https://legal.funapp.world/manifest.json` and selected `en-GB` JSON assets.
+  Public hash routes are `/privacy`, `/terms`,
+  `/founding-friend/purchase-terms`, `/user-agreement`, and
+  `/acceptable-use-policy`. Footers expose all five. Refund/cookie placeholder
+  hashes remain redirects to `/`; they create no consent behavior.
+- Publication is distinct from effectiveness. The five initial releases were
+  published at `2026-11-08T11:57:22.034Z` and become effective at
+  `2026-11-14T00:00:00+01:00` (13 November 23:00 UTC). Future-effective
+  publications are labelled explicitly. This implementation does not authorize
+  production replacement before an approved applicability transition. The
+  service does not expose prior applicable versions; any requirement to retain
+  one needs an authoritative source and publication-contract decision.
 - Landing, form, success, Privacy, and legal-document pages use one reusable
   viewport-aware scrolling shell. When content is short, the shared footer
   rests at the bottom of the available viewport; longer or text-scaled content
@@ -98,7 +101,7 @@ Current implementation is evidence of repository state, not automatically a perm
   section, or clipping.
 - The landing and shared routed-page footers open the hosted Privacy Notice in
   the current app tab. The venue form shows
-  the approved English privacy acknowledgement immediately before submission,
+  its existing privacy acknowledgement immediately before submission,
   with an inline link that opens the same page in a new tab, preserving the
   current form draft. Its checkbox is presentation-local, optional, and
   non-persistent. This disclosure remains informational: no submitted consent
@@ -161,7 +164,7 @@ Current implementation is evidence of repository state, not automatically a perm
   minimal Worker-first `/api` handler that returns `404` when no more-specific
   API Worker Route exists. Its `workers.dev` and preview URLs are disabled, and
   it declares no route or Custom Domain. The prepared staging artifact removes
-  the production `CNAME`, removes review-only legal assets, uses a staging
+  the production `CNAME`, rejects bundled local legal assets, uses a staging
   canonical URL, and adds HTML, robots, and response-header noindex controls.
   Cloudflare Access remains the required access-control boundary; noindex is not
   authorization.
@@ -193,7 +196,7 @@ Current implementation is evidence of repository state, not automatically a perm
 - Any future submitted marketing-consent contract, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
-- Approved Terms of Use, Refund & Cancellation Policy, and Cookie Policy copy,
+- Approved standalone Refund & Cancellation Policy and Cookie Policy copy,
   plus the production cookie-consent/preferences solution.
 
 ## 5. Repository shape
@@ -204,11 +207,9 @@ The repository is an active Flutter Web project:
   venue-lead domain/application/data foundation.
 - `lib/l10n/` contains committed ARB localization inputs; generated localization Dart files remain uncommitted.
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
-- `assets/legal/privacy_notice.md` is the canonical website representation of
-  the currently approved English Privacy Notice.
-- `assets/legal/` also contains explicitly review-only Markdown documents for
-  unresolved legal routes; the Cookie Policy route reads its copy from the
-  canonical Privacy Notice instead of a second document.
+- `assets/legal/` retains inactive, unbundled refund/cookie reference drafts.
+  No local legal Markdown is consumed at runtime. Exact public JSON fixtures
+  under `test/fixtures/legal/` are test data only.
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
 - `cloudflare/venue-interest-worker/` contains the isolated TypeScript
@@ -451,11 +452,34 @@ above, logo/navigation and
 email/legal content form the two approved desktop rows around the full-width
 divider;
 intermediate widths stack those groups without fixed heights or horizontal
-overflow. Privacy Policy opens the authoritative hosted Privacy Notice and is
-the only legal control visible. Terms of Use, Refund & Cancellation Policy,
-Cookie Policy, and Cookie Banner remain inaccessible until their approval and
-release requirements are resolved; their presence establishes no consent
-behavior.
+overflow. The five published-document links wrap using the shared legal controls.
+Footer navigation uses typed same-tab routes. Contextual registration links open
+separate current-origin hash pages so form drafts survive. They are informational,
+not acceptance controls. The purchase document is available before initial
+Founding Friend submission and in Checkout retry/cancellation presentation.
+Refund/cookie hashes remain restricted.
+
+Legal pages reuse the branded card and viewport-aware shell. A small domain
+repository contract and one HTTP data implementation resolve each selected
+`en-GB` publication; no BLoC is needed. Requests validate production schema,
+metadata, strict offset timestamps/calendar dates, MIME, strict UTF-8 and exact
+manifest-derived HTTPS paths on `legal.funapp.world`. Redirects are rejected.
+The entire load has a 15-second deadline, with 256 KiB manifest and 1 MiB JSON
+limits. One re-resolution handles a disappearing/mismatched asset. Hashes must
+match between manifest and JSON; no independent runtime digest recomputation is
+claimed. There is no persisted cache or bundled fallback. HTTP cache revalidation
+remains publisher-owned; a route retains its loaded snapshot until retry or exit.
+Historical asset availability is not guaranteed. PDF navigation is independent
+of JSON rendering and may return 404 after a later publication.
+
+The exact title is the page H1. Original Markdown paragraphs, heading levels,
+list ordering, emphasis and hard breaks remain intact. Text is selectable and
+links support keyboard focus and activation. HTTPS and mailto destinations are
+validated; raw HTML, images, unsafe URLs and unsupported constructs fail explicitly.
+The UI labels version, `en-GB`, publication/effective timestamps with their source
+offsets and future-effective status. All four UI locales retain English legal
+prose and show a language explanation outside English. There is no automatic
+effective-date version selection or invented legal translation.
 
 The cancellation FAQ asks for 48 hours' notice for the ongoing Here & Now
 subscription; the existing Founding Friend
@@ -898,6 +922,10 @@ capabilities as implemented.
 
 ### Open
 
+- Approval of the pre-effective-date legal transition; historical applicability
+  cannot be inferred from the manifest. Existing Venue disclosure catalogs contain
+  localized text despite earlier English-only documentation; translation approval
+  is not established or changed by this integration.
 - An approved consent/privacy field contract and any corresponding HubSpot
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.
@@ -957,10 +985,9 @@ Backend implementation must be driven by an actual approved contract rather than
 - Do not add analytics, advertising, non-essential cookies, session replay,
   marketing pixels, or visitor-profiling telemetry while the approved Privacy
   Notice states that those technologies are not currently used.
-- The approved Privacy Notice legal prose is maintained in
-  `assets/legal/privacy_notice.md`. It must not be changed casually. A future
-  approved notice must replace or update that canonical source from the newly
-  approved document without independent rewriting or translation.
+- The legal repository/service owns legal prose. Never rewrite or translate it
+  independently, log document responses with user information, or silently use
+  old bundled wording as a current legal fallback.
 - Evaluate dependency changes for supply-chain, maintenance, privacy, and data-handling impact.
 - Settle consent, retention, and deletion requirements before collecting the corresponding personal data.
 - Never introduce client secrets into this public web application.
@@ -981,7 +1008,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The public routes are `/`, `/venues`, `/privacy`, `/here-and-now`, `/founding-friend`, `/founding-friend/payment`, and `/founding-friend/payment/cancelled`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Draft-legal hashes redirect to `/` while the public form and payment-return hashes support direct access, refresh, and browser history. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The public routes are `/`, `/venues`, `/privacy`, `/terms`, `/founding-friend/purchase-terms`, `/user-agreement`, `/acceptable-use-policy`, `/here-and-now`, `/founding-friend`, `/founding-friend/payment`, and `/founding-friend/payment/cancelled`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Refund/cookie placeholder hashes redirect to `/` while the public form and payment-return hashes support direct access, refresh, and browser history. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -1075,7 +1102,7 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   the operator; current evidence and local undeployed changes are recorded in
   [README's operational status](README.md#operational-configuration-and-rollback).
   Staging credentials are not stored in this repository. Stripe live-account
-  approval and approved legal documentation remain outstanding. Later
+  approval and approval of the legal applicability transition remain outstanding. Later
   production setup requires `STRIPE_PRICE_ID`,
   `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
   `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
@@ -1097,9 +1124,8 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   `subosito/flutter-action@v2`, generates localizations and Dart sources,
   analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`
   without browser-side HubSpot configuration. Local development continues to
-  use Puro. The workflow then removes the three
-  review-only legal Markdown files from `build/web`. The production artifact
-  does not publish those draft source documents as static assets.
+  use Puro. The workflow then rejects bundled local legal content in `build/web`. No
+  local legal document is published as a static landing asset.
 - Only pushes to `main` and manual dispatches run the production Pages
   deployment. Its `github-pages` environment remains unchanged. Production
   Worker deployment workflows remain manual-only and no live Stripe payment
@@ -1234,8 +1260,8 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   still require remote fonts; an incomplete local fallback URL must not replace
   this working behavior.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
-- Production builds include the canonical Privacy Notice asset and remove the
-  three review-only Markdown files during artifact preparation; protected
+- Production/staging builds exclude local legal assets and reject stale bundled
+  legal directories during artifact preparation; unpublished refund/cookie
   hashes redirect without a Pages rewrite or `404.html` fallback. Client-side
   routing remains neither backend authorization nor a security boundary.
 - The archived Astro project is not built or deployed.

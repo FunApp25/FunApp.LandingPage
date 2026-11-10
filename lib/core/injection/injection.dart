@@ -12,6 +12,7 @@ import 'package:fun_app_landing_page/data/founding_friend_payment/data_sources/w
 import 'package:fun_app_landing_page/data/founding_friend_payment/deferred_founding_friend_payment_repository.dart';
 import 'package:fun_app_landing_page/data/founding_friend_payment/founding_friend_payment_repository.dart';
 import 'package:fun_app_landing_page/data/founding_friend_payment/session_pending_founding_friend_payment_store.dart';
+import 'package:fun_app_landing_page/data/legal/legal_document_repository.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/hubspot_user_registration_data_source.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/user_registration_data_source_interface.dart';
 import 'package:fun_app_landing_page/data/user_registration/data_sources/worker_user_registration_data_source.dart';
@@ -24,6 +25,7 @@ import 'package:fun_app_landing_page/data/venue/data_sources/production_venue_le
 import 'package:fun_app_landing_page/data/venue/data_sources/venue_lead_data_source_interface.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/founding_friend_payment_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/pending_founding_friend_payment_store_interface.dart';
+import 'package:fun_app_landing_page/domain/legal/legal_document_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/here_and_now_registration_repository_interface.dart';
 import 'package:get_it/get_it.dart';
@@ -40,6 +42,7 @@ final GetIt getIt = GetIt.instance;
 @InjectableInit(
   preferRelativeImports: true,
   ignoreUnregisteredTypes: [
+    LegalDocumentRepositoryInterface,
     VenueLeadDataSourceInterface,
     HereAndNowRegistrationRepositoryInterface,
     FoundingFriendRegistrationRepositoryInterface,
@@ -150,6 +153,10 @@ void configureDependencies(
     );
   }
 
+  _ensureHttpClient(null);
+  getIt.registerLazySingleton<LegalDocumentRepositoryInterface>(
+    () => LegalDocumentRepository(client: getIt<http.Client>()),
+  );
   getIt
     ..registerLazySingleton<PendingFoundingFriendPaymentStoreInterface>(
       SessionPendingFoundingFriendPaymentStore.new,

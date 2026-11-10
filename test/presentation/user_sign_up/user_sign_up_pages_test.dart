@@ -1383,7 +1383,8 @@ TextEditingController _inputController(
 
 Future<void> _tapSubmit(WidgetTester tester, String semanticId) async {
   final submit = find.byKey(Key('userSignUpSubmit-$semanticId'));
-  await tester.ensureVisible(submit);
+  await tester.pumpAndSettle();
+  await Scrollable.ensureVisible(tester.element(submit), alignment: 0.5);
   await tester.pumpAndSettle();
   await tester.tap(submit);
   await tester.pump();

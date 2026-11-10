@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
@@ -7,6 +8,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
 import 'package:fun_app_landing_page/presentation/founding_friend_payment/pages/founding_friend_payment_return_page.dart';
 import 'package:fun_app_landing_page/presentation/founding_friend_payment/utils/checkout_redirect.dart';
+import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/venue/pages/venue_page.dart';
@@ -55,10 +57,12 @@ final class FunAppLandingPageApp extends StatefulWidget {
 
 final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
   late final AppRouter _appRouter;
+  late final void Function() _removeLegalLinkNavigation;
 
   @override
   void initState() {
     super.initState();
+    _removeLegalLinkNavigation = installLegalLinkNavigation();
     _appRouter = AppRouter();
     _appRouter.routeInfoProvider(
       initialRouteInformation: RouteInformation(
@@ -71,6 +75,7 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
 
   @override
   void dispose() {
+    _removeLegalLinkNavigation();
     _appRouter.dispose();
     super.dispose();
   }
@@ -86,7 +91,10 @@ final class _FunAppLandingPageAppState extends State<FunAppLandingPageApp> {
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     localeListResolutionCallback: _resolveLocaleList,
-    routerConfig: _appRouter.config(includePrefixMatches: false),
+    routerConfig: _appRouter.config(
+      includePrefixMatches: false,
+      navigatorObservers: () => [AutoRouteObserver()],
+    ),
     builder: (context, child) => AppRouteDependencies(
       onPrivacyNoticeLaunch: widget.onPrivacyNoticeLaunch,
       createVenueLeadFormBloc: widget.createVenueLeadFormBloc,

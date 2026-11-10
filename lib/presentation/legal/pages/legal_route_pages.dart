@@ -1,51 +1,52 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
+import 'package:fun_app_landing_page/domain/legal/entities/legal_document.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
 
-/// Typed route for the review-only Terms document.
+/// Stable route for the selected published legal document.
 @RoutePage()
 final class TermsPage extends StatelessWidget {
-  /// Creates the Terms route page.
+  /// Creates the document page.
   const TermsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const LegalPlaceholderPage(
-    kind: LegalPlaceholderKind.terms,
+  Widget build(BuildContext context) => const LegalDocumentPage(
+    documentId: LegalDocumentId.termsOfUse,
   );
 }
 
-/// Typed route for the review-only Refund and Cancellation document.
+/// Stable route for the selected published legal document.
 @RoutePage()
-final class RefundsPage extends StatelessWidget {
-  /// Creates the Refund and Cancellation route page.
-  const RefundsPage({super.key});
+final class PurchaseTermsPage extends StatelessWidget {
+  /// Creates the document page.
+  const PurchaseTermsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const LegalPlaceholderPage(
-    kind: LegalPlaceholderKind.refunds,
+  Widget build(BuildContext context) => const LegalDocumentPage(
+    documentId: LegalDocumentId.foundingFriendPurchaseTerms,
   );
 }
 
-/// Typed route for the Cookie Policy excerpt.
+/// Stable route for the selected published legal document.
 @RoutePage()
-final class CookiePolicyPage extends StatelessWidget {
-  /// Creates the Cookie Policy route page.
-  const CookiePolicyPage({super.key});
+final class UserAgreementPage extends StatelessWidget {
+  /// Creates the document page.
+  const UserAgreementPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const LegalPlaceholderPage(
-    kind: LegalPlaceholderKind.cookies,
+  Widget build(BuildContext context) => const LegalDocumentPage(
+    documentId: LegalDocumentId.userAgreement,
   );
 }
 
-/// Typed route for the review-only Cookie Banner document.
+/// Stable route for the selected published legal document.
 @RoutePage()
-final class CookieBannerPage extends StatelessWidget {
-  /// Creates the Cookie Banner route page.
-  const CookieBannerPage({super.key});
+final class AcceptableUsePolicyPage extends StatelessWidget {
+  /// Creates the document page.
+  const AcceptableUsePolicyPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const LegalPlaceholderPage(
-    kind: LegalPlaceholderKind.cookieBanner,
+  Widget build(BuildContext context) => const LegalDocumentPage(
+    documentId: LegalDocumentId.acceptableUsePolicy,
   );
 }

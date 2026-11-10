@@ -249,12 +249,9 @@ void main() {
       );
       final linkSemantics = find.semantics.byLabel('Privacy Notice');
       expect(
-        linkSemantics
-            .evaluate()
-            .single
-            .getSemanticsData()
-            .flagsCollection
-            .isLink,
+        linkSemantics.evaluate().any(
+          (node) => node.getSemanticsData().flagsCollection.isLink,
+        ),
         isTrue,
       );
       for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.space]) {

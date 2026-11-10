@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../tool/prepare_staging_release_artifact.dart' as staging;
 
-const _draftLegalAssetPaths = <String>[
+const _obsoleteLegalAssetPaths = <String>[
+  'assets/assets/legal/privacy_notice.md',
   'assets/assets/legal/cookie_banner.md',
   'assets/assets/legal/refund_cancellation_policy.md',
   'assets/assets/legal/terms_of_use.md',
@@ -18,11 +19,7 @@ void main() {
     artifactRoot = Directory.systemTemp.createTempSync(
       'funapp-staging-artifact-',
     );
-    for (final relativePath in _draftLegalAssetPaths) {
-      final file = File('${artifactRoot.path}/$relativePath');
-      file.parent.createSync(recursive: true);
-      file.writeAsStringSync('review only');
-    }
+
     File('${artifactRoot.path}/CNAME').writeAsStringSync('funapp.world\n');
     File('${artifactRoot.path}/index.html').writeAsStringSync('''
 <meta name="robots" content="index, follow">
@@ -40,7 +37,7 @@ void main() {
 
     expect(exitCode, 0);
     expect(File('${artifactRoot.path}/CNAME').existsSync(), false);
-    for (final relativePath in _draftLegalAssetPaths) {
+    for (final relativePath in _obsoleteLegalAssetPaths) {
       expect(File('${artifactRoot.path}/$relativePath').existsSync(), false);
     }
     expect(
@@ -60,4 +57,19 @@ void main() {
       '/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n',
     );
   });
+  for (final relativePath in [
+    ..._obsoleteLegalAssetPaths,
+    'assets/assets/legal/unexpected.md',
+  ]) {
+    test('rejects $relativePath without deleting it', () {
+      final file = File('${artifactRoot.path}/$relativePath');
+      file.parent.createSync(recursive: true);
+      file.writeAsStringSync('inactive reference');
+
+      staging.main(<String>[artifactRoot.path]);
+
+      expect(exitCode, 1);
+      expect(file.readAsStringSync(), 'inactive reference');
+    });
+  }
 }

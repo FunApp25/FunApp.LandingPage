@@ -11,7 +11,8 @@ import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interfac
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
@@ -21,10 +22,9 @@ import '../landing/landing_test_helpers.dart';
 
 void main() {
   const protectedLegalPaths = <String>[
-    LegalPlaceholderPage.termsRouteName,
-    LegalPlaceholderPage.refundsRouteName,
-    LegalPlaceholderPage.cookiesRouteName,
-    LegalPlaceholderPage.cookieBannerRouteName,
+    LegalRoutes.refunds,
+    LegalRoutes.cookies,
+    LegalRoutes.cookieBanner,
   ];
 
   testWidgets('registration forms support direct route initialization', (
@@ -165,7 +165,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LandingPage), findsOneWidget, reason: path);
-      expect(find.byType(LegalPlaceholderPage), findsNothing, reason: path);
+      expect(find.byType(LegalDocumentPage), findsNothing, reason: path);
       final router = tester.element(find.byType(LandingPage)).router;
       expect(router.currentPath, '/', reason: path);
       expect(router.stackData, hasLength(1), reason: path);
@@ -182,26 +182,29 @@ void main() {
       expect(await tester.binding.handlePushRoute(path), isTrue, reason: path);
       await tester.pumpAndSettle();
       expect(find.byType(LandingPage), findsOneWidget, reason: path);
-      expect(find.byType(LegalPlaceholderPage), findsNothing, reason: path);
+      expect(find.byType(LegalDocumentPage), findsNothing, reason: path);
       expect(router.currentPath, '/', reason: path);
       expect(router.stackData, hasLength(1), reason: path);
     }
   });
 
-  testWidgets('production exposes only Privacy in the landing footer', (
-    tester,
-  ) async {
-    setTestSurface(tester, const Size(1440, 900));
-    await _pumpPublicApp(tester);
+  testWidgets(
+    'footer exposes published documents and excludes unpublished policies',
+    (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(1440, 900));
+      await _pumpPublicApp(tester);
 
-    final footer = find.byKey(const Key('footerLegalItems'));
-    await tester.ensureVisible(footer);
-    expect(find.byKey(const Key('footerPrivacyNoticeLink')), findsOneWidget);
-    expect(find.byKey(const Key('footerTermsLink')), findsNothing);
-    expect(find.byKey(const Key('footerRefundsLink')), findsNothing);
-    expect(find.byKey(const Key('footerCookiePolicyLink')), findsNothing);
-    expect(find.byKey(const Key('footerCookieBannerLink')), findsNothing);
-  });
+      final footer = find.byKey(const Key('footerLegalItems'));
+      await tester.ensureVisible(footer);
+      expect(find.byKey(const Key('footerPrivacyNoticeLink')), findsOneWidget);
+      expect(find.byKey(const Key('footerTermsLink')), findsOneWidget);
+      expect(find.byKey(const Key('footerRefundsLink')), findsNothing);
+      expect(find.byKey(const Key('footerCookiePolicyLink')), findsNothing);
+      expect(find.byKey(const Key('footerCookieBannerLink')), findsNothing);
+    },
+  );
 
   testWidgets('Venue and Privacy routes remain available', (tester) async {
     await _pumpPublicApp(tester);

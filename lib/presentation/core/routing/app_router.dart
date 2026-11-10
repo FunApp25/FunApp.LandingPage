@@ -5,6 +5,7 @@ import 'package:fun_app_landing_page/presentation/founding_friend_payment/pages/
 import 'package:fun_app_landing_page/presentation/founding_friend_payment/utils/checkout_redirect.dart';
 import 'package:fun_app_landing_page/presentation/landing/navigation/landing_section_target.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/legal/pages/legal_route_pages.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
@@ -36,11 +37,20 @@ final class AppRouter extends RootStackRouter {
       path: '/founding-friend/payment/cancelled',
     ),
     AutoRoute(page: VenueRoute.page, path: '/venues'),
-    AutoRoute(page: PrivacyNoticeRoute.page, path: '/privacy'),
-    RedirectRoute(path: '/terms', redirectTo: '/'),
-    RedirectRoute(path: '/refunds', redirectTo: '/'),
-    RedirectRoute(path: '/cookies', redirectTo: '/'),
-    RedirectRoute(path: '/cookie-banner', redirectTo: '/'),
+    AutoRoute(page: PrivacyNoticeRoute.page, path: LegalRoutes.privacy),
+    AutoRoute(page: TermsRoute.page, path: LegalRoutes.terms),
+    AutoRoute(
+      page: PurchaseTermsRoute.page,
+      path: LegalRoutes.purchaseTerms,
+    ),
+    AutoRoute(page: UserAgreementRoute.page, path: LegalRoutes.userAgreement),
+    AutoRoute(
+      page: AcceptableUsePolicyRoute.page,
+      path: LegalRoutes.acceptableUsePolicy,
+    ),
+    RedirectRoute(path: LegalRoutes.refunds, redirectTo: '/'),
+    RedirectRoute(path: LegalRoutes.cookies, redirectTo: '/'),
+    RedirectRoute(path: LegalRoutes.cookieBanner, redirectTo: '/'),
     RedirectRoute(path: '*', redirectTo: '/'),
   ];
 }
