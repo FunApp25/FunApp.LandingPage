@@ -229,9 +229,7 @@ final class _UserSignUpIntroduction extends StatelessWidget {
       UserSignUpExperience.foundingFriend =>
         l10n.userSignUpFoundingFriendHeadingEmphasis,
     };
-    final leading = heading.endsWith(emphasis)
-        ? heading.substring(0, heading.length - emphasis.length)
-        : heading;
+    final emphasisStart = heading.indexOf(emphasis);
     final headingStyle = LandingTextStyles.heroHeadline.copyWith(
       fontSize: mobile ? 36 : 60,
       height: mobile ? 46 / 36 : 70 / 60,
@@ -262,10 +260,18 @@ final class _UserSignUpIntroduction extends StatelessWidget {
               excludeSemantics: true,
               child: Text.rich(
                 TextSpan(
-                  text: leading,
                   style: headingStyle,
                   children: [
-                    TextSpan(text: emphasis, style: emphasisStyle),
+                    if (emphasisStart >= 0) ...[
+                      TextSpan(text: heading.substring(0, emphasisStart)),
+                      TextSpan(text: emphasis, style: emphasisStyle),
+                      TextSpan(
+                        text: heading.substring(
+                          emphasisStart + emphasis.length,
+                        ),
+                      ),
+                    ] else
+                      TextSpan(text: heading),
                   ],
                 ),
                 key: Key('userSignUpHeading-${experience.name}'),

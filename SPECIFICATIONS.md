@@ -352,7 +352,10 @@ pricing controls retain their approved appearance and navigate to the public
 Pricing cards use three, two,
 or one column based on usable card width, and Founding Friend benefit cards
 similarly reflow from the desktop intro-plus-three-card composition without
-forcing desktop heights onto narrow single-column layouts.
+forcing desktop heights onto narrow single-column layouts. Multi-column benefit
+cards share a height derived from the tallest localized, text-scaled content,
+including the third card in the two-column layout. Single-column cards fill the
+available width while retaining content-driven heights.
 
 Header and footer section navigation scrolls within the single landing page
 while the header remains fixed above the scrolling content. The header and
@@ -431,8 +434,9 @@ Below a 600px outer viewport width, Problem, Membership, Limited Offer, Welcome,
 and FAQ opt into the approved mobile 16px page bounds and section-specific
 Figma rhythm and type roles. Membership remains a one-column, naturally sized
 pricing-card stack with its approved reveal unchanged. Its Founding Friend
-supporting line follows the distinct approved mobile copy. FAQ retains its
-existing independent expansion, semantics, focus, and motion behavior while using its
+supporting line retains the distinct mobile early-build participation copy and
+includes the shared vision and lifetime privileged-access message. FAQ retains
+its existing independent expansion, semantics, focus, and motion behavior while using its
 mobile-specific spacing and type. Marketing copy remains shared across
 responsive layouts unless product or design explicitly changes it.
 
@@ -472,7 +476,9 @@ remains publisher-owned; a route retains its loaded snapshot until retry or exit
 Historical asset availability is not guaranteed. PDF navigation is independent
 of JSON rendering and may return 404 after a later publication.
 
-The exact title is the page H1. Original Markdown paragraphs, heading levels,
+The exact title is the page H1. Legal H2 and H3 headings use Instrument Serif
+with distinct sizes and spacing; legal body text remains Manrope.
+Original Markdown paragraphs, heading levels,
 list ordering, emphasis and hard breaks remain intact. Text is selectable and
 links support keyboard focus and activation. HTTPS and mailto destinations are
 validated; raw HTML, images, unsafe URLs and unsupported constructs fail explicitly.
@@ -536,7 +542,9 @@ capabilities as implemented.
   gender and usage reason are optional. The Founding Friend UI adds required
   country while keeping gender and usage reason optional. Both forms expose a
   separate optional marketing-consent checkbox that starts unchecked and does
-  not block local validation.
+  not block local validation. These two marketing labels use 18px medium text
+  with 28px line height; the shared checkbox retains its 44px hit target and
+  other checkbox typography remains unchanged.
 - Domain validation rejects blank required names, structurally invalid email,
   non-integer age input, and a missing Founding Friend country. It does not
   invent an age threshold. Presentation exposes those application-coordinated

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
+import 'package:fun_app_landing_page/presentation/core/theme/app_text_styles.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_checkbox.dart';
 
 /// Controlled, optional marketing opt-in for a user sign-up form.
@@ -30,6 +32,15 @@ final class UserSignUpMarketingConsent extends StatelessWidget {
     focusKey: Key('marketingConsentFocus-$semanticId'),
     visualKey: Key('marketingConsentVisual-$semanticId'),
     label: label,
+    labelWidget: Text(
+      label,
+      style: AppTextStyles.bodyFontStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w500,
+        height: 28 / 18,
+        color: AppColors.bodyGray,
+      ),
+    ),
     value: value,
     onChanged: onChanged,
   );

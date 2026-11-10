@@ -290,7 +290,7 @@ void main() {
   });
   test('new navigation resolves a newly selected version', () async {
     final repo = repository();
-    expect((await repo.load(id)).version, '3.0.0');
+    expect((await repo.load(id)).version, legalFixture(id.value)['version']);
     entry()['version'] = '3.1.0';
     entry()['jsonPath'] = 'documents/privacy_notice/3.1.0/en-GB.json';
     entry()['pdfPath'] = 'documents/privacy_notice/3.1.0/en-GB.pdf';

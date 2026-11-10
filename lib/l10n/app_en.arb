@@ -438,13 +438,13 @@
   "@landingMembershipHereNowDescription": {
     "description": "Description of the Here & Now membership tier."
   },
-  "landingMembershipLifetimeDescription": "Pay once, keep full access forever, and never deal with a monthly renewal again",
+  "landingMembershipLifetimeDescription": "Support Fun App’s vision from the start, keep privileged access forever and never deal with a monthly renewal again",
   "@landingMembershipLifetimeDescription": {
     "description": "Desktop description of the Founding Friend membership tier."
   },
-  "landingMembershipLifetimeMobileDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape",
+  "landingMembershipLifetimeMobileDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape. Support Fun App’s vision from the start, keep privileged access forever and never deal with a monthly renewal again",
   "@landingMembershipLifetimeMobileDescription": {
-    "description": "Mobile description of the Founding Friend membership tier."
+    "description": "Mobile description of the Founding Friend membership tier, retaining early-build participation and the shared vision and lifetime-access message."
   },
   "landingMembershipFreeBenefitBeta": "All of the core functionality that makes Fun App so much fun",
   "@landingMembershipFreeBenefitBeta": {
@@ -574,7 +574,7 @@
   "@landingFoundingMemberRecognisedTitle": {
     "description": "Title of the first Founding Friend benefit card."
   },
-  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed Fun App from the start",
+  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed Fun App’s vision from the start",
   "@landingFoundingMemberRecognisedBody": {
     "description": "Body of the first Founding Friend benefit card."
   },
@@ -878,12 +878,12 @@
   "@userSignUpHereAndNowEyebrow": {"description":"Eyebrow identifying the Here & Now membership sign-up page."},
   "userSignUpFoundingFriendEyebrow": "Founding Friend",
   "@userSignUpFoundingFriendEyebrow": {"description":"Eyebrow identifying the Founding Friend sign-up page."},
-  "userSignUpHereAndNowIntroduction": "Thank you for interest in joining Fun App with a 6 month free trial of Here & Now membership",
-  "@userSignUpHereAndNowIntroduction": {"description":"Exact approved English Here & Now introduction heading. The source wording intentionally omits your after."},
+  "userSignUpHereAndNowIntroduction": "Thank you for your interest in joining Fun App with a free trial of Here & Now membership for 6 months from launch",
+  "@userSignUpHereAndNowIntroduction": {"description":"Approved Here & Now introduction heading; the free trial lasts 6 months from launch."},
   "userSignUpHereAndNowIntroductionBody": "Sign up by entering your details on this form and secure your place in the queue. We'll stay in touch as Fun App moves towards launch. Welcome!",
   "@userSignUpHereAndNowIntroductionBody": {"description":"Exact approved English Here & Now introduction body."},
   "userSignUpHereAndNowHeadingEmphasis": "Here & Now membership",
-  "@userSignUpHereAndNowHeadingEmphasis": {"description":"Italicized final phrase within the Here & Now introduction heading."},
+  "@userSignUpHereAndNowHeadingEmphasis": {"description":"Italicized phrase within the Here & Now introduction heading; text may precede and follow it."},
   "userSignUpFoundingFriendIntroduction": "Thank you for your interest in becoming a Fun App Founding Friend",
   "@userSignUpFoundingFriendIntroduction": {"description":"Exact approved English Founding Friend introduction heading."},
   "userSignUpFoundingFriendIntroductionBody": "Sign up by entering your details below and get ready for an exciting journey as you gain Founding Friend status and help Fun App to change the world. Welcome!",
@@ -926,9 +926,9 @@
   "@userSignUpFoundingFriendUsageReasonLabel": {"description":"Optional usage-reason label on the Founding Friend form."},
   "userSignUpUsageReasonPlaceholder": "Enter Your Message",
   "@userSignUpUsageReasonPlaceholder": {"description":"Optional usage-reason input placeholder shared by the user sign-up forms."},
-  "userSignUpHereAndNowMarketingConsent": "Yes, I'd like to receive occasional emails from Fun App about the upcoming app, including launch updates and exciting news.",
+  "userSignUpHereAndNowMarketingConsent": "Yes, I’d like to receive occasional emails from Fun App about the upcoming app, including launch updates and exciting news.",
   "@userSignUpHereAndNowMarketingConsent": {"description":"Exact optional Here & Now marketing opt-in copy."},
-  "userSignUpFoundingFriendMarketingConsent": "Yes, I'd like to receive emails from Fun App about the upcoming app, including launch updates, exciting news and exclusive Founding Friend communication",
+  "userSignUpFoundingFriendMarketingConsent": "Yes, I’d like to receive occasional emails from Fun App about the upcoming app, including launch updates, exciting news and exclusive Founding Friend communication",
   "@userSignUpFoundingFriendMarketingConsent": {"description":"Exact optional Founding Friend marketing opt-in copy."},
   "userSignUpHereAndNowCta": "Join Here & Now Waitlist",
   "@userSignUpHereAndNowCta": {"description":"Exact Here & Now form action label. Production action remains disabled until integration."},

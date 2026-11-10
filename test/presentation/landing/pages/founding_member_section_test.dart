@@ -38,7 +38,8 @@ void main() {
     );
     expect(
       find.text(
-        'A clean profile badge showing you backed Fun App from the start',
+        'A clean profile badge showing you backed Fun App’s vision '
+        'from the start',
       ),
       findsOneWidget,
     );

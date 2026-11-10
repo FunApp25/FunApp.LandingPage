@@ -7,7 +7,7 @@ import 'package:fun_app_landing_page/domain/legal/legal_document_repository_inte
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-/// Public responses captured on 8 November 2026, for tests only.
+/// Public responses captured on 10 November 2026, for tests only.
 Map<String, dynamic> legalFixture(String name) =>
     jsonDecode(File('test/fixtures/legal/$name.json').readAsStringSync())
         as Map<String, dynamic>;
