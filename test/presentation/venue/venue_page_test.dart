@@ -477,6 +477,16 @@ void main() {
     final checkbox = find.byKey(
       const Key('venuePrivacyAcknowledgementCheckbox'),
     );
+    final row = find.descendant(of: checkbox, matching: find.byType(Row));
+    final control = find.descendant(
+      of: checkbox,
+      matching: find.byType(InkWell),
+    );
+    expect(tester.getSize(row).height, greaterThan(44));
+    expect(
+      tester.getTopLeft(control).dy,
+      closeTo(tester.getTopLeft(row).dy, 0.01),
+    );
     expect(
       tester
           .getSemantics(checkbox)

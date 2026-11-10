@@ -33,6 +33,7 @@ import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dar
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchable_country_dropdown.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -40,6 +41,137 @@ import 'package:http/testing.dart';
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final locale in AppLocalizations.supportedLocales) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+        'marketing prominence, semantics and wrapping: $locale, ${scale}x',
+        (tester) async {
+          final semantics = tester.ensureSemantics();
+          final l10n = lookupAppLocalizations(locale);
+          for (final foundingFriend in [false, true]) {
+            final id = foundingFriend ? 'foundingFriend' : 'hereAndNow';
+            final label = foundingFriend
+                ? l10n.userSignUpFoundingFriendMarketingConsent
+                : l10n.userSignUpHereAndNowMarketingConsent;
+            for (final width in [320.0, 390.0, 900.0, 1440.0]) {
+              setTestSurface(tester, Size(width, 1000));
+              await _pumpPage(
+                tester,
+                foundingFriend
+                    ? const FoundingFriendPage()
+                    : const HereAndNowPage(),
+                locale: locale,
+                textScaleFactor: scale,
+              );
+              final checkbox = find.byKey(Key('marketingConsent-$id'));
+              final text = tester.widget<Text>(find.text(label));
+              expect(text.style!.fontSize, 18);
+              expect(text.style!.height, 28 / 18);
+              expect(text.style!.fontWeight, FontWeight.w500);
+              final paragraph = tester.renderObject<RenderParagraph>(
+                find.text(label),
+              );
+              expect(paragraph.didExceedMaxLines, isFalse);
+              expect(paragraph.size.height, greaterThan(28 * scale));
+              var data = tester.getSemantics(checkbox).getSemanticsData();
+              expect(data.label, label);
+              expect(data.flagsCollection.isChecked, CheckedState.isFalse);
+              final control = find.descendant(
+                of: checkbox,
+                matching: find.byType(InkWell),
+              );
+              expect(tester.getSize(control), const Size.square(44));
+              final labelCenter = tester.getCenter(find.text(label)).dy;
+              expect(tester.getCenter(control).dy, closeTo(labelCenter, 0.01));
+              expect(
+                tester
+                    .getCenter(find.byKey(Key('marketingConsentVisual-$id')))
+                    .dy,
+                closeTo(labelCenter, 0.01),
+              );
+              await tester.ensureVisible(checkbox);
+              tester
+                  .widget<Focus>(find.byKey(Key('marketingConsentFocus-$id')))
+                  .focusNode!
+                  .requestFocus();
+              await tester.pump();
+              await tester.sendKeyEvent(LogicalKeyboardKey.space);
+              await tester.pump();
+              data = tester.getSemantics(checkbox).getSemanticsData();
+              expect(data.flagsCollection.isChecked, CheckedState.isTrue);
+              await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+              await tester.pump();
+              expect(
+                tester
+                    .getSemantics(checkbox)
+                    .getSemanticsData()
+                    .flagsCollection
+                    .isChecked,
+                CheckedState.isFalse,
+              );
+              final introduction = find.byKey(Key('userSignUpHeading-$id'));
+              final heading =
+                  tester.widget<Text>(introduction).textSpan! as TextSpan;
+              final fullHeading = foundingFriend
+                  ? l10n.userSignUpFoundingFriendIntroduction
+                  : l10n.userSignUpHereAndNowIntroduction;
+              expect(heading.toPlainText(), fullHeading);
+              expectHeaderSemantics(
+                tester,
+                Key('userSignUpIntroduction-$id'),
+                fullHeading,
+              );
+              expect(
+                tester
+                    .renderObject<RenderParagraph>(introduction)
+                    .didExceedMaxLines,
+                isFalse,
+              );
+              expect(tester.takeException(), isNull);
+              await tester.pumpWidget(const SizedBox.shrink());
+            }
+          }
+          semantics.dispose();
+        },
+      );
+    }
+  }
+  testWidgets('single-line marketing labels remain vertically centered', (
+    tester,
+  ) async {
+    for (final width in [320.0, 1440.0]) {
+      for (final scale in [1.0, 2.0]) {
+        setTestSurface(tester, Size(width, 1000));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+              child: Scaffold(
+                body: UserSignUpMarketingConsent(
+                  semanticId: 'singleLine',
+                  label: 'Updates',
+                  value: false,
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        );
+        final label = find.text('Updates');
+        expect(tester.getSize(label).height, closeTo(28 * scale, 0.01));
+        expect(
+          tester
+              .getCenter(
+                find.byKey(const Key('marketingConsentVisual-singleLine')),
+              )
+              .dy,
+          closeTo(tester.getCenter(label).dy, 0.01),
+        );
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
   for (final language in ['en', 'es', 'cy', 'be']) {
     testWidgets(
       'Founding Friend email limit feedback is localized in $language',
@@ -493,8 +625,8 @@ void main() {
   }
 
   const hereAndNowIntroduction =
-      'Thank you for interest in joining Fun App with a 6 month free trial '
-      'of Here & Now membership';
+      'Thank you for your interest in joining Fun App with a free trial of '
+      'Here & Now membership for 6 months from launch';
   const hereAndNowIntroductionBody =
       'Sign up by entering your details on this form and secure your place '
       "in the queue. We'll stay in touch as Fun App moves towards launch. "
@@ -506,10 +638,11 @@ void main() {
       'journey as you gain Founding Friend status and help Fun App to change '
       'the world. Welcome!';
   const hereAndNowMarketing =
-      "Yes, I'd like to receive occasional emails from Fun App about the "
+      'Yes, I’d like to receive occasional emails from Fun App about the '
       'upcoming app, including launch updates and exciting news.';
   const foundingFriendMarketing =
-      "Yes, I'd like to receive emails from Fun App about the upcoming app, "
+      'Yes, I’d like to receive occasional emails from Fun App about the '
+      'upcoming app, '
       'including launch updates, exciting news and exclusive Founding Friend '
       'communication';
 
@@ -1081,8 +1214,13 @@ void main() {
         find.byKey(const Key('userSignUpHeading-hereAndNow')),
       );
       final introductionSpan = introduction.textSpan! as TextSpan;
-      final introductionEmphasis =
-          introductionSpan.children!.single as TextSpan;
+      final introductionEmphasis = introductionSpan.children![1] as TextSpan;
+      expect(introductionSpan.toPlainText(), hereAndNowIntroduction);
+      expect(introductionEmphasis.text, 'Here & Now membership');
+      expect(
+        (introductionSpan.children!.last as TextSpan).text,
+        ' for 6 months from launch',
+      );
       expect(introductionSpan.style?.fontSize, width == 390 ? 36 : 60);
       expect(introductionEmphasis.style?.fontStyle, FontStyle.italic);
       expect(introductionEmphasis.style?.color, AppColors.warmOrange);

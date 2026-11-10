@@ -487,9 +487,9 @@ final class LegalMarkdownDocument extends StatelessWidget {
         color: AppColors.textPrimary,
       ),
       h2Padding: const EdgeInsets.only(top: 28, bottom: 8),
-      h3: AppTextStyles.bodyFontStyle(
+      h3: AppTextStyles.headlineFontStyle(
         fontSize: isNarrow ? 18 : 20,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w400,
         height: 1.35,
         color: AppColors.textPrimary,
       ),

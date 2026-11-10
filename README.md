@@ -660,7 +660,7 @@ they do not create acceptance, consent, eligibility rules or backend fields.
 Venue retains its optional presentation-only acknowledgement and new-tab link.
 
 `test/fixtures/legal/` contains exact public JSON responses captured on
-8 November 2026 solely for regression tests; it is not an application asset or
+10 November 2026 solely for regression tests; it is not an application asset or
 runtime fallback. The refund/cookie drafts in `assets/legal/` remain unbundled
 references. Their routes still redirect home. Both artifact preparation tools
 reject accidentally bundled local legal material while preserving host metadata

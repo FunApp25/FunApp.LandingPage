@@ -15,6 +15,7 @@ final class BrandedFormCheckbox extends StatefulWidget {
     required this.onChanged,
     this.labelWidget,
     this.preserveLabelSemantics = false,
+    this.crossAxisAlignment = CrossAxisAlignment.start,
     super.key,
   });
 
@@ -41,6 +42,9 @@ final class BrandedFormCheckbox extends StatefulWidget {
 
   /// Whether rich descendant semantics, such as an inline link, stay exposed.
   final bool preserveLabelSemantics;
+
+  /// Vertical alignment of the control and its complete label block.
+  final CrossAxisAlignment crossAxisAlignment;
 
   @override
   State<BrandedFormCheckbox> createState() => _BrandedFormCheckboxState();
@@ -90,7 +94,7 @@ final class _BrandedFormCheckboxState extends State<BrandedFormCheckbox> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 1),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: widget.crossAxisAlignment,
           children: [
             SizedBox.square(
               dimension: 44,

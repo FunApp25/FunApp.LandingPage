@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/core/injection/injection.dart';
 import 'package:fun_app_landing_page/domain/legal/entities/legal_document.dart';
@@ -13,6 +14,7 @@ import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
 import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
 import 'package:fun_app_landing_page/presentation/legal/widgets/legal_document_links.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_form.dart';
+import 'package:markdown/markdown.dart' as markdown;
 
 import '../../fixtures/legal/legal_test_repository.dart';
 import '../landing/landing_test_helpers.dart';
@@ -96,7 +98,7 @@ void main() {
         find.byType(LegalMarkdownDocument),
       );
       expect(renderer.markdownData, privacy.bodyMarkdown);
-      expect(find.textContaining('3.0.0'), findsOneWidget);
+      expect(find.textContaining(privacy.version), findsOneWidget);
       expect(find.textContaining('en-GB'), findsOneWidget);
       expect(find.textContaining(privacy.publishedAt), findsOneWidget);
       expect(find.textContaining(privacy.effectiveAt), findsOneWidget);
@@ -194,6 +196,63 @@ void main() {
       expect(isSafeLegalLink(Uri.parse('https://funapp.world/')), isTrue);
     },
   );
+  testWidgets('published clauses, nested headings and lists remain faithful', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    for (final id in LegalDocumentId.values) {
+      final doc = documents[id]!;
+      await pump(tester, TestLegalRepository((_) async => doc), width: 900);
+      await tester.pumpAndSettle();
+      final renderer = tester.widget<MarkdownBody>(find.byType(MarkdownBody));
+      expect(renderer.data, doc.bodyMarkdown);
+      final nodes = markdown.Document(
+        encodeHtml: false,
+        extensionSet: markdown.ExtensionSet.gitHubFlavored,
+      ).parseLines(doc.bodyMarkdown.split('\n'));
+      final headings = nodes.whereType<markdown.Element>().where(
+        (node) => node.tag == 'h2' || node.tag == 'h3',
+      );
+      final clauses = <int>[];
+      for (final heading in headings) {
+        final level = heading.tag == 'h2' ? 2 : 3;
+        final text = find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.textSpan?.toPlainText() == heading.textContent,
+        );
+        expect(text, findsOneWidget);
+        expect(
+          tester.getSemantics(text).getSemanticsData().headingLevel,
+          level,
+        );
+        if (level == 2) {
+          final number = RegExp(r'^(\d+)\. ').firstMatch(heading.textContent);
+          if (number != null) clauses.add(int.parse(number[1]!));
+        }
+      }
+      expect(
+        clauses,
+        orderedEquals(List.generate(clauses.length, (i) => i + 1)),
+      );
+      expect(tester.takeException(), isNull, reason: id.value);
+    }
+    final aup = documents[LegalDocumentId.acceptableUsePolicy]!.bodyMarkdown;
+    final clause43 = aup.substring(
+      aup.indexOf('### 4.3.'),
+      aup.indexOf('4.4.'),
+    );
+    expect('\n- '.allMatches(clause43), hasLength(2));
+    final agreement = documents[LegalDocumentId.userAgreement]!.bodyMarkdown;
+    final clause24 = agreement.substring(
+      agreement.indexOf('2.4.'),
+      agreement.indexOf('2.5.'),
+    );
+    expect(clause24, isNot(contains('**')));
+    expect(clause24, contains('Didit'));
+    semantics.dispose();
+  });
+
   test('all exact published bodies use supported constructs', () {
     for (final id in LegalDocumentId.values) {
       expect(
