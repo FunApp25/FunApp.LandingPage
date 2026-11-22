@@ -2,12 +2,25 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Fun App Landing — Development (Fake Repositories)",
+      "name": "Fun App Landing — Development",
       "request": "launch",
       "type": "dart",
       "program": "lib/main_dev.dart",
       "deviceId": "chrome",
-      "flutterMode": "debug"
+      "toolArgs": ["--no-web-resources-cdn"]
+    },
+    {
+      "name": "Fun App Landing — Development (Booking .env)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--no-web-resources-cdn",
+        "--dart-define-from-file=.env",
+        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=deferred",
+        "--dart-define=FUN_APP_PAYMENT_TRANSPORT=deferred"
+      ]
     },
     {
       "name": "Fun App Landing — Development (Direct HubSpot)",
@@ -15,32 +28,31 @@
       "type": "dart",
       "program": "lib/main_dev.dart",
       "deviceId": "chrome",
-      "flutterMode": "debug",
       "toolArgs": [
         "--dart-define-from-file=.env",
-        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot"
+        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot",
+        "--dart-define=FUN_APP_PAYMENT_TRANSPORT=deferred"
       ]
     },
     {
-      "name": "Fun App Landing — Development (Local Registration Worker)",
+      "name": "Fun App Landing — Development (Mock Registration)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main_dev.dart",
       "deviceId": "chrome",
-      "flutterMode": "debug",
       "toolArgs": [
         "--web-port=7357",
         "--dart-define-from-file=.env",
-        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker"
+        "--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker",
+        "--dart-define=FUN_APP_PAYMENT_TRANSPORT=deferred"
       ]
     },
     {
-      "name": "Fun App Landing — Development (Local Workers)",
+      "name": "Fun App Landing — Development (Mock Registration + Payment)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main_dev.dart",
       "deviceId": "chrome",
-      "flutterMode": "debug",
       "toolArgs": [
         "--web-port=7357",
         "--dart-define-from-file=.env",
@@ -49,7 +61,7 @@
       ]
     },
     {
-      "name": "Fun App Worker — Local Mock",
+      "name": "Fun App Registration Worker — Local Mock",
       "request": "launch",
       "type": "node-terminal",
       "command": "npm run dev",
@@ -63,29 +75,28 @@
       "cwd": "${workspaceFolder}/cloudflare/founding-friend-payment-worker"
     },
     {
-      "name": "Fun App Landing — Production",
+      "name": "Fun App Landing — Production (Local Inspection)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main_prod.dart",
-      "deviceId": "chrome",
-      "flutterMode": "debug"
+      "deviceId": "chrome"
     }
   ],
   "compounds": [
     {
-      "name": "Fun App Landing + Local Mock Worker",
+      "name": "Fun App Landing + Mock Registration",
       "configurations": [
-        "Fun App Worker — Local Mock",
-        "Fun App Landing — Development (Local Registration Worker)"
+        "Fun App Registration Worker — Local Mock",
+        "Fun App Landing — Development (Mock Registration)"
       ],
       "stopAll": true
     },
     {
-      "name": "Fun App Landing + Local Mock Workers",
+      "name": "Fun App Landing + Mock Registration and Payment",
       "configurations": [
-        "Fun App Worker — Local Mock",
+        "Fun App Registration Worker — Local Mock",
         "Fun App Payment Worker — Local Mock",
-        "Fun App Landing — Development (Local Workers)"
+        "Fun App Landing — Development (Mock Registration + Payment)"
       ],
       "stopAll": true
     }

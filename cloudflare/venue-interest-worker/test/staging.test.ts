@@ -106,7 +106,7 @@ describe('staging registration entrypoint', () => {
       HUBSPOT_PORTAL_ID: '123456789',
       HUBSPOT_HERE_AND_NOW_FORM_GUID:
         '11111111-1111-1111-1111-111111111111',
-      REGISTRATION_SUBMISSIONS_ENABLED: 'true',
+      HERE_AND_NOW_SUBMISSIONS_ENABLED: 'true',
       STAGING_REGISTRATION_MOCK_ENABLED: 'true',
     };
     const response = await handleRequest(

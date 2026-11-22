@@ -389,7 +389,7 @@ void main() {
     expect(find.byType(BrandedFormTextField), findsNWidgets(9));
     expect(find.byType(BrandedFormDropdown<String>), findsOneWidget);
     expect(find.byType(BrandedFormCheckbox), findsOneWidget);
-    expect(find.byType(BrandedFormActionButton), findsOneWidget);
+    expect(find.byType(BrandedFormActionButton), findsNWidgets(2));
     expect(find.byKey(const Key('venueLeadVenueCountField')), findsNothing);
     expect(find.byKey(const Key('venueLeadTwoColumnLayout')), findsOneWidget);
     for (var row = 1; row <= 6; row++) {
@@ -437,12 +437,17 @@ void main() {
     final submitRect = tester.getRect(
       find.byKey(const Key('venueLeadSubmitButton')),
     );
+    final booking = find.byKey(const Key('venueLeadBookingButton'));
+    final bookingRect = tester.getRect(booking);
     final contentRect = tester.getRect(
       find.byKey(const Key('venuePageContent')),
     );
-    expect(submitRect.height, 48);
-    expect(submitRect.width, greaterThanOrEqualTo(144));
-    expect(submitRect.center.dx, closeTo(contentRect.center.dx, 0.1));
+    expect(submitRect.height, greaterThanOrEqualTo(48));
+    expect(bookingRect.size, submitRect.size);
+    expect(bookingRect.top, submitRect.top);
+    expect(bookingRect.right + 16, submitRect.left);
+    expect(bookingRect.left, contentRect.left);
+    expect(submitRect.right, contentRect.right);
 
     setTestSurface(tester, const Size(390, 1000));
     await _pumpDirectVenuePage(tester);
@@ -456,11 +461,79 @@ void main() {
       tester.getSize(find.byKey(const Key('venueLeadSubmitButton'))).width,
       326,
     );
+    final mobileSubmit = tester.getRect(
+      find.byKey(const Key('venueLeadSubmitButton')),
+    );
+    expect(tester.getRect(booking).top, mobileSubmit.bottom + 12);
+    expect(tester.getSize(booking).width, mobileSubmit.width);
 
     setTestSurface(tester, const Size(768, 1000));
     await _pumpDirectVenuePage(tester);
     expect(find.byKey(const Key('venueLeadOneColumnLayout')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('booking without a URL announces status and keeps the draft', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final repository = _ControlledVenueLeadRepository();
+    setTestSurface(tester, const Size(390, 1000));
+    await _pumpDirectVenuePage(tester, repository: repository);
+
+    final name = find.byKey(const Key('venueLeadVenueNameField'));
+    final booking = find.byKey(const Key('venueLeadBookingButton'));
+    final checkbox = find.byKey(
+      const Key('venuePrivacyAcknowledgementCheckbox'),
+    );
+    await tester.enterText(name, 'Unsaved venue');
+    await tester.ensureVisible(checkbox);
+    await tester.tap(checkbox);
+    await tester.pump();
+    await tester.ensureVisible(booking);
+    await tester.pumpAndSettle();
+
+    for (final label in [
+      'Book a call with the Fun App team',
+      'Register for the waitlist now',
+    ]) {
+      expect(
+        find.semantics
+            .byLabel(label)
+            .evaluate()
+            .single
+            .getSemanticsData()
+            .flagsCollection
+            .isButton,
+        isTrue,
+      );
+    }
+
+    await tester.tap(booking);
+    await tester.pumpAndSettle();
+    const feedback =
+        'Call booking is unavailable right now. Please try again later.';
+    expect(find.text(feedback), findsOneWidget);
+    expect(
+      find.semantics
+          .byLabel(feedback)
+          .evaluate()
+          .single
+          .getSemanticsData()
+          .flagsCollection
+          .isLiveRegion,
+      isTrue,
+    );
+    expect(repository.submittedLeads, isEmpty);
+    expect(tester.widget<TextField>(name).controller?.text, 'Unsaved venue');
+    expect(tester.widget<TextField>(name).decoration?.errorText, isNull);
+    expect(
+      tester
+          .widget<BrandedFormCheckbox>(find.byType(BrandedFormCheckbox))
+          .value,
+      isTrue,
+    );
+    semantics.dispose();
   });
 
   testWidgets('acknowledgement is local, accessible, and link-independent', (
@@ -683,6 +756,14 @@ void main() {
       expect(
         find.byKey(const Key('venueLeadSubmissionProgress')),
         findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const Key('venueLeadBookingButton')),
+            )
+            .onPressed,
+        isNotNull,
       );
       await tester.tap(find.byKey(const Key('venueLeadSubmitButton')));
       await tester.pump();

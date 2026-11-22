@@ -13,9 +13,56 @@ jobs:
     name: Validation
     uses: ./.github/workflows/pr_checks.yml
 
+  build:
+    name: Build staging deployment artifact
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout validated revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies and generate sources
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          dart run build_runner build
+
+      - name: Build staging site
+        env:
+          FUN_APP_VENUE_BOOKING_URL: ${{ vars.FUN_APP_VENUE_BOOKING_URL }}
+        run: >-
+          flutter build web --no-web-resources-cdn
+          -t lib/main_staging.dart
+          --dart-define="FUN_APP_VENUE_BOOKING_URL=$FUN_APP_VENUE_BOOKING_URL"
+
+      - name: Prepare and verify staging artifact
+        run: |
+          dart run tool/prepare_staging_release_artifact.dart
+          dart run tool/verify_web_resources.dart
+          bash tool/verify_staging_artifact.sh
+
+      - name: Upload validated staging artifact for dev deployment
+        uses: actions/upload-artifact@v7
+        with:
+          name: staging-web-${{ github.sha }}
+          path: build/web
+          if-no-files-found: error
+          retention-days: 1
+
   deploy:
     name: Deploy staging site and API Workers
-    needs: checks
+    needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     timeout-minutes: 20

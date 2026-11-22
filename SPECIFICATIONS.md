@@ -16,8 +16,9 @@ Founding Friend forms are public routes at `/here-and-now` and
 `/founding-friend`. Each has an independent domain model, provider-neutral
 repository contract, and application BLoC. Development can explicitly select
 temporary direct HubSpot testing or a first-party local Worker transport backed
-by deterministic mocks. The default development graph and every production
-graph remain fail-closed without registration I/O.
+by deterministic mocks. The default development graph remains deferred.
+Production Here & Now uses the same-origin first-party registration endpoint
+and requires separate Worker activation.
 
 After a confirmed Founding Friend registration, the implemented purchase
 workflow can prepare a separate one-time Stripe-hosted Checkout with a
@@ -78,7 +79,8 @@ Current implementation is evidence of repository state, not automatically a perm
   supplies approved translations.
 - GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
 - GitHub Pages builds Flutter directly through `subosito/flutter-action@v2` and
-  publishes `build/web` from the repository root at base href `/`; local Flutter
+  publishes `build/web` from `main` at base href `/`. The build reads the optional
+  public booking URL from the `production` Environment. Local Flutter
   and Dart commands continue to use Puro.
 - Legal document content, versions, metadata and publication are owned solely by
   `FunApp.LegalDocumentation`. Flutter resolves the public production manifest at
@@ -116,9 +118,10 @@ Current implementation is evidence of repository state, not automatically a perm
   `funapp-venue-interest` Worker. Its code implements `POST
   /api/venue-interest`, `POST /api/registrations/here-and-now`, and `POST
   /api/registrations/founding-friend`. Only the Venue endpoint is currently
-  routed and active in production; registration routes and activation remain
-  unprovisioned. It has no route, account ID, or zone ID in repository
-  configuration. Its source-controlled
+  documented as routed and active in production. Here & Now is eligible for
+  separate activation through its exact route. The production entrypoint in
+  this repository rejects Founding Friend submissions. It has no route,
+  account ID, or zone ID in repository configuration. Its source-controlled
   GitHub Actions deployment is manual only and uses the GitHub `production`
   Environment for runtime bindings and Cloudflare authentication. GitHub Pages
   remains the web origin for every other path.
@@ -127,10 +130,11 @@ Current implementation is evidence of repository state, not automatically a perm
   by separate provider-neutral registration models, repository contracts, and
   application BLoCs. Explicit development selection uses either the public
   unauthenticated HubSpot Forms endpoint or the local mocked first-party Worker;
-  unconfigured development and all production builds use deferred repositories
-  that perform no registration network or persistence operation. Here & Now
-  retains its established terminal success. Founding Friend instead continues
-  from confirmed registration into its independent Checkout workflow.
+  unconfigured development uses deferred repositories. Production Here & Now
+  submits to the same-origin Worker and retains its terminal waitlist success.
+  Production Founding Friend retains its deferred repository. Where Founding
+  Friend registration is available, confirmation leads into its independent
+  Checkout workflow.
 - `cloudflare/founding-friend-payment-worker/` is a separate, independently
   testable TypeScript Worker for Checkout creation and read-only session
   verification. Flutter contains no Stripe SDK or credential. Creation is
@@ -385,7 +389,8 @@ header/mobile-menu queue action, Limited Offer queue CTA, Free Membership CTA,
 Here & Now membership CTA, Lifetime Membership CTA, and Founding Friends
 prospective-user CTA navigate to their established `/here-and-now` or
 `/founding-friend` mappings. The routes contain the implemented registration
-workflows; production registration remains disabled. A confirmed Founding
+workflows. Production Here & Now targets its first-party endpoint; production
+Founding Friend registration remains disabled. A confirmed Founding
 Friend registration proceeds to Checkout preparation, while a return redirect
 is verified through `/founding-friend/payment` and cancellation renders
 `/founding-friend/payment/cancelled`. Reloading either payment route never
@@ -662,9 +667,15 @@ capabilities as implemented.
   same approved `mailto:info@funapp.world` behavior as the shared footer.
   Operational failure
   keeps the form open and editable for retry, with a concise retry-later
-  message above Send.
-  While submission is pending, Send is visibly disabled and an indeterminate
-  linear progress indicator appears immediately above it.
+  message above the actions. While a submission is pending, the blue waitlist
+  button is disabled and an indeterminate progress indicator appears above it.
+- The independent orange booking action opens the configured HTTPS destination
+  in a new tab without opener access. It preserves the draft and does not
+  validate or submit the form. The optional public
+  `FUN_APP_VENUE_BOOKING_URL` is a compile-time value. Missing or invalid
+  configuration produces localized live-region feedback when clicked. Wide
+  layouts place booking to the left of waitlist; narrow layouts put waitlist
+  first.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
@@ -714,8 +725,7 @@ capabilities as implemented.
   `usageReason` are omitted. Founding Friend additionally emits required
   canonical `country`. They contain no portal/form identifier or HubSpot field
   name.
-- `WorkerUserRegistrationDataSource` posts those models to exact local Worker
-  paths `/api/registrations/here-and-now` and
+- `WorkerUserRegistrationDataSource` posts those models to exact Worker paths `/api/registrations/here-and-now` and
   `/api/registrations/founding-friend`. It uses one abortable 15-second deadline
   and no retry. A 204 succeeds; 400/422 are submission rejected; 429/503 and
   transport/deadline failures are service unavailable; 500 and unrecognised
@@ -732,7 +742,8 @@ capabilities as implemented.
   explicit `FUN_APP_REGISTRATION_TRANSPORT` selection (`deferred`,
   `direct_hubspot`, or `local_worker`); omission selects deferred. The local
   Worker selection accepts only an HTTP(S) loopback origin. Production ignores
-  every development registration selection and remains deferred.
+  every development registration selection. Here & Now resolves its endpoint
+  against the browser origin. Founding Friend remains deferred.
 - Flutter production needs no Venue submission runtime configuration. A local
   production browser run resolves the same-origin endpoint to localhost and
   therefore cannot reach the deployed Worker without separate local routing;
@@ -748,9 +759,12 @@ capabilities as implemented.
   JavaScript integer-serialization and UTF-8 total-body boundaries before I/O.
   It applies no age eligibility threshold and no extra registration field-length
   constraints beyond that total-body limit.
-- Registration Worker forwarding is disabled unless
-  `REGISTRATION_SUBMISSIONS_ENABLED` is exactly `true`. Activation additionally
-  requires valid portal/form IDs and the `REGISTRATION_RATE_LIMITER` binding;
+- Production Here & Now forwarding is disabled unless
+  `HERE_AND_NOW_SUBMISSIONS_ENABLED` is exactly `true`. Activation additionally
+  requires valid portal/form IDs and the `REGISTRATION_RATE_LIMITER` binding.
+  The production forms entrypoint rejects Founding Friend even when Here & Now is
+  enabled. The old shared switch still gates local mock selection, and staging
+  continues using its isolated mock entrypoint. For production Here & Now,
   missing or malformed mandatory configuration fails closed. The binding
   provides approximate, Cloudflare-location-local protection targeting 10
   attempts per 60 seconds per route and connecting-IP key, not a strict
@@ -965,8 +979,7 @@ capabilities as implemented.
   purchase to an authenticated account's verified email and granting benefits.
 - Timing and authorized deployment of the updated Worker, registration route
   attachment, payment Worker route/binding/secret configuration, controlled
-  live verification, and any future production Flutter switch to the
-  first-party registration transport.
+  live verification, and any later Founding Friend activation.
 
 Backend implementation must be driven by an actual approved contract rather than inferred from the main mobile application. Do not copy `/profiles`, Entra, OIDC, user-profile, onboarding, or other mobile-app contracts into this project without an explicit landing-page requirement.
 
@@ -1097,10 +1110,14 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   GitHub `production` Environment for public HubSpot and Cloudflare account
   configuration and the Cloudflare API-token secret; it does not configure the
   route.
-- The registration Worker routes are not attached and
-  `REGISTRATION_SUBMISSIONS_ENABLED` remains false. Later activation requires
-  the two registration form variables, source-declared rate-limit binding,
-  exact route attachment, controlled verification, and legal/product approval.
+- Production Here & Now defaults to disabled. Authorized activation requires
+  the Here & Now form GUID, source-declared rate-limit binding, the exact
+  `funapp.world/api/registrations/here-and-now` Worker Route, controlled
+  verification, and legal/product approval. The workflow does not provision
+  routes.
+- Both site artifacts include the approved full wordmark as a transparent PNG
+  at `/email/fun-app-logo.png`. Verify anonymous access on production after
+  publication. Staging keeps its existing Access boundary.
 - The payment Worker has a separate manual-only
   `deploy-founding-friend-payment-worker.yml` workflow. It validates before
   deployment, configures no route, and defaults
@@ -1134,15 +1151,13 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   without browser-side HubSpot configuration. Local development continues to
   use Puro. The workflow then rejects bundled local legal content in `build/web`. No
   local legal document is published as a static landing asset.
-- Only pushes to `main` and manual dispatches run the production Pages
-  deployment. Its `github-pages` environment remains unchanged. Production
+- Pushes to `main` and manual dispatches on `main` run the production Pages
+  deployment. Publishing uses the `github-pages` environment. Production
   Worker deployment workflows remain manual-only and no live Stripe payment
   activation is introduced.
 - Pushes to `dev`, including PR merges, run `deploy-staging-site.yml` (**Deploy
   Staging**), calling credential-free `pr_checks.yml` through `workflow_call`.
-  After all checks pass, the publishing job enters GitHub `staging`; staging
-  artifact upload is enabled only on dev pushes. No temporary diagnostic job
-  remains. GitHub `staging` stays restricted to `dev`, and `production` to `main`.
+  GitHub `staging` stays restricted to `dev`, and `production` to `main`.
 - Staging alone installs `tool/staging-wrangler/` with `npm ci`. Its lock pins
   Wrangler 4.155.0 and its postinstall applies the route-category backport from
   cloudflare/workers-sdk PR #16531, revision
@@ -1150,7 +1165,7 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   SHA-256 checks, no-fuzz patching, and invocation-time version/hash validation
   fail closed on incompatible tools. There is no mutable prerelease fetch or
   maintained fork. All staging publishes, generated-config dry runs, and upload
-  tests use this same wrapper. Production tooling/workflows are unchanged.
+  tests use this same wrapper. Production uses its existing Wrangler tooling.
 - The fix omits route/Custom Domain metadata reads only when those categories
   are absent from deployment; explicitly configured categories still require
   authorization. Versions upload does not compare unrelated routes. Normal
@@ -1168,9 +1183,10 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   enablement checkbox are retired. The publishing job uses a shared
   concurrency lock without cancelling an active publish and checks the revision
   against current `dev` HEAD under that lock, rejecting superseded queued jobs/reruns.
-- The staging site artifact comes from the successful validation run for that
-  revision. It is prepared with the existing tool and checked before upload and
-  again after download. Flutter builds never receive deployment credentials.
+- After credential-free checks pass, a build job in the `staging` Environment
+  packages the same revision with its public booking URL and verifies it before
+  upload. The publishing job in the same Environment checks artifact identity
+  after download. Flutter builds never receive deployment credentials.
   Both API Workers publish before the site; publishing is sequential, not atomic.
 - Read-only preflight validates complete environment configuration and all three
   existing staging identities with their own tokens before writing deployable

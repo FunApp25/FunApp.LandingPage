@@ -34,6 +34,9 @@ void main() {
         },
       ]),
     );
+    Directory('${artifact.path}/email').createSync();
+    File('web/email/fun-app-logo.png')
+        .copySync('${artifact.path}/email/fun-app-logo.png');
   });
 
   tearDown(() => artifact.deleteSync(recursive: true));
@@ -44,6 +47,14 @@ void main() {
 
   test('rejects a missing renderer variant', () {
     File('${artifact.path}/canvaskit/chromium/canvaskit.wasm').deleteSync();
+    expect(() => verifyWebResources(artifact.path), throwsStateError);
+  });
+
+  test('requires a PNG at the public email logo path', () {
+    final logo = File('${artifact.path}/email/fun-app-logo.png')
+      ..writeAsStringSync('<html>SPA fallback</html>');
+    expect(() => verifyWebResources(artifact.path), throwsStateError);
+    logo.deleteSync();
     expect(() => verifyWebResources(artifact.path), throwsStateError);
   });
 

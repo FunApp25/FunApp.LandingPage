@@ -8,6 +8,7 @@ void main() {
     for (final path in [
       '.github/workflows/deploy.yml',
       '.github/workflows/pr_checks.yml',
+      '.github/workflows/deploy-staging-site.yml',
     ]) {
       final workflow = File(path).readAsStringSync();
       final builds = RegExp(r'flutter build web[^\n]*').allMatches(workflow);
@@ -28,7 +29,14 @@ void main() {
     final deploy = File(
       '.github/workflows/deploy-staging-site.yml',
     ).readAsStringSync();
-    expect(deploy, isNot(contains('flutter build web')));
+    final buildJob = deploy.split('\n  deploy:\n').first;
+    final deployJob = deploy.split('\n  deploy:\n').last;
+    expect(buildJob, contains('environment: staging'));
+    expect(buildJob, contains('vars.FUN_APP_VENUE_BOOKING_URL'));
+    expect(buildJob, contains('actions/upload-artifact'));
+    expect(deployJob, contains('actions/download-artifact'));
+    expect(deployJob, contains('tool/verify_staging_artifact.sh'));
+    expect(deployJob, isNot(contains('flutter build web')));
   });
 
   test('Wrangler keeps production and staging Worker identities isolated', () {
@@ -120,43 +128,66 @@ void main() {
     }
   });
 
-  test('local launch modes retain isolated and combined mocked Workers', () {
-    final launch = _readJsonc('.vscode/launch.json');
-    final configurations = (launch['configurations']! as List<dynamic>)
-        .map(_objectMap)
-        .toList();
-    final registrationOnly = configurations.singleWhere(
-      (configuration) =>
-          configuration['name'] ==
-          'Fun App Landing — Development (Local Registration Worker)',
-    );
-    final bothWorkers = configurations.singleWhere(
-      (configuration) =>
-          configuration['name'] ==
-          'Fun App Landing — Development (Local Workers)',
-    );
-    final registrationArgs = (registrationOnly['toolArgs']! as List<dynamic>)
-        .cast<String>();
-    final bothWorkerArgs = (bothWorkers['toolArgs']! as List<dynamic>)
-        .cast<String>();
+  test(
+    'local launch profiles select their intended registration and payment',
+    () {
+      final launch = _readJsonc('.vscode/launch.json');
+      final configurations = (launch['configurations']! as List<dynamic>)
+          .map(_objectMap)
+          .toList();
+      const development = 'Fun App Landing — Development';
+      expect(configurations.first['name'], development);
+      expect(configurations.first['toolArgs'], ['--no-web-resources-cdn']);
 
-    expect(
-      registrationArgs,
-      contains('--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker'),
-    );
-    expect(
-      registrationArgs,
-      isNot(contains('--dart-define=FUN_APP_PAYMENT_TRANSPORT=local_worker')),
-    );
-    expect(
-      bothWorkerArgs,
-      contains('--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker'),
-    );
-    expect(
-      bothWorkerArgs,
-      contains('--dart-define=FUN_APP_PAYMENT_TRANSPORT=local_worker'),
-    );
-  });
+      final profiles = {
+        for (final configuration in configurations)
+          configuration['name']! as String: configuration,
+      };
+      for (final (name, registration, payment) in [
+        ('Booking .env', 'deferred', 'deferred'),
+        ('Direct HubSpot', 'direct_hubspot', 'deferred'),
+        ('Mock Registration', 'local_worker', 'deferred'),
+        ('Mock Registration + Payment', 'local_worker', 'local_worker'),
+      ]) {
+        final args = profiles['$development ($name)']!['toolArgs']! as List;
+        expect(args, contains('--dart-define-from-file=.env'));
+        expect(
+          args.where((arg) => (arg as String).startsWith('--dart-define=')),
+          unorderedEquals([
+            '--dart-define=FUN_APP_REGISTRATION_TRANSPORT=$registration',
+            '--dart-define=FUN_APP_PAYMENT_TRANSPORT=$payment',
+          ]),
+          reason: name,
+        );
+        if (registration == 'local_worker') {
+          expect(args, contains('--web-port=7357'), reason: name);
+        }
+      }
+
+      final compounds = (launch['compounds']! as List<dynamic>).map(_objectMap);
+      expect(
+        compounds.map((compound) => compound['configurations']),
+        unorderedEquals([
+          [
+            'Fun App Registration Worker — Local Mock',
+            '$development (Mock Registration)',
+          ],
+          [
+            'Fun App Registration Worker — Local Mock',
+            'Fun App Payment Worker — Local Mock',
+            '$development (Mock Registration + Payment)',
+          ],
+        ]),
+      );
+      for (final compound in compounds) {
+        expect(
+          (compound['configurations']! as List).every(profiles.containsKey),
+          isTrue,
+        );
+        expect(compound['stopAll'], isTrue);
+      }
+    },
+  );
 
   test('PR validation has no deployment credentials or environment', () {
     final workflow = File(
@@ -174,11 +205,12 @@ void main() {
     expect(workflow, isNot(contains('wrangler-action')));
   });
 
-  test('required Flutter check runs focused Chrome storage tests', () {
+  test('required Flutter check runs focused Chrome regressions', () {
     final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
     final quality = workflow.split('\n  quality:\n').last;
     const stepName =
-        '      - name: Test browser payment storage and country ordering\n';
+        '      - name: Test browser payment storage, country '
+        'ordering, and links\n';
     expect(quality, contains(stepName));
     final browserStep = quality
         .split(stepName)
@@ -196,6 +228,10 @@ void main() {
     expect(
       browserStep,
       contains('test/presentation/user_sign_up/country_ordering_web_test.dart'),
+    );
+    expect(
+      browserStep,
+      contains('test/presentation/venue/venue_booking_web_test.dart'),
     );
     for (final bypass in ['continue-on-error', 'if:', '||', '--coverage']) {
       expect(browserStep, isNot(contains(bypass)));
@@ -262,9 +298,10 @@ void main() {
         r'^  ([A-Za-z_][A-Za-z0-9_-]*):$',
         multiLine: true,
       ).allMatches(jobs).map((match) => match.group(1)).toList(),
-      ['checks', 'deploy'],
+      ['checks', 'build', 'deploy'],
     );
     final deploy = jobs.split('\n  deploy:\n').last;
+    expect(deploy, contains('needs: build'));
     expect(
       deploy,
       contains(
@@ -287,17 +324,7 @@ void main() {
     expect(workflow, contains('permissions:\n  contents: read\n\n'));
 
     final checks = File('.github/workflows/pr_checks.yml').readAsStringSync();
-    final artifactUpload = checks
-        .split(
-          '- name: Upload validated staging artifact for dev deployment\n',
-        )
-        .last;
-    expect(
-      artifactUpload,
-      contains(
-        "if: github.event_name == 'push' && github.ref == 'refs/heads/dev'",
-      ),
-    );
+    expect(checks, isNot(contains('name: staging-web-')));
     expect(checks, isNot(contains('diagnostic')));
     expect(checks, contains('staging_wrangler.test.mjs'));
     expect(

@@ -27,9 +27,13 @@ application is a Flutter Web-only project deployed through GitHub Pages.
   models, provider-neutral repository contracts, and application BLoCs own
   validation, pending, success, failure, duplicate prevention, and retry. The
   development can explicitly select the temporary direct HubSpot transport or
-  a first-party local Worker transport backed by deterministic mocks. With no
-  explicit development selection, and in every production composition, the
-  repositories deliberately fail closed without network or persistence.
+  a first-party local Worker transport backed by deterministic mocks. Without
+  an explicit development selection, both development repositories fail closed.
+  Production Flutter uses the first-party Worker-backed repository for Here &
+  Now at the same-origin `/api/registrations/here-and-now` endpoint. Live
+  activation depends on Cloudflare routing, Worker configuration, and approved
+  HubSpot settings. Production Founding Friend registration remains deferred,
+  and production Stripe payment creation is independently restricted.
   Injected test repositories can confirm the existing Here & Now success
   presentation. After a confirmed Founding Friend registration, the separate
   payment workflow prepares a server-owned one-time Stripe-hosted Checkout for
@@ -146,56 +150,78 @@ Those machine-specific settings remain ignored.
 ## Run Flutter Web
 
 ```bash
-puro flutter run -d chrome -t lib/main_dev.dart
+puro flutter run -d chrome -t lib/main_dev.dart --no-web-resources-cdn
 ```
 
 Both entrypoints expose the Here & Now and Founding Friend forms. Their BLoCs
 validate and attempt submission. Development remains fail-closed by default,
-and does not load local HubSpot configuration. Copy `.env.example` to the
-ignored local `.env`, then replace the four placeholder identifiers with the
-approved portal and form identifiers. The Venue form identifier is retained
+and does not load local HubSpot configuration. If the ignored local `.env`
+does not exist, copy it from `.env.example`. Use only approved portal and
+form identifiers for direct HubSpot testing. The Venue form identifier is retained
 only as a local reference for configuring the Worker-specific `.dev.vars` file;
 Flutter does not read it. The shared portal identifier and two registration
 form identifiers configure only an explicitly configured temporary
 direct-HubSpot development test:
 
 ```bash
-cp .env.example .env
 puro flutter run -d chrome -t lib/main_dev.dart \
   --dart-define-from-file=.env \
-  --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot
+  --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot \
+  --dart-define=FUN_APP_PAYMENT_TRANSPORT=deferred
 ```
 
 These are public form identifiers, not credentials. Do not put private HubSpot
 access tokens or secrets in Dart defines or a Flutter Web bundle. The direct
 transport sends no `legalConsentOptions`; independently verify each form's
 required fields and legal-consent settings in HubSpot before any authorized
-live test. Production registration submissions remain fail-closed even when
-these defines are present. Consent and age-eligibility decisions remain open.
+live test. Production ignores browser-side HubSpot defines and uses the first-party
+Worker for Here & Now. Consent and age-eligibility decisions remain open.
 Refund/cookie placeholder routes remain restricted.
 
-VS Code and VSCodium users can also launch either explicit Flutter entrypoint
-on Chrome in debug mode through the committed configurations:
+VS Code and VSCodium use the shared Chrome launch profiles in
+`.vscode/launch.json`. Run the Puro editor setup above on a new machine.
 
-- **Fun App Landing — Development (Fake Repositories)** selects the
-  deterministic local data source and does not load `.env`.
-- **Fun App Landing — Development (Direct HubSpot)** loads `.env` for the two
-  development-only registration workflows. This is the only committed launch
-  configuration that can make direct registration requests.
-- **Fun App Landing — Development (Local Registration Worker)** uses Flutter
-  port `7357`, loads the registration Worker origin from `.env`, keeps payment
-  deferred, and sends provider-neutral registration JSON only to localhost.
-- **Fun App Landing — Development (Local Workers)** loads both Worker origins
-  and selects both local deterministic transports.
-- **Fun App Worker — Local Mock** runs Wrangler on `localhost:8787`; the
-  **Fun App Landing + Local Mock Worker** compound starts both local processes.
-- **Fun App Payment Worker — Local Mock** runs the deterministic Stripe mock on
-  `localhost:8788`; the **Fun App Landing + Local Mock Workers** compound starts
-  Flutter and both isolated Workers without contacting HubSpot or Stripe.
-- **Fun App Landing — Production** selects the production first-party Venue
-  source and fixed `https://funapp.world` payment boundary without loading `.env`.
-  Registration remains deferred, so the purchase flow cannot start, and the
-  payment Worker separately defaults creation to disabled.
+- **Fun App Landing — Development** is the first and recommended everyday
+  profile. It uses the deterministic Venue repository and defers user
+  registration and payment. It serves Flutter's web resources locally and
+  needs neither `.env` nor local Workers.
+- **Fun App Landing — Development (Booking .env)** loads
+  `FUN_APP_VENUE_BOOKING_URL` from the ignored root `.env` and explicitly
+  keeps registration and payment deferred. The equivalent terminal launch is
+  shown below.
+- **Fun App Landing + Mock Registration** starts the registration Worker and
+  the **Development (Mock Registration)** Flutter profile. Use it to test
+  Here & Now registration at `http://localhost:7357` with payment deferred.
+- **Fun App Landing + Mock Registration and Payment** starts both mock Workers
+  and the **Development (Mock Registration + Payment)** Flutter profile. Use
+  it for the deterministic Founding Friend registration and Checkout journey.
+- **Fun App Registration Worker — Local Mock** and **Fun App Payment Worker —
+  Local Mock** start just their respective Worker on port `8787` or `8788`.
+  The Flutter profiles in the compounds are also available for Workers you
+  have already started.
+- **Fun App Landing — Development (Direct HubSpot)** loads the approved public
+  identifiers from `.env`. Submitting Here & Now or Founding Friend can
+  create real HubSpot records. Payment remains deferred.
+- **Fun App Landing — Production (Local Inspection)** uses the production
+  dependency graph without `.env`. Venue and Here & Now requests resolve to
+  localhost. Payment requests can target `https://funapp.world`. Founding
+  Friend production registration remains deferred and production Stripe
+  creation is independently disabled.
+
+To launch the booking profile from a terminal:
+
+```bash
+puro flutter run -d chrome -t lib/main_dev.dart --no-web-resources-cdn \
+  --dart-define-from-file=.env \
+  --dart-define=FUN_APP_REGISTRATION_TRANSPORT=deferred \
+  --dart-define=FUN_APP_PAYMENT_TRANSPORT=deferred
+```
+
+For mock integration, run `npm ci` in each Worker directory you will start.
+Copy the registration Worker's `.dev.vars.example` to its ignored `.dev.vars`.
+Use the root `.env.example` for the loopback URL settings. If you already have
+a root `.env` for booking, add any missing Worker URL settings to it. The
+default payment mock needs no additional file or credential.
 
 For a terminal production launch, use the production entrypoint without the
 development-only registration configuration:
@@ -232,18 +258,41 @@ a running browser submits through an explicitly selected transport. The
 staging artifact is deliberately separate from `web/CNAME`, which remains the
 production declaration for `funapp.world`.
 
+### Venue booking and email logo
+
+The Venue waitlist action submits the existing enquiry form. The booking action
+opens a separate browser tab and preserves the current draft. On wide layouts
+the orange booking button is on the left and the blue waitlist button is on the
+right. On narrow layouts the waitlist button comes first.
+
+Set the public `FUN_APP_VENUE_BOOKING_URL` in the ignored `.env` file for local
+development and choose **Development (Booking .env)** or use its terminal
+command above.
+Keep the value quoted if it contains a URL fragment.
+Hosted builds read the same-named Actions variable from the `staging` or
+`production` Environment. A missing or invalid HTTPS URL leaves the button
+available and displays localized feedback on activation. A URL change needs a
+new web build.
+
+`web/email/fun-app-logo.png` is copied to `/email/fun-app-logo.png` in both
+artifacts. After publishing and verifying the production site, use
+`https://funapp.world/email/fun-app-logo.png` in HTML email signatures or
+footers. The production URL is intended for anonymous access. Staging retains
+its existing site protection.
+
 ### Environment matrix
 
 | Environment or mode | Purpose | Flutter entrypoint or build command | VS Code/VSCodium | Website location | Configuration and preparation |
 | --- | --- | --- | --- | --- | --- |
-| Local fake development | Default UI work with no registration or payment I/O. Venue submissions are deterministic local success; user registration and payment fail closed. | `puro flutter run -d chrome -t lib/main_dev.dart`; build-only: `puro flutter build web --no-web-resources-cdn -t lib/main_dev.dart` | **Fun App Landing — Development (Fake Repositories)**; this is the first/default Run choice. | Flutter-selected localhost; build output is `build/web`. | No `.env`, Worker, HubSpot, Stripe, Cloudflare, or GitHub preparation. |
-| Local direct HubSpot testing | Explicit browser-to-HubSpot testing for Here & Now and Founding Friend only. | `puro flutter run -d chrome -t lib/main_dev.dart --dart-define-from-file=.env --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot` | **Fun App Landing — Development (Direct HubSpot)** | Flutter-selected localhost. | Copy `.env.example` to ignored `.env` and set the public portal and two registration form IDs. No private token belongs in Flutter. |
-| Local mocked registration Worker | Exercise first-party registration serialization, validation, rate limiting, and deterministic responses without starting payment. | Start `npm run dev` in `cloudflare/venue-interest-worker`, then run `lib/main_dev.dart` on port `7357` with `.env` and `FUN_APP_REGISTRATION_TRANSPORT=local_worker`. | **Fun App Landing + Local Mock Worker** compound; its Flutter child is **Development (Local Registration Worker)**. | Flutter at `http://localhost:7357`; registration Worker at `http://localhost:8787`. | Copy the registration `.dev.vars.example` to ignored `.dev.vars` and root `.env.example` to ignored `.env`. |
-| Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Local Mock Workers** compound; its Flutter child is **Development (Local Workers)**. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
-| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production** | Localhost when run; `build/web` when built. | No `.env`. Venue requests resolve to localhost; payment routes target `https://funapp.world`, subject to browser CORS. Deferred registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
-| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME`, rejects bundled local legal assets, and adds staging canonical/noindex metadata. | No `.env` or provider credential. The compiled graph targets `https://staging.funapp.world` for both first-party integrations. |
+| Local fake development | Default UI work with no registration or payment I/O. Venue submissions are deterministic local success; user registration and payment fail closed. | `puro flutter run -d chrome -t lib/main_dev.dart --no-web-resources-cdn`; build-only: `puro flutter build web --no-web-resources-cdn -t lib/main_dev.dart` | **Fun App Landing — Development** (first/default). | Flutter-selected localhost; build output is `build/web`. | Booking configuration is optional. The default mode requires no external services. |
+| Local booking configuration | Use the configured scheduler with deferred registration and payment. | Use the booking terminal launch above. | **Fun App Landing — Development (Booking .env)** | Flutter-selected localhost. | Set `FUN_APP_VENUE_BOOKING_URL` in the ignored root `.env`. |
+| Local direct HubSpot testing | Explicit browser-to-HubSpot testing for Here & Now and Founding Friend only. | `puro flutter run -d chrome -t lib/main_dev.dart --dart-define-from-file=.env --dart-define=FUN_APP_REGISTRATION_TRANSPORT=direct_hubspot --dart-define=FUN_APP_PAYMENT_TRANSPORT=deferred` | **Fun App Landing — Development (Direct HubSpot)** | Flutter-selected localhost. | Copy `.env.example` to ignored `.env` and set the public portal and two registration form IDs. No private token belongs in Flutter. |
+| Local mocked registration Worker | Exercise first-party registration serialization, validation, rate limiting, and deterministic responses without starting payment. | Start `npm run dev` in `cloudflare/venue-interest-worker`, then run `lib/main_dev.dart` on port `7357` with `.env`, `FUN_APP_REGISTRATION_TRANSPORT=local_worker`, and `FUN_APP_PAYMENT_TRANSPORT=deferred`. | **Fun App Landing + Mock Registration** compound. | Flutter at `http://localhost:7357`; registration Worker at `http://localhost:8787`. | Copy the registration `.dev.vars.example` to ignored `.dev.vars` and root `.env.example` to ignored `.env`. |
+| Local mocked Worker integration | Exercise registration plus the complete deterministic Checkout/verification journey, without HubSpot or Stripe. | Start registration `npm run dev` and payment `npm run dev:mock`, then run `lib/main_dev.dart` on port `7357` with both `local_worker` defines. | **Fun App Landing + Mock Registration and Payment** compound. | Flutter at `http://localhost:7357`; Workers at ports `8787` and `8788`. | Same ignored `.env` and registration `.dev.vars`; payment `dev:mock` needs no file or credential. Copy its `.dev.vars.example` only to choose another scenario. |
+| Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production (Local Inspection)** | Localhost when run; `build/web` when built. | Venue and Here & Now requests resolve to localhost. Payment routes target `https://funapp.world`, subject to browser CORS. Deferred Founding Friend registration prevents the normal registration-to-Checkout journey. Builds make no requests. |
+| Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME`, rejects bundled local legal assets, and adds staging canonical/noindex metadata. | Booking configuration is optional. No provider credential is required. Registration and payment requests target `https://staging.funapp.world`. |
 | Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate, then automatically publish the two staging API Workers and staging site. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
-| Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Production registration and payment creation remain disabled. |
+| Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; the two existing production Worker workflows deploy only when manually dispatched. | **Fun App Landing — Production (Local Inspection)** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | GitHub Pages plus the existing production Cloudflare configuration. Here & Now requires separate Worker activation and its exact route. Founding Friend registration and payment creation remain disabled. |
 
 The standalone Worker commands are also supported execution modes:
 
@@ -267,23 +316,23 @@ The standalone Worker commands are also supported execution modes:
 | Local direct HubSpot testing | In-memory fake success | Direct public HubSpot Forms API | **Real** development-selected forms | Deferred/fail-closed | Unavailable | **Can create HubSpot form records** when a developer submits | Cannot change production infrastructure, but supplied IDs may identify real HubSpot forms | Implemented; use only for explicitly authorized tests. |
 | Local mocked registration Worker | In-memory fake success | Local registration Worker | Mocked, no upstream call | Deferred/fail-closed | Unavailable | No | No | Implemented; deterministic. |
 | Local mocked Worker integration | In-memory fake success | Local registration Worker | Mocked, no upstream call | Local payment Worker | Mocked, no upstream call | No | No | Implemented; deterministic. |
-| Production-mode local run | Same-origin localhost request | Deferred/fail-closed | Registration unavailable | Fixed `https://funapp.world` payment endpoints, subject to browser CORS | Production payment service boundary | No during build; runtime payment routes can attempt production requests; registration remains deferred | Payment requests target production, not a local mock | Use local mocked Worker integration for payment development. |
+| Production-mode local run | Same-origin localhost request | Here & Now resolves to localhost; Founding Friend is deferred | Requires separate local routing | Fixed `https://funapp.world` payment endpoints, subject to browser CORS | Production payment service boundary | No during build; runtime payment routes can attempt production requests | Payment requests target production, not a local mock | Use local mocked Worker integration for payment development. |
 | Staging artifact build | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No | No | Implemented build path; artifact is not deployed. |
 | Hosted staging | In-memory fake success; no staging Venue API route | `funapp-venue-interest-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Automated deployment verified; registration, sandbox Checkout and verification reported successful by the operator. See [operational status](#operational-configuration-and-rollback). |
-| Hosted production | Existing `funapp-venue-interest` route may submit to HubSpot | Deferred/fail-closed in Flutter; registration routes remain unattached/disabled | Real for the existing Venue contract only | Repository boundary exists, but creation is disabled and no production payment route is approved | Live payment unavailable | Existing Venue submissions can create HubSpot records; no registration or payment activation is introduced here | This is production | Existing hosting/Worker behavior preserved. |
+| Hosted production | Existing `funapp-venue-interest` route may submit to HubSpot | Here & Now is Worker-backed and requires separate activation; Founding Friend is deferred | Venue and, after activation, the approved Here & Now form | Repository boundary exists, but creation is disabled and no production payment route is approved | Live payment unavailable | Venue and enabled Here & Now submissions can create HubSpot records | This is production | Here & Now rollout requires authorized setup. |
 
 ### Trigger matrix
 
 | Event or command | Builds/tests | Deploys | Target and safety boundary |
 | --- | --- | --- | --- |
-| Press Run in VSCodium | Starts only the selected launch configuration. The first/default choice is fake development. | Nothing | The selected name states whether it is fake, direct HubSpot, local registration, both local Workers, or production-mode local. |
-| Start **Landing + Local Mock Worker** | Starts Flutter plus the registration mock. | Nothing | Localhost only; payment remains deferred. |
-| Start **Landing + Local Mock Workers** | Starts Flutter plus both deterministic Workers. | Nothing | Localhost only; no HubSpot or Stripe request. |
+| Press Run in VSCodium | Starts only the selected launch configuration. The first/default choice is fake development. | Nothing | The profile name identifies the booking, mock integration, direct HubSpot, or production inspection mode. |
+| Start **Landing + Mock Registration** | Starts Flutter plus the registration mock. | Nothing | Localhost only; payment remains deferred. |
+| Start **Landing + Mock Registration and Payment** | Starts Flutter plus both deterministic Workers. | Nothing | Localhost only; no HubSpot or Stripe request. |
 | Run any local `flutter build web --no-web-resources-cdn` command | Compiles the selected entrypoint into `build/web`. | Nothing | Build commands perform no provider I/O. Run the matching artifact preparation command before upload. |
 | Push a feature branch other than `dev` or `main` | No repository workflow is triggered solely by the push. | Nothing | No staging Worker uses Cloudflare Git integration or an automatic repository trigger. |
 | Open or update a PR targeting `dev` or `main` | `pr_checks.yml` formats, generates, analyzes, tests, dry-runs the site Worker and both API Workers, and builds production plus staging artifacts. | Nothing | Hosted CI validation only. |
 | Push a commit to `main` | `deploy.yml` regenerates, analyzes, tests, and builds production. | **Deploys production GitHub Pages** | Existing production behavior is intentionally preserved. It does not deploy either Worker or staging. |
-| Manually dispatch `deploy.yml` | Same production validation/build. | **Deploys production GitHub Pages** | Production action; unrelated to staging. |
+| Manually dispatch `deploy.yml` | Same production validation/build when dispatched on `main`. | **Deploys production GitHub Pages** | Production action; unrelated to staging. |
 | Manually dispatch either existing production Worker workflow | Validates the selected root Worker. | **Deploys that production Worker identity** | Uses GitHub `production`; no routes are changed. These are not staging commands. |
 | Push a commit to `dev` (including a PR merge) | Reuses every `pr_checks.yml` validation, including production/staging builds and all three Worker suites. | **Deploys staging registration, sandbox payment, then site** | `deploy-staging-site.yml` uses GitHub `staging` after all checks pass, complete read-only preflight, and the dev-HEAD check under the publishing lock. |
 
@@ -291,7 +340,8 @@ The staging workflow has no manual or PR deployment trigger. The former
 individual staging API deployment workflows have been retired so there is one
 validation gate and no manual checkbox that resets payment creation. Production
 Worker workflows remain manual-only and use the GitHub `production` environment.
-Production Pages retains the `github-pages` environment and its existing triggers.
+The production Pages build uses the `production` Environment. Publishing
+continues through `github-pages`.
 
 ### Staging architecture and routing
 
@@ -413,8 +463,9 @@ each API Worker job filters the deployment suite to its own upload-metadata test
 The site upload-metadata test runs with the common tests. Staging artifact upload is enabled
 only for dev pushes; coverage upload remains available to PRs.
 
-After all checks pass, the deployment job enters GitHub `staging` and downloads
-that run's validated staging artifact without rebuilding Flutter with credentials.
+After all checks pass, the build job enters GitHub `staging` and compiles the
+same revision with its public booking URL. The deploy job downloads that
+verified artifact. The Flutter build receives no deployment credentials.
 Publishing holds `funapp-staging-deployment` with `cancel-in-progress: false`.
 The dev-HEAD check under that lock rejects superseded revisions and stale reruns.
 A newer push waits for an active publish to finish. Order remains registration,
@@ -525,7 +576,7 @@ failures; the incident is not a current unresolved blocker.
 The `general_audit` changes after that deployed revision, including the local
 audit fixes and A08 image optimizations, are not covered by that deployment
 evidence. The A09/A10 CI and documentation edits are also local and undeployed.
-Production registration and payment creation remain disabled. Stripe live-account
+Production Founding Friend registration and payment creation remain disabled. Stripe live-account
 approval, approved legal documentation, and the separate production configuration
 and controlled verification described below remain outstanding. No live production
 payment verification is claimed.
@@ -794,10 +845,10 @@ a potential future optimization; no lazy-loading framework is added.
 existing `funapp-venue-interest` Worker. It preserves `POST
 /api/venue-interest` and implements exact dispatch for `POST
 /api/registrations/here-and-now` and `POST
-/api/registrations/founding-friend`. The registration routes are implemented
-but are not attached or enabled in production. The Worker validates each Fun
-App-owned request contract and maps to HubSpot only inside the Worker. GitHub
-Pages remains the origin for every non-API path.
+/api/registrations/founding-friend`. Here & Now requires separate production
+activation. Founding Friend is available in the mocked environments. The Worker
+validates each Fun App-owned request contract and maps to HubSpot internally.
+GitHub Pages remains the origin for every non-API path.
 
 Install and validate it independently:
 
@@ -813,7 +864,7 @@ Fake local values live only in the tracked `.dev.vars.example`; copy that file
 to an ignored `.dev.vars` for local Wrangler development. Its required mock
 scenario makes both Venue and registration submissions deterministic and
 prevents HubSpot I/O. Start it with `npm run dev`; copy `.env.example` to the
-ignored root `.env`; then use the compound launch configuration. Change
+ignored root `.env`; then use **Fun App Landing + Mock Registration**. Change
 `HUBSPOT_MOCK_SCENARIO` and restart Wrangler to exercise `success`,
 `provider_rejection`, `rate_limited`, `provider_unavailable`,
 `network_failure`, or `timeout`. Send malformed JSON or omit a required field
@@ -830,7 +881,7 @@ The Here & Now request requires `firstName`, `lastName`, `email`, integer
 Founding Friend uses the same contract plus required canonical `country`.
 Unknown properties, malformed JSON, unsupported gender/country values,
 non-safe-integer ages, non-JSON content, and bodies over 16 KiB are rejected.
-The local Flutter Worker client applies the same JavaScript safe-integer and
+The Flutter Worker client applies the same JavaScript safe-integer and
 UTF-8 body-size boundaries before sending; these are serialization constraints,
 not age eligibility or product-specific text-length rules.
 Responses are provider-neutral: `204` success, `400` invalid request, `404`
@@ -839,48 +890,41 @@ unknown route, `405` unsupported method, `422` provider validation rejection,
 configuration. Provider bodies and submitted personal data are never returned
 or logged.
 
-The Worker uses `HUBSPOT_PORTAL_ID`, the authoritative existing
-`HUBSPOT_FORM_GUID` (with `HUBSPOT_VENUE_FORM_GUID` supported only as a fallback
-alias when the established binding is absent),
-`HUBSPOT_HERE_AND_NOW_FORM_GUID`,
-`HUBSPOT_FOUNDING_FRIEND_FORM_GUID`, and
-`REGISTRATION_SUBMISSIONS_ENABLED`. Registration defaults to disabled and
-requires the source-declared `REGISTRATION_RATE_LIMITER` binding. That binding
-provides approximate, Cloudflare-location-local protection targeting 10
-attempts per 60 seconds for each route/connecting-IP key; it is not a strict,
-globally consistent quota. Shared public IPs can group unrelated users and
-cause collective throttling, while traffic handled in different Cloudflare
-locations may exceed the nominal aggregate rate. The
-`wrangler.jsonc` file declares no HubSpot `vars` and sets `keep_vars: true`.
-The Worker makes at most one HubSpot attempt with a 10-second timeout and never
-retries. `LOCAL_DEVELOPMENT_ALLOWED_ORIGIN` and `HUBSPOT_MOCK_SCENARIO` are
-local-only mock settings. Loopback Worker execution requires both settings and
-a valid scenario, otherwise it fails closed without provider I/O. A deployed
-Worker rejects either local setting. Do not configure them on the deployed
-Worker.
+The Worker uses `HUBSPOT_PORTAL_ID` and the authoritative
+`HUBSPOT_FORM_GUID` for Venue (`HUBSPOT_VENUE_FORM_GUID` is a fallback when
+the authoritative binding is absent). Production Here & Now forwarding requires
+`HERE_AND_NOW_SUBMISSIONS_ENABLED=true`, a numeric portal ID, a valid
+`HUBSPOT_HERE_AND_NOW_FORM_GUID`, and the source-declared
+`REGISTRATION_RATE_LIMITER` binding. The Worker rejects production Founding
+Friend submissions even with the earlier shared flag and a form GUID present.
+The shared `REGISTRATION_SUBMISSIONS_ENABLED` switch continues to gate
+deterministic registration in local Worker development. Hosted staging uses its
+separate staging-only enablement and mock entrypoint.
 
-`.github/workflows/deploy-venue-interest-worker.yml` is manually triggered
-only. Its sole job targets the GitHub `production` Environment, validates the
-Worker, and deploys the existing Worker using that Environment's
-`HUBSPOT_PORTAL_ID`, `HUBSPOT_FORM_GUID`, `CLOUDFLARE_ACCOUNT_ID`, and
-`CLOUDFLARE_API_TOKEN`. It supplies
-`REGISTRATION_SUBMISSIONS_ENABLED=false` when that Environment variable is
-absent. The two registration form variables are required only if the flag is
-later set to `true`. Do not enable it until consent/legal approval and the
-Cloudflare routes and bindings have been reviewed. The workflow deliberately
-configures no route; route attachment remains dashboard-managed.
+The production `wrangler.jsonc` sets `keep_vars: true` and leaves runtime
+bindings and routing outside the repository. The Worker makes at most one
+HubSpot attempt with a 10-second timeout. Loopback requests require
+`LOCAL_DEVELOPMENT_ALLOWED_ORIGIN` and a supported `HUBSPOT_MOCK_SCENARIO`.
+The deployed Worker rejects local mock settings.
 
-Pending manual production setup is deliberately unperformed: keep the existing
+The manual `deploy-venue-interest-worker.yml` workflow validates and publishes
+the existing production Worker. It uses the `production` Environment values
 `HUBSPOT_PORTAL_ID`, `HUBSPOT_FORM_GUID`, `CLOUDFLARE_ACCOUNT_ID`, and
-`CLOUDFLARE_API_TOKEN`; add GitHub Environment variables
-`HUBSPOT_HERE_AND_NOW_FORM_GUID`,
-`HUBSPOT_FOUNDING_FRIEND_FORM_GUID`, and
-`REGISTRATION_SUBMISSIONS_ENABLED=false`; confirm rate-limit namespace `1001`
-is unique in the Cloudflare account; and later attach the existing Worker to
-the exact `funapp.world/api/registrations/here-and-now` and
-`funapp.world/api/registrations/founding-friend` routes. Do not change the flag
-to `true` until the outstanding legal/consent and controlled-live-verification
-gates are approved.
+`CLOUDFLARE_API_TOKEN`. It validates the numeric portal ID and Venue form GUID
+on every deployment. It supplies `HERE_AND_NOW_SUBMISSIONS_ENABLED=false`
+when unset and also validates the Here & Now form GUID when enabled.
+
+Before an authorized Here & Now rollout, verify the approved HubSpot form and
+field/consent settings, confirm the existing rate-limit binding and namespace
+`1001`, and attach only the exact
+`funapp.world/api/registrations/here-and-now` route to the existing Worker.
+Coordinate the Worker deployment and route verification before publishing the
+new Pages build. Enable forwarding through the `production` Environment and
+the manual Worker workflow once rollout is approved. Roll back forwarding by
+setting the scoped value to `false` and redeploying the forms Worker. Restore
+the prior Pages release to recover the previous Venue UI and deferred Here &
+Now composition. Keep the PNG in the rollback artifact if its public URL is
+already in use.
 
 ### Founding Friend payment Worker
 
@@ -991,8 +1035,8 @@ scenario: `created`, `paid`, `pending`, `cancelled`, `expired`,
 `provider_validation_failure`, `payment_mismatch`, `network_failure`,
 `provider_unavailable`, `timeout`, `duplicate_attempt`, `refunded`, or
 `disputed`, then run `npm run dev`. Local mode requires the exact loopback
-Flutter origin and never calls Stripe. Point Flutter at it with the committed
-VSCodium compound or:
+Flutter origin and never calls Stripe. Point Flutter at it with
+**Fun App Landing + Mock Registration and Payment** or:
 
 ```bash
 puro flutter run -d chrome -t lib/main_dev.dart --web-port=7357 \
@@ -1129,8 +1173,9 @@ The Venue data repository maps validated leads into a provider-neutral DTO and
 delegates to an environment-selected data source. Prospective-user repositories
 use direct HubSpot only in the explicit direct-development profile, or
 provider-neutral requests to a local mocked Worker in the explicit Worker
-profile. Unconfigured development and every production build remain
-fail-closed. Payment uses only the separate first-party Worker boundary;
+profile. Unconfigured development remains deferred. Production Here & Now
+uses the same-origin Worker transport, and production Founding Friend remains
+deferred. Payment uses only the separate first-party Worker boundary;
 Flutter has no Stripe SDK or secret. The explicit development and production
 entrypoints pass a typed
 environment into `core`, which configures GetIt through Injectable before the
@@ -1147,12 +1192,11 @@ dependency boundaries.
 Pull requests targeting `dev` or `main` run all three Worker projects'
 typechecking, tests, and Wrangler dry runs plus Flutter formatting, generation,
 analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
-legal-link browser navigation, and production/staging builds through the
-read-only `PR Checks` workflow. These checks have no staging environment or
-Cloudflare/Stripe credentials and cannot deploy. Pushes to `dev` reuse these
-checks, then automatically deploy only staging through **Deploy Staging**.
+legal-link and Venue booking browser navigation, and production/staging builds
+through the credential-free `PR Checks` workflow. Pushes to `dev` reuse these
+checks before the [staging release sequence](#staging-validation-and-deployment).
 
-Pushes to `main` and manual workflow dispatches run the GitHub Pages workflow.
+Pushes to `main` and manual dispatches on `main` run the GitHub Pages workflow.
 The `dev` branch deploys to Cloudflare staging and has no Pages environment.
 Hosted CI installs Flutter 3.47.2 directly through
 `subosito/flutter-action@v2`, then generates localizations and Dart sources,
