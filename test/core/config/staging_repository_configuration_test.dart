@@ -128,43 +128,66 @@ void main() {
     }
   });
 
-  test('local launch modes retain isolated and combined mocked Workers', () {
-    final launch = _readJsonc('.vscode/launch.json');
-    final configurations = (launch['configurations']! as List<dynamic>)
-        .map(_objectMap)
-        .toList();
-    final registrationOnly = configurations.singleWhere(
-      (configuration) =>
-          configuration['name'] ==
-          'Fun App Landing — Development (Local Registration Worker)',
-    );
-    final bothWorkers = configurations.singleWhere(
-      (configuration) =>
-          configuration['name'] ==
-          'Fun App Landing — Development (Local Workers)',
-    );
-    final registrationArgs = (registrationOnly['toolArgs']! as List<dynamic>)
-        .cast<String>();
-    final bothWorkerArgs = (bothWorkers['toolArgs']! as List<dynamic>)
-        .cast<String>();
+  test(
+    'local launch profiles select their intended registration and payment',
+    () {
+      final launch = _readJsonc('.vscode/launch.json');
+      final configurations = (launch['configurations']! as List<dynamic>)
+          .map(_objectMap)
+          .toList();
+      const development = 'Fun App Landing — Development';
+      expect(configurations.first['name'], development);
+      expect(configurations.first['toolArgs'], ['--no-web-resources-cdn']);
 
-    expect(
-      registrationArgs,
-      contains('--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker'),
-    );
-    expect(
-      registrationArgs,
-      isNot(contains('--dart-define=FUN_APP_PAYMENT_TRANSPORT=local_worker')),
-    );
-    expect(
-      bothWorkerArgs,
-      contains('--dart-define=FUN_APP_REGISTRATION_TRANSPORT=local_worker'),
-    );
-    expect(
-      bothWorkerArgs,
-      contains('--dart-define=FUN_APP_PAYMENT_TRANSPORT=local_worker'),
-    );
-  });
+      final profiles = {
+        for (final configuration in configurations)
+          configuration['name']! as String: configuration,
+      };
+      for (final (name, registration, payment) in [
+        ('Booking .env', 'deferred', 'deferred'),
+        ('Direct HubSpot', 'direct_hubspot', 'deferred'),
+        ('Mock Registration', 'local_worker', 'deferred'),
+        ('Mock Registration + Payment', 'local_worker', 'local_worker'),
+      ]) {
+        final args = profiles['$development ($name)']!['toolArgs']! as List;
+        expect(args, contains('--dart-define-from-file=.env'));
+        expect(
+          args.where((arg) => (arg as String).startsWith('--dart-define=')),
+          unorderedEquals([
+            '--dart-define=FUN_APP_REGISTRATION_TRANSPORT=$registration',
+            '--dart-define=FUN_APP_PAYMENT_TRANSPORT=$payment',
+          ]),
+          reason: name,
+        );
+        if (registration == 'local_worker') {
+          expect(args, contains('--web-port=7357'), reason: name);
+        }
+      }
+
+      final compounds = (launch['compounds']! as List<dynamic>).map(_objectMap);
+      expect(
+        compounds.map((compound) => compound['configurations']),
+        unorderedEquals([
+          [
+            'Fun App Registration Worker — Local Mock',
+            '$development (Mock Registration)',
+          ],
+          [
+            'Fun App Registration Worker — Local Mock',
+            'Fun App Payment Worker — Local Mock',
+            '$development (Mock Registration + Payment)',
+          ],
+        ]),
+      );
+      for (final compound in compounds) {
+        expect(
+          (compound['configurations']! as List).every(profiles.containsKey),
+          isTrue,
+        );
+        expect(compound['stopAll'], isTrue);
+      }
+    },
+  );
 
   test('PR validation has no deployment credentials or environment', () {
     final workflow = File(
