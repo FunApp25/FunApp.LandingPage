@@ -211,8 +211,17 @@
     "description": "Validation message for a non-positive venue quantity."
   },
   "venueLeadBookCall": "Book a call with the Fun App team",
+  "@venueLeadBookCall": {
+    "description": "Label for the Venue action that opens the call scheduler."
+  },
   "venueLeadJoinWaitlist": "Register for the waitlist now",
+  "@venueLeadJoinWaitlist": {
+    "description": "Label for the Venue waitlist form submit button."
+  },
   "venueLeadBookingUnavailable": "Call booking is unavailable right now. Please try again later.",
+  "@venueLeadBookingUnavailable": {
+    "description": "Live feedback when the Venue call scheduler cannot be opened."
+  },
   "venueLeadSubmitting": "Sending…",
   "@venueLeadSubmitting": {
     "description": "Venue-interest form submission progress label."
@@ -958,36 +967,129 @@
   "userSignUpHereAndNowSuccessBody": "Fun App will be launching soon and we look forward to welcoming you as an early member",
   "@userSignUpHereAndNowSuccessBody": {"description":"Exact approved body after a confirmed Here & Now submission."},
   "foundingFriendPaymentPreparingTitle": "Preparing secure Checkout",
+  "@foundingFriendPaymentPreparingTitle": {
+    "description": "Heading while a Founding Friend Checkout Session is being prepared."
+  },
   "foundingFriendPaymentPreparingBody": "Your registration step is complete. We’re preparing Stripe-hosted Checkout for the one-time £249 GBP payment. Payment hasn’t been confirmed.",
+  "@foundingFriendPaymentPreparingBody": {
+    "description": "Explains what happens while Founding Friend Checkout is being prepared."
+  },
   "foundingFriendPaymentRedirectingTitle": "Taking you to secure Checkout",
+  "@foundingFriendPaymentRedirectingTitle": {
+    "description": "Heading while opening Stripe Checkout."
+  },
   "foundingFriendPaymentRedirectingBody": "You’ll complete payment on Stripe. Returning to this page is not proof of payment; Fun App verifies the payment separately.",
+  "@foundingFriendPaymentRedirectingBody": {
+    "description": "Explains the Stripe redirect and subsequent payment verification."
+  },
   "foundingFriendPaymentPreparationFailedTitle": "We couldn't open checkout",
+  "@foundingFriendPaymentPreparationFailedTitle": {
+    "description": "Heading when Checkout preparation fails."
+  },
   "foundingFriendPaymentPreparationFailedBody": "Your registration step is complete, but payment hasn't been confirmed. You can try again without filling in the form again in this browser tab.",
+  "@foundingFriendPaymentPreparationFailedBody": {
+    "description": "Explains how to retry after Checkout preparation fails."
+  },
   "foundingFriendPaymentRetryCheckout": "Try checkout again",
+  "@foundingFriendPaymentRetryCheckout": {
+    "description": "Button label for retrying Checkout from this browser tab."
+  },
   "foundingFriendPaymentCancelledTitle": "Checkout cancelled",
+  "@foundingFriendPaymentCancelledTitle": {
+    "description": "Heading on the Checkout cancellation return page."
+  },
   "foundingFriendPaymentCancelledBody": "No completed payment has been confirmed. You can retry Checkout without submitting your registration again in this browser tab.",
+  "@foundingFriendPaymentCancelledBody": {
+    "description": "Explains payment status and retry on the Checkout cancellation page."
+  },
   "foundingFriendPaymentVerifyingTitle": "Verifying your payment",
+  "@foundingFriendPaymentVerifyingTitle": {
+    "description": "Heading while the Checkout Session is being verified."
+  },
   "foundingFriendPaymentVerifyingBody": "We’re checking the Checkout Session securely. The redirect alone does not confirm payment.",
+  "@foundingFriendPaymentVerifyingBody": {
+    "description": "Explains the verification performed after returning from Checkout."
+  },
   "foundingFriendPaymentConfirmedTitle": "Payment confirmed",
+  "@foundingFriendPaymentConfirmedTitle": {
+    "description": "Heading for a verified Founding Friend payment."
+  },
   "foundingFriendPaymentConfirmedBody": "Your Founding Friend purchase is confirmed. This does not activate a Fun App membership yet.",
+  "@foundingFriendPaymentConfirmedBody": {
+    "description": "Confirms the Founding Friend purchase and explains membership status."
+  },
   "foundingFriendPaymentPendingTitle": "Payment pending",
+  "@foundingFriendPaymentPendingTitle": {
+    "description": "Heading when payment confirmation is pending."
+  },
   "foundingFriendPaymentPendingBody": "Stripe has not confirmed available funds yet. You can check again safely without creating another Checkout Session.",
+  "@foundingFriendPaymentPendingBody": {
+    "description": "Explains how to check a pending payment again."
+  },
   "foundingFriendPaymentExpiredTitle": "Checkout expired",
+  "@foundingFriendPaymentExpiredTitle": {
+    "description": "Heading when the Checkout Session has expired."
+  },
   "foundingFriendPaymentExpiredBody": "This Checkout Session expired and is not proof of payment. You can retry Checkout without submitting your registration again in this browser tab.",
+  "@foundingFriendPaymentExpiredBody": {
+    "description": "Explains how to retry Checkout after the Session expires."
+  },
   "foundingFriendPaymentRefundedTitle": "Payment refunded",
+  "@foundingFriendPaymentRefundedTitle": {
+    "description": "Heading for a refunded Founding Friend payment."
+  },
   "foundingFriendPaymentRefundedBody": "This payment is recorded as refunded and does not currently qualify as a completed Founding Friend purchase.",
+  "@foundingFriendPaymentRefundedBody": {
+    "description": "Explains how a refund affects the Founding Friend purchase."
+  },
   "foundingFriendPaymentDisputedTitle": "Payment disputed",
+  "@foundingFriendPaymentDisputedTitle": {
+    "description": "Heading for a disputed Founding Friend payment."
+  },
   "foundingFriendPaymentDisputedBody": "This payment is recorded as disputed and cannot currently be confirmed as a qualifying purchase.",
+  "@foundingFriendPaymentDisputedBody": {
+    "description": "Explains why a disputed payment cannot be confirmed."
+  },
   "foundingFriendPaymentInvalidTitle": "Payment could not be confirmed",
+  "@foundingFriendPaymentInvalidTitle": {
+    "description": "Heading when the Checkout Session does not match the expected payment."
+  },
   "foundingFriendPaymentInvalidBody": "The Checkout Session did not match the expected one-time Founding Friend payment. Please contact support if you believe you paid.",
+  "@foundingFriendPaymentInvalidBody": {
+    "description": "Explains the Checkout Session mismatch and gives support guidance."
+  },
   "foundingFriendPaymentUnableTitle": "Unable to verify payment",
+  "@foundingFriendPaymentUnableTitle": {
+    "description": "Heading when payment verification is unavailable."
+  },
   "foundingFriendPaymentUnableBody": "Payment verification is temporarily unavailable. Please try again; this check will not create another payment.",
+  "@foundingFriendPaymentUnableBody": {
+    "description": "Explains what retrying payment verification does."
+  },
   "foundingFriendPaymentRecoveryUnavailableBody": "This browser tab no longer has the registration details required for a safe payment retry. Return to the Founding Friend form or contact support.",
+  "@foundingFriendPaymentRecoveryUnavailableBody": {
+    "description": "Guidance when this tab lacks the details needed to retry Checkout."
+  },
   "foundingFriendPaymentRetryVerification": "Check payment again",
+  "@foundingFriendPaymentRetryVerification": {
+    "description": "Button label for checking the payment status again."
+  },
   "foundingFriendPaymentReferenceLabel": "Purchase reference",
+  "@foundingFriendPaymentReferenceLabel": {
+    "description": "Label next to the purchase reference for a verified payment."
+  },
   "foundingFriendPaymentCopyReference": "Copy reference",
+  "@foundingFriendPaymentCopyReference": {
+    "description": "Button label for copying the purchase reference."
+  },
   "foundingFriendPaymentReferenceCopied": "Purchase reference copied",
+  "@foundingFriendPaymentReferenceCopied": {
+    "description": "Feedback after the purchase reference is copied."
+  },
   "foundingFriendPaymentSameEmailReminder": "When Fun App accounts become available, use the same email address as this purchase so your qualifying payment can be verified.",
+  "@foundingFriendPaymentSameEmailReminder": {
+    "description": "Reminder to use the purchase email for future account verification."
+  },
   "validationMaxLength": "Use at most {maximumLength} characters (some symbols count as two).",
   "venueLeadValidationQuantity": "Enter a whole number from 1 to {maximum}",
   "@validationMaxLength": {
@@ -1009,19 +1111,49 @@
   "userSignUpCountryOptionsSource": "Afghanistan\tAfghanistan\nÅland Islands\tÅland Islands\nAlbania\tAlbania\nAlgeria\tAlgeria\nAmerican Samoa\tAmerican Samoa\nAndorra\tAndorra\nAngola\tAngola\nAnguilla\tAnguilla\nAntarctica\tAntarctica\nAntigua and Barbuda\tAntigua and Barbuda\nArgentina\tArgentina\nArmenia\tArmenia\nAruba\tAruba\nAsia/Pacific Region\tAsia/Pacific Region\nAustralia\tAustralia\nAustria\tAustria\nAzerbaijan\tAzerbaijan\nBahamas\tBahamas\nBahrain\tBahrain\nBangladesh\tBangladesh\nBarbados\tBarbados\nBelarus\tBelarus\nBelgium\tBelgium\nBelize\tBelize\nBenin\tBenin\nBermuda\tBermuda\nBhutan\tBhutan\nBolivia\tBolivia\nBosnia and Herzegovina\tBosnia and Herzegovina\nBotswana\tBotswana\nBouvet Island\tBouvet Island\nBrazil\tBrazil\nBritish Indian Ocean Territory\tBritish Indian Ocean Territory\nBritish Virgin Islands\tBritish Virgin Islands\nBrunei\tBrunei\nBulgaria\tBulgaria\nBurkina Faso\tBurkina Faso\nBurundi\tBurundi\nCambodia\tCambodia\nCameroon\tCameroon\nCanada\tCanada\nCanary Islands\tCanary Islands\nCape Verde\tCape Verde\nCaribbean Netherlands\tCaribbean Netherlands\nCayman Islands\tCayman Islands\nCentral African Republic\tCentral African Republic\nChad\tChad\nChile\tChile\nChina\tChina\nChristmas Island\tChristmas Island\nCocos (Keeling) Islands\tCocos (Keeling) Islands\nColombia\tColombia\nComoros\tComoros\nCongo\tCongo\nCook Islands\tCook Islands\nCosta Rica\tCosta Rica\nCote d'Ivoire\tCote d'Ivoire\nCroatia\tCroatia\nCuba\tCuba\nCuraçao\tCuraçao\nCyprus\tCyprus\nCzech Republic\tCzech Republic\nDemocratic Republic of the Congo\tDemocratic Republic of the Congo\nDenmark\tDenmark\nDjibouti\tDjibouti\nDominica\tDominica\nDominican Republic\tDominican Republic\nEast Timor\tEast Timor\nEcuador\tEcuador\nEgypt\tEgypt\nEl Salvador\tEl Salvador\nEquatorial Guinea\tEquatorial Guinea\nEritrea\tEritrea\nEstonia\tEstonia\nEthiopia\tEthiopia\nEurope\tEurope\nFalkland Islands\tFalkland Islands\nFaroe Islands\tFaroe Islands\nFiji\tFiji\nFinland\tFinland\nFrance\tFrance\nFrench Guiana\tFrench Guiana\nFrench Polynesia\tFrench Polynesia\nFrench Southern and Antarctic Lands\tFrench Southern and Antarctic Lands\nGabon\tGabon\nGambia\tGambia\nGeorgia\tGeorgia\nGermany\tGermany\nGhana\tGhana\nGibraltar\tGibraltar\nGreece\tGreece\nGreenland\tGreenland\nGrenada\tGrenada\nGuadeloupe\tGuadeloupe\nGuam\tGuam\nGuatemala\tGuatemala\nGuernsey\tGuernsey\nGuinea\tGuinea\nGuinea-Bissau\tGuinea-Bissau\nGuyana\tGuyana\nHaiti\tHaiti\nHeard Island and McDonald Islands\tHeard Island and McDonald Islands\nHonduras\tHonduras\nHong Kong\tHong Kong\nHungary\tHungary\nIceland\tIceland\nIndia\tIndia\nIndonesia\tIndonesia\nIran\tIran\nIraq\tIraq\nIreland\tIreland\nIsle of Man\tIsle of Man\nIsrael\tIsrael\nItaly\tItaly\nJamaica\tJamaica\nJapan\tJapan\nJersey\tJersey\nJordan\tJordan\nKazakhstan\tKazakhstan\nKenya\tKenya\nKiribati\tKiribati\nKosovo\tKosovo\nKuwait\tKuwait\nKyrgyzstan\tKyrgyzstan\nLaos\tLaos\nLatvia\tLatvia\nLebanon\tLebanon\nLesotho\tLesotho\nLiberia\tLiberia\nLibya\tLibya\nLiechtenstein\tLiechtenstein\nLithuania\tLithuania\nLuxembourg\tLuxembourg\nMacau\tMacau\nMadagascar\tMadagascar\nMalawi\tMalawi\nMalaysia\tMalaysia\nMaldives\tMaldives\nMali\tMali\nMalta\tMalta\nMarshall Islands\tMarshall Islands\nMartinique\tMartinique\nMauritania\tMauritania\nMauritius\tMauritius\nMayotte\tMayotte\nMexico\tMexico\nMicronesia\tMicronesia\nMoldova\tMoldova\nMonaco\tMonaco\nMongolia\tMongolia\nMontenegro\tMontenegro\nMontserrat\tMontserrat\nMorocco\tMorocco\nMozambique\tMozambique\nMyanmar (Burma)\tMyanmar (Burma)\nNamibia\tNamibia\nNauru\tNauru\nNepal\tNepal\nNetherlands\tNetherlands\nNetherlands Antilles\tNetherlands Antilles\nNew Caledonia\tNew Caledonia\nNew Zealand\tNew Zealand\nNicaragua\tNicaragua\nNiger\tNiger\nNigeria\tNigeria\nNiue\tNiue\nNorfolk Island\tNorfolk Island\nNorth Korea\tNorth Korea\nNorth Macedonia\tNorth Macedonia\nNorthern Mariana Islands\tNorthern Mariana Islands\nNorway\tNorway\nOman\tOman\nPakistan\tPakistan\nPalau\tPalau\nPalestine\tPalestine\nPanama\tPanama\nPapua New Guinea\tPapua New Guinea\nParaguay\tParaguay\nPeru\tPeru\nPhilippines\tPhilippines\nPitcairn Islands\tPitcairn Islands\nPoland\tPoland\nPortugal\tPortugal\nPuerto Rico\tPuerto Rico\nQatar\tQatar\nRéunion\tRéunion\nRomania\tRomania\nRussia\tRussia\nRwanda\tRwanda\nSaint Barthélemy\tSaint Barthélemy\nSaint Helena\tSaint Helena\nSaint Kitts and Nevis\tSaint Kitts and Nevis\nSaint Lucia\tSaint Lucia\nSaint Martin\tSaint Martin\nSaint Pierre and Miquelon\tSaint Pierre and Miquelon\nSaint Vincent and the Grenadines\tSaint Vincent and the Grenadines\nSamoa\tSamoa\nSan Marino\tSan Marino\nSao Tome and Principe\tSao Tome and Principe\nSaudi Arabia\tSaudi Arabia\nSenegal\tSenegal\nSerbia\tSerbia\nSeychelles\tSeychelles\nSierra Leone\tSierra Leone\nSingapore\tSingapore\nSint Maarten\tSint Maarten\nSlovakia\tSlovakia\nSlovenia\tSlovenia\nSolomon Islands\tSolomon Islands\nSomalia\tSomalia\nSouth Africa\tSouth Africa\nSouth Georgia and the South Sandwich Islands\tSouth Georgia and the South Sandwich Islands\nSouth Korea\tSouth Korea\nSouth Sudan\tSouth Sudan\nSpain\tSpain\nSri Lanka\tSri Lanka\nSudan\tSudan\nSuriname\tSuriname\nSvalbard and Jan Mayen\tSvalbard and Jan Mayen\nSwaziland\tSwaziland\nSweden\tSweden\nSwitzerland\tSwitzerland\nSyria\tSyria\nTaiwan\tTaiwan\nTajikistan\tTajikistan\nTanzania\tTanzania\nThailand\tThailand\nTogo\tTogo\nTokelau\tTokelau\nTonga\tTonga\nTrinidad and Tobago\tTrinidad and Tobago\nTunisia\tTunisia\nTürkiye\tTürkiye\nTurkmenistan\tTurkmenistan\nTurks and Caicos Islands\tTurks and Caicos Islands\nTuvalu\tTuvalu\nU.S. Virgin Islands\tU.S. Virgin Islands\nUganda\tUganda\nUkraine\tUkraine\nUnited Arab Emirates\tUnited Arab Emirates\nUnited Kingdom\tUnited Kingdom\nUnited States\tUnited States\nUnited States Minor Outlying Islands\tUnited States Minor Outlying Islands\nUruguay\tUruguay\nUzbekistan\tUzbekistan\nVanuatu\tVanuatu\nVatican City\tVatican City\nVenezuela\tVenezuela\nVietnam\tVietnam\nWallis and Futuna\tWallis and Futuna\nWestern Sahara\tWestern Sahara\nYemen\tYemen\nZambia\tZambia\nZimbabwe\tZimbabwe",
   "@userSignUpCountryOptionsSource": {"description":"Tab and newline delimited label and value pairs from the live HubSpot contact country property. English is the approved fallback until localization completion."},
   "legalDocumentsLabel": "Legal documents",
+  "@legalDocumentsLabel": {
+    "description": "Label for the group of legal document links."
+  },
   "legalPurchaseTermsLabel": "Founding Friend Purchase Terms",
+  "@legalPurchaseTermsLabel": {
+    "description": "Link or heading label for the Founding Friend Purchase Terms."
+  },
   "legalUserAgreementLabel": "User Agreement",
+  "@legalUserAgreementLabel": {
+    "description": "Link or heading label for the User Agreement."
+  },
   "legalAcceptableUsePolicyLabel": "Acceptable Use Policy",
+  "@legalAcceptableUsePolicyLabel": {
+    "description": "Link or heading label for the Acceptable Use Policy."
+  },
   "legalDocumentVersion": "Version: {version}",
-  "@legalDocumentVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@legalDocumentVersion": {"description": "Displays the version of the selected legal document.", "placeholders": {"version": {"type": "String"}}},
   "legalDocumentLanguage": "Document language: English (en-GB)",
+  "@legalDocumentLanguage": {
+    "description": "Displays the language of the published legal document."
+  },
   "legalDocumentPublished": "Published: {timestamp}",
-  "@legalDocumentPublished": {"placeholders": {"timestamp": {"type": "String"}}},
+  "@legalDocumentPublished": {"description": "Displays when the selected legal document was published.", "placeholders": {"timestamp": {"type": "String"}}},
   "legalDocumentEffective": "Effective: {timestamp}",
-  "@legalDocumentEffective": {"placeholders": {"timestamp": {"type": "String"}}},
+  "@legalDocumentEffective": {"description": "Displays when the selected legal document becomes effective.", "placeholders": {"timestamp": {"type": "String"}}},
   "legalDocumentFutureEffective": "This published document is not yet effective. Publication does not determine which terms currently apply.",
+  "@legalDocumentFutureEffective": {
+    "description": "Notice for a published legal document whose effective date is in the future."
+  },
   "legalDocumentEnglishOnly": "This legal document is available in English.",
+  "@legalDocumentEnglishOnly": {
+    "description": "Notice that the legal document is available in English."
+  },
   "legalDocumentViewPdf": "View PDF (opens in a new tab)",
+  "@legalDocumentViewPdf": {
+    "description": "Link label for opening the legal document PDF in a new tab."
+  },
   "legalDocumentLoading": "Loading legal document…",
-  "legalDocumentRetry": "Retry"
+  "@legalDocumentLoading": {
+    "description": "Status while the selected legal document is loading."
+  },
+  "legalDocumentRetry": "Retry",
+  "@legalDocumentRetry": {
+    "description": "Button label for retrying a legal document load."
+  }
 }

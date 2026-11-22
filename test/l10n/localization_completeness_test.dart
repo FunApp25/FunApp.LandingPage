@@ -10,7 +10,19 @@ void main() {
         File('lib/l10n/app_$locale.arb').readAsStringSync(),
       ) as Map<String, dynamic>,
   };
-  final englishMessages = _messages(catalogs['en']!);
+  final englishCatalog = catalogs['en']!;
+  final englishMessages = _messages(englishCatalog);
+
+  test('every English template message has a metadata description', () {
+    for (final key in englishMessages.keys) {
+      final metadata = englishCatalog['@$key'];
+      expect(
+        metadata is Map<String, dynamic> ? metadata['description'] : null,
+        matches(RegExp(r'\S')),
+        reason: key,
+      );
+    }
+  });
 
   test('all supported catalogs contain the complete English message set', () {
     for (final locale in const ['es', 'cy', 'be']) {
