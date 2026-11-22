@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
@@ -293,7 +295,7 @@ void main() {
   );
 
   test(
-    'production injects the first-party data source without real I/O',
+    'production posts Venue and Here & Now to the current origin',
     () async {
       late http.Request capturedRequest;
       final client = MockClient((request) async {
@@ -338,15 +340,15 @@ void main() {
       await bloc.close();
       expect(
         getIt<HereAndNowRegistrationRepositoryInterface>(),
-        isA<DeferredHereAndNowRegistrationRepository>(),
+        isA<HereAndNowRegistrationRepository>(),
       );
       expect(
         getIt<FoundingFriendRegistrationRepositoryInterface>(),
         isA<DeferredFoundingFriendRegistrationRepository>(),
       );
       expect(
-        getIt.isRegistered<UserRegistrationDataSourceInterface>(),
-        isFalse,
+        getIt<UserRegistrationDataSourceInterface>(),
+        isA<WorkerUserRegistrationDataSource>(),
       );
       expect(
         getIt<FoundingFriendPaymentDataSourceInterface>(),
@@ -356,7 +358,39 @@ void main() {
         getIt<FoundingFriendPaymentRepositoryInterface>(),
         isA<FoundingFriendPaymentRepository>(),
       );
-      await getIt<HereAndNowRegistrationFormBloc>().close();
+      final registration = getIt<HereAndNowRegistrationFormBloc>()
+        ..add(const HereAndNowRegistrationFormEvent.firstNameChanged('Alex'))
+        ..add(const HereAndNowRegistrationFormEvent.lastNameChanged('Morgan'))
+        ..add(
+          const HereAndNowRegistrationFormEvent.emailChanged(
+            'alex@example.com',
+          ),
+        )
+        ..add(const HereAndNowRegistrationFormEvent.ageChanged('29'));
+      await registration.stream.firstWhere(
+        (state) => state.registration.isValid,
+      );
+      final settled = registration.stream.firstWhere(
+        (state) => state.submissionResult.isSome(),
+      );
+      registration.add(const HereAndNowRegistrationFormEvent.submitted());
+      expect(
+        (await settled).submissionResult,
+        some(right<AppFailure, Unit>(unit)),
+      );
+      expect(
+        capturedRequest.url,
+        Uri.base.resolve('/api/registrations/here-and-now'),
+      );
+      expect(capturedRequest.method, 'POST');
+      expect(jsonDecode(capturedRequest.body), {
+        'firstName': 'Alex',
+        'lastName': 'Morgan',
+        'email': 'alex@example.com',
+        'age': 29,
+        'marketingConsent': false,
+      });
+      await registration.close();
       await getIt<FoundingFriendRegistrationFormBloc>().close();
     },
   );

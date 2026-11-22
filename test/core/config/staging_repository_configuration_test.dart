@@ -8,6 +8,7 @@ void main() {
     for (final path in [
       '.github/workflows/deploy.yml',
       '.github/workflows/pr_checks.yml',
+      '.github/workflows/deploy-staging-site.yml',
     ]) {
       final workflow = File(path).readAsStringSync();
       final builds = RegExp(r'flutter build web[^\n]*').allMatches(workflow);
@@ -28,7 +29,14 @@ void main() {
     final deploy = File(
       '.github/workflows/deploy-staging-site.yml',
     ).readAsStringSync();
-    expect(deploy, isNot(contains('flutter build web')));
+    final buildJob = deploy.split('\n  deploy:\n').first;
+    final deployJob = deploy.split('\n  deploy:\n').last;
+    expect(buildJob, contains('environment: staging'));
+    expect(buildJob, contains('vars.FUN_APP_VENUE_BOOKING_URL'));
+    expect(buildJob, contains('actions/upload-artifact'));
+    expect(deployJob, contains('actions/download-artifact'));
+    expect(deployJob, contains('tool/verify_staging_artifact.sh'));
+    expect(deployJob, isNot(contains('flutter build web')));
   });
 
   test('Wrangler keeps production and staging Worker identities isolated', () {
@@ -174,11 +182,12 @@ void main() {
     expect(workflow, isNot(contains('wrangler-action')));
   });
 
-  test('required Flutter check runs focused Chrome storage tests', () {
+  test('required Flutter check runs focused Chrome regressions', () {
     final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
     final quality = workflow.split('\n  quality:\n').last;
     const stepName =
-        '      - name: Test browser payment storage and country ordering\n';
+        '      - name: Test browser payment storage, country '
+        'ordering, and links\n';
     expect(quality, contains(stepName));
     final browserStep = quality
         .split(stepName)
@@ -196,6 +205,10 @@ void main() {
     expect(
       browserStep,
       contains('test/presentation/user_sign_up/country_ordering_web_test.dart'),
+    );
+    expect(
+      browserStep,
+      contains('test/presentation/venue/venue_booking_web_test.dart'),
     );
     for (final bypass in ['continue-on-error', 'if:', '||', '--coverage']) {
       expect(browserStep, isNot(contains(bypass)));
@@ -262,9 +275,10 @@ void main() {
         r'^  ([A-Za-z_][A-Za-z0-9_-]*):$',
         multiLine: true,
       ).allMatches(jobs).map((match) => match.group(1)).toList(),
-      ['checks', 'deploy'],
+      ['checks', 'build', 'deploy'],
     );
     final deploy = jobs.split('\n  deploy:\n').last;
+    expect(deploy, contains('needs: build'));
     expect(
       deploy,
       contains(
@@ -287,17 +301,7 @@ void main() {
     expect(workflow, contains('permissions:\n  contents: read\n\n'));
 
     final checks = File('.github/workflows/pr_checks.yml').readAsStringSync();
-    final artifactUpload = checks
-        .split(
-          '- name: Upload validated staging artifact for dev deployment\n',
-        )
-        .last;
-    expect(
-      artifactUpload,
-      contains(
-        "if: github.event_name == 'push' && github.ref == 'refs/heads/dev'",
-      ),
-    );
+    expect(checks, isNot(contains('name: staging-web-')));
     expect(checks, isNot(contains('diagnostic')));
     expect(checks, contains('staging_wrangler.test.mjs'));
     expect(

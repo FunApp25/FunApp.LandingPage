@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test production Venue Worker preflight
+        run: node --test ../../test/tool/venue_worker_preflight.test.mjs
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -141,12 +144,25 @@ jobs:
       - name: Test with coverage
         run: flutter test --coverage
 
-      - name: Test browser payment storage and country ordering
+      - name: Test browser payment storage, country ordering, and links
         run: >-
           flutter test --platform chrome
           test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
           test/presentation/user_sign_up/country_ordering_web_test.dart
           test/presentation/legal/legal_link_navigation_web_test.dart
+          test/presentation/venue/venue_booking_web_test.dart
+
+      - name: Test configured Venue booking navigation
+        run: >-
+          flutter test --platform chrome
+          "--dart-define=FUN_APP_VENUE_BOOKING_URL=https://booking.example.test/team?slot=demo#week"
+          test/presentation/venue/venue_booking_web_test.dart
+
+      - name: Test malformed Venue booking navigation
+        run: >-
+          flutter test --platform chrome
+          "--dart-define=FUN_APP_VENUE_BOOKING_URL=https://[v1.foo:bar]:8443/team"
+          test/presentation/venue/venue_booking_web_test.dart
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
@@ -240,12 +256,3 @@ jobs:
 
       - name: Verify staging artifact identity
         run: bash tool/verify_staging_artifact.sh
-
-      - name: Upload validated staging artifact for dev deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-        uses: actions/upload-artifact@v7
-        with:
-          name: staging-web-${{ github.sha }}
-          path: build/web
-          if-no-files-found: error
-          retention-days: 1

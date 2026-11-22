@@ -210,10 +210,9 @@
   "@venueLeadValidationPositiveInteger": {
     "description": "Validation message for a non-positive venue quantity."
   },
-  "venueLeadSubmit": "Send",
-  "@venueLeadSubmit": {
-    "description": "Venue-interest form submission action."
-  },
+  "venueLeadBookCall": "Book a call with the Fun App team",
+  "venueLeadJoinWaitlist": "Register for the waitlist now",
+  "venueLeadBookingUnavailable": "Call booking is unavailable right now. Please try again later.",
   "venueLeadSubmitting": "Sending…",
   "@venueLeadSubmitting": {
     "description": "Venue-interest form submission progress label."

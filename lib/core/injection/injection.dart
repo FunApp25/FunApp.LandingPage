@@ -146,8 +146,21 @@ void configureDependencies(
         () => ProductionVenueLeadDataSource(
           client: getIt<http.Client>(),
         ),
+      )
+      ..registerLazySingleton<UserRegistrationDataSourceInterface>(
+        () => WorkerUserRegistrationDataSource(
+          client: getIt<http.Client>(),
+          config: ProductionRegistrationWorkerConfig(),
+        ),
+      )
+      ..registerLazySingleton<HereAndNowRegistrationRepositoryInterface>(
+        () => HereAndNowRegistrationRepository(
+          getIt<UserRegistrationDataSourceInterface>(),
+        ),
+      )
+      ..registerLazySingleton<FoundingFriendRegistrationRepositoryInterface>(
+        DeferredFoundingFriendRegistrationRepository.new,
       );
-    _registerDeferredUserRegistrationRepositories();
     _registerWorkerPaymentRepository(
       productionPaymentConfig ?? FoundingFriendPaymentConfig.production(),
     );

@@ -11,6 +11,7 @@ export interface Env {
   HUBSPOT_HERE_AND_NOW_FORM_GUID?: string;
   HUBSPOT_FOUNDING_FRIEND_FORM_GUID?: string;
   REGISTRATION_SUBMISSIONS_ENABLED?: string;
+  HERE_AND_NOW_SUBMISSIONS_ENABLED?: string;
   REGISTRATION_RATE_LIMITER?: RateLimiter;
   LOCAL_DEVELOPMENT_ALLOWED_ORIGIN?: string;
   HUBSPOT_MOCK_SCENARIO?: string;
@@ -116,9 +117,11 @@ interface HubSpotField {
   value: string;
 }
 
+type RegistrationWorkflow = 'here-and-now' | 'founding-friend';
+
 type Endpoint =
   | { kind: 'venue' }
-  | { kind: 'registration'; workflow: 'here-and-now' | 'founding-friend' };
+  | { kind: 'registration'; workflow: RegistrationWorkflow };
 
 type RegistrationAvailability = 'enabled' | 'disabled' | 'invalid';
 
@@ -151,8 +154,19 @@ export async function handleRequest(
     );
   }
 
+  const usesStagingMock =
+    endpoint.kind === 'registration' &&
+    dependencies.registrationProvider === 'staging_mock';
+  const portalId = env.HUBSPOT_PORTAL_ID;
+  let formGuid: string | null;
   if (endpoint.kind === 'registration') {
-    const availability = registrationAvailability(env);
+    const usesMock = usesStagingMock || isLoopbackHostname(url.hostname);
+    const configuredValue = usesMock
+      ? env.REGISTRATION_SUBMISSIONS_ENABLED
+      : endpoint.workflow === 'here-and-now'
+        ? env.HERE_AND_NOW_SUBMISSIONS_ENABLED
+        : undefined;
+    const availability = registrationAvailability(configuredValue);
 
     if (availability === 'disabled') {
       return errorResponse(
@@ -170,17 +184,13 @@ export async function handleRequest(
       return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
     }
 
-    const registrationConfiguration = registrationFormGuid(endpoint, env);
+    formGuid = registrationFormGuid(endpoint.workflow, env);
     const rateLimiter =
       dependencies.registrationRateLimiter ?? env.REGISTRATION_RATE_LIMITER;
-    const usesStagingMock =
-      dependencies.registrationProvider === 'staging_mock';
 
     if (
       rateLimiter === undefined ||
-      (!usesStagingMock &&
-        (registrationConfiguration === null ||
-          !hasValidPortalId(env.HUBSPOT_PORTAL_ID)))
+      (!usesStagingMock && (formGuid === null || !hasValidPortalId(portalId)))
     ) {
       return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
     }
@@ -205,8 +215,11 @@ export async function handleRequest(
     if (!rateLimitSucceeded) {
       return errorResponse(429, 'rate_limited', requestId, {}, corsHeaders);
     }
-  } else if (!hasValidMockConfiguration(env, url)) {
-    return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+  } else {
+    if (!hasValidMockConfiguration(env, url)) {
+      return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
+    }
+    formGuid = venueFormGuid(env);
   }
 
   if (!isJsonContentType(request.headers.get('content-type'))) {
@@ -220,18 +233,15 @@ export async function handleRequest(
   }
 
   let fields: HubSpotField[];
-  let formGuid: string | null;
 
   try {
     const body = await readLimitedBody(request);
 
     if (endpoint.kind === 'venue') {
       fields = venueToHubSpotFields(parseVenueInterest(body));
-      formGuid = venueFormGuid(env);
     } else {
       const registration = parseRegistration(body, endpoint.workflow);
       fields = registrationToHubSpotFields(registration);
-      formGuid = registrationFormGuid(endpoint, env);
     }
   } catch (error) {
     if (
@@ -250,18 +260,11 @@ export async function handleRequest(
     }
   }
 
-  if (
-    endpoint.kind === 'registration' &&
-    dependencies.registrationProvider === 'staging_mock'
-  ) {
+  if (usesStagingMock) {
     return new Response(null, { status: 204, headers: corsHeaders ?? {} });
   }
 
-  const portalId = env.HUBSPOT_PORTAL_ID;
-
   if (formGuid === null || !hasConfiguredText(portalId)) {
-    return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
-  } else if (endpoint.kind === 'registration' && !hasValidPortalId(portalId)) {
     return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
   }
 
@@ -348,10 +351,13 @@ function endpointForPath(pathname: string): Endpoint | null {
   }
 }
 
-function registrationAvailability(env: Env): RegistrationAvailability {
-  const configuredValue = env.REGISTRATION_SUBMISSIONS_ENABLED;
-
-  if (configuredValue === undefined || configuredValue.trim() === '') {
+function registrationAvailability(
+  configuredValue: string | undefined,
+): RegistrationAvailability {
+  if (
+    configuredValue === undefined ||
+    (typeof configuredValue === 'string' && configuredValue.trim() === '')
+  ) {
     return 'disabled';
   } else if (configuredValue === 'true') {
     return 'enabled';
@@ -362,13 +368,12 @@ function registrationAvailability(env: Env): RegistrationAvailability {
   }
 }
 
-function registrationFormGuid(endpoint: Endpoint, env: Env): string | null {
-  if (endpoint.kind !== 'registration') {
-    return null;
-  }
-
+function registrationFormGuid(
+  workflow: RegistrationWorkflow,
+  env: Env,
+): string | null {
   const formGuid =
-    endpoint.workflow === 'here-and-now'
+    workflow === 'here-and-now'
       ? env.HUBSPOT_HERE_AND_NOW_FORM_GUID
       : env.HUBSPOT_FOUNDING_FRIEND_FORM_GUID;
 
@@ -581,7 +586,7 @@ function parseVenueInterest(body: string): VenueInterest {
 
 function parseRegistration(
   body: string,
-  workflow: 'here-and-now' | 'founding-friend',
+  workflow: RegistrationWorkflow,
 ): UserRegistration {
   const allowedFields =
     workflow === 'here-and-now'

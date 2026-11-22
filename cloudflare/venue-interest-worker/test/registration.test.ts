@@ -7,11 +7,14 @@ import {
   type RateLimiter,
   type UpstreamFetch,
 } from '../src/index';
+import { handleStagingRequest } from '../src/staging';
 
 const hereAndNowEndpoint =
   'https://funapp.world/api/registrations/here-and-now';
 const foundingFriendEndpoint =
   'https://funapp.world/api/registrations/founding-friend';
+const stagingFoundingFriendEndpoint =
+  'https://staging.funapp.world/api/registrations/founding-friend';
 const localHereAndNowEndpoint =
   'http://localhost:8787/api/registrations/here-and-now';
 const localFoundingFriendEndpoint =
@@ -23,8 +26,7 @@ const enabledEnv: Env = {
   HUBSPOT_PORTAL_ID: '123456789',
   HUBSPOT_FORM_GUID: '00000000-0000-0000-0000-000000000000',
   HUBSPOT_HERE_AND_NOW_FORM_GUID: hereAndNowFormGuid,
-  HUBSPOT_FOUNDING_FRIEND_FORM_GUID: foundingFriendFormGuid,
-  REGISTRATION_SUBMISSIONS_ENABLED: 'true',
+  HERE_AND_NOW_SUBMISSIONS_ENABLED: 'true',
 };
 const allowedRateLimiter: RateLimiter = {
   limit: async () => ({ success: true }),
@@ -49,10 +51,14 @@ describe('registration routes', () => {
   it.each([254, 255, 261])('preserves broader registration email contract at %s units', async (length) => {
     const email = `a@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(length === 261 ? 62 : length - 194)}${length === 261 ? '.test' : ''}`;
     expect(email.length).toBe(length);
-    for (const [endpoint, registration] of [[hereAndNowEndpoint, hereAndNowRegistration], [foundingFriendEndpoint, foundingFriendRegistration]] as const) {
-      const response = await post(endpoint, { ...registration, email }, async () => new Response(null, { status: 200 }));
-      expect(response.status).toBe(204);
-    }
+    const hereAndNow = await post(hereAndNowEndpoint, {
+      ...hereAndNowRegistration, email,
+    });
+    const foundingFriend = await postStagingFoundingFriend({
+      ...foundingFriendRegistration, email,
+    });
+    expect(hereAndNow.status).toBe(204);
+    expect(foundingFriend.status).toBe(204);
   });
 
   it('dispatches Here & Now to its server-selected form and exact mapping', async () => {
@@ -87,44 +93,23 @@ describe('registration routes', () => {
     expect(capturedBody).not.toContain('legalConsentOptions');
   });
 
-  it('dispatches Founding Friend with optionals and the exact mapping', async () => {
-    let capturedInput: RequestInfo | URL | undefined;
-    let capturedBody = '';
-    const response = await post(
-      foundingFriendEndpoint,
+  it('rejects direct production Founding Friend requests even with both flags and forms configured', async () => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const rateLimiter = { limit: vi.fn(async () => ({ success: true })) };
+    const response = await rawRequest(
+      jsonRequest(foundingFriendEndpoint, foundingFriendRegistration),
       {
-        ...foundingFriendRegistration,
-        gender: 'Non-binary',
-        usageReason: 'Meet local people\nand join activities',
+        ...enabledEnv,
+        REGISTRATION_SUBMISSIONS_ENABLED: 'true',
+        HUBSPOT_FOUNDING_FRIEND_FORM_GUID: foundingFriendFormGuid,
       },
-      async (input, init) => {
-        capturedInput = input;
-        capturedBody = init?.body as string;
-        return new Response(null, { status: 200 });
-      },
+      upstreamFetch,
+      rateLimiter,
     );
 
-    expect(response.status).toBe(204);
-    expect(capturedInput).toEqual(
-      new URL(
-        `https://api.hsforms.com/submissions/v3/integration/submit/123456789/${foundingFriendFormGuid}`,
-      ),
-    );
-    expect(JSON.parse(capturedBody)).toEqual({
-      fields: [
-        { name: 'firstname', value: 'Taylor' },
-        { name: 'lastname', value: 'Jones' },
-        { name: 'email', value: 'taylor@example.com' },
-        { name: 'age', value: '31' },
-        { name: 'gender', value: 'Non-binary' },
-        {
-          name: 'usage_reason',
-          value: 'Meet local people\nand join activities',
-        },
-        { name: 'marketing_consent', value: 'true' },
-        { name: 'country', value: 'United Kingdom' },
-      ],
-    });
+    await expectError(response, 503, 'service_unavailable');
+    expect(rateLimiter.limit).not.toHaveBeenCalled();
+    expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -151,16 +136,14 @@ describe('registration routes', () => {
   it('requires Founding Friend country and accepts every canonical value', async () => {
     expect(hubSpotCountryValues.size).toBe(254);
     await expectError(
-      await post(
-        foundingFriendEndpoint,
+      await postStagingFoundingFriend(
         { ...foundingFriendRegistration, country: undefined },
       ),
       400,
       'invalid_request',
     );
     await expectError(
-      await post(
-        foundingFriendEndpoint,
+      await postStagingFoundingFriend(
         { ...foundingFriendRegistration, country: 'Not a canonical country' },
       ),
       400,
@@ -168,7 +151,7 @@ describe('registration routes', () => {
     );
 
     for (const country of hubSpotCountryValues) {
-      const response = await post(foundingFriendEndpoint, {
+      const response = await postStagingFoundingFriend({
         ...foundingFriendRegistration,
         country,
       });
@@ -252,7 +235,8 @@ describe('registration routes', () => {
         jsonRequest(hereAndNowEndpoint, hereAndNowRegistration),
         {
           ...enabledEnv,
-          REGISTRATION_SUBMISSIONS_ENABLED: configuredValue,
+          REGISTRATION_SUBMISSIONS_ENABLED: 'true',
+          HERE_AND_NOW_SUBMISSIONS_ENABLED: configuredValue,
         },
         upstreamFetch,
         rateLimiter,
@@ -265,7 +249,7 @@ describe('registration routes', () => {
   });
 
   it.each([
-    ['malformed enable flag', { REGISTRATION_SUBMISSIONS_ENABLED: 'yes' }],
+    ['malformed enable flag', { HERE_AND_NOW_SUBMISSIONS_ENABLED: 'yes' }],
     ['missing portal', { HUBSPOT_PORTAL_ID: undefined }],
     ['malformed portal', { HUBSPOT_PORTAL_ID: 'portal' }],
     ['missing Here & Now form', { HUBSPOT_HERE_AND_NOW_FORM_GUID: undefined }],
@@ -401,6 +385,7 @@ describe('registration routes', () => {
       {
         ...enabledEnv,
         LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'http://localhost:7357',
+        REGISTRATION_SUBMISSIONS_ENABLED: 'true',
         HUBSPOT_MOCK_SCENARIO: scenario,
       },
       upstreamFetch,
@@ -434,7 +419,7 @@ describe('registration routes', () => {
     ] as const) {
       const response = await rawRequest(
         jsonRequest(endpoint, body),
-        { ...enabledEnv, ...mockEnv },
+        { ...enabledEnv, REGISTRATION_SUBMISSIONS_ENABLED: 'true', ...mockEnv },
         upstreamFetch,
         rateLimiter,
       );
@@ -513,6 +498,13 @@ describe('registration routes', () => {
     }
   });
 });
+
+function postStagingFoundingFriend(body: Record<string, unknown>): Promise<Response> {
+  return handleStagingRequest(jsonRequest(stagingFoundingFriendEndpoint, body), {
+    STAGING_REGISTRATION_MOCK_ENABLED: 'true',
+    REGISTRATION_RATE_LIMITER: allowedRateLimiter,
+  });
+}
 
 const successfulUpstreamFetch: UpstreamFetch = async () =>
   new Response(null, { status: 200 });

@@ -17,7 +17,9 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout
@@ -49,9 +51,12 @@ jobs:
         run: flutter test
 
       - name: Build site
+        env:
+          FUN_APP_VENUE_BOOKING_URL: ${{ vars.FUN_APP_VENUE_BOOKING_URL }}
         run: >-
           flutter build web --no-web-resources-cdn
           -t lib/main_prod.dart
+          --dart-define="FUN_APP_VENUE_BOOKING_URL=$FUN_APP_VENUE_BOOKING_URL"
 
       - name: Remove review-only legal assets
         run: >-

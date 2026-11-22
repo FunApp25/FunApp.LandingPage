@@ -80,6 +80,13 @@ final class LocalRegistrationWorkerConfig extends RegistrationWorkerConfig {
   }
 }
 
+/// Same-origin configuration for production registration requests.
+final class ProductionRegistrationWorkerConfig
+    extends RegistrationWorkerConfig {
+  /// Resolves first-party registration against the current browser origin.
+  ProductionRegistrationWorkerConfig() : super(Uri.base);
+}
+
 /// Fixed hosted origin for the isolated staging registration Worker routes.
 final class StagingRegistrationWorkerConfig extends RegistrationWorkerConfig {
   /// Creates the staging configuration without accepting runtime overrides.
