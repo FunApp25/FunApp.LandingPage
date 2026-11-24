@@ -24,7 +24,7 @@ void main() {
         firstName: PersonalName('界'),
         lastName: PersonalName('Jones'),
         email: address,
-        age: Age('0'),
+        age: Age('18'),
         country: NonEmptySingleLineText('United Kingdom'),
       );
       expect(registration.emailValidation.isRight(), valid);
@@ -37,7 +37,7 @@ void main() {
                 firstName: registration.firstName,
                 lastName: registration.lastName,
                 email: address,
-                age: registration.age,
+                age: Age('0'),
               )
               .isValid,
           isTrue,
@@ -86,6 +86,7 @@ void main() {
     );
 
     expect(registration.isValid, isTrue);
+    expect(registration.copyWith(age: Age('17')).isValid, isTrue);
     expect(
       registration.copyWith(email: EmailAddress('invalid')).isValid,
       isFalse,

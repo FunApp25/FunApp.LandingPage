@@ -549,10 +549,12 @@ capabilities as implemented.
   with 28px line height; the shared checkbox retains its 44px hit target and
   other checkbox typography remains unchanged.
 - Domain validation rejects blank required names, structurally invalid email,
-  non-integer age input, and a missing Founding Friend country. It does not
-  invent an age threshold. Presentation exposes those application-coordinated
-  errors after a submit attempt. This validation is usability only and does
-  not authorize production collection without matching backend validation.
+  non-integer age input, and a missing Founding Friend country. The Founding
+  Friend aggregate and registration Worker require a self-declared age of
+  at least 18. Localized feedback appears after a submit attempt. Here & Now
+  retains the shared integer-age rule. The form collects neither date of birth
+  nor verified identity. Checkout creation accepts an email and attempt ID
+  without evidence of an eligible registration.
 - Founding Friend domain validation additionally caps email at 254 UTF-16 code
   units before registration so the unchanged Checkout preparation contract can
   accept it. Structural validation and original casing/whitespace are preserved;
@@ -756,8 +758,9 @@ capabilities as implemented.
   non-safe-integer ages, unsupported canonical gender/country values, and
   requests over 16 KiB. The Flutter Worker transport applies the same exact
   JavaScript integer-serialization and UTF-8 total-body boundaries before I/O.
-  It applies no age eligibility threshold and no extra registration field-length
-  constraints beyond that total-body limit.
+  Founding Friend requests with an integer age below 18 are rejected before
+  provider I/O, including in the staging mock. The Worker applies no extra
+  registration field-length constraints beyond the total-body limit.
 - Production forwarding requires the exact string `true` on the respective
   flag, `HERE_AND_NOW_SUBMISSIONS_ENABLED` or
   `FOUNDING_FRIEND_SUBMISSIONS_ENABLED`. Each defaults to `false` and requires a
@@ -977,7 +980,8 @@ capabilities as implemented.
   required. The current domain contract deliberately has no chain/count
   cross-field invariant.
 - Prospective-user retention/deletion requirements.
-- The minimum/maximum age eligibility policy and corresponding backend rule.
+- Legal alignment of the strict Founding Friend registration rule with the
+  exception wording in Purchase Terms clause 3.1.
 - Whether approved display labels should differ from the confirmed HubSpot
   gender values, and any explicit reversible mapping if they do.
 - Ongoing synchronization of the HubSpot country option source before

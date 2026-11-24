@@ -47,6 +47,50 @@ void main() {
     sessionId: 'cs_test_abcdefghijklmnopqrstuvwxyz123456',
   );
 
+  testWidgets('under-18 registration shows feedback and starts no Checkout', (
+    tester,
+  ) async {
+    final registrationRepository = _RegistrationRepository();
+    final paymentRepository = _RecoveryRepository([], []);
+    final store = _PendingStore();
+    final registration = FoundingFriendRegistrationFormBloc(
+      registrationRepository,
+    );
+    await _pump(
+      tester,
+      FoundingFriendPage(
+        createBloc: () => registration,
+        createCheckoutBloc: () => FoundingFriendCheckoutBloc(
+          repository: paymentRepository,
+          pendingStore: store,
+        ),
+      ),
+    );
+    registration
+      ..add(const FoundingFriendRegistrationFormEvent.firstNameChanged('Alex'))
+      ..add(const FoundingFriendRegistrationFormEvent.lastNameChanged('Morgan'))
+      ..add(
+        const FoundingFriendRegistrationFormEvent.emailChanged(
+          'test@example.com',
+        ),
+      )
+      ..add(const FoundingFriendRegistrationFormEvent.ageChanged('17'))
+      ..add(
+        const FoundingFriendRegistrationFormEvent.countryChanged(
+          'United Kingdom',
+        ),
+      )
+      ..add(const FoundingFriendRegistrationFormEvent.submitted());
+    await tester.pumpAndSettle();
+    expect(
+      find.text('You must be 18 or older to register as a Founding Friend.'),
+      findsOneWidget,
+    );
+    expect(registrationRepository.submissions, isEmpty);
+    expect(paymentRepository.creates, isEmpty);
+    expect(store.value, isNull);
+  });
+
   for (final delayedCreation in [false, true]) {
     testWidgets('Session change discards late Checkout '
         '${delayedCreation ? 'creation' : 'verification'}', (tester) async {

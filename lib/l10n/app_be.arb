@@ -250,6 +250,7 @@
   "foundingFriendPaymentInvalidBody": "Сесія не адпавядае чаканаму аднаразоваму плацяжу Founding Friend. Звярніцеся ў падтрымку, калі лічыце, што заплацілі.",
   "foundingFriendPaymentUnableTitle": "Немагчыма праверыць аплату",
   "foundingFriendPaymentUnableBody": "Праверка аплаты часова недаступная. Паўтарыце спробу; гэта не створыць новую аплату.",
+  "foundingFriendAgeMinimum": "Каб зарэгістравацца як Founding Friend, вам павінна быць не менш за 18 гадоў.",
   "foundingFriendPaymentRecoveryUnavailableBody": "У гэтай укладцы больш няма рэгістрацыйных даных для бяспечнага паўтору аплаты. Вярніцеся да формы або звярніцеся ў падтрымку.",
   "foundingFriendPaymentRetryVerification": "Праверыць аплату яшчэ раз",
   "foundingFriendPaymentReferenceLabel": "Спасылка на пакупку",

@@ -620,6 +620,8 @@ function parseRegistration(
 
   if (!registrationEmailPattern.test(email)) {
     throw new InvalidRequestError();
+  } else if (workflow === 'founding-friend' && age < 18) {
+    throw new InvalidRequestError();
   } else if (gender !== undefined && !genderValues.has(gender)) {
     throw new InvalidRequestError();
   } else if (country !== undefined && !hubSpotCountryValues.has(country)) {

@@ -13,7 +13,8 @@ String? userSignUpValidationMessage<T>(
     MultiLineString() => l10n.venueLeadValidationSingleLine,
     InvalidEmail() => l10n.userSignUpValidationEmail,
     InvalidNumericInput() => l10n.userSignUpValidationInteger,
-    InvalidUrl() || BelowMinimum() => l10n.userSignUpValidationRequired,
+    BelowMinimum() => l10n.foundingFriendAgeMinimum,
+    InvalidUrl() => l10n.userSignUpValidationRequired,
   },
   (_) => null,
 );

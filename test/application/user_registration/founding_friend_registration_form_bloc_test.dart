@@ -22,6 +22,26 @@ void main() {
   FoundingFriendRegistrationFormBloc buildBloc() =>
       FoundingFriendRegistrationFormBloc(repository);
 
+  for (final age in ['', 'unknown', '17.5', '-1', '17', '18', '19']) {
+    final accepted = age == '18' || age == '19';
+    final registration = _validRegistration().copyWith(age: Age(age));
+    blocTest<
+      FoundingFriendRegistrationFormBloc,
+      FoundingFriendRegistrationFormState
+    >(
+      'Founding Friend age "$age" accepted=$accepted',
+      build: buildBloc,
+      seed: () => _state(registration: registration),
+      act: (bloc) =>
+          bloc.add(const FoundingFriendRegistrationFormEvent.submitted()),
+      verify: (bloc) {
+        expect(bloc.state.hasAttemptedSubmit, isTrue);
+        expect(bloc.state.registration.isValid, accepted);
+        expect(repository.submissions, accepted ? [registration] : isEmpty);
+      },
+    );
+  }
+
   blocTest<
     FoundingFriendRegistrationFormBloc,
     FoundingFriendRegistrationFormState

@@ -1066,6 +1066,8 @@
   "@foundingFriendPaymentUnableBody": {
     "description": "Explains what retrying payment verification does."
   },
+  "foundingFriendAgeMinimum": "You must be 18 or older to register as a Founding Friend.",
+  "@foundingFriendAgeMinimum": {"description": "Minimum age validation for Founding Friend registration."},
   "foundingFriendPaymentRecoveryUnavailableBody": "This browser tab no longer has the registration details required for a safe payment retry. Return to the Founding Friend form or contact support.",
   "@foundingFriendPaymentRecoveryUnavailableBody": {
     "description": "Guidance when this tab lacks the details needed to retry Checkout."

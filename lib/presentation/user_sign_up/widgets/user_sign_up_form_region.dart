@@ -148,7 +148,10 @@ final class UserSignUpFormRegion extends StatelessWidget {
             )
           : null,
       ageError: showErrors
-          ? userSignUpValidationMessage(context.l10n, registration.age.value)
+          ? userSignUpValidationMessage(
+              context.l10n,
+              registration.ageValidation,
+            )
           : null,
       countryError: showErrors
           ? userSignUpValidationMessage(

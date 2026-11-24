@@ -877,12 +877,17 @@ npm run dev
 
 The Here & Now request requires `firstName`, `lastName`, `email`, integer
 `age`, and boolean `marketingConsent`; `gender` and `usageReason` are optional.
-Founding Friend uses the same contract plus required canonical `country`.
+Founding Friend also requires a canonical `country` and a self-declared
+integer age of at least 18. The Flutter form and the registration Worker
+enforce 18+ before submission, with localized feedback in the form. Here &
+Now keeps its integer-age contract. Registration does not verify date of birth,
+age, or identity. The payment API's email and attempt ID do not prove that an
+eligible registration exists. Reconcile Purchase Terms clause 3.1 and its
+exception wording with the strict form rule before launch.
 Unknown properties, malformed JSON, unsupported gender/country values,
 non-safe-integer ages, non-JSON content, and bodies over 16 KiB are rejected.
 The Flutter Worker client applies the same JavaScript safe-integer and
-UTF-8 body-size boundaries before sending; these are serialization constraints,
-not age eligibility or product-specific text-length rules.
+UTF-8 body-size boundaries before sending.
 Responses are provider-neutral: `204` success, `400` invalid request, `404`
 unknown route, `405` unsupported method, `422` provider validation rejection,
 `429` rate limited, `503` disabled/unavailable, and `500` unexpected or invalid

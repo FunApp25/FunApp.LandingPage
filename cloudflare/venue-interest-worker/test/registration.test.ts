@@ -204,6 +204,29 @@ describe('registration routes', () => {
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [undefined, false], ['', false], ['18', false], [-1, false],
+    [17, false], [17.5, false], [18, true], [19, true],
+  ])('validates Founding Friend age %s before HubSpot I/O', async (age, accepted) => {
+    const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const body = { ...foundingFriendRegistration, age };
+    const response = await rawRequest(jsonRequest(foundingFriendEndpoint, body), {
+      ...enabledEnv,
+      FOUNDING_FRIEND_SUBMISSIONS_ENABLED: 'true',
+      HUBSPOT_FOUNDING_FRIEND_FORM_GUID: foundingFriendFormGuid,
+    }, upstream);
+    if (accepted) {
+      expect(response.status).toBe(204);
+      expect(upstream).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(upstream.mock.calls[0]?.[1]?.body as string).fields)
+        .toContainEqual({ name: 'age', value: String(age) });
+    } else {
+      await expectError(response, 400, 'invalid_request');
+      expect(upstream).not.toHaveBeenCalled();
+    }
+    expect((await postStagingFoundingFriend(body)).status).toBe(accepted ? 204 : 400);
+  });
+
   it('requires Founding Friend country and accepts every canonical value', async () => {
     expect(hubSpotCountryValues.size).toBe(254);
     await expectError(
@@ -259,7 +282,7 @@ describe('registration routes', () => {
   });
 
   it('allows negative and zero integer ages without inventing eligibility', async () => {
-    for (const age of [-1, 0]) {
+    for (const age of [-1, 0, 17]) {
       const response = await post(hereAndNowEndpoint, {
         ...hereAndNowRegistration,
         age,
