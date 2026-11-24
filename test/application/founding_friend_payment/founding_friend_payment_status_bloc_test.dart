@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,6 +90,52 @@ void main() {
     );
   }
 
+  test(
+    'a late paid return leaves a newer snapshot of the same Session',
+    () async {
+      final response =
+          Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+      final store = _PendingStore()
+        ..save(
+          const PendingFoundingFriendPayment(
+            email: 'founder@example.com',
+            attemptId: '123e4567-e89b-42d3-a456-426614174000',
+            sessionId: sessionId,
+          ),
+        );
+      final bloc = FoundingFriendPaymentStatusBloc(
+        repository: _VerificationRepository(response.future),
+        pendingStore: store,
+      );
+      addTearDown(bloc.close);
+      final verifying = bloc.stream.firstWhere(
+        (state) => state.phase == FoundingFriendPaymentStatusPhase.verifying,
+      );
+      final confirmed = bloc.stream.firstWhere(
+        (state) => state.phase == FoundingFriendPaymentStatusPhase.confirmed,
+      );
+      bloc.add(const FoundingFriendPaymentVerificationRequested(sessionId));
+      await verifying;
+      const newer = PendingFoundingFriendPayment(
+        email: 'founder@example.com',
+        attemptId: '123e4567-e89b-42d3-a456-426614174000',
+        sessionId: sessionId,
+        createdAt: 1795521600000,
+      );
+      store.save(newer);
+      response.complete(
+        right(
+          const FoundingFriendPaymentVerification(
+            status: FoundingFriendPaymentStatus.confirmed,
+            purchaseReference: 'FF-1234567890ABCDEF',
+          ),
+        ),
+      );
+      expect((await confirmed).purchaseReference, 'FF-1234567890ABCDEF');
+      expect(store.value, same(newer));
+    },
+  );
+
   blocTest<FoundingFriendPaymentStatusBloc, FoundingFriendPaymentStatusState>(
     'provider failure becomes retryable unable-to-verify state',
     build: () => FoundingFriendPaymentStatusBloc(
@@ -118,7 +166,7 @@ final class _VerificationRepository
     implements FoundingFriendPaymentRepositoryInterface {
   const _VerificationRepository(this.result);
 
-  final Either<AppFailure, FoundingFriendPaymentVerification> result;
+  final FutureOr<Either<AppFailure, FoundingFriendPaymentVerification>> result;
 
   @override
   Future<Either<AppFailure, FoundingFriendCheckout>> createCheckout({

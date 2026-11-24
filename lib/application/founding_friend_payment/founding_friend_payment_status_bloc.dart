@@ -117,6 +117,7 @@ final class FoundingFriendPaymentStatusBloc
     Emitter<FoundingFriendPaymentStatusState> emit,
   ) async {
     if (state.phase != FoundingFriendPaymentStatusPhase.verifying) {
+      final pending = _pendingStore.readForRecovery().payment;
       emit(
         const FoundingFriendPaymentStatusState(
           phase: FoundingFriendPaymentStatusPhase.verifying,
@@ -136,7 +137,9 @@ final class FoundingFriendPaymentStatusBloc
               verification,
             );
             if (status.phase == FoundingFriendPaymentStatusPhase.confirmed &&
-                _pendingStore.read()?.sessionId == event.sessionId) {
+                pending != null &&
+                pending.sessionId == event.sessionId &&
+                pending.matches(_pendingStore.readForRecovery().payment)) {
               _pendingStore.clear();
             }
             emit(status);

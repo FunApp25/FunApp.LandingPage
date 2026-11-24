@@ -642,6 +642,30 @@ describe('Founding Friend payment Worker', () => {
   });
 
   it.each([
+    [null, 'expired'],
+    ['canceled', 'expired'],
+    ['processing', 'invalid'],
+    ['succeeded', 'invalid'],
+  ])('an unpaid expired Session with intent %s verifies as %s', async (status, expected) => {
+    const intent = validSession().payment_intent as Record<string, unknown>;
+    const upstreamFetch = vi.fn<UpstreamFetch>(async () => Response.json(validSession({
+      status: 'expired',
+      payment_status: 'unpaid',
+      payment_intent: status === null ? null : {
+        ...intent,
+        status,
+        amount_received: 0,
+        latest_charge: null,
+      },
+    })));
+    const response = await handleRequest(verifyRequest(sessionId), productionEnv(), {
+      upstreamFetch, paymentRateLimiter: acceptingRateLimiter,
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ status: expected });
+  });
+
+  it.each([
     ['pending', 'pending'],
     ['expired', 'expired'],
     ['refunded', 'refunded'],

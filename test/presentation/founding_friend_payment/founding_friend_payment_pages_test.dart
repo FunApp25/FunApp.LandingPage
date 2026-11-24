@@ -55,6 +55,7 @@ void main() {
     final store = _PendingStore();
     final registration = FoundingFriendRegistrationFormBloc(
       registrationRepository,
+      pendingStore: store,
     );
     await _pump(
       tester,
@@ -89,6 +90,126 @@ void main() {
     expect(registrationRepository.submissions, isEmpty);
     expect(paymentRepository.creates, isEmpty);
     expect(store.value, isNull);
+  });
+
+  for (final outcome in ['open', 'paid', 'expired', 'unknown']) {
+    testWidgets(
+      'reopening registration recovers $outcome only on explicit action',
+      (
+        tester,
+      ) async {
+        final registration = _RegistrationRepository();
+        const oldSession = 'cs_test_originalSession123456789';
+        const open = FoundingFriendPaymentVerification(
+          status: FoundingFriendPaymentStatus.pending,
+          canResumeCheckout: true,
+        );
+        final repository = _RecoveryRepository(
+          [if (outcome == 'expired') right(checkout)],
+          [
+            switch (outcome) {
+              'paid' => right(
+                const FoundingFriendPaymentVerification(
+                  status: FoundingFriendPaymentStatus.confirmed,
+                  purchaseReference: 'FF-1234567890ABCDEF',
+                ),
+              ),
+              'expired' => right(
+                const FoundingFriendPaymentVerification(
+                  status: FoundingFriendPaymentStatus.expired,
+                ),
+              ),
+              'unknown' => left(const AppFailure.serviceUnavailable()),
+              _ => right(open),
+            },
+            if (outcome == 'expired') right(open),
+          ],
+        );
+        final saved = PendingFoundingFriendPayment(
+          email: 'founder@example.com',
+          attemptId: attemptId,
+          sessionId: oldSession,
+          checkoutUrl: Uri.https('checkout.stripe.com', '/c/pay/$oldSession'),
+        );
+        final store = _PendingStore()..save(saved);
+        final redirects = <Uri>[];
+        Widget page() => FoundingFriendPage(
+          createBloc: () => FoundingFriendRegistrationFormBloc(
+            registration,
+            pendingStore: store,
+          ),
+          createCheckoutBloc: () => FoundingFriendCheckoutBloc(
+            repository: repository,
+            pendingStore: store,
+          ),
+          onCheckoutRedirect: (url) async {
+            redirects.add(url);
+            return false;
+          },
+        );
+        await _pump(tester, page());
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(const SizedBox.shrink());
+        await _pump(tester, page());
+        await tester.pumpAndSettle();
+        expect(find.text('Continue your payment'), findsOneWidget);
+        expect(
+          find.byKey(const Key('userSignUpForm-foundingFriend')),
+          findsNothing,
+        );
+        expect(repository.verifications, isEmpty);
+        expect(repository.creates, isEmpty);
+        expect(store.value, same(saved));
+        final retry = find.byKey(const Key('foundingFriendCheckoutRetry'));
+        await tester.ensureVisible(retry);
+        await tester.tap(retry);
+        await tester.pumpAndSettle();
+        expect(registration.submissions, isEmpty);
+        expect(repository.verifications, [
+          oldSession,
+          if (outcome == 'expired') checkout.sessionId,
+        ]);
+        expect(repository.creates, hasLength(outcome == 'expired' ? 1 : 0));
+        expect(redirects, [
+          if (outcome == 'open') saved.checkoutUrl!,
+          if (outcome == 'expired') checkout.checkoutUrl,
+        ]);
+        if (outcome == 'paid') {
+          expect(find.text('Payment confirmed'), findsOneWidget);
+          expect(store.value, isNull);
+        } else if (outcome == 'unknown') {
+          expect(
+            find.byKey(const Key('foundingFriendVerificationRetry')),
+            findsOneWidget,
+          );
+          expect(store.value, same(saved));
+        }
+      },
+    );
+  }
+
+  testWidgets('reopening registration with unreadable storage shows support', (
+    tester,
+  ) async {
+    final repository = _RecoveryRepository([], []);
+    final store = _PendingStore()..unreadable = true;
+    await _pump(
+      tester,
+      FoundingFriendPage(
+        createCheckoutBloc: () => FoundingFriendCheckoutBloc(
+          repository: repository,
+          pendingStore: store,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Contact support for help'), findsOneWidget);
+    expect(
+      find.byKey(const Key('userSignUpForm-foundingFriend')),
+      findsNothing,
+    );
+    expect(repository.creates, isEmpty);
+    expect(repository.verifications, isEmpty);
   });
 
   for (final delayedCreation in [false, true]) {
@@ -566,9 +687,10 @@ void main() {
   ) async {
     final repository = _PaymentRepository([right(checkout)]);
     final store = _PendingStore()
-      ..value = const PendingFoundingFriendPayment(
+      ..value = PendingFoundingFriendPayment(
         email: 'founder@example.com',
         attemptId: attemptId,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
       );
 
     Widget page() => FoundingFriendPaymentCancelledPage(
@@ -597,24 +719,13 @@ void main() {
     (tester) async {
       final verification =
           Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
-      final creation = Completer<Either<AppFailure, FoundingFriendCheckout>>();
-      final repository = _RecoveryRepository(
-        [creation.future],
-        [
-          verification.future,
-          right(
-            const FoundingFriendPaymentVerification(
-              status: FoundingFriendPaymentStatus.pending,
-              canResumeCheckout: true,
-            ),
-          ),
-        ],
-      );
+      final repository = _RecoveryRepository([], [verification.future]);
       final store = _PendingStore()
         ..value = PendingFoundingFriendPayment(
           email: 'founder@example.com',
           attemptId: attemptId,
           sessionId: checkout.sessionId,
+          checkoutUrl: checkout.checkoutUrl,
         );
       final redirects = <Uri>[];
       Widget page() => FoundingFriendPaymentCancelledPage(
@@ -650,16 +761,9 @@ void main() {
           ),
         ),
       );
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('Preparing secure Checkout'), findsOneWidget);
-      creation.complete(right(checkout));
       await tester.pumpAndSettle();
-      expect(repository.creates, [attemptId]);
-      expect(repository.verifications, [
-        checkout.sessionId,
-        checkout.sessionId,
-      ]);
+      expect(repository.creates, isEmpty);
+      expect(repository.verifications, [checkout.sessionId]);
       expect(redirects, [checkout.checkoutUrl]);
       expect(store.value?.sessionId, checkout.sessionId);
     },
@@ -672,14 +776,14 @@ void main() {
       const oldSession = 'cs_test_originalExpiredSession123456';
       final creation = Completer<Either<AppFailure, FoundingFriendCheckout>>();
       final repository = _RecoveryRepository(
-        [creation.future, right(checkout)],
+        [creation.future],
         [
           right(
             const FoundingFriendPaymentVerification(
               status: FoundingFriendPaymentStatus.expired,
             ),
           ),
-          for (var i = 0; i < 3; i++)
+          for (var i = 0; i < 2; i++)
             right(
               const FoundingFriendPaymentVerification(
                 status: FoundingFriendPaymentStatus.pending,
@@ -725,12 +829,11 @@ void main() {
       expect(store.value?.sessionId, checkout.sessionId);
       await tester.tap(retry);
       await tester.pumpAndSettle();
-      expect(repository.creates, [replacementAttemptId, replacementAttemptId]);
+      expect(repository.creates, [replacementAttemptId]);
       expect(rotations, 1);
       expect(redirects, [checkout.checkoutUrl, checkout.checkoutUrl]);
       expect(repository.verifications, [
         oldSession,
-        checkout.sessionId,
         checkout.sessionId,
         checkout.sessionId,
       ]);
@@ -1008,6 +1111,50 @@ void main() {
     },
   );
 
+  testWidgets('expired return cannot recover an unrelated stored Session', (
+    tester,
+  ) async {
+    final stored = PendingFoundingFriendPayment(
+      email: 'founder@example.com',
+      attemptId: attemptId,
+      sessionId: checkout.sessionId,
+      checkoutUrl: checkout.checkoutUrl,
+    );
+    final store = _PendingStore()..save(stored);
+    const returnedSession = 'cs_test_expiredReturnSession123456';
+    final repository = _RecoveryRepository([], [
+      right(
+        const FoundingFriendPaymentVerification(
+          status: FoundingFriendPaymentStatus.expired,
+        ),
+      ),
+    ]);
+    await _pump(
+      tester,
+      FoundingFriendPaymentReturnPage(
+        sessionId: returnedSession,
+        createBloc: () => FoundingFriendPaymentStatusBloc(
+          repository: repository,
+          pendingStore: store,
+        ),
+        createCheckoutBloc: () => FoundingFriendCheckoutBloc(
+          repository: repository,
+          pendingStore: store,
+        ),
+        onCheckoutRedirect: (_) => throw StateError('wrong Session redirect'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final retry = find.byKey(const Key('foundingFriendExpiredCheckoutRetry'));
+    await tester.ensureVisible(retry);
+    await tester.tap(retry);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Contact support for help'), findsOneWidget);
+    expect(repository.verifications, [returnedSession]);
+    expect(repository.creates, isEmpty);
+    expect(store.value, same(stored));
+  });
+
   testWidgets('pending and unavailable verification can be retried safely', (
     tester,
   ) async {
@@ -1087,9 +1234,10 @@ void main() {
       );
       addTearDown(getIt.reset);
       final store = _PendingStore()
-        ..value = const PendingFoundingFriendPayment(
+        ..value = PendingFoundingFriendPayment(
           email: 'founder@example.com',
           attemptId: attemptId,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
         );
       await _pump(
         tester,
@@ -1124,9 +1272,10 @@ void main() {
             left(const AppFailure.serviceUnavailable()),
           ]);
           final store = _PendingStore()
-            ..value = const PendingFoundingFriendPayment(
+            ..value = PendingFoundingFriendPayment(
               email: 'founder@example.com',
               attemptId: attemptId,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
             );
           await _pump(
             tester,
@@ -1335,12 +1484,14 @@ final class _ExpiredPaymentRepository
 final class _PendingStore
     implements PendingFoundingFriendPaymentStoreInterface {
   PendingFoundingFriendPayment? value;
+  bool unreadable = false;
 
   @override
   void clear() => value = null;
 
   @override
-  PendingFoundingFriendPayment? read() => value;
+  PendingFoundingFriendPayment? read() =>
+      unreadable ? throw const FormatException('Malformed payment') : value;
 
   @override
   void save(PendingFoundingFriendPayment payment) => value = payment;

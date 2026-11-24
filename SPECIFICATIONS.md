@@ -605,8 +605,7 @@ capabilities as implemented.
   branded membership-specific confirmation. Confirmed Founding Friend
   registration does not render the prior terminal registration acknowledgement;
   it starts the separate Checkout-preparation BLoC with the validated email and
-  a new opaque attempt ID. Retrying payment reuses that attempt and never
-  resubmits HubSpot registration.
+  a new opaque attempt ID. Payment recovery never resubmits HubSpot registration.
 
 - The prospective-venue lead contract is provider-neutral and lives in
   `domain`. It uses `dartz` `Either` for validation results and `Option` for
@@ -827,15 +826,22 @@ capabilities as implemented.
   holds the purchase record; no D1, KV, Durable Object, or other payment
   database is used.
 - Checkout creation uses the attempt-derived Stripe idempotency key
-  `founding-friend-checkout-v1-{attemptId}`. Flutter creates the attempt only
-  after confirmed registration and retains its email, attempt ID, and opaque
-  Checkout Session ID (once creation succeeds) in current-tab session storage
-  for explicit payment retry. Older stored attempts without a Session ID
-  remain readable. This prevents payment retry from resubmitting registration
-  and correlates retries while Stripe retains its idempotency result. It is not durable exactly-once
-  creation: a lost response after Stripe's retention window, expired session,
-  cleared tab state, or independent browser session can require a new attempt
-  and can leave another unpaid Stripe Session. Stripe remains authoritative.
+  `founding-friend-checkout-v1-{attemptId}`. After registration Flutter stores
+  the email, attempt ID and creation start in current-tab session storage.
+  Creation requires that snapshot to be readable. When creation returns,
+  Flutter saves the validated hosted URL with the Session ID. Reopening the
+  registration route with a pending record offers explicit recovery and blocks
+  new registration. Unreadable tab state goes to support guidance.
+- When a creation response is missing, explicit recovery may replay the same
+  attempt for one hour from the original start and then verify the recovered
+  Session. Missing, invalid, future or expired timestamps cannot authorize
+  replay, including older records with no timestamp. Stripe API v1 retains
+  keys for at least 24 hours and can cache errors. Repeated failures preserve
+  the same key and timestamp. Recovery never treats an unknown outcome as
+  a confirmed failure. This is a browser-local safeguard. Lost, duplicated,
+  or independent tab state and direct API calls can still produce duplicate
+  purchases. Stripe holds the purchase record for manual reconciliation.
+  [Stripe idempotency](https://docs.stripe.com/api/idempotent_requests).
 - Stripe Adaptive Pricing remains enabled in Stripe settings. The Worker does
   not override it or calculate FX. £249 GBP (24900 minor units) is the original
   tax-inclusive, one-time Price contract; Stripe may collect its localized
@@ -886,33 +892,20 @@ capabilities as implemented.
   the outgoing Dahlia header and cover both representations. A direct pinned-
   version sandbox GET and hosted validation remain unperformed. Neither this
   investigation nor the tests create a Stripe payment or mutate Stripe.
-- Flutter trusts neither Checkout redirection nor browser parameters as proof
-  of payment. The return route verifies its `session_id` through the Worker and
-  shows the purchase reference only for confirmed payment. Cancelled, pending,
-  expired, refunded, disputed, invalid, and temporarily unverifiable states
-  receive localized recovery guidance. The cancellation page stays inert until
-  explicit retry. Recovery verifies the stored Session before creation; only
-  verified expiry rotates the attempt. Open/unpaid verification returns
-  `pending` with `canResumeCheckout: true`; complete/unpaid returns `pending`
-  with that flag false. This optional response field is negotiated with
-  `Accept: application/json; checkout-recovery=1`, preserving the exact old
-  response schema for older clients. Missing flags in older responses cannot authorize a
-  redirect. An anomalous expired/paid Session is invalid, not retryable expiry.
-  For an open Session, recovery replays creation with the original attempt to
-  recover its hosted URL and verifies the same returned Session again before
-  redirect. A different returned Session is rejected without replacing the
-  known Session. Older data or interrupted creation without a Session ID first
-  replays the original attempt and persists and verifies the returned Session;
-  it never guesses expiry. This retains the existing idempotency-retention
-  limit when the original Session ID is unknown. Confirmed, refunded,
-  disputed, invalid, pending-but-not-resumable, and unavailable verification
-  never authorize another Checkout. Verification failures remain retryable;
-  overlapping retry events are ignored. The return page retains explicit
-  verified-expired retry using current-tab registration state without
-  resubmitting registration; missing tab state fails safely to support guidance.
-  The confirmation states that membership is not active yet and asks customers
-  to use the purchase email for their future Fun App account, whose authenticated
-  backend will later verify a qualifying payment against its verified email.
+- The return route verifies its exact `session_id` through the Worker and
+  shows a purchase reference only when payment is confirmed. A retry on the
+  expired return route requires a matching stored Session. Cancellation stays
+  inert until explicit retry. A known Session is always verified through a
+  read-only lookup regardless of its attempt age. Open/unpaid verification
+  carries `canResumeCheckout: true` when the client opts in with
+  `Accept: application/json; checkout-recovery=1`. It can resume from the
+  valid URL saved with that Session. A legacy record lacking the URL can still
+  show verified status and directs the user to support if it cannot resume.
+  Only verified unpaid expiry without evidence of in-flight payment permits
+  a new attempt. Pending non-resumable, confirmed, refunded, disputed, invalid,
+  and unavailable verification do not authorize a replacement. Missing or
+  mismatched tab state gives support guidance. Success confirms payment for
+  future benefits and does not create an account or activate membership.
 - Stripe automatic payment receipts use the Customer email supplied by hosted
   Checkout. Enabling **Successful payments** and verifying actual delivery are
   production prerequisites. The MVP uses manual reconciliation and includes
@@ -927,13 +920,12 @@ capabilities as implemented.
   15-second browser deadline for one Stripe lookup. These deadlines include
   response-body reads; a browser abort does not prove that Stripe creation was
   cancelled, so ambiguous failures retain the original attempt for recovery.
-  Errors remain provider-neutral, and neither
-  boundary logs or returns emails, names, request bodies, billing/payment
-  details, Checkout URLs, credentials, or complete provider responses.
+  Errors remain provider-neutral. Verification exposes neither hosted Checkout
+  URLs nor personal or provider payment details. Checkout URLs from successful
+  creation are kept only in tab storage for recovery.
 - Checkout recovery rejects disposed asynchronous completions before storage
   changes or follow-up calls. A newer stored attempt or Session takes precedence
-  over an older workflow; browser storage unavailability still permits the
-  active Checkout to continue. Public form text-field validation messages wrap
+  over an older workflow. Public form text-field validation messages wrap
   completely and expand at narrow widths and increased text scales.
 - Staging Checkout-creation HTTP 500 responses log only the response's generated
   request ID, a fixed allowlisted execution stage, and either

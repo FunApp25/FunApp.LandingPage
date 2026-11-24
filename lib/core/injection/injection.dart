@@ -161,6 +161,12 @@ void configureDependencies(
     ..registerLazySingleton<PendingFoundingFriendPaymentStoreInterface>(
       SessionPendingFoundingFriendPaymentStore.new,
     )
+    ..registerFactory<FoundingFriendRegistrationFormBloc>(
+      () => FoundingFriendRegistrationFormBloc(
+        getIt<FoundingFriendRegistrationRepositoryInterface>(),
+        pendingStore: getIt<PendingFoundingFriendPaymentStoreInterface>(),
+      ),
+    )
     ..init();
 }
 

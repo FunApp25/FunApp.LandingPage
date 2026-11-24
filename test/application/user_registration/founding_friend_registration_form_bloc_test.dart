@@ -9,6 +9,8 @@ import 'package:fun_app_landing_page/domain/core/value_objects/age.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/email_address.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/personal_name.dart';
+import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/pending_founding_friend_payment.dart';
+import 'package:fun_app_landing_page/domain/founding_friend_payment/pending_founding_friend_payment_store_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/entities/founding_friend_registration.dart';
 import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
 
@@ -41,6 +43,27 @@ void main() {
       },
     );
   }
+
+  blocTest<
+    FoundingFriendRegistrationFormBloc,
+    FoundingFriendRegistrationFormState
+  >(
+    'an active payment blocks direct form resubmission',
+    build: () => FoundingFriendRegistrationFormBloc(
+      repository,
+      pendingStore: _PendingStore(),
+    ),
+    seed: () => _state(registration: _validRegistration()),
+    act: (bloc) =>
+        bloc.add(const FoundingFriendRegistrationFormEvent.submitted()),
+    verify: (bloc) {
+      expect(repository.submissions, isEmpty);
+      expect(
+        bloc.state.submissionResult,
+        some(left<AppFailure, Unit>(const AppFailure.serviceUnavailable())),
+      );
+    },
+  );
 
   blocTest<
     FoundingFriendRegistrationFormBloc,
@@ -249,6 +272,21 @@ void main() {
       ),
     ],
   );
+}
+
+final class _PendingStore
+    implements PendingFoundingFriendPaymentStoreInterface {
+  @override
+  PendingFoundingFriendPayment read() => const PendingFoundingFriendPayment(
+    email: 'founder@example.com',
+    attemptId: '123e4567-e89b-42d3-a456-426614174000',
+  );
+
+  @override
+  void save(PendingFoundingFriendPayment payment) {}
+
+  @override
+  void clear() {}
 }
 
 FoundingFriendRegistrationFormState _state({

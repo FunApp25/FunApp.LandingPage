@@ -552,7 +552,11 @@ function classifySession(
   ) {
     return { status: 'refunded' };
   } else if (session.status === 'expired' && session.payment_status === 'unpaid') {
-    return { status: 'expired' };
+    const intent = record(session.payment_intent);
+    const noPaymentInFlight =
+      (intent === null || (intent.status === 'canceled' && intent.amount_received === 0)) &&
+      (charge === null || (charge.paid === false && charge.captured === false));
+    return { status: noPaymentInFlight ? 'expired' : 'invalid' };
   } else if (
     session.status === 'complete' &&
     session.payment_status === 'paid'
@@ -1094,7 +1098,7 @@ function hasValidCustomer(customer: unknown): boolean {
 
 function latestCharge(
   paymentIntent: unknown,
-): { disputed?: unknown; refunded?: unknown; amount_refunded?: unknown } | null {
+): Record<string, unknown> | null {
   return record(record(paymentIntent)?.latest_charge);
 }
 

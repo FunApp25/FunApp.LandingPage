@@ -58,7 +58,11 @@ final class FoundingFriendPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => blocFactory()),
-        BlocProvider(create: (_) => checkoutBlocFactory()),
+        BlocProvider(
+          create: (_) =>
+              checkoutBlocFactory()
+                ..add(const FoundingFriendCheckoutRecoveryOpened()),
+        ),
       ],
       child: MultiBlocListener(
         listeners: [
@@ -102,12 +106,21 @@ final class FoundingFriendPage extends StatelessWidget {
               bool
             >(
               selector: _submissionSucceeded,
-              builder: (context, submissionSucceeded) => UserSignUpPage(
-                experience: UserSignUpExperience.foundingFriend,
-                contentOverride: submissionSucceeded
-                    ? const FoundingFriendCheckoutPanel()
-                    : null,
-              ),
+              builder: (context, submissionSucceeded) =>
+                  BlocSelector<
+                    FoundingFriendCheckoutBloc,
+                    FoundingFriendCheckoutState,
+                    bool
+                  >(
+                    selector: (state) =>
+                        state.phase != FoundingFriendCheckoutPhase.idle,
+                    builder: (context, hasPaymentFlow) => UserSignUpPage(
+                      experience: UserSignUpExperience.foundingFriend,
+                      contentOverride: submissionSucceeded || hasPaymentFlow
+                          ? const FoundingFriendCheckoutPanel()
+                          : null,
+                    ),
+                  ),
             ),
       ),
     );

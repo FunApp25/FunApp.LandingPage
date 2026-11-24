@@ -45,6 +45,12 @@ final class FoundingFriendCheckoutPanel extends StatelessWidget {
               showRetry: true,
               busy: false,
             ),
+            FoundingFriendCheckoutPhase.recoveryRequired => (
+              title: l10n.foundingFriendPaymentRecoveryTitle,
+              body: l10n.foundingFriendPaymentRecoveryBody,
+              showRetry: true,
+              busy: false,
+            ),
             FoundingFriendCheckoutPhase.idle ||
             FoundingFriendCheckoutPhase.preparing ||
             FoundingFriendCheckoutPhase.verifying => (

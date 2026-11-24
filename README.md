@@ -981,31 +981,35 @@ billing or payment-method details, raw Stripe objects, provider errors,
 Checkout URLs on verification, or secrets.
 
 Checkout creation uses `founding-friend-checkout-v1-{attemptId}` as the Stripe
-idempotency key. Flutter creates the attempt only after successful HubSpot
-registration and keeps the email, attempt ID, and opaque Checkout Session ID
-once returned in tab-scoped browser session storage for explicit payment retry.
-A retry therefore does not resubmit registration and, while Stripe retains the
-idempotency result, reuses the logical Checkout creation. This is not durable
-exactly-once behavior: no D1, KV, Durable Object, or other payment database exists. A lost response after
-Stripe's idempotency retention window, cleared tab storage, an independent
-browser session, or an expired Checkout Session can require a new attempt and
-may produce another unpaid session. In the original browser tab, an explicitly
-retried expired session rotates only the payment attempt and does not resubmit
-registration. Cancellation stays inert until explicit retry, then verifies the
-stored Session through the payment repository. Only verified expiry rotates the
-attempt. Open/unpaid `pending` results explicitly allow resuming Checkout via
-`canResumeCheckout`. Updated clients opt in with
-`Accept: application/json; checkout-recovery=1`; older clients retain the
-previous response schema. Complete/unpaid or older responses without that
-capability cannot authorize a redirect. Creation replay recovers the URL using the same
-attempt, and the returned Session is verified again before redirect. Older
-stored attempts and interrupted creation without a Session ID replay the
-original attempt, then persist and verify the response; they retain the existing
-Stripe idempotency-retention limitation. Verification failure never rotates the
-attempt. Confirmed, refunded, disputed, and invalid results cannot create a new
-Checkout. Without tab state, the UI fails safely to support guidance.
-Stripe remains the only purchase record; customers must not be treated as paid
-from a redirect alone.
+idempotency key. After registration Flutter records the email, attempt ID, and
+creation start time in session storage before contacting Checkout. The validated
+Session ID and hosted URL are saved together when returned. Reopening the
+registration page with a pending attempt offers an explicit recovery action.
+It blocks a new form submission while the record is unresolved.
+
+Recovery verifies a known Session through the Worker. An expired-payment
+return can retry only the stored Session matching its `session_id`. Cancellation
+stays inert until retry. A verified open, unpaid Session can resume through its
+saved URL if `canResumeCheckout` is true. Known Session recovery performs no
+creation replay and has no timestamp cutoff. Only a verified unpaid expiry can
+start a replacement attempt. Paid, pending, refunded, disputed, invalid, and
+unverifiable outcomes cannot start a replacement. Stale completions preserve
+newer tab state. A legacy known Session can still be verified. If it remains
+open and the old record lacks a hosted URL, the UI directs the user to support.
+
+For an unknown creation outcome, a user can explicitly replay the same attempt
+only within one hour of the recorded start. Stripe API v1 can prune keys at 24
+hours or later and can cache errors. Retrying preserves the original start and
+does not generate a new key to bypass an error. Missing, unreadable, invalid,
+future, or expired replay timestamps require support. An ordinary lost response
+inside the window can be recovered and is verified before any redirect.
+[Stripe idempotency](https://docs.stripe.com/api/idempotent_requests).
+
+Storage is tab-scoped. A cleared or duplicated tab, another browser or device,
+or a direct API caller can still produce independent payments. Stripe holds
+the purchase record, and support must manually reconcile ambiguous or duplicate
+purchases. Confirmation requires server verification and does not activate
+membership.
 
 Run the browser storage regression separately from the normal Flutter suite:
 
@@ -1077,8 +1081,8 @@ Flutter gives Checkout creation 25 seconds for the sequential Price lookup and
 Session creation, including 5 seconds of transport/processing allowance beyond
 the two independent Stripe deadlines. Verification keeps a separate 15-second
 deadline for one lookup. Deadlines include response-body reads. Browser aborts
-can leave creation ambiguous; retry retains the same attempt for idempotent
-recovery.
+can leave creation ambiguous. An explicit retry may use the original attempt
+inside the one-hour window.
 It performs no operational logging of emails, names, request bodies, Checkout
 URLs, payment details, credentials, or provider responses. Local mock settings
 are rejected outside loopback execution. `PAYMENT_CREATION_ENABLED` must be

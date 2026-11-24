@@ -6,16 +6,15 @@ import 'package:fun_app_landing_page/domain/core/value_objects/age.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/email_address.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
 import 'package:fun_app_landing_page/domain/core/value_objects/personal_name.dart';
+import 'package:fun_app_landing_page/domain/founding_friend_payment/pending_founding_friend_payment_store_interface.dart';
 import 'package:fun_app_landing_page/domain/user_registration/entities/founding_friend_registration.dart';
 import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
-import 'package:injectable/injectable.dart';
 
 part 'founding_friend_registration_form_bloc.freezed.dart';
 part 'founding_friend_registration_form_event.dart';
 part 'founding_friend_registration_form_state.dart';
 
 /// Owns the Founding Friend registration draft and submission workflow.
-@injectable
 class FoundingFriendRegistrationFormBloc
     extends
         Bloc<
@@ -23,8 +22,10 @@ class FoundingFriendRegistrationFormBloc
           FoundingFriendRegistrationFormState
         > {
   /// Creates a BLoC backed by a provider-neutral repository.
-  FoundingFriendRegistrationFormBloc(this._repository)
-    : super(FoundingFriendRegistrationFormState.initial()) {
+  FoundingFriendRegistrationFormBloc(
+    this._repository, {
+    this._pendingStore,
+  }) : super(FoundingFriendRegistrationFormState.initial()) {
     on<_FirstNameChanged>(_onFirstNameChanged);
     on<_LastNameChanged>(_onLastNameChanged);
     on<_EmailChanged>(_onEmailChanged);
@@ -37,6 +38,7 @@ class FoundingFriendRegistrationFormBloc
   }
 
   final FoundingFriendRegistrationRepositoryInterface _repository;
+  final PendingFoundingFriendPaymentStoreInterface? _pendingStore;
 
   void _onFirstNameChanged(
     _FirstNameChanged event,
@@ -119,6 +121,17 @@ class FoundingFriendRegistrationFormBloc
       );
 
       if (state.registration.isValid) {
+        final pending = _pendingStore?.readForRecovery();
+        if (pending?.payment != null || pending?.unavailable == true) {
+          emit(
+            attemptedState.copyWith(
+              submissionResult: some(
+                left(const AppFailure.serviceUnavailable()),
+              ),
+            ),
+          );
+          return;
+        }
         final submittedRegistration = state.registration;
         emit(attemptedState.copyWith(isSubmitting: true));
 
