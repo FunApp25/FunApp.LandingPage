@@ -812,8 +812,12 @@ capabilities as implemented.
   line item, quantity 1, in `payment` mode, prefills the validated registration
   email, requires `customer_creation=always`, explicitly sends the configured
   automatic-tax boolean, and supplies only fixed return/cancel URLs derived
-  from `PUBLIC_APP_ORIGIN`. The client cannot select a Price, amount, currency,
-  quantity, mode, tax setting, or redirect.
+  from `PUBLIC_APP_ORIGIN`. With the pinned `2026-08-26.dahlia` API it sends
+  `payment_method_types[0]=card`. Stripe can present Apple Pay and Google Pay
+  for eligible customers based on browser, device, wallet and account settings.
+  Klarna, bank debit, bank transfer and other delayed methods are excluded.
+  The client cannot select a Price, amount, currency, quantity, mode, payment
+  method, tax setting, or redirect.
 - The Worker generates a non-email purchase reference in `FF-...` form with a
   server-only HMAC secret and the attempt ID. It records that reference in
   Stripe `client_reference_id`, Checkout Session metadata, and PaymentIntent
@@ -909,6 +913,12 @@ capabilities as implemented.
   The confirmation states that membership is not active yet and asks customers
   to use the purchase email for their future Fun App account, whose authenticated
   backend will later verify a qualifying payment against its verified email.
+- Stripe automatic payment receipts use the Customer email supplied by hosted
+  Checkout. Enabling **Successful payments** and verifying actual delivery are
+  production prerequisites. The MVP uses manual reconciliation and includes
+  no webhook fulfillment, paid invoice creation, custom email delivery, or
+  automatic HubSpot payment synchronization.
+  [Stripe automatic receipts](https://docs.stripe.com/receipts#automatic).
 - Flutter accepts Checkout redirects only from exact HTTPS
   `checkout.stripe.com`, or from its exact configured loopback origin in local
   mock mode. Checkout creation uses a 25-second browser deadline for two
@@ -981,14 +991,15 @@ capabilities as implemented.
   cross-field invariant.
 - Prospective-user retention/deletion requirements.
 - Legal alignment of the strict Founding Friend registration rule with the
-  exception wording in Purchase Terms clause 3.1.
+  exception wording in Purchase Terms clause 3.1, and of the receipt-only MVP
+  with the emailed order confirmation described in clause 4.6.
 - Whether approved display labels should differ from the confirmed HubSpot
   gender values, and any explicit reversible mapping if they do.
 - Ongoing synchronization of the HubSpot country option source before
   integration and release.
 - Approved tax treatment, the corresponding explicit automatic-tax setting,
   Stripe Tax configuration and registrations if enabled, Refund & Cancellation
-  Policy, Terms of Use, supported payment methods, dispute/support process, and
+  Policy, Terms of Use, dispute/support process, and
   the exact legal copy required around purchase. The implementation does not
   invent these terms.
 - The later main Fun App backend contract for matching a qualifying Stripe

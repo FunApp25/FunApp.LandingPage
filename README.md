@@ -947,9 +947,10 @@ Worker. It owns two first-party JSON endpoints:
   validated `email` and UUID v4 `attemptId`. When creation is enabled, the
   Worker validates its configured tax-inclusive Stripe Price, creates one
   Stripe Checkout Session in `payment` mode for quantity 1 and a £249 GBP
-  base price, explicitly applies the approved automatic-tax setting, always
-  creates a Stripe Customer after Checkout completion, prefills the Customer email, and
-  returns only `checkoutUrl`, `sessionId`, and an opaque request ID.
+  base price, explicitly applies the configured automatic-tax setting, and
+  restricts the Session to `payment_method_types[0]=card` on the pinned
+  `2026-08-26.dahlia` API. It supplies the email for the new Stripe Customer
+  and returns only `checkoutUrl`, `sessionId`, and an opaque request ID.
 - `POST /api/founding-friend-payments/checkout-sessions/verify` accepts exactly
   a Stripe Checkout `sessionId`. It retrieves that specific session and its
   line item, verifies environment, mode, configured Price, quantity, currency,
@@ -957,7 +958,15 @@ Worker. It owns two first-party JSON endpoints:
   signals available from Stripe. It returns only a provider-neutral status and
   exposes the purchase reference after confirmed payment.
 
-The browser never supplies a Price, amount, currency, or redirect URL. The
+Eligible Apple Pay and Google Pay remain possible through Stripe-hosted
+Checkout, subject to browser, device, wallet, currency, and Stripe settings.
+Klarna, bank debit, bank transfer, and other delayed methods are outside the
+card allowlist. Adaptive Pricing remains account-configured. Check wallet
+presentation and local currency together during controlled testing.
+[Stripe Checkout version change](https://docs.stripe.com/changelog/endive/2026-09-30/remove-payment-method-types-checkout-sessions),
+[Wallet testing](https://docs.stripe.com/testing/wallets).
+
+The browser never supplies a Price, amount, currency, methods, or redirect URL. The
 Worker generates `FF-...` purchase references with a server-only HMAC secret
 and writes each reference to Stripe `client_reference_id`, Checkout metadata,
 and PaymentIntent metadata. The explicit automatic-tax choice is also stored in
@@ -1140,16 +1149,19 @@ Before activation, approve the tax treatment and then set
 `STRIPE_AUTOMATIC_TAX_ENABLED` deliberately. Enabling it also requires the
 business's confirmed Stripe Tax settings, origin address, applicable active
 registrations, and approved Product tax code; the code does not choose any of
-those legal or business inputs. Also approve the refund/cancellation policy and
-copy, supported payment methods, dispute/support handling, and any required
-terms. This MVP deliberately performs no automatic HubSpot payment sync,
-webhook fulfillment, account creation, or membership provisioning. The later
-authenticated Fun App backend must verify a qualifying Stripe payment against
-the account's verified email. Customers are reminded to use the purchase email
-for that future account; the present payment confirmation does not activate
-membership. If delayed payment methods or payment-triggered side effects are
-introduced, their asynchronous lifecycle and authenticated webhook handling
-must be designed before launch.
+those legal or business inputs. Approve the refund/cancellation policy,
+dispute/support handling, and applicable terms before launch.
+
+Enable **Successful payments** under Stripe's **Customer emails** in the live
+account and verify delivery during controlled live testing. Checkout supplies
+`customer_email` with `customer_creation=always`, so Stripe can use the paid
+Customer's email for automatic receipts. This MVP uses Stripe receipts and
+manual reconciliation. It has no custom email delivery, paid invoice creation,
+webhooks, or automatic HubSpot payment synchronization. Review the emailed
+order confirmation described in Purchase Terms clause 4.6 alongside the
+receipt-only implementation. Purchasing secures future benefits. Account creation
+and membership activation remain separate from payment confirmation.
+[Stripe automatic receipts](https://docs.stripe.com/receipts#automatic).
 
 ## Repository structure
 

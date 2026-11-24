@@ -209,6 +209,12 @@ describe('Founding Friend payment Worker', () => {
     const create = requests[1];
     const parameters = new URLSearchParams(create?.init?.body as string);
     expect(parameters.get('mode')).toBe('payment');
+    expect([...parameters].filter(([name]) =>
+      name.startsWith('payment_method_types'))).toEqual([
+      ['payment_method_types[0]', 'card'],
+    ]);
+    expect(parameters.has('invoice_creation[enabled]')).toBe(false);
+    expect(parameters.has('payment_intent_data[receipt_email]')).toBe(false);
     expect(parameters.get('line_items[0][price]')).toBe(
       'price_test249gbp',
     );
@@ -230,7 +236,6 @@ describe('Founding Friend payment Worker', () => {
     expect(
       parameters.get('payment_intent_data[metadata][automatic_tax_enabled]'),
     ).toBe('false');
-    expect(parameters.has('payment_method_types[0]')).toBe(false);
     expect(parameters.has('allow_promotion_codes')).toBe(false);
     expect(parameters.get('success_url')).toBe(
       'https://funapp.world/#/founding-friend/payment?session_id={CHECKOUT_SESSION_ID}',
@@ -823,17 +828,24 @@ describe('Founding Friend payment Worker', () => {
     expect(await response.json()).toMatchObject({ status: 'pending', canResumeCheckout: true });
   });
 
-  it('rejects malformed and extra request fields', async () => {
+  it.each([
+    { amount: 1 },
+    { payment_method_types: ['klarna'] },
+    { allowed_payment_method_types: ['sepa_debit'] },
+    { 'payment_method_types[0]': 'customer_balance' },
+  ])('rejects caller-controlled Checkout overrides %j', async (override) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>();
     const response = await handleRequest(
       createRequest('https://payment.example', {
         email,
         attemptId,
-        amount: 1,
+        ...override,
       }),
       productionEnv(),
-      { paymentRateLimiter: acceptingRateLimiter },
+      { paymentRateLimiter: acceptingRateLimiter, upstreamFetch },
     );
     expect(response.status).toBe(400);
+    expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
   it('rejects oversized bodies before parsing', async () => {

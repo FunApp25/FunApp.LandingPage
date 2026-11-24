@@ -390,6 +390,7 @@ async function createCheckoutSession(
 
   const parameters = new URLSearchParams({
     mode: 'payment',
+    'payment_method_types[0]': 'card',
     success_url: successUrl,
     cancel_url: cancelUrl,
     customer_email: input.email,
