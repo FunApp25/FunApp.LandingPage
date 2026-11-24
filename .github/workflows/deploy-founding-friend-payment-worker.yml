@@ -2,6 +2,11 @@ name: Deploy Founding Friend Payment Worker
 
 on:
   workflow_dispatch:
+    inputs:
+      authorize_payment_creation:
+        description: Authorize live Checkout creation for this deployment
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -12,6 +17,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     name: Validate and deploy payment Worker
     runs-on: ubuntu-latest
     environment: production
@@ -40,10 +46,11 @@ jobs:
       - name: Validate Wrangler configuration
         run: npm run wrangler:validate
 
-      - name: Validate production deployment configuration
+      - name: Preflight and deploy payment Worker
         shell: bash
         env:
           PAYMENT_CREATION_ENABLED: ${{ vars.PAYMENT_CREATION_ENABLED || 'false' }}
+          AUTHORIZE_PAYMENT_CREATION: ${{ inputs.authorize_payment_creation }}
           STRIPE_PRICE_ID: ${{ vars.STRIPE_PRICE_ID }}
           STRIPE_EXPECTED_LIVEMODE: ${{ vars.STRIPE_EXPECTED_LIVEMODE }}
           STRIPE_AUTOMATIC_TAX_ENABLED: ${{ vars.STRIPE_AUTOMATIC_TAX_ENABLED }}
@@ -54,71 +61,19 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
-          for variable_name in \
-            STRIPE_PRICE_ID \
-            STRIPE_EXPECTED_LIVEMODE \
-            STRIPE_AUTOMATIC_TAX_ENABLED \
-            PUBLIC_APP_ORIGIN \
-            STRIPE_SECRET_KEY \
-            PURCHASE_REFERENCE_SECRET \
-            CLOUDFLARE_ACCOUNT_ID \
-            CLOUDFLARE_API_TOKEN
-          do
-            if [[ -z "${!variable_name:-}" ]]; then
-              echo "::error::Missing required production Environment configuration: $variable_name"
-              exit 1
-            fi
-          done
-
-          case "$PAYMENT_CREATION_ENABLED" in
-            true|false)
-              ;;
-            *)
-              echo "::error::PAYMENT_CREATION_ENABLED must be true or false"
-              exit 1
-              ;;
-          esac
-
-          case "$STRIPE_EXPECTED_LIVEMODE" in
-            true|false)
-              ;;
-            *)
-              echo "::error::STRIPE_EXPECTED_LIVEMODE must be true or false"
-              exit 1
-              ;;
-          esac
-
-          case "$STRIPE_AUTOMATIC_TAX_ENABLED" in
-            true|false)
-              ;;
-            *)
-              echo "::error::STRIPE_AUTOMATIC_TAX_ENABLED must be true or false"
-              exit 1
-              ;;
-          esac
-
-      - name: Deploy payment Worker
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: cloudflare/founding-friend-payment-worker
-          packageManager: npm
-          command: deploy --env=""
-          vars: |
-            PAYMENT_CREATION_ENABLED
-            STRIPE_PRICE_ID
-            STRIPE_EXPECTED_LIVEMODE
-            STRIPE_AUTOMATIC_TAX_ENABLED
-            PUBLIC_APP_ORIGIN
-          secrets: |
-            STRIPE_SECRET_KEY
-            PURCHASE_REFERENCE_SECRET
-        env:
-          PAYMENT_CREATION_ENABLED: ${{ vars.PAYMENT_CREATION_ENABLED || 'false' }}
-          STRIPE_PRICE_ID: ${{ vars.STRIPE_PRICE_ID }}
-          STRIPE_EXPECTED_LIVEMODE: ${{ vars.STRIPE_EXPECTED_LIVEMODE }}
-          STRIPE_AUTOMATIC_TAX_ENABLED: ${{ vars.STRIPE_AUTOMATIC_TAX_ENABLED }}
-          PUBLIC_APP_ORIGIN: ${{ vars.PUBLIC_APP_ORIGIN }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          PURCHASE_REFERENCE_SECRET: ${{ secrets.PURCHASE_REFERENCE_SECRET }}
+          node ../../tool/check_production_worker.mjs founding-friend-payment-worker
+          umask 077
+          secrets_file=$(mktemp "$RUNNER_TEMP/production-payment-secrets.XXXXXX")
+          trap 'rm -f "$secrets_file"' EXIT
+          node -e '
+            const { STRIPE_SECRET_KEY, PURCHASE_REFERENCE_SECRET } = process.env;
+            process.stdout.write(JSON.stringify({ STRIPE_SECRET_KEY, PURCHASE_REFERENCE_SECRET }));
+          ' > "$secrets_file"
+          unset STRIPE_SECRET_KEY PURCHASE_REFERENCE_SECRET
+          npx --no-install wrangler deploy --env="" --config wrangler.jsonc \
+            --secrets-file "$secrets_file" \
+            --var "PAYMENT_CREATION_ENABLED:$PAYMENT_CREATION_ENABLED" \
+            --var "STRIPE_PRICE_ID:$STRIPE_PRICE_ID" \
+            --var "STRIPE_EXPECTED_LIVEMODE:$STRIPE_EXPECTED_LIVEMODE" \
+            --var "STRIPE_AUTOMATIC_TAX_ENABLED:$STRIPE_AUTOMATIC_TAX_ENABLED" \
+            --var "PUBLIC_APP_ORIGIN:$PUBLIC_APP_ORIGIN"

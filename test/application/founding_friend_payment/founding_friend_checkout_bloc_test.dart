@@ -34,12 +34,19 @@ FoundingFriendCheckout _checkout(String session) => FoundingFriendCheckout(
   sessionId: session,
 );
 
-_PendingStore _store({String? session = _session}) => _PendingStore()
+_PendingStore _store({
+  String? session = _session,
+  bool legacy = false,
+}) => _PendingStore()
   ..save(
     PendingFoundingFriendPayment(
       email: _email,
       attemptId: _attempt,
       sessionId: session,
+      createdAt: legacy ? null : DateTime.now().millisecondsSinceEpoch,
+      checkoutUrl: legacy || session == null
+          ? null
+          : _checkout(session).checkoutUrl,
     ),
   );
 
@@ -172,7 +179,7 @@ void main() {
   );
 
   test(
-    'initial Checkout continues when browser storage is unavailable',
+    'initial Checkout refuses to create when storage cannot retain it',
     () async {
       final repository = _PaymentRepository([right(_checkout(_session))]);
       final bloc = FoundingFriendCheckoutBloc(
@@ -186,9 +193,9 @@ void main() {
           bloc,
           const FoundingFriendRegistrationConfirmed(_email),
         )).phase,
-        FoundingFriendCheckoutPhase.ready,
+        FoundingFriendCheckoutPhase.recoveryUnavailable,
       );
-      expect(repository.creates, [_attempt]);
+      expect(repository.creates, isEmpty);
     },
   );
 
@@ -243,42 +250,45 @@ void main() {
   });
 
   for (final storedSession in [_session, _newSession, null]) {
-    test('recovery clears only the verified Session: $storedSession', () async {
-      final verification =
-          Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
-      final repository = _PaymentRepository([], [verification.future]);
-      final store = _store();
-      final bloc = FoundingFriendCheckoutBloc(
-        repository: repository,
-        pendingStore: store,
-      );
-      addTearDown(bloc.close);
-      final finished = _dispatch(bloc);
-      await bloc.stream.firstWhere(
-        (state) => state.phase == FoundingFriendCheckoutPhase.verifying,
-      );
-      final current = PendingFoundingFriendPayment(
-        email: _email,
-        attemptId: _replacement,
-        sessionId: storedSession,
-      );
-      store.save(current);
-      verification.complete(
-        right(
-          const FoundingFriendPaymentVerification(
-            status: FoundingFriendPaymentStatus.confirmed,
-            purchaseReference: 'FF-1234567890ABCDEF',
+    test(
+      'stale confirmed recovery preserves a newer snapshot: $storedSession',
+      () async {
+        final verification =
+            Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
+        final repository = _PaymentRepository([], [verification.future]);
+        final store = _store();
+        final bloc = FoundingFriendCheckoutBloc(
+          repository: repository,
+          pendingStore: store,
+        );
+        addTearDown(bloc.close);
+        final finished = _dispatch(bloc);
+        await bloc.stream.firstWhere(
+          (state) => state.phase == FoundingFriendCheckoutPhase.verifying,
+        );
+        final current = PendingFoundingFriendPayment(
+          email: _email,
+          attemptId: _replacement,
+          sessionId: storedSession,
+        );
+        store.save(current);
+        verification.complete(
+          right(
+            const FoundingFriendPaymentVerification(
+              status: FoundingFriendPaymentStatus.confirmed,
+              purchaseReference: 'FF-1234567890ABCDEF',
+            ),
           ),
-        ),
-      );
-      expect(
-        (await finished).paymentStatus?.phase,
-        FoundingFriendPaymentStatusPhase.confirmed,
-      );
-      expect(store.read(), storedSession == _session ? isNull : same(current));
-      expect(repository.creates, isEmpty);
-      expect(repository.verifications, [_session]);
-    });
+        );
+        expect(
+          (await finished).phase,
+          FoundingFriendCheckoutPhase.recoveryUnavailable,
+        );
+        expect(store.read(), same(current));
+        expect(repository.creates, isEmpty);
+        expect(repository.verifications, [_session]);
+      },
+    );
   }
 
   test(
@@ -327,15 +337,11 @@ void main() {
     expect(repository.calls, isEmpty);
     final result = await _dispatch(bloc);
     expect(result.checkout?.sessionId, _session);
-    expect(repository.calls, [
-      'verify:$_session',
-      'create:$_attempt',
-      'verify:$_session',
-    ]);
+    expect(repository.calls, ['verify:$_session']);
     expect(store.read()?.attemptId, _attempt);
     bloc.add(const FoundingFriendCheckoutRetryRequested());
     await Future<void>.delayed(Duration.zero);
-    expect(repository.creates, [_attempt]);
+    expect(repository.creates, isEmpty);
   });
 
   test(
@@ -368,7 +374,7 @@ void main() {
       final reloaded = createBloc();
       addTearDown(reloaded.close);
       expect((await _dispatch(reloaded)).checkout?.sessionId, _newSession);
-      expect(repository.creates, [_replacement, _replacement, _replacement]);
+      expect(repository.creates, [_replacement, _replacement]);
       expect(repository.emails, everyElement(_email));
       expect(rotations, 1);
       expect(store.read()?.sessionId, _newSession);
@@ -376,7 +382,7 @@ void main() {
   );
 
   test(
-    'cancel retry never redirects to an expired replay from legacy data',
+    'bounded replay never redirects to an expired Session',
     () async {
       final repository = _PaymentRepository(
         [
@@ -443,7 +449,7 @@ void main() {
   });
 
   test(
-    'legacy pending data recovers and persists its Session before verification',
+    'recent unresolved data persists its recovered Session before verification',
     () async {
       final response =
           Completer<Either<AppFailure, FoundingFriendPaymentVerification>>();
@@ -511,7 +517,9 @@ void main() {
           if (status != FoundingFriendPaymentStatus.pending) {
             bloc
               ..add(const FoundingFriendCheckoutRetryRequested())
-              ..add(const FoundingFriendExpiredCheckoutRetryRequested());
+              ..add(
+                const FoundingFriendExpiredCheckoutRetryRequested(_session),
+              );
             await Future<void>.delayed(Duration.zero);
             expect(repository.verifications, [_session]);
           }
@@ -582,7 +590,7 @@ void main() {
     );
     bloc
       ..add(const FoundingFriendCheckoutRetryRequested())
-      ..add(const FoundingFriendExpiredCheckoutRetryRequested())
+      ..add(const FoundingFriendExpiredCheckoutRetryRequested(_session))
       ..add(const FoundingFriendRegistrationConfirmed(_email));
     await Future<void>.delayed(Duration.zero);
     final preparing = bloc.stream.firstWhere(
@@ -591,7 +599,7 @@ void main() {
     verification.complete(right(_expired));
     await preparing;
     bloc
-      ..add(const FoundingFriendExpiredCheckoutRetryRequested())
+      ..add(const FoundingFriendExpiredCheckoutRetryRequested(_session))
       ..add(const FoundingFriendCheckoutRetryRequested());
     await Future<void>.delayed(Duration.zero);
     creation.complete(right(_checkout(_newSession)));
@@ -599,26 +607,11 @@ void main() {
     bloc
       ..add(const FoundingFriendCheckoutRedirectStarted())
       ..add(const FoundingFriendCheckoutRetryRequested())
-      ..add(const FoundingFriendExpiredCheckoutRetryRequested());
+      ..add(const FoundingFriendExpiredCheckoutRetryRequested(_session));
     await Future<void>.delayed(Duration.zero);
     expect(repository.creates, [_replacement]);
     expect(repository.verifications, [_session, _newSession]);
     expect(rotations, 1);
-  });
-
-  test('expiry during idempotent replay is verified before redirect', () async {
-    final repository = _PaymentRepository(
-      [right(_checkout(_session)), right(_checkout(_newSession))],
-      [right(_open), right(_expired), right(_open)],
-    );
-    final bloc = FoundingFriendCheckoutBloc(
-      repository: repository,
-      pendingStore: _store(),
-      createAttemptId: () => _replacement,
-    );
-    addTearDown(bloc.close);
-    expect((await _dispatch(bloc)).checkout?.sessionId, _newSession);
-    expect(repository.creates, [_attempt, _replacement]);
   });
 
   test(
@@ -648,20 +641,158 @@ void main() {
     },
   );
 
-  test('a different replayed Session never replaces a known Session', () async {
-    final repository = _PaymentRepository(
-      [right(_checkout(_newSession))],
-      [right(_open)],
-    );
-    final store = _store();
+  test(
+    'legacy known Session remains verifiable without a hosted URL',
+    () async {
+      final repository = _PaymentRepository([], [right(_open)]);
+      final store = _store(legacy: true);
+      final bloc = FoundingFriendCheckoutBloc(
+        repository: repository,
+        pendingStore: store,
+      );
+      addTearDown(bloc.close);
+      expect(
+        (await _dispatch(bloc)).phase,
+        FoundingFriendCheckoutPhase.recoveryUnavailable,
+      );
+      expect(store.read()?.sessionId, _session);
+      expect(repository.calls, ['verify:$_session']);
+    },
+  );
+
+  test('expired return cannot use a different stored Session', () async {
+    final repository = _PaymentRepository([]);
+    final store = _store(session: _newSession);
+    final pending = store.read();
     final bloc = FoundingFriendCheckoutBloc(
       repository: repository,
       pendingStore: store,
-      createAttemptId: () => throw StateError('must not rotate'),
     );
     addTearDown(bloc.close);
-    expect((await _dispatch(bloc)).phase, FoundingFriendCheckoutPhase.failed);
-    expect(store.read()?.sessionId, _session);
+    expect(
+      (await _dispatch(
+        bloc,
+        const FoundingFriendExpiredCheckoutRetryRequested(_session),
+      )).phase,
+      FoundingFriendCheckoutPhase.recoveryUnavailable,
+    );
+    expect(repository.calls, isEmpty);
+    expect(store.read(), same(pending));
+  });
+
+  test('registration confirmation cannot replace a pending attempt', () async {
+    final repository = _PaymentRepository([]);
+    final store = _store();
+    final pending = store.read();
+    final bloc = FoundingFriendCheckoutBloc(
+      repository: repository,
+      pendingStore: store,
+    );
+    addTearDown(bloc.close);
+    expect(
+      (await _dispatch(
+        bloc,
+        const FoundingFriendRegistrationConfirmed(_email),
+      )).phase,
+      FoundingFriendCheckoutPhase.recoveryUnavailable,
+    );
+    expect(repository.calls, isEmpty);
+    expect(store.read(), same(pending));
+  });
+
+  for (final age in <Duration?>[
+    null,
+    const Duration(seconds: -1),
+    foundingFriendCheckoutReplayWindow,
+    const Duration(days: 2),
+  ]) {
+    test('unresolved replay fails safely with timestamp age $age', () async {
+      final now = DateTime.utc(2026, 11, 24, 12);
+      final store = _PendingStore()
+        ..save(
+          PendingFoundingFriendPayment(
+            email: _email,
+            attemptId: _attempt,
+            createdAt: age == null
+                ? null
+                : now.subtract(age).millisecondsSinceEpoch,
+          ),
+        );
+      final pending = store.read();
+      final repository = _PaymentRepository([]);
+      final bloc = FoundingFriendCheckoutBloc(
+        repository: repository,
+        pendingStore: store,
+        now: () => now,
+      );
+      addTearDown(bloc.close);
+      expect(
+        (await _dispatch(bloc)).phase,
+        FoundingFriendCheckoutPhase.recoveryUnavailable,
+      );
+      expect(repository.calls, isEmpty);
+      expect(store.read(), same(pending));
+    });
+  }
+
+  test(
+    'cached creation errors keep the same key and do not extend the window',
+    () async {
+      const error = AppFailure.unexpected();
+      final repository = _PaymentRepository([left(error), left(error)]);
+      final store = _PendingStore();
+      var now = DateTime.utc(2026, 11, 24, 12);
+      final bloc = FoundingFriendCheckoutBloc(
+        repository: repository,
+        pendingStore: store,
+        createAttemptId: () => _attempt,
+        now: () => now,
+      );
+      addTearDown(bloc.close);
+      expect(
+        (await _dispatch(
+          bloc,
+          const FoundingFriendRegistrationConfirmed(_email),
+        )).failure,
+        error,
+      );
+      final pending = store.read();
+      now = now.add(const Duration(minutes: 59));
+      expect((await _dispatch(bloc)).failure, error);
+      now = now.add(const Duration(minutes: 1));
+      expect(
+        (await _dispatch(bloc)).phase,
+        FoundingFriendCheckoutPhase.recoveryUnavailable,
+      );
+      expect(repository.creates, [_attempt, _attempt]);
+      expect(repository.verifications, isEmpty);
+      expect(store.read(), same(pending));
+    },
+  );
+
+  test('a known open Session is verified beyond the replay window', () async {
+    final now = DateTime.utc(2026, 11, 24, 12);
+    final store = _PendingStore()
+      ..save(
+        PendingFoundingFriendPayment(
+          email: _email,
+          attemptId: _attempt,
+          sessionId: _session,
+          createdAt: now
+              .subtract(const Duration(days: 2))
+              .millisecondsSinceEpoch,
+          checkoutUrl: _checkout(_session).checkoutUrl,
+        ),
+      );
+    final repository = _PaymentRepository([], [right(_open)]);
+    final bloc = FoundingFriendCheckoutBloc(
+      repository: repository,
+      pendingStore: store,
+      now: () => now,
+    );
+    addTearDown(bloc.close);
+    expect((await _dispatch(bloc)).checkout?.sessionId, _session);
+    expect(repository.calls, ['verify:$_session']);
   });
 
   test('missing tab state fails without payment work', () async {
@@ -679,7 +810,7 @@ void main() {
   });
 
   test(
-    'legacy verification failure retains the recovered Session for recheck',
+    'verification failure retains the recovered Session for recheck',
     () async {
       final repository = _PaymentRepository(
         [right(_checkout(_session))],
@@ -720,7 +851,7 @@ void main() {
     },
   );
 
-  test('stale expired retry event rechecks the current open Session', () async {
+  test('expired retry rechecks the matching Session before resuming', () async {
     final repository = _PaymentRepository(
       [right(_checkout(_session))],
       [right(_open), right(_open)],
@@ -734,11 +865,11 @@ void main() {
     expect(
       (await _dispatch(
         bloc,
-        const FoundingFriendExpiredCheckoutRetryRequested(),
+        const FoundingFriendExpiredCheckoutRetryRequested(_session),
       )).checkout?.sessionId,
       _session,
     );
-    expect(repository.creates, [_attempt]);
+    expect(repository.creates, isEmpty);
   });
 
   for (final status in [
@@ -748,11 +879,10 @@ void main() {
     FoundingFriendPaymentStatus.disputed,
     FoundingFriendPaymentStatus.invalid,
   ]) {
-    test('Session becoming $status during replay is not redirected', () async {
+    test('replayed unknown Session with $status is not redirected', () async {
       final repository = _PaymentRepository(
         [right(_checkout(_session))],
         [
-          right(_open),
           right(
             FoundingFriendPaymentVerification(
               status: status,
@@ -765,7 +895,7 @@ void main() {
       );
       final bloc = FoundingFriendCheckoutBloc(
         repository: repository,
-        pendingStore: _store(),
+        pendingStore: _store(session: null),
         createAttemptId: () => throw StateError('must not rotate'),
       );
       addTearDown(bloc.close);

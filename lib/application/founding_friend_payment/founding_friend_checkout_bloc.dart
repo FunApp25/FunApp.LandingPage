@@ -9,10 +9,16 @@ import 'package:fun_app_landing_page/domain/founding_friend_payment/entities/pen
 import 'package:fun_app_landing_page/domain/founding_friend_payment/founding_friend_payment_repository_interface.dart';
 import 'package:fun_app_landing_page/domain/founding_friend_payment/pending_founding_friend_payment_store_interface.dart';
 
+/// Recovery stops well before Stripe can prune API v1 idempotency keys.
+const foundingFriendCheckoutReplayWindow = Duration(hours: 1);
+
 /// Checkout preparation lifecycle after confirmed Founding Friend registration.
 enum FoundingFriendCheckoutPhase {
   /// No registration success or retry has started Checkout preparation.
   idle,
+
+  /// The current tab has an earlier attempt that needs an explicit retry.
+  recoveryRequired,
 
   /// The first-party service is preparing a Checkout Session.
   preparing,
@@ -71,6 +77,13 @@ sealed class FoundingFriendCheckoutEvent {
   const FoundingFriendCheckoutEvent();
 }
 
+/// Checks the current tab before displaying the registration form.
+final class FoundingFriendCheckoutRecoveryOpened
+    extends FoundingFriendCheckoutEvent {
+  /// Creates the event.
+  const FoundingFriendCheckoutRecoveryOpened();
+}
+
 /// Starts Checkout exactly once after confirmed registration.
 final class FoundingFriendRegistrationConfirmed
     extends FoundingFriendCheckoutEvent {
@@ -92,7 +105,10 @@ final class FoundingFriendCheckoutRetryRequested
 final class FoundingFriendExpiredCheckoutRetryRequested
     extends FoundingFriendCheckoutEvent {
   /// Creates the event.
-  const FoundingFriendExpiredCheckoutRetryRequested();
+  const FoundingFriendExpiredCheckoutRetryRequested(this.sessionId);
+
+  /// Session ID from the verified return route.
+  final String sessionId;
 }
 
 /// Marks a validated browser redirect as started.
@@ -117,18 +133,22 @@ final class FoundingFriendCheckoutBloc
     required FoundingFriendPaymentRepositoryInterface repository,
     required PendingFoundingFriendPaymentStoreInterface pendingStore,
     String Function()? createAttemptId,
+    DateTime Function()? now,
   }) : this._(
          repository,
          pendingStore,
          createAttemptId ?? generateCheckoutAttemptId,
+         now ?? DateTime.now,
        );
 
   FoundingFriendCheckoutBloc._(
     this._repository,
     this._pendingStore,
     this._createAttemptId,
+    this._now,
   ) : super(const FoundingFriendCheckoutState.initial()) {
     on<FoundingFriendRegistrationConfirmed>(_onRegistrationConfirmed);
+    on<FoundingFriendCheckoutRecoveryOpened>(_onRecoveryOpened);
     on<FoundingFriendCheckoutRetryRequested>(_onRetryRequested);
     on<FoundingFriendExpiredCheckoutRetryRequested>(_onExpiredRetryRequested);
     on<FoundingFriendCheckoutRedirectStarted>(_onRedirectStarted);
@@ -138,20 +158,42 @@ final class FoundingFriendCheckoutBloc
   final FoundingFriendPaymentRepositoryInterface _repository;
   final PendingFoundingFriendPaymentStoreInterface _pendingStore;
   final String Function() _createAttemptId;
+  final DateTime Function() _now;
   PendingFoundingFriendPayment? _pendingPayment;
+
+  void _onRecoveryOpened(
+    FoundingFriendCheckoutRecoveryOpened event,
+    Emitter<FoundingFriendCheckoutState> emit,
+  ) {
+    if (state.phase == FoundingFriendCheckoutPhase.idle) {
+      final snapshot = _pendingStore.readForRecovery();
+      if (snapshot.unavailable) {
+        _recoveryUnavailable(emit);
+      } else if (snapshot.payment != null) {
+        _pendingPayment = snapshot.payment;
+        emit(
+          const FoundingFriendCheckoutState(
+            phase: FoundingFriendCheckoutPhase.recoveryRequired,
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _onRegistrationConfirmed(
     FoundingFriendRegistrationConfirmed event,
     Emitter<FoundingFriendCheckoutState> emit,
   ) async {
     if (state.phase == FoundingFriendCheckoutPhase.idle) {
-      final pending = PendingFoundingFriendPayment(
-        email: event.email,
-        attemptId: _createAttemptId(),
-      );
-      _pendingPayment = pending;
-      _pendingStore.save(pending);
-      await _prepare(pending, emit);
+      final snapshot = _pendingStore.readForRecovery();
+      if (!snapshot.unavailable && snapshot.payment == null) {
+        final pending = _newAttempt(event.email);
+        _pendingPayment = pending;
+        _pendingStore.save(pending);
+        await _prepare(pending, emit);
+      } else {
+        _recoveryUnavailable(emit);
+      }
     }
   }
 
@@ -169,14 +211,14 @@ final class FoundingFriendCheckoutBloc
     Emitter<FoundingFriendCheckoutState> emit,
   ) async {
     if (state.phase == FoundingFriendCheckoutPhase.idle) {
-      await _recover(emit);
+      await _recover(emit, expectedSessionId: event.sessionId);
     }
   }
 
   bool get _canRetry =>
       state.phase == FoundingFriendCheckoutPhase.idle ||
+      state.phase == FoundingFriendCheckoutPhase.recoveryRequired ||
       state.phase == FoundingFriendCheckoutPhase.failed ||
-      state.phase == FoundingFriendCheckoutPhase.recoveryUnavailable ||
       (state.phase == FoundingFriendCheckoutPhase.verified &&
           (state.paymentStatus?.phase ==
                   FoundingFriendPaymentStatusPhase.pending ||
@@ -185,24 +227,47 @@ final class FoundingFriendCheckoutBloc
               state.paymentStatus?.phase ==
                   FoundingFriendPaymentStatusPhase.unableToVerify));
 
-  Future<void> _recover(Emitter<FoundingFriendCheckoutState> emit) async {
-    final pending = _pendingPayment ?? _pendingStore.read();
-    if (pending == null) {
-      emit(
-        const FoundingFriendCheckoutState(
-          phase: FoundingFriendCheckoutPhase.recoveryUnavailable,
-        ),
-      );
+  Future<void> _recover(
+    Emitter<FoundingFriendCheckoutState> emit, {
+    String? expectedSessionId,
+  }) async {
+    final pending = _pendingPayment ?? _pendingStore.readForRecovery().payment;
+    if (pending == null ||
+        (expectedSessionId != null && pending.sessionId != expectedSessionId)) {
+      _recoveryUnavailable(emit);
     } else {
       _pendingPayment = pending;
-      if (pending.sessionId == null) {
-        // Recover a lost response with the original idempotency key.
+      if (pending.sessionId != null) {
+        await _verify(pending, emit);
+      } else if (_canReplay(pending)) {
         await _prepare(pending, emit, verify: true);
       } else {
-        await _verify(pending, emit);
+        _recoveryUnavailable(emit);
       }
     }
   }
+
+  PendingFoundingFriendPayment _newAttempt(String email) =>
+      PendingFoundingFriendPayment(
+        email: email,
+        attemptId: _createAttemptId(),
+        createdAt: _now().millisecondsSinceEpoch,
+      );
+
+  bool _canReplay(PendingFoundingFriendPayment pending) {
+    final createdAt = pending.createdAt;
+    if (createdAt == null || createdAt <= 0) {
+      return false;
+    }
+    final age = _now().millisecondsSinceEpoch - createdAt;
+    return age >= 0 && age < foundingFriendCheckoutReplayWindow.inMilliseconds;
+  }
+
+  void _recoveryUnavailable(Emitter<FoundingFriendCheckoutState> emit) => emit(
+    const FoundingFriendCheckoutState(
+      phase: FoundingFriendCheckoutPhase.recoveryUnavailable,
+    ),
+  );
 
   void _onRedirectStarted(
     FoundingFriendCheckoutRedirectStarted event,
@@ -240,18 +305,11 @@ final class FoundingFriendCheckoutBloc
     if (emit.isDone) {
       return false;
     } else {
-      final current = _pendingStore.read();
-      // Unavailable storage must not prevent the active Checkout.
-      final ownsPending =
-          current == null ||
-          (current.attemptId == pending.attemptId &&
-              current.sessionId == pending.sessionId);
+      final ownsPending = pending.matches(
+        _pendingStore.readForRecovery().payment,
+      );
       if (!ownsPending) {
-        emit(
-          const FoundingFriendCheckoutState(
-            phase: FoundingFriendCheckoutPhase.recoveryUnavailable,
-          ),
-        );
+        _recoveryUnavailable(emit);
       }
       return ownsPending;
     }
@@ -286,28 +344,20 @@ final class FoundingFriendCheckoutBloc
         ),
       ),
       (checkout) async {
-        if (pending.sessionId != null &&
-            pending.sessionId != checkout.sessionId) {
-          // A replay must not replace the known Session.
-          emit(
-            const FoundingFriendCheckoutState(
-              phase: FoundingFriendCheckoutPhase.failed,
-              failure: AppFailure.unexpected(),
-            ),
-          );
-        } else {
-          final saved = PendingFoundingFriendPayment(
-            email: pending.email,
-            attemptId: pending.attemptId,
-            sessionId: checkout.sessionId,
-          );
-          _pendingPayment = saved;
-          _pendingStore.save(saved);
+        final saved = PendingFoundingFriendPayment(
+          email: pending.email,
+          attemptId: pending.attemptId,
+          sessionId: checkout.sessionId,
+          createdAt: pending.createdAt,
+          checkoutUrl: checkout.checkoutUrl,
+        );
+        _pendingPayment = saved;
+        _pendingStore.save(saved);
+        if (_canContinue(saved, emit)) {
           if (verify) {
             await _verify(
               saved,
               emit,
-              checkout: checkout,
               allowRotation: allowRotation,
             );
           } else {
@@ -326,7 +376,6 @@ final class FoundingFriendCheckoutBloc
   Future<void> _verify(
     PendingFoundingFriendPayment pending,
     Emitter<FoundingFriendCheckoutState> emit, {
-    FoundingFriendCheckout? checkout,
     bool allowRotation = true,
   }) async {
     if (!_canContinue(pending, emit)) {
@@ -341,7 +390,7 @@ final class FoundingFriendCheckoutBloc
       ),
     );
     final result = await _repository.verifyCheckout(pending.sessionId!);
-    if (emit.isDone) {
+    if (!_canContinue(pending, emit)) {
       return;
     }
     await result.fold(
@@ -357,39 +406,28 @@ final class FoundingFriendCheckoutBloc
       (verification) async {
         if (verification.status == FoundingFriendPaymentStatus.expired &&
             allowRotation) {
-          if (!_canContinue(pending, emit)) {
-            return;
-          }
-          final replacement = PendingFoundingFriendPayment(
-            email: pending.email,
-            attemptId: _createAttemptId(),
-          );
+          final replacement = _newAttempt(pending.email);
           _pendingPayment = replacement;
           _pendingStore.save(replacement);
           await _prepare(replacement, emit, verify: true, allowRotation: false);
         } else if (verification.status == FoundingFriendPaymentStatus.pending &&
             verification.canResumeCheckout) {
-          if (!_canContinue(pending, emit)) {
-            return;
-          }
-          if (checkout == null) {
-            await _prepare(
-              pending,
-              emit,
-              verify: true,
-              allowRotation: allowRotation,
-            );
+          final checkoutUrl = pending.checkoutUrl;
+          if (checkoutUrl == null) {
+            _recoveryUnavailable(emit);
           } else {
             emit(
               FoundingFriendCheckoutState(
                 phase: FoundingFriendCheckoutPhase.ready,
-                checkout: checkout,
+                checkout: FoundingFriendCheckout(
+                  checkoutUrl: checkoutUrl,
+                  sessionId: pending.sessionId!,
+                ),
               ),
             );
           }
         } else {
-          if (verification.status == FoundingFriendPaymentStatus.confirmed &&
-              _pendingStore.read()?.sessionId == pending.sessionId) {
+          if (verification.status == FoundingFriendPaymentStatus.confirmed) {
             _pendingStore.clear();
           }
           emit(

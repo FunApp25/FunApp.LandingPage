@@ -93,7 +93,77 @@ describe('registration routes', () => {
     expect(capturedBody).not.toContain('legalConsentOptions');
   });
 
-  it('rejects direct production Founding Friend requests even with both flags and forms configured', async () => {
+  it.each([
+    ['false', 'false'],
+    ['true', 'false'],
+    ['false', 'true'],
+    ['true', 'true'],
+  ])('isolates production Here & Now=%s and Founding Friend=%s', async (hereAndNow, foundingFriend) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const rateLimiter = { limit: vi.fn(async () => ({ success: true })) };
+    const env = {
+      ...enabledEnv,
+      HERE_AND_NOW_SUBMISSIONS_ENABLED: hereAndNow,
+      FOUNDING_FRIEND_SUBMISSIONS_ENABLED: foundingFriend,
+      REGISTRATION_SUBMISSIONS_ENABLED: 'true',
+      HUBSPOT_HERE_AND_NOW_FORM_GUID: hereAndNow === 'true' ? hereAndNowFormGuid : undefined,
+      HUBSPOT_FOUNDING_FRIEND_FORM_GUID: foundingFriend === 'true' ? foundingFriendFormGuid : undefined,
+    };
+    const hereAndNowResponse = await rawRequest(
+      jsonRequest(hereAndNowEndpoint, hereAndNowRegistration), env, upstreamFetch, rateLimiter,
+    );
+    const foundingFriendResponse = await rawRequest(
+      jsonRequest(foundingFriendEndpoint, {
+        ...foundingFriendRegistration,
+        gender: 'Non-binary',
+        usageReason: 'Find local activities',
+      }), env, upstreamFetch, rateLimiter,
+    );
+    const venueResponse = await rawRequest(jsonRequest('https://funapp.world/api/venue-interest', {
+      venueName: 'Synthetic Venue',
+      website: 'https://venue.test',
+      firstName: 'Test',
+      lastName: 'Contact',
+      role: 'Venue manager',
+      email: 'contact@venue.test',
+    }), env, upstreamFetch, rateLimiter);
+
+    expect(hereAndNowResponse.status).toBe(hereAndNow === 'true' ? 204 : 503);
+    expect(foundingFriendResponse.status).toBe(foundingFriend === 'true' ? 204 : 503);
+    expect(venueResponse.status).toBe(204);
+    const formGuids = upstreamFetch.mock.calls.map(([url]) => url.toString().split('/').at(-1));
+    expect(formGuids).toEqual([
+      ...(hereAndNow === 'true' ? [hereAndNowFormGuid] : []),
+      ...(foundingFriend === 'true' ? [foundingFriendFormGuid] : []),
+      enabledEnv.HUBSPOT_FORM_GUID,
+    ]);
+    expect(rateLimiter.limit).toHaveBeenCalledTimes(formGuids.length - 1);
+    if (foundingFriend === 'true') {
+      expect(JSON.parse(upstreamFetch.mock.calls.at(-2)?.[1]?.body as string)).toEqual({
+        fields: [
+          { name: 'firstname', value: 'Taylor' },
+          { name: 'lastname', value: 'Jones' },
+          { name: 'email', value: 'taylor@example.com' },
+          { name: 'age', value: '31' },
+          { name: 'gender', value: 'Non-binary' },
+          { name: 'usage_reason', value: 'Find local activities' },
+          { name: 'marketing_consent', value: 'true' },
+          { name: 'country', value: 'United Kingdom' },
+        ],
+      });
+    }
+  });
+
+  it.each([
+    [undefined, foundingFriendFormGuid, 503, 'service_unavailable'],
+    ['', foundingFriendFormGuid, 503, 'service_unavailable'],
+    ['TRUE', foundingFriendFormGuid, 500, 'unexpected'],
+    [' true ', foundingFriendFormGuid, 500, 'unexpected'],
+    ['true', undefined, 500, 'unexpected'],
+    ['true', 'not-a-guid', 500, 'unexpected'],
+    ['true', hereAndNowFormGuid, 500, 'unexpected'],
+    ['true', enabledEnv.HUBSPOT_FORM_GUID, 500, 'unexpected'],
+  ])('fails closed with Founding Friend flag %s and form %s', async (flag, guid, status, code) => {
     const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
     const rateLimiter = { limit: vi.fn(async () => ({ success: true })) };
     const response = await rawRequest(
@@ -101,13 +171,14 @@ describe('registration routes', () => {
       {
         ...enabledEnv,
         REGISTRATION_SUBMISSIONS_ENABLED: 'true',
-        HUBSPOT_FOUNDING_FRIEND_FORM_GUID: foundingFriendFormGuid,
+        FOUNDING_FRIEND_SUBMISSIONS_ENABLED: flag,
+        HUBSPOT_FOUNDING_FRIEND_FORM_GUID: guid,
       },
       upstreamFetch,
       rateLimiter,
     );
 
-    await expectError(response, 503, 'service_unavailable');
+    await expectError(response, status, code);
     expect(rateLimiter.limit).not.toHaveBeenCalled();
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
@@ -131,6 +202,29 @@ describe('registration routes', () => {
 
     await expectError(response, 400, 'invalid_request');
     expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [undefined, false], ['', false], ['18', false], [-1, false],
+    [17, false], [17.5, false], [18, true], [19, true],
+  ])('validates Founding Friend age %s before HubSpot I/O', async (age, accepted) => {
+    const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const body = { ...foundingFriendRegistration, age };
+    const response = await rawRequest(jsonRequest(foundingFriendEndpoint, body), {
+      ...enabledEnv,
+      FOUNDING_FRIEND_SUBMISSIONS_ENABLED: 'true',
+      HUBSPOT_FOUNDING_FRIEND_FORM_GUID: foundingFriendFormGuid,
+    }, upstream);
+    if (accepted) {
+      expect(response.status).toBe(204);
+      expect(upstream).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(upstream.mock.calls[0]?.[1]?.body as string).fields)
+        .toContainEqual({ name: 'age', value: String(age) });
+    } else {
+      await expectError(response, 400, 'invalid_request');
+      expect(upstream).not.toHaveBeenCalled();
+    }
+    expect((await postStagingFoundingFriend(body)).status).toBe(accepted ? 204 : 400);
   });
 
   it('requires Founding Friend country and accepts every canonical value', async () => {
@@ -188,7 +282,7 @@ describe('registration routes', () => {
   });
 
   it('allows negative and zero integer ages without inventing eligibility', async () => {
-    for (const age of [-1, 0]) {
+    for (const age of [-1, 0, 17]) {
       const response = await post(hereAndNowEndpoint, {
         ...hereAndNowRegistration,
         age,

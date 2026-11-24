@@ -1066,7 +1066,13 @@
   "@foundingFriendPaymentUnableBody": {
     "description": "Explains what retrying payment verification does."
   },
-  "foundingFriendPaymentRecoveryUnavailableBody": "This browser tab no longer has the registration details required for a safe payment retry. Return to the Founding Friend form or contact support.",
+  "foundingFriendAgeMinimum": "You must be 18 or older to register as a Founding Friend.",
+  "@foundingFriendAgeMinimum": {"description": "Minimum age validation for Founding Friend registration."},
+  "foundingFriendPaymentRecoveryTitle": "Continue your payment",
+  "@foundingFriendPaymentRecoveryTitle": {"description": "Heading for an existing payment attempt when reopening registration."},
+  "foundingFriendPaymentRecoveryBody": "This tab has a previous Founding Friend payment attempt. Check it before starting another payment.",
+  "@foundingFriendPaymentRecoveryBody": {"description": "Guidance before explicitly recovering an existing payment attempt."},
+  "foundingFriendPaymentRecoveryUnavailableBody": "This tab cannot safely recover the previous payment. Contact support for help before starting another payment.",
   "@foundingFriendPaymentRecoveryUnavailableBody": {
     "description": "Guidance when this tab lacks the details needed to retry Checkout."
   },

@@ -26,20 +26,47 @@ PendingFoundingFriendPayment? readPendingPayment() {
       final email = decoded['email'];
       final attemptId = decoded['attemptId'];
       final sessionId = decoded['sessionId'];
+      final createdAt = decoded['createdAt'];
+      final checkoutUrl = decoded['checkoutUrl'];
       if (email is String &&
+          email.trim().isNotEmpty &&
           attemptId is String &&
-          (sessionId == null || sessionId is String)) {
+          _attemptId.hasMatch(attemptId) &&
+          (sessionId == null ||
+              (sessionId is String && _sessionId.hasMatch(sessionId)))) {
         return PendingFoundingFriendPayment(
           email: email,
           attemptId: attemptId,
           sessionId: sessionId as String?,
+          createdAt: createdAt is int ? createdAt : null,
+          checkoutUrl: sessionId != null && checkoutUrl is String
+              ? _restorableCheckoutUrl(checkoutUrl)
+              : null,
         );
       }
     }
   } on Object {
-    clearPendingPayment();
+    throw const FormatException('Pending payment storage is unavailable.');
   }
-  return null;
+  throw const FormatException('Pending payment storage is invalid.');
+}
+
+final _attemptId = RegExp(
+  r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+  caseSensitive: false,
+);
+final _sessionId = RegExp(
+  r'^cs_(?:(?:test|live)_[A-Za-z0-9]{16,240}|mock_[a-z_]+_[0-9a-f]{32})$',
+);
+
+Uri? _restorableCheckoutUrl(String value) {
+  final url = Uri.tryParse(value);
+  if (url == null || !url.hasAuthority || url.userInfo.isNotEmpty) {
+    return null;
+  }
+  final isStripe = url.scheme == 'https' && url.host == 'checkout.stripe.com';
+  final loopback = const {'localhost', '127.0.0.1', '::1'}.contains(url.host);
+  return isStripe || (loopback && url.origin == Uri.base.origin) ? url : null;
 }
 
 /// Saves pending payment state only for the current browser tab.
@@ -51,9 +78,12 @@ void savePendingPayment(PendingFoundingFriendPayment payment) {
         'email': payment.email,
         'attemptId': payment.attemptId,
         if (payment.sessionId != null) 'sessionId': payment.sessionId,
+        if (payment.createdAt != null) 'createdAt': payment.createdAt,
+        if (payment.checkoutUrl != null)
+          'checkoutUrl': payment.checkoutUrl.toString(),
       }),
     );
   } on Object {
-    // The active checkout can continue without browser retry correlation.
+    // The Checkout BLoC reads back the snapshot before continuing.
   }
 }

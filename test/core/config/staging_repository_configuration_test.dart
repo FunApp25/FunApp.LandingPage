@@ -123,8 +123,12 @@ void main() {
       final workflow = File(path).readAsStringSync();
 
       expect(workflow, contains('environment: production'), reason: path);
-      expect(workflow, contains('command: deploy --env=""'), reason: path);
-      expect(workflow, isNot(contains('command: deploy --env staging')));
+      expect(
+        workflow,
+        contains('wrangler deploy --env="" --config wrangler.jsonc'),
+        reason: path,
+      );
+      expect(workflow, isNot(contains('wrangler deploy --env staging')));
     }
   });
 

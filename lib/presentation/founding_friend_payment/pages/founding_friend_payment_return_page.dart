@@ -101,7 +101,7 @@ final class FoundingFriendPaymentReturnPage extends StatelessWidget {
                     ? FoundingFriendPaymentStatusPanel(
                         sessionId: opaqueSessionId,
                         onExpiredCheckoutRetry: () =>
-                            _retryExpiredCheckout(context),
+                            _retryExpiredCheckout(context, opaqueSessionId),
                       )
                     : const FoundingFriendCheckoutPanel(),
               ),
@@ -110,9 +110,9 @@ final class FoundingFriendPaymentReturnPage extends StatelessWidget {
     );
   }
 
-  void _retryExpiredCheckout(BuildContext context) {
+  void _retryExpiredCheckout(BuildContext context, String sessionId) {
     context.read<FoundingFriendCheckoutBloc>().add(
-      const FoundingFriendExpiredCheckoutRetryRequested(),
+      FoundingFriendExpiredCheckoutRetryRequested(sessionId),
     );
   }
 }

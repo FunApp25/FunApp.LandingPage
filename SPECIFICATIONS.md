@@ -130,17 +130,15 @@ Current implementation is evidence of repository state, not automatically a perm
   by separate provider-neutral registration models, repository contracts, and
   application BLoCs. Explicit development selection uses either the public
   unauthenticated HubSpot Forms endpoint or the local mocked first-party Worker;
-  unconfigured development uses deferred repositories. Production Here & Now
-  submits to the same-origin Worker and retains its terminal waitlist success.
-  Production Founding Friend retains its deferred repository. Where Founding
-  Friend registration is available, confirmation leads into its independent
-  Checkout workflow.
+  unconfigured development uses deferred repositories. Both production forms
+  submit through the same-origin Worker with independent server-side activation.
+  Here & Now retains its terminal waitlist success. Confirmed Founding Friend
+  registration leads into its independent Checkout workflow.
 - `cloudflare/founding-friend-payment-worker/` is a separate, independently
   testable TypeScript Worker for Checkout creation and read-only session
   verification. Flutter contains no Stripe SDK or credential. Creation is
   disabled by default; verification remains independently available for
-  recovery. The existing Venue Worker, its bindings, and its deployment remain
-  unchanged.
+  recovery. Venue uses its existing separate submission path and HubSpot form.
 - `lib/main_staging.dart` selects an isolated hosted dependency graph. It uses
   `https://staging.funapp.world` for both first-party registration and payment
   API families, uses no browser-side provider credential or arbitrary endpoint,
@@ -551,10 +549,12 @@ capabilities as implemented.
   with 28px line height; the shared checkbox retains its 44px hit target and
   other checkbox typography remains unchanged.
 - Domain validation rejects blank required names, structurally invalid email,
-  non-integer age input, and a missing Founding Friend country. It does not
-  invent an age threshold. Presentation exposes those application-coordinated
-  errors after a submit attempt. This validation is usability only and does
-  not authorize production collection without matching backend validation.
+  non-integer age input, and a missing Founding Friend country. The Founding
+  Friend aggregate and registration Worker require a self-declared age of
+  at least 18. Localized feedback appears after a submit attempt. Here & Now
+  retains the shared integer-age rule. The form collects neither date of birth
+  nor verified identity. Checkout creation accepts an email and attempt ID
+  without evidence of an eligible registration.
 - Founding Friend domain validation additionally caps email at 254 UTF-16 code
   units before registration so the unchanged Checkout preparation contract can
   accept it. Structural validation and original casing/whitespace are preserved;
@@ -599,13 +599,13 @@ capabilities as implemented.
   the Worker-backed repositories only when the local Worker transport and a
   valid loopback origin are explicitly selected. Otherwise it resolves deferred
   repositories that return service unavailable without I/O. Production always
-  resolves the deferred repositories, even if development settings are supplied.
+  resolves both Worker-backed registration repositories and ignores development
+  transport settings.
   Confirmed Here & Now success replaces the submitted form with its established
   branded membership-specific confirmation. Confirmed Founding Friend
   registration does not render the prior terminal registration acknowledgement;
   it starts the separate Checkout-preparation BLoC with the validated email and
-  a new opaque attempt ID. Retrying payment reuses that attempt and never
-  resubmits HubSpot registration.
+  a new opaque attempt ID. Payment recovery never resubmits HubSpot registration.
 
 - The prospective-venue lead contract is provider-neutral and lives in
   `domain`. It uses `dartz` `Either` for validation results and `Option` for
@@ -742,8 +742,8 @@ capabilities as implemented.
   explicit `FUN_APP_REGISTRATION_TRANSPORT` selection (`deferred`,
   `direct_hubspot`, or `local_worker`); omission selects deferred. The local
   Worker selection accepts only an HTTP(S) loopback origin. Production ignores
-  every development registration selection. Here & Now resolves its endpoint
-  against the browser origin. Founding Friend remains deferred.
+  every development registration selection. Both registration endpoints resolve
+  against the browser origin.
 - Flutter production needs no Venue submission runtime configuration. A local
   production browser run resolves the same-origin endpoint to localhost and
   therefore cannot reach the deployed Worker without separate local routing;
@@ -757,15 +757,18 @@ capabilities as implemented.
   non-safe-integer ages, unsupported canonical gender/country values, and
   requests over 16 KiB. The Flutter Worker transport applies the same exact
   JavaScript integer-serialization and UTF-8 total-body boundaries before I/O.
-  It applies no age eligibility threshold and no extra registration field-length
-  constraints beyond that total-body limit.
-- Production Here & Now forwarding is disabled unless
-  `HERE_AND_NOW_SUBMISSIONS_ENABLED` is exactly `true`. Activation additionally
-  requires valid portal/form IDs and the `REGISTRATION_RATE_LIMITER` binding.
-  The production forms entrypoint rejects Founding Friend even when Here & Now is
-  enabled. The old shared switch still gates local mock selection, and staging
-  continues using its isolated mock entrypoint. For production Here & Now,
-  missing or malformed mandatory configuration fails closed. The binding
+  Founding Friend requests with an integer age below 18 are rejected before
+  provider I/O, including in the staging mock. The Worker applies no extra
+  registration field-length constraints beyond the total-body limit.
+- Production forwarding requires the exact string `true` on the respective
+  flag, `HERE_AND_NOW_SUBMISSIONS_ENABLED` or
+  `FOUNDING_FRIEND_SUBMISSIONS_ENABLED`. Each defaults to `false` and requires a
+  numeric portal ID, its own approved HubSpot form GUID, and the
+  `REGISTRATION_RATE_LIMITER` binding when enabled. The Founding Friend form
+  GUID must differ from the Venue and Here & Now form GUIDs. Missing or
+  malformed configuration fails closed for the affected form. The shared
+  local flag still governs loopback mocks. Staging uses its isolated mock
+  entrypoint without HubSpot I/O. The rate-limit binding
   provides approximate, Cloudflare-location-local protection targeting 10
   attempts per 60 seconds per route and connecting-IP key, not a strict
   globally consistent quota. It is an abuse control, not authentication:
@@ -790,6 +793,17 @@ capabilities as implemented.
   exact-schema JSON and limited to 4 KiB. Creation accepts only validated
   `email` and UUID v4 `attemptId`; verification accepts only a specific
   Checkout `sessionId`. There is no public email-lookup or enumeration API.
+- The production payment entrypoint accepts only Stripe-backed requests on
+  `https://funapp.world` with that exact configured return origin, live mode
+  explicitly set to `true`, a restricted live `rk_live_` key, a syntactically
+  valid `price_…` ID, explicit automatic tax `true` or `false`, a valid
+  purchase-reference secret, and the `PAYMENT_RATE_LIMITER` binding. The secret
+  must be independently generated, at least 32 characters, and free of
+  surrounding whitespace, CR/LF, and NUL. The public local mock secret is
+  rejected. Checkout creation defaults to disabled and requires the exact
+  string `true`. Read-only verification remains available with valid
+  live configuration while creation is disabled. The staging entrypoint
+  remains sandbox-only and the local mock remains loopback-only.
 - Checkout parameters are server-owned. The Worker first retrieves and validates
   the configured active one-time Stripe Price, including the expected live/test
   environment, GBP currency, fixed 24900 minor-unit amount, tax-inclusive
@@ -797,8 +811,12 @@ capabilities as implemented.
   line item, quantity 1, in `payment` mode, prefills the validated registration
   email, requires `customer_creation=always`, explicitly sends the configured
   automatic-tax boolean, and supplies only fixed return/cancel URLs derived
-  from `PUBLIC_APP_ORIGIN`. The client cannot select a Price, amount, currency,
-  quantity, mode, tax setting, or redirect.
+  from `PUBLIC_APP_ORIGIN`. With the pinned `2026-08-26.dahlia` API it sends
+  `payment_method_types[0]=card`. Stripe can present Apple Pay and Google Pay
+  for eligible customers based on browser, device, wallet and account settings.
+  Klarna, bank debit, bank transfer and other delayed methods are excluded.
+  The client cannot select a Price, amount, currency, quantity, mode, payment
+  method, tax setting, or redirect.
 - The Worker generates a non-email purchase reference in `FF-...` form with a
   server-only HMAC secret and the attempt ID. It records that reference in
   Stripe `client_reference_id`, Checkout Session metadata, and PaymentIntent
@@ -808,15 +826,22 @@ capabilities as implemented.
   holds the purchase record; no D1, KV, Durable Object, or other payment
   database is used.
 - Checkout creation uses the attempt-derived Stripe idempotency key
-  `founding-friend-checkout-v1-{attemptId}`. Flutter creates the attempt only
-  after confirmed registration and retains its email, attempt ID, and opaque
-  Checkout Session ID (once creation succeeds) in current-tab session storage
-  for explicit payment retry. Older stored attempts without a Session ID
-  remain readable. This prevents payment retry from resubmitting registration
-  and correlates retries while Stripe retains its idempotency result. It is not durable exactly-once
-  creation: a lost response after Stripe's retention window, expired session,
-  cleared tab state, or independent browser session can require a new attempt
-  and can leave another unpaid Stripe Session. Stripe remains authoritative.
+  `founding-friend-checkout-v1-{attemptId}`. After registration Flutter stores
+  the email, attempt ID and creation start in current-tab session storage.
+  Creation requires that snapshot to be readable. When creation returns,
+  Flutter saves the validated hosted URL with the Session ID. Reopening the
+  registration route with a pending record offers explicit recovery and blocks
+  new registration. Unreadable tab state goes to support guidance.
+- When a creation response is missing, explicit recovery may replay the same
+  attempt for one hour from the original start and then verify the recovered
+  Session. Missing, invalid, future or expired timestamps cannot authorize
+  replay, including older records with no timestamp. Stripe API v1 retains
+  keys for at least 24 hours and can cache errors. Repeated failures preserve
+  the same key and timestamp. Recovery never treats an unknown outcome as
+  a confirmed failure. This is a browser-local safeguard. Lost, duplicated,
+  or independent tab state and direct API calls can still produce duplicate
+  purchases. Stripe holds the purchase record for manual reconciliation.
+  [Stripe idempotency](https://docs.stripe.com/api/idempotent_requests).
 - Stripe Adaptive Pricing remains enabled in Stripe settings. The Worker does
   not override it or calculate FX. £249 GBP (24900 minor units) is the original
   tax-inclusive, one-time Price contract; Stripe may collect its localized
@@ -867,33 +892,26 @@ capabilities as implemented.
   the outgoing Dahlia header and cover both representations. A direct pinned-
   version sandbox GET and hosted validation remain unperformed. Neither this
   investigation nor the tests create a Stripe payment or mutate Stripe.
-- Flutter trusts neither Checkout redirection nor browser parameters as proof
-  of payment. The return route verifies its `session_id` through the Worker and
-  shows the purchase reference only for confirmed payment. Cancelled, pending,
-  expired, refunded, disputed, invalid, and temporarily unverifiable states
-  receive localized recovery guidance. The cancellation page stays inert until
-  explicit retry. Recovery verifies the stored Session before creation; only
-  verified expiry rotates the attempt. Open/unpaid verification returns
-  `pending` with `canResumeCheckout: true`; complete/unpaid returns `pending`
-  with that flag false. This optional response field is negotiated with
-  `Accept: application/json; checkout-recovery=1`, preserving the exact old
-  response schema for older clients. Missing flags in older responses cannot authorize a
-  redirect. An anomalous expired/paid Session is invalid, not retryable expiry.
-  For an open Session, recovery replays creation with the original attempt to
-  recover its hosted URL and verifies the same returned Session again before
-  redirect. A different returned Session is rejected without replacing the
-  known Session. Older data or interrupted creation without a Session ID first
-  replays the original attempt and persists and verifies the returned Session;
-  it never guesses expiry. This retains the existing idempotency-retention
-  limit when the original Session ID is unknown. Confirmed, refunded,
-  disputed, invalid, pending-but-not-resumable, and unavailable verification
-  never authorize another Checkout. Verification failures remain retryable;
-  overlapping retry events are ignored. The return page retains explicit
-  verified-expired retry using current-tab registration state without
-  resubmitting registration; missing tab state fails safely to support guidance.
-  The confirmation states that membership is not active yet and asks customers
-  to use the purchase email for their future Fun App account, whose authenticated
-  backend will later verify a qualifying payment against its verified email.
+- The return route verifies its exact `session_id` through the Worker and
+  shows a purchase reference only when payment is confirmed. A retry on the
+  expired return route requires a matching stored Session. Cancellation stays
+  inert until explicit retry. A known Session is always verified through a
+  read-only lookup regardless of its attempt age. Open/unpaid verification
+  carries `canResumeCheckout: true` when the client opts in with
+  `Accept: application/json; checkout-recovery=1`. It can resume from the
+  valid URL saved with that Session. A legacy record lacking the URL can still
+  show verified status and directs the user to support if it cannot resume.
+  Only verified unpaid expiry without evidence of in-flight payment permits
+  a new attempt. Pending non-resumable, confirmed, refunded, disputed, invalid,
+  and unavailable verification do not authorize a replacement. Missing or
+  mismatched tab state gives support guidance. Success confirms payment for
+  future benefits and does not create an account or activate membership.
+- Stripe automatic payment receipts use the Customer email supplied by hosted
+  Checkout. Enabling **Successful payments** and verifying actual delivery are
+  production prerequisites. The MVP uses manual reconciliation and includes
+  no webhook fulfillment, paid invoice creation, custom email delivery, or
+  automatic HubSpot payment synchronization.
+  [Stripe automatic receipts](https://docs.stripe.com/receipts#automatic).
 - Flutter accepts Checkout redirects only from exact HTTPS
   `checkout.stripe.com`, or from its exact configured loopback origin in local
   mock mode. Checkout creation uses a 25-second browser deadline for two
@@ -902,13 +920,12 @@ capabilities as implemented.
   15-second browser deadline for one Stripe lookup. These deadlines include
   response-body reads; a browser abort does not prove that Stripe creation was
   cancelled, so ambiguous failures retain the original attempt for recovery.
-  Errors remain provider-neutral, and neither
-  boundary logs or returns emails, names, request bodies, billing/payment
-  details, Checkout URLs, credentials, or complete provider responses.
+  Errors remain provider-neutral. Verification exposes neither hosted Checkout
+  URLs nor personal or provider payment details. Checkout URLs from successful
+  creation are kept only in tab storage for recovery.
 - Checkout recovery rejects disposed asynchronous completions before storage
   changes or follow-up calls. A newer stored attempt or Session takes precedence
-  over an older workflow; browser storage unavailability still permits the
-  active Checkout to continue. Public form text-field validation messages wrap
+  over an older workflow. Public form text-field validation messages wrap
   completely and expand at narrow widths and increased text scales.
 - Staging Checkout-creation HTTP 500 responses log only the response's generated
   request ID, a fixed allowlisted execution stage, and either
@@ -965,14 +982,16 @@ capabilities as implemented.
   required. The current domain contract deliberately has no chain/count
   cross-field invariant.
 - Prospective-user retention/deletion requirements.
-- The minimum/maximum age eligibility policy and corresponding backend rule.
+- Legal alignment of the strict Founding Friend registration rule with the
+  exception wording in Purchase Terms clause 3.1, and of the receipt-only MVP
+  with the emailed order confirmation described in clause 4.6.
 - Whether approved display labels should differ from the confirmed HubSpot
   gender values, and any explicit reversible mapping if they do.
 - Ongoing synchronization of the HubSpot country option source before
   integration and release.
 - Approved tax treatment, the corresponding explicit automatic-tax setting,
   Stripe Tax configuration and registrations if enabled, Refund & Cancellation
-  Policy, Terms of Use, supported payment methods, dispute/support process, and
+  Policy, Terms of Use, dispute/support process, and
   the exact legal copy required around purchase. The implementation does not
   invent these terms.
 - The later main Fun App backend contract for matching a qualifying Stripe
@@ -1106,36 +1125,42 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   exception is a dashboard-managed narrow Cloudflare Worker Route to the
   repository-controlled `funapp-venue-interest` Worker. The
   `deploy-venue-interest-worker.yml` workflow provides manual-only source
-  deployment of that existing Worker after Worker validation. It uses the
+  deployment on `main` of that existing Worker after Worker validation. It uses the
   GitHub `production` Environment for public HubSpot and Cloudflare account
   configuration and the Cloudflare API-token secret; it does not configure the
   route.
-- Production Here & Now defaults to disabled. Authorized activation requires
-  the Here & Now form GUID, source-declared rate-limit binding, the exact
-  `funapp.world/api/registrations/here-and-now` Worker Route, controlled
-  verification, and legal/product approval. The workflow does not provision
-  routes.
+- Both production registration workflows default to disabled. The manual
+  forms workflow validates the root Worker identity, source-declared rate
+  limiter in namespace `1001`, and Venue identifiers. Each enabled
+  registration requires its own dispatch authorization and form GUID.
+  Deployment prerequisites include the exact dashboard-managed routes
+  `funapp.world/api/registrations/here-and-now` and
+  `funapp.world/api/registrations/founding-friend` as applicable, approved form
+  and consent settings, and controlled verification. Venue operates
+  independently of those flags.
 - Both site artifacts include the approved full wordmark as a transparent PNG
   at `/email/fun-app-logo.png`. Verify anonymous access on production after
   publication. Staging keeps its existing Access boundary.
 - The payment Worker has a separate manual-only
-  `deploy-founding-friend-payment-worker.yml` workflow. It validates before
-  deployment, configures no route, and defaults
-  `PAYMENT_CREATION_ENABLED` to false. No live Stripe Product/Price or key,
-  production Cloudflare secret, production payment route, or live deployment is
-  introduced. The historical staging Checkout HTTP 500 is resolved according to
-  the operator; current evidence and local undeployed changes are recorded in
+  `deploy-founding-friend-payment-worker.yml` workflow on `main`. It validates
+  the root Worker identity, live configuration described above, and the rate
+  limiter in namespace `1002`. It defaults `PAYMENT_CREATION_ENABLED` to
+  `false` and requires matching dispatch authorization for live creation.
+  Wrangler uploads the payment secrets with the Worker code. The historical
+  staging Checkout HTTP 500 is resolved according to the operator. Current
+  evidence and local undeployed changes are recorded in
   [README's operational status](README.md#operational-configuration-and-rollback).
-  Staging credentials are not stored in this repository. Stripe live-account
-  approval and approval of the legal applicability transition remain outstanding. Later
-  production setup requires `STRIPE_PRICE_ID`,
-  `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`,
-  `PUBLIC_APP_ORIGIN`, `STRIPE_SECRET_KEY`,
-  `PURCHASE_REFERENCE_SECRET`, the source-declared rate-limit binding, exact
-  payment endpoint route attachment, and controlled Stripe/Cloudflare review.
+  The Stripe business account is approved. External setup requires the live
+  Price, scoped Stripe permissions for Price retrieval and Checkout Session
+  creation and expanded retrieval, encrypted Stripe and purchase-reference
+  secrets, and exact routing for both payment endpoints. Deploy and verify with
+  creation disabled first. Controlled live Checkout testing and public launch
+  require separate authorization, with the legal applicability transition
+  approved before public launch. Founding Friend purchasing has not been launched.
 - Pull requests targeting `dev` or `main` run the staging site Worker's typechecking,
   tests, and dry-run validation, both API Worker projects' typechecking, tests,
-  and root/staging dry-run validation, plus Flutter formatting, generation,
+  and root/staging dry-run validation, both production Worker preflight suites,
+  plus Flutter formatting, generation,
   analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
   and production/staging compile checks. Common deployment-safety tests and Wrangler
   backport regressions execute once in **Flutter and staging site checks**, with
@@ -1153,8 +1178,8 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   local legal document is published as a static landing asset.
 - Pushes to `main` and manual dispatches on `main` run the production Pages
   deployment. Publishing uses the `github-pages` environment. Production
-  Worker deployment workflows remain manual-only and no live Stripe payment
-  activation is introduced.
+  Worker deployment workflows remain manual-only and manage code and bindings.
+  Routes are externally managed, with workers.dev and preview URLs disabled.
 - Pushes to `dev`, including PR merges, run `deploy-staging-site.yml` (**Deploy
   Staging**), calling credential-free `pr_checks.yml` through `workflow_call`.
   GitHub `staging` stays restricted to `dev`, and `production` to `main`.

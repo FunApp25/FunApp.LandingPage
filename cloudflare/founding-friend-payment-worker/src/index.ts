@@ -1,3 +1,8 @@
+import {
+  invalidProductionPaymentBinding,
+  productionAppOrigin,
+} from './production-config';
+
 export interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
 }
@@ -169,6 +174,7 @@ export async function handleRequest(
   env: Env,
   dependencies: WorkerDependencies = {},
   reportCheckoutFailure?: (diagnostic: CheckoutFailureDiagnostic) => void,
+  requireProductionConfiguration = false,
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
   const url = new URL(request.url);
@@ -222,10 +228,19 @@ export async function handleRequest(
     }
   }
 
+  if (
+    requireProductionConfiguration &&
+    mockConfiguration === 'absent' &&
+    (url.origin !== productionAppOrigin ||
+      invalidProductionPaymentBinding(env) !== null)
+  ) {
+    return unexpectedResponse('configuration_invalid');
+  }
+
   execution.stage = 'rate_limiter';
   const rateLimiter =
     dependencies.paymentRateLimiter ?? env.PAYMENT_RATE_LIMITER;
-  if (rateLimiter === undefined) {
+  if (typeof rateLimiter?.limit !== 'function') {
     return unexpectedResponse('configuration_invalid');
   }
 
@@ -299,7 +314,7 @@ export async function handleRequest(
 
 export const worker = {
   fetch(request: Request, env: Env): Promise<Response> {
-    return handleRequest(request, env);
+    return handleRequest(request, env, {}, undefined, true);
   },
 };
 
@@ -356,7 +371,7 @@ async function createCheckoutSession(
   }
 
   execution.stage = 'stripe_configuration';
-  const config = productionStripeConfig(env, appOrigin);
+  const config = stripeConfig(env, appOrigin);
   execution.stage = 'stripe_price_lookup';
   const price = await stripeJson<StripePrice>(
     `/v1/prices/${encodeURIComponent(config.priceId)}`,
@@ -375,6 +390,7 @@ async function createCheckoutSession(
 
   const parameters = new URLSearchParams({
     mode: 'payment',
+    'payment_method_types[0]': 'card',
     success_url: successUrl,
     cancel_url: cancelUrl,
     customer_email: input.email,
@@ -472,7 +488,7 @@ async function verifyCheckoutSession(
     expectedPriceId = 'price_mock_founding_friend_249_gbp';
   } else {
     const appOrigin = validatedAppOrigin(env, false);
-    const config = productionStripeConfig(env, appOrigin);
+    const config = stripeConfig(env, appOrigin);
     expectedLivemode = config.expectedLivemode;
     expectedPriceId = config.priceId;
     session = await stripeJson<StripeCheckoutSession>(
@@ -536,7 +552,11 @@ function classifySession(
   ) {
     return { status: 'refunded' };
   } else if (session.status === 'expired' && session.payment_status === 'unpaid') {
-    return { status: 'expired' };
+    const intent = record(session.payment_intent);
+    const noPaymentInFlight =
+      (intent === null || (intent.status === 'canceled' && intent.amount_received === 0)) &&
+      (charge === null || (charge.paid === false && charge.captured === false));
+    return { status: noPaymentInFlight ? 'expired' : 'invalid' };
   } else if (
     session.status === 'complete' &&
     session.payment_status === 'paid'
@@ -568,7 +588,11 @@ function endpointForPath(pathname: string): Endpoint | null {
 function creationAvailability(
   value: string | undefined,
 ): 'enabled' | 'disabled' | 'invalid' {
-  if (value === undefined || value.trim() === '' || value === 'false') {
+  if (
+    value === undefined ||
+    value === 'false' ||
+    (typeof value === 'string' && value.trim() === '')
+  ) {
     return 'disabled';
   } else if (value === 'true') {
     return 'enabled';
@@ -621,7 +645,7 @@ function validatedAppOrigin(env: Env, requireLoopback: boolean): URL {
   return new URL(value);
 }
 
-function productionStripeConfig(
+function stripeConfig(
   env: Env,
   appOrigin: URL,
 ): {
@@ -1074,7 +1098,7 @@ function hasValidCustomer(customer: unknown): boolean {
 
 function latestCharge(
   paymentIntent: unknown,
-): { disputed?: unknown; refunded?: unknown; amount_refunded?: unknown } | null {
+): Record<string, unknown> | null {
   return record(record(paymentIntent)?.latest_charge);
 }
 

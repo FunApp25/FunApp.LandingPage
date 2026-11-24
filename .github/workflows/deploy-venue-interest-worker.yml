@@ -2,6 +2,15 @@ name: Deploy Venue Interest Worker
 
 on:
   workflow_dispatch:
+    inputs:
+      authorize_here_and_now_submissions:
+        description: Authorize Here & Now submissions for this deployment
+        type: boolean
+        default: false
+      authorize_founding_friend_submissions:
+        description: Authorize Founding Friend submissions for this deployment
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -12,6 +21,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     name: Validate and deploy Worker
     runs-on: ubuntu-latest
     environment: production
@@ -40,69 +50,32 @@ jobs:
       - name: Validate Wrangler configuration
         run: npm run wrangler:validate
 
-      - name: Validate production deployment configuration
+      - name: Preflight and deploy existing forms Worker
         shell: bash
         env:
           HUBSPOT_PORTAL_ID: ${{ vars.HUBSPOT_PORTAL_ID }}
           HUBSPOT_FORM_GUID: ${{ vars.HUBSPOT_FORM_GUID }}
           HUBSPOT_HERE_AND_NOW_FORM_GUID: ${{ vars.HUBSPOT_HERE_AND_NOW_FORM_GUID }}
+          HUBSPOT_FOUNDING_FRIEND_FORM_GUID: ${{ vars.HUBSPOT_FOUNDING_FRIEND_FORM_GUID }}
           HERE_AND_NOW_SUBMISSIONS_ENABLED: ${{ vars.HERE_AND_NOW_SUBMISSIONS_ENABLED || 'false' }}
+          FOUNDING_FRIEND_SUBMISSIONS_ENABLED: ${{ vars.FOUNDING_FRIEND_SUBMISSIONS_ENABLED || 'false' }}
+          AUTHORIZE_HERE_AND_NOW_SUBMISSIONS: ${{ inputs.authorize_here_and_now_submissions }}
+          AUTHORIZE_FOUNDING_FRIEND_SUBMISSIONS: ${{ inputs.authorize_founding_friend_submissions }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
-          for variable_name in \
-            HUBSPOT_PORTAL_ID \
-            HUBSPOT_FORM_GUID \
-            CLOUDFLARE_ACCOUNT_ID \
-            CLOUDFLARE_API_TOKEN
-          do
-            if [[ -z "${!variable_name:-}" ]]; then
-              echo "::error::Missing required production Environment configuration: $variable_name"
-              exit 1
-            fi
-          done
-
-          guid_pattern='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-          if [[ ! "$HUBSPOT_PORTAL_ID" =~ ^[0-9]+$ ]]; then
-            echo "::error::HUBSPOT_PORTAL_ID must be numeric"
-            exit 1
+          node ../../tool/check_production_worker.mjs venue-interest-worker
+          args=(
+            --var "HUBSPOT_PORTAL_ID:$HUBSPOT_PORTAL_ID"
+            --var "HUBSPOT_FORM_GUID:$HUBSPOT_FORM_GUID"
+            --var "HERE_AND_NOW_SUBMISSIONS_ENABLED:$HERE_AND_NOW_SUBMISSIONS_ENABLED"
+            --var "FOUNDING_FRIEND_SUBMISSIONS_ENABLED:$FOUNDING_FRIEND_SUBMISSIONS_ENABLED"
+          )
+          if [[ "$HERE_AND_NOW_SUBMISSIONS_ENABLED" == true ]]; then
+            args+=(--var "HUBSPOT_HERE_AND_NOW_FORM_GUID:$HUBSPOT_HERE_AND_NOW_FORM_GUID")
           fi
-          if [[ ! "$HUBSPOT_FORM_GUID" =~ $guid_pattern ]]; then
-            echo "::error::HUBSPOT_FORM_GUID must be a valid HubSpot form GUID"
-            exit 1
+          if [[ "$FOUNDING_FRIEND_SUBMISSIONS_ENABLED" == true ]]; then
+            args+=(--var "HUBSPOT_FOUNDING_FRIEND_FORM_GUID:$HUBSPOT_FOUNDING_FRIEND_FORM_GUID")
           fi
-
-          case "$HERE_AND_NOW_SUBMISSIONS_ENABLED" in
-            true)
-              if [[ ! "${HUBSPOT_HERE_AND_NOW_FORM_GUID:-}" =~ $guid_pattern ]]; then
-                echo "::error::Here & Now activation requires a valid HUBSPOT_HERE_AND_NOW_FORM_GUID"
-                exit 1
-              fi
-              ;;
-            false)
-              ;;
-            *)
-              echo "::error::HERE_AND_NOW_SUBMISSIONS_ENABLED must be true or false"
-              exit 1
-              ;;
-          esac
-
-      - name: Deploy existing Worker
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: cloudflare/venue-interest-worker
-          packageManager: npm
-          command: deploy --env=""
-          vars: |
-            HUBSPOT_PORTAL_ID
-            HUBSPOT_FORM_GUID
-            HERE_AND_NOW_SUBMISSIONS_ENABLED
-            ${{ vars.HERE_AND_NOW_SUBMISSIONS_ENABLED == 'true' && 'HUBSPOT_HERE_AND_NOW_FORM_GUID' || '' }}
-        env:
-          HUBSPOT_PORTAL_ID: ${{ vars.HUBSPOT_PORTAL_ID }}
-          HUBSPOT_FORM_GUID: ${{ vars.HUBSPOT_FORM_GUID }}
-          HUBSPOT_HERE_AND_NOW_FORM_GUID: ${{ vars.HUBSPOT_HERE_AND_NOW_FORM_GUID }}
-          HERE_AND_NOW_SUBMISSIONS_ENABLED: ${{ vars.HERE_AND_NOW_SUBMISSIONS_ENABLED || 'false' }}
+          npx --no-install wrangler deploy --env="" --config wrangler.jsonc "${args[@]}"

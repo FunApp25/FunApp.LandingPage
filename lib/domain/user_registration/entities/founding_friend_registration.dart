@@ -42,13 +42,20 @@ abstract class FoundingFriendRegistration with _$FoundingFriendRegistration {
   Either<ValueFailure<String>, String> get emailValidation =>
       email.value.flatMap((value) => validateMaxLength(value, 254));
 
+  /// Validates the self-declared Founding Friend minimum age.
+  Either<ValueFailure<int>, int> get ageValidation => age.value.flatMap(
+    (value) => value >= 18
+        ? right(value)
+        : left(ValueFailure.belowMinimum(failedValue: value, minimum: 18)),
+  );
+
   /// The first validation failure in product-field order, when present.
   Option<ValueFailure<dynamic>> get failureOption {
     final failuresOrUnit = <Either<ValueFailure<dynamic>, Unit>>[
       firstName.failureOrUnit,
       lastName.failureOrUnit,
       emailValidation.map((_) => unit),
-      age.failureOrUnit,
+      ageValidation.map((_) => unit),
       country.failureOrUnit,
       gender.fold(
         () => right<ValueFailure<dynamic>, Unit>(unit),

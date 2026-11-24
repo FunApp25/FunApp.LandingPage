@@ -5,9 +5,23 @@ abstract interface class PendingFoundingFriendPaymentStoreInterface {
   /// Saves the minimum data required for an explicit payment retry.
   void save(PendingFoundingFriendPayment payment);
 
-  /// Reads a pending attempt from the current browser tab.
+  /// Reads a pending attempt. Throws [FormatException] for unreadable storage.
   PendingFoundingFriendPayment? read();
 
   /// Removes the pending attempt after verified payment.
   void clear();
+}
+
+/// Distinguishes a fresh tab from storage that cannot safely be recovered.
+extension PendingFoundingFriendPaymentRecovery
+    on PendingFoundingFriendPaymentStoreInterface {
+  /// Distinguishes an absent record from unreadable storage.
+  ({PendingFoundingFriendPayment? payment, bool unavailable})
+  readForRecovery() {
+    try {
+      return (payment: read(), unavailable: false);
+    } on FormatException {
+      return (payment: null, unavailable: true);
+    }
+  }
 }
