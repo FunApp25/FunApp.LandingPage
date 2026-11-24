@@ -38,7 +38,9 @@ jobs:
         run: npm ci
 
       - name: Test production Venue Worker preflight
-        run: node --test ../../test/tool/venue_worker_preflight.test.mjs
+        run: >-
+          node --test --test-name-pattern='^venue-interest-worker$'
+          ../../test/tool/production_worker_preflight.test.mjs
 
       - name: Typecheck
         run: npm run typecheck
@@ -83,6 +85,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Test production payment Worker preflight
+        run: >-
+          node --test --test-name-pattern='^founding-friend-payment-worker$'
+          ../../test/tool/production_worker_preflight.test.mjs
 
       - name: Typecheck
         run: npm run typecheck

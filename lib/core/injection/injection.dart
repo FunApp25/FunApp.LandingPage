@@ -86,7 +86,7 @@ void configureDependencies(
         );
       }
 
-      _registerDevelopmentRegistrationDataSource(
+      _registerUserRegistrationDataSource(
         dataSource: (client) => HubSpotUserRegistrationDataSource(
           client: client,
           config: hubSpotConfig,
@@ -97,7 +97,7 @@ void configureDependencies(
       final workerConfig =
           developmentWorkerConfig ??
           LocalRegistrationWorkerConfig.fromEnvironment();
-      _registerDevelopmentRegistrationDataSource(
+      _registerUserRegistrationDataSource(
         dataSource: (client) => WorkerUserRegistrationDataSource(
           client: client,
           config: workerConfig,
@@ -123,7 +123,7 @@ void configureDependencies(
     getIt.registerLazySingleton<VenueLeadDataSourceInterface>(
       DevelopmentVenueLeadDataSource.new,
     );
-    _registerDevelopmentRegistrationDataSource(
+    _registerUserRegistrationDataSource(
       dataSource: (client) => WorkerUserRegistrationDataSource(
         client: client,
         config:
@@ -137,30 +137,17 @@ void configureDependencies(
       httpClient: stagingHttpClient,
     );
   } else {
-    getIt
-      ..registerLazySingleton<http.Client>(
-        () => productionHttpClient ?? http.Client(),
-        dispose: (client) => client.close(),
-      )
-      ..registerLazySingleton<VenueLeadDataSourceInterface>(
-        () => ProductionVenueLeadDataSource(
-          client: getIt<http.Client>(),
-        ),
-      )
-      ..registerLazySingleton<UserRegistrationDataSourceInterface>(
-        () => WorkerUserRegistrationDataSource(
-          client: getIt<http.Client>(),
-          config: ProductionRegistrationWorkerConfig(),
-        ),
-      )
-      ..registerLazySingleton<HereAndNowRegistrationRepositoryInterface>(
-        () => HereAndNowRegistrationRepository(
-          getIt<UserRegistrationDataSourceInterface>(),
-        ),
-      )
-      ..registerLazySingleton<FoundingFriendRegistrationRepositoryInterface>(
-        DeferredFoundingFriendRegistrationRepository.new,
-      );
+    _ensureHttpClient(productionHttpClient);
+    getIt.registerLazySingleton<VenueLeadDataSourceInterface>(
+      () => ProductionVenueLeadDataSource(client: getIt<http.Client>()),
+    );
+    _registerUserRegistrationDataSource(
+      dataSource: (client) => WorkerUserRegistrationDataSource(
+        client: client,
+        config: ProductionRegistrationWorkerConfig(),
+      ),
+      httpClient: productionHttpClient,
+    );
     _registerWorkerPaymentRepository(
       productionPaymentConfig ?? FoundingFriendPaymentConfig.production(),
     );
@@ -177,7 +164,7 @@ void configureDependencies(
     ..init();
 }
 
-void _registerDevelopmentRegistrationDataSource({
+void _registerUserRegistrationDataSource({
   required UserRegistrationDataSourceInterface Function(http.Client client)
   dataSource,
   required http.Client? httpClient,

@@ -5,6 +5,7 @@ import {
   type RateLimiter,
   type UpstreamFetch,
   handleRequest,
+  worker,
 } from '../src/index';
 import { handleStagingRequest } from '../src/staging';
 
@@ -20,6 +21,115 @@ const acceptingRateLimiter: RateLimiter = {
     return { success: true };
   },
 };
+
+describe('production payment entrypoint', () => {
+  const origin = 'https://funapp.world';
+  const liveSessionId = 'cs_live_abcdefghijklmnopqrstuvwxyz123456';
+  const liveEnv: Env = {
+    ...productionEnv(),
+    STRIPE_EXPECTED_LIVEMODE: 'true',
+    STRIPE_SECRET_KEY: ['rk', 'live', 'SyntheticRestrictedKey'].join('_'),
+    PAYMENT_RATE_LIMITER: acceptingRateLimiter,
+  };
+
+  it.each([
+    ['missing live mode', { STRIPE_EXPECTED_LIVEMODE: undefined }],
+    ['test mode', { STRIPE_EXPECTED_LIVEMODE: 'false' }],
+    ['sandbox key', { STRIPE_SECRET_KEY: productionEnv().STRIPE_SECRET_KEY }],
+    ['unrestricted live key', { STRIPE_SECRET_KEY: ['sk', 'live', 'SyntheticKey'].join('_') }],
+    ['publishable key', { STRIPE_SECRET_KEY: ['pk', 'live', 'SyntheticKey'].join('_') }],
+    ['malformed restricted key', { STRIPE_SECRET_KEY: 'rk_live_' }],
+    ['missing key', { STRIPE_SECRET_KEY: undefined }],
+    ['staging origin', { PUBLIC_APP_ORIGIN: 'https://staging.funapp.world' }],
+    ['loopback origin', { PUBLIC_APP_ORIGIN: 'http://localhost:7357' }],
+    ['non-exact origin', { PUBLIC_APP_ORIGIN: 'https://funapp.world/' }],
+    ['missing Price', { STRIPE_PRICE_ID: undefined }],
+    ['invalid Price', { STRIPE_PRICE_ID: 'prod_insteadOfPrice' }],
+    ['missing tax boolean', { STRIPE_AUTOMATIC_TAX_ENABLED: undefined }],
+    ['invalid tax boolean', { STRIPE_AUTOMATIC_TAX_ENABLED: 'False' }],
+    ['missing limiter', { PAYMENT_RATE_LIMITER: undefined }],
+    ['missing reference secret', { PURCHASE_REFERENCE_SECRET: undefined }],
+    ['short reference secret', { PURCHASE_REFERENCE_SECRET: 'short' }],
+    ['whitespace reference secret', { PURCHASE_REFERENCE_SECRET: ' '.repeat(32) }],
+    ['multiline reference secret', { PURCHASE_REFERENCE_SECRET: 'synthetic fixture\nwith an invalid newline' }],
+    ['public mock reference secret', { PURCHASE_REFERENCE_SECRET: mockEnv('paid').PURCHASE_REFERENCE_SECRET }],
+  ] satisfies Array<[string, Partial<Env>]>)('rejects %s before Stripe I/O', async (_, override) => {
+    for (const request of [createRequest(origin), verifyRequest(liveSessionId, origin)]) {
+      const response = await worker.fetch(request, { ...liveEnv, ...override });
+      expect(response.status).toBe(500);
+      expect(await response.json()).toEqual({
+        error: { code: 'unexpected', requestId: expect.any(String) },
+      });
+    }
+  });
+
+  it('allows only an explicit loopback mock outside the production origin', async () => {
+    const localOrigin = 'http://localhost:8788';
+    const mocked = await worker.fetch(createRequest(localOrigin), {
+      ...mockEnv('paid'),
+      PAYMENT_RATE_LIMITER: acceptingRateLimiter,
+    });
+    expect(mocked.status).toBe(201);
+    for (const otherOrigin of [localOrigin, 'https://staging.funapp.world']) {
+      expect((await worker.fetch(createRequest(otherOrigin), liveEnv)).status).toBe(500);
+    }
+  });
+
+  it('uses the production price and origin and verifies live sessions with sales disabled', async () => {
+    const liveSession = validSession({ id: liveSessionId, livemode: true });
+    for (const field of [
+      'line_items.data.0.price.livemode',
+      'payment_intent.livemode',
+      'payment_intent.latest_charge.livemode',
+    ]) {
+      changeField(liveSession, field, true);
+    }
+    const upstream = vi.fn<UpstreamFetch>(async (input, init) => {
+      expect(new Headers(init?.headers).get('authorization')).toBe(
+        `Bearer ${liveEnv.STRIPE_SECRET_KEY}`,
+      );
+      if (init?.method === 'POST') {
+        const body = new URLSearchParams(init.body as string);
+        expect(body.get('success_url')).toBe(
+          `${origin}/#/founding-friend/payment?session_id={CHECKOUT_SESSION_ID}`,
+        );
+        return Response.json(validCreatedSession(body.get('client_reference_id'), {
+          id: liveSessionId, livemode: true,
+        }));
+      }
+      return Response.json(new URL(input.toString()).pathname.startsWith('/v1/prices/')
+        ? { ...validPrice(), livemode: true }
+        : liveSession);
+    });
+
+    const originalFetch = globalThis.fetch;
+    vi.stubGlobal('fetch', upstream);
+    try {
+      expect((await worker.fetch(createRequest(origin), liveEnv)).status).toBe(201);
+      for (const value of [undefined, 'false']) {
+        const disabled = { ...liveEnv, PAYMENT_CREATION_ENABLED: value };
+        expect((await worker.fetch(createRequest(origin), disabled)).status).toBe(503);
+        const verified = await worker.fetch(verifyRequest(liveSessionId, origin), disabled);
+        expect(verified.status).toBe(200);
+        expect(await verified.json()).toEqual({
+          status: 'confirmed',
+          purchaseReference: 'FF-1234567890ABCDEF',
+          requestId: expect.any(String),
+        });
+      }
+      expect(upstream.mock.calls.map(([url, init]) => [
+        new URL(url.toString()).pathname, init?.method,
+      ])).toEqual([
+        ['/v1/prices/price_test249gbp', 'GET'],
+        ['/v1/checkout/sessions', 'POST'],
+        [`/v1/checkout/sessions/${liveSessionId}`, 'GET'],
+        [`/v1/checkout/sessions/${liveSessionId}`, 'GET'],
+      ]);
+    } finally {
+      vi.stubGlobal('fetch', originalFetch);
+    }
+  });
+});
 
 describe('Founding Friend payment Worker', () => {
   it.each([
@@ -1041,7 +1151,7 @@ function changeField(session: Record<string, unknown>, path: string, value: unkn
   object[parts.at(-1)!] = value;
 }
 
-describe.each(['production', 'staging'])('%s Adaptive Pricing verification', (entrypoint) => {
+describe.each(['shared handler', 'staging'])('%s Adaptive Pricing verification', (entrypoint) => {
   async function verify(session: Record<string, unknown>) {
     const upstreamFetch = vi.fn<UpstreamFetch>(async () => Response.json(session));
     const handler = entrypoint === 'staging' ? handleStagingRequest : handleRequest;

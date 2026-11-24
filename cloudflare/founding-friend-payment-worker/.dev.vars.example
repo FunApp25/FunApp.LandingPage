@@ -13,7 +13,6 @@ PURCHASE_REFERENCE_SECRET="local-development-only-reference-secret"
 STRIPE_MOCK_SCENARIO="paid"
 
 # Do not add Stripe credentials to this tracked example. Production later needs:
-# STRIPE_SECRET_KEY as a Cloudflare secret (prefer an rk_ restricted key), plus
-# STRIPE_PRICE_ID, STRIPE_EXPECTED_LIVEMODE, and the explicitly approved
-# STRIPE_AUTOMATIC_TAX_ENABLED=true|false as environment variables. Keep
-# automatic tax false until the business tax setup is separately approved.
+# STRIPE_SECRET_KEY as a restricted live key in a Cloudflare secret,
+# STRIPE_EXPECTED_LIVEMODE=true, the live STRIPE_PRICE_ID, and an explicitly
+# approved STRIPE_AUTOMATIC_TAX_ENABLED=true|false setting.

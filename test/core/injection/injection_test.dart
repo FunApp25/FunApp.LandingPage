@@ -295,7 +295,7 @@ void main() {
   );
 
   test(
-    'production posts Venue and Here & Now to the current origin',
+    'production posts Venue and both registrations to the current origin',
     () async {
       late http.Request capturedRequest;
       final client = MockClient((request) async {
@@ -344,7 +344,7 @@ void main() {
       );
       expect(
         getIt<FoundingFriendRegistrationRepositoryInterface>(),
-        isA<DeferredFoundingFriendRegistrationRepository>(),
+        isA<FoundingFriendRegistrationRepository>(),
       );
       expect(
         getIt<UserRegistrationDataSourceInterface>(),
@@ -391,7 +391,50 @@ void main() {
         'marketingConsent': false,
       });
       await registration.close();
-      await getIt<FoundingFriendRegistrationFormBloc>().close();
+
+      final foundingFriend = getIt<FoundingFriendRegistrationFormBloc>()
+        ..add(
+          const FoundingFriendRegistrationFormEvent.firstNameChanged('Taylor'),
+        )
+        ..add(
+          const FoundingFriendRegistrationFormEvent.lastNameChanged('Jones'),
+        )
+        ..add(
+          const FoundingFriendRegistrationFormEvent.emailChanged(
+            'taylor@example.com',
+          ),
+        )
+        ..add(const FoundingFriendRegistrationFormEvent.ageChanged('31'))
+        ..add(
+          const FoundingFriendRegistrationFormEvent.countryChanged(
+            'United Kingdom',
+          ),
+        );
+      await foundingFriend.stream.firstWhere(
+        (state) => state.registration.isValid,
+      );
+      final foundingFriendSettled = foundingFriend.stream.firstWhere(
+        (state) => state.submissionResult.isSome(),
+      );
+      foundingFriend.add(const FoundingFriendRegistrationFormEvent.submitted());
+      expect(
+        (await foundingFriendSettled).submissionResult,
+        some(right<AppFailure, Unit>(unit)),
+      );
+      expect(
+        capturedRequest.url,
+        Uri.base.resolve('/api/registrations/founding-friend'),
+      );
+      expect(capturedRequest.method, 'POST');
+      expect(jsonDecode(capturedRequest.body), {
+        'firstName': 'Taylor',
+        'lastName': 'Jones',
+        'email': 'taylor@example.com',
+        'age': 31,
+        'country': 'United Kingdom',
+        'marketingConsent': false,
+      });
+      await foundingFriend.close();
     },
   );
 }

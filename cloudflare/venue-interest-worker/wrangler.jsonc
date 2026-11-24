@@ -7,6 +7,7 @@
   // Preserve dashboard-managed values when deploying code-only changes.
   "keep_vars": true,
   "workers_dev": false,
+  "preview_urls": false,
   "ratelimits": [
     {
       "name": "REGISTRATION_RATE_LIMITER",

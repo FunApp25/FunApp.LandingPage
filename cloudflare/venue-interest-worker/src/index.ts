@@ -12,6 +12,7 @@ export interface Env {
   HUBSPOT_FOUNDING_FRIEND_FORM_GUID?: string;
   REGISTRATION_SUBMISSIONS_ENABLED?: string;
   HERE_AND_NOW_SUBMISSIONS_ENABLED?: string;
+  FOUNDING_FRIEND_SUBMISSIONS_ENABLED?: string;
   REGISTRATION_RATE_LIMITER?: RateLimiter;
   LOCAL_DEVELOPMENT_ALLOWED_ORIGIN?: string;
   HUBSPOT_MOCK_SCENARIO?: string;
@@ -165,7 +166,7 @@ export async function handleRequest(
       ? env.REGISTRATION_SUBMISSIONS_ENABLED
       : endpoint.workflow === 'here-and-now'
         ? env.HERE_AND_NOW_SUBMISSIONS_ENABLED
-        : undefined;
+        : env.FOUNDING_FRIEND_SUBMISSIONS_ENABLED;
     const availability = registrationAvailability(configuredValue);
 
     if (availability === 'disabled') {
@@ -184,7 +185,7 @@ export async function handleRequest(
       return errorResponse(500, 'unexpected', requestId, {}, corsHeaders);
     }
 
-    formGuid = registrationFormGuid(endpoint.workflow, env);
+    formGuid = registrationFormGuid(endpoint.workflow, env, usesMock);
     const rateLimiter =
       dependencies.registrationRateLimiter ?? env.REGISTRATION_RATE_LIMITER;
 
@@ -371,11 +372,23 @@ function registrationAvailability(
 function registrationFormGuid(
   workflow: RegistrationWorkflow,
   env: Env,
+  usesMock: boolean,
 ): string | null {
   const formGuid =
     workflow === 'here-and-now'
       ? env.HUBSPOT_HERE_AND_NOW_FORM_GUID
       : env.HUBSPOT_FOUNDING_FRIEND_FORM_GUID;
+
+  if (!usesMock && workflow === 'founding-friend' && typeof formGuid === 'string') {
+    const normalized = formGuid.toLowerCase();
+    const hereAndNowForm = env.HUBSPOT_HERE_AND_NOW_FORM_GUID;
+    if (
+      normalized === venueFormGuid(env)?.toLowerCase() ||
+      (typeof hereAndNowForm === 'string' && normalized === hereAndNowForm.toLowerCase())
+    ) {
+      return null;
+    }
+  }
 
   return typeof formGuid === 'string' && guidPattern.test(formGuid)
     ? formGuid
