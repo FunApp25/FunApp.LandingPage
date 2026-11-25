@@ -17,8 +17,8 @@ Founding Friend forms are public routes at `/here-and-now` and
 repository contract, and application BLoC. Development can explicitly select
 temporary direct HubSpot testing or a first-party local Worker transport backed
 by deterministic mocks. The default development graph remains deferred.
-Production Here & Now uses the same-origin first-party registration endpoint
-and requires separate Worker activation.
+Production Here & Now uses the same-origin first-party registration endpoint,
+with forwarding controlled by its production release flag.
 
 After a confirmed Founding Friend registration, the implemented purchase
 workflow can prepare a separate one-time Stripe-hosted Checkout with a
@@ -27,8 +27,8 @@ workflow can prepare a separate one-time Stripe-hosted Checkout with a
 stores the purchase reference and payment record in Stripe, verifies a
 specific Checkout Session before Flutter displays payment confirmation, and
 uses no D1 or other payment database. Local development is fully mocked. New
-payment creation and Founding Friend registration both remain disabled in
-production pending separate external configuration and authorization.
+payment creation and Founding Friend registration are controlled by their
+independent production release flags.
 
 The repository also prepares an isolated staging composition for
 `https://staging.funapp.world`. Staging keeps Venue submissions deterministic
@@ -995,9 +995,8 @@ capabilities as implemented.
   invent these terms.
 - The later main Fun App backend contract for matching a qualifying Stripe
   purchase to an authenticated account's verified email and granting benefits.
-- Timing and authorized deployment of the updated Worker, registration route
-  attachment, payment Worker route/binding/secret configuration, controlled
-  live verification, and any later Founding Friend activation.
+- Operational verification of the deployed registration and payment routes,
+  provider configuration, and controlled live Checkout verification.
 
 Backend implementation must be driven by an actual approved contract rather than inferred from the main mobile application. Do not copy `/profiles`, Entra, OIDC, user-profile, onboarding, or other mobile-app contracts into this project without an explicit landing-page requirement.
 
@@ -1137,19 +1136,18 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   sequential. See the [production runbook](README.md#production-release).
 - Independent `HERE_AND_NOW_SUBMISSIONS_ENABLED`,
   `FOUNDING_FRIEND_SUBMISSIONS_ENABLED`, and `PAYMENT_CREATION_ENABLED` flags
-  default to `false`. A release requesting any `true` flag requires
-  matching per-flag authorization in a manual dispatch. A push with an enabled
-  flag fails before upload and leaves the active release in place. Venue and
-  payment verification remain independently available with valid bindings.
+  must each be exactly `true` or `false` in the `production` Environment.
+  The reviewed merge to `main` authorizes applying those values on the current
+  `main` push. A manual dispatch requires matching authorization for every flag
+  set to `true`. Missing or malformed flags fail preflight before Worker upload.
+  Venue and payment verification remain independently available with valid bindings.
 - The production payment preflight verifies the live Price with a read-only
   Stripe lookup under the Worker's pinned API version. It requires the active
   one-time tax-inclusive £249 GBP Price and automatic tax disabled. Wrangler
   uploads the restricted live Stripe key and the independent purchase-reference
   secret in the same version as the code.
-  The Stripe business account is approved. Deploy with creation disabled first.
-  Controlled live Checkout testing and public launch require separate
-  authorization, with the legal applicability transition approved before public
-  launch. Founding Friend purchasing has not been launched.
+  The Stripe business account is approved. Controlled live Checkout test
+  payments require authorization for those transactions.
 - Both site artifacts include the approved full wordmark as a transparent PNG
   at `/email/fun-app-logo.png`. Verify anonymous access on production after
   publication. Staging keeps its existing Access boundary.

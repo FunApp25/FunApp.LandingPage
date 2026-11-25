@@ -115,6 +115,7 @@ void main() {
   test('production Pages requires both Workers at the current main SHA', () {
     final workflow = File('.github/workflows/deploy.yml').readAsStringSync();
     final jobs = workflow.split('\njobs:\n').last;
+    final checks = jobs.split('\n  build:\n').first;
     final workers = jobs
         .split('\n  workers:\n')
         .last
@@ -125,7 +126,14 @@ void main() {
     expect(workflow, contains('workflow_dispatch:'));
     expect(workflow, contains('group: funapp-production-deployment'));
     expect(workflow, contains('cancel-in-progress: false'));
-    expect(jobs, contains("if: github.ref == 'refs/heads/main'"));
+    expect(
+      checks.replaceFirst('if: >-', 'if:').replaceAll(RegExp(r'\s+'), ' '),
+      contains(
+        "if: github.ref == 'refs/heads/main' && "
+        "(github.event_name == 'push' || "
+        "github.event_name == 'workflow_dispatch')",
+      ),
+    );
     expect(jobs, contains('uses: ./.github/workflows/pr_checks.yml'));
     expect(jobs, contains('needs: checks'));
     expect(workers, contains('needs: build'));

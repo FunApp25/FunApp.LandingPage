@@ -15,15 +15,25 @@ const cloudflare = {
   CLOUDFLARE_ACCOUNT_ID: 'fixture-account',
   CLOUDFLARE_API_TOKEN: 'fixture-token',
 };
+const mainPush = {
+  GITHUB_REF: 'refs/heads/main',
+  GITHUB_EVENT_NAME: 'push',
+  GITHUB_SHA: 'a'.repeat(40),
+};
 const venue = {
   ...cloudflare,
+  ...mainPush,
   HUBSPOT_PORTAL_ID: '123456789',
   HUBSPOT_VENUE_FORM_GUID: '01234567-89ab-cdef-0123-456789abcdef',
+  HERE_AND_NOW_SUBMISSIONS_ENABLED: 'false',
+  FOUNDING_FRIEND_SUBMISSIONS_ENABLED: 'false',
 };
 const hereAndNowGuid = '11111111-1111-1111-1111-111111111111';
 const foundingFriendGuid = '22222222-2222-2222-2222-222222222222';
 const payment = {
   ...cloudflare,
+  ...mainPush,
+  PAYMENT_CREATION_ENABLED: 'false',
   STRIPE_PRICE_ID: 'price_fixture249',
   STRIPE_EXPECTED_LIVEMODE: 'true',
   STRIPE_AUTOMATIC_TAX_ENABLED: 'false',
@@ -90,24 +100,19 @@ for (const [project, baseEnv] of [
         }
       }
 
-      it('requires separate authorization and a valid form for each enabled workflow', () => {
-        for (const [prefix, form, valid] of [
-          ['HERE_AND_NOW', 'HUBSPOT_HERE_AND_NOW_FORM_GUID', hereAndNowGuid],
-          ['FOUNDING_FRIEND', 'HUBSPOT_FOUNDING_FRIEND_FORM_GUID', foundingFriendGuid],
+      it('requires a valid form for each enabled registration on a main push', () => {
+        for (const [prefix, form] of [
+          ['HERE_AND_NOW', 'HUBSPOT_HERE_AND_NOW_FORM_GUID'],
+          ['FOUNDING_FRIEND', 'HUBSPOT_FOUNDING_FRIEND_FORM_GUID'],
         ]) {
           const flag = `${prefix}_SUBMISSIONS_ENABLED`;
-          assert.throws(() => check({ ...venue, [flag]: 'TRUE' }), /exactly true or false/);
-          assert.throws(() => check({ ...venue, [flag]: 'true', [form]: valid }), /explicit dispatch authorization/);
-          const authorized = { ...venue, GITHUB_EVENT_NAME: 'workflow_dispatch', [flag]: 'true', [`AUTHORIZE_${prefix}_SUBMISSIONS`]: 'true' };
           for (const guid of [undefined, 'invalid']) {
-            assert.throws(() => check({ ...authorized, [form]: guid }), new RegExp(form));
+            assert.throws(() => check({ ...venue, [flag]: 'true', [form]: guid }), new RegExp(form));
           }
         }
         assert.throws(() => check({
           ...venue,
-          GITHUB_EVENT_NAME: 'workflow_dispatch',
           FOUNDING_FRIEND_SUBMISSIONS_ENABLED: 'true',
-          AUTHORIZE_FOUNDING_FRIEND_SUBMISSIONS: 'true',
           HUBSPOT_FOUNDING_FRIEND_FORM_GUID: venue.HUBSPOT_VENUE_FORM_GUID.toUpperCase(),
         }), /distinct valid HUBSPOT_FOUNDING_FRIEND_FORM_GUID/);
         assert.throws(() => check({ ...venue, HUBSPOT_PORTAL_ID: '123x' }), /HUBSPOT_PORTAL_ID/);
@@ -122,14 +127,6 @@ for (const [project, baseEnv] of [
         }), /HUBSPOT_VENUE_FORM_GUID/);
       });
     } else {
-      it('requires explicit authorization for true even with all Stripe bindings present', () => {
-        const enabled = { ...payment, PAYMENT_CREATION_ENABLED: 'true' };
-        assert.throws(() => check(enabled), /explicit dispatch authorization/);
-        assert.throws(() => check({ ...payment, PAYMENT_CREATION_ENABLED: 'True' }), /exactly true or false/);
-        assert.throws(() => check({ ...enabled, GITHUB_EVENT_NAME: 'push', AUTHORIZE_PAYMENT_CREATION: 'true' }), /explicit dispatch authorization/);
-        check({ ...enabled, GITHUB_EVENT_NAME: 'workflow_dispatch', AUTHORIZE_PAYMENT_CREATION: 'true' });
-      });
-
       it('rejects misconfigured Stripe bindings even while creation is disabled', () => {
         for (const [name, value] of [
           ['STRIPE_EXPECTED_LIVEMODE', 'false'],
@@ -151,12 +148,19 @@ for (const [project, baseEnv] of [
   });
 }
 
-const releaseEnv = {
-  ...venue,
-  ...payment,
-  GITHUB_REF: 'refs/heads/main',
-  GITHUB_EVENT_NAME: 'push',
-  GITHUB_SHA: 'a'.repeat(40),
+const releaseEnv = { ...venue, ...payment };
+const allEnabled = {
+  ...releaseEnv,
+  HERE_AND_NOW_SUBMISSIONS_ENABLED: 'true',
+  FOUNDING_FRIEND_SUBMISSIONS_ENABLED: 'true',
+  PAYMENT_CREATION_ENABLED: 'true',
+  HUBSPOT_HERE_AND_NOW_FORM_GUID: hereAndNowGuid,
+  HUBSPOT_FOUNDING_FRIEND_FORM_GUID: foundingFriendGuid,
+};
+const dispatchAuthorizations = {
+  AUTHORIZE_HERE_AND_NOW_SUBMISSIONS: 'true',
+  AUTHORIZE_FOUNDING_FRIEND_SUBMISSIONS: 'true',
+  AUTHORIZE_PAYMENT_CREATION: 'true',
 };
 const workerNames = {
   'venue-interest-worker': 'funapp-registration-forms',
@@ -205,7 +209,7 @@ function providerFixture({ missing, price = activePrice, legacy = venue.HUBSPOT_
   };
 }
 
-function mockWrangler(calls, failAt) {
+function mockWrangler(calls, release, failAt) {
   return (project, args, env) => {
     calls.push([project, args.slice(0, 2).join(' ')]);
     if (calls.length === failAt) throw new Error('Simulated Wrangler failure');
@@ -213,19 +217,29 @@ function mockWrangler(calls, failAt) {
     assert.equal(env.CLOUDFLARE_API_TOKEN, cloudflare.CLOUDFLARE_API_TOKEN);
     assert.ok(!env.STRIPE_SECRET_KEY && !env.PURCHASE_REFERENCE_SECRET);
     assert.ok(!env.CLOUDFLARE_WORKERS_API_TOKEN && !env.CLOUDFLARE_STAGING_SITE_API_TOKEN);
-    assert.ok(args.includes(`Release ${releaseEnv.GITHUB_SHA}`));
+    assert.ok(args.includes(`Release ${release.GITHUB_SHA}`));
     assert.ok(!args.some((arg) => /route|trigger|staging/.test(arg)));
     const id = project === 'venue-interest-worker'
       ? '11111111-1111-4111-8111-111111111111' : '22222222-2222-4222-8222-222222222222';
     let receipt;
     if (args[1] === 'upload') {
       const tag = `tag-${name}`;
+      const vars = args.filter((_, index) => args[index - 1] === '--var');
       assert.equal(env.WRANGLER_CI_MATCH_TAG, tag);
       if (project === 'venue-interest-worker') {
-        assert.ok(args.includes(`HUBSPOT_VENUE_FORM_GUID:${venue.HUBSPOT_VENUE_FORM_GUID}`));
-        assert.ok(args.includes('HERE_AND_NOW_SUBMISSIONS_ENABLED:false'));
-        assert.ok(args.includes('FOUNDING_FRIEND_SUBMISSIONS_ENABLED:false'));
-        assert.ok(!args.some((arg) => arg.startsWith('HUBSPOT_FORM_GUID:')));
+        const expected = [
+          `HERE_AND_NOW_SUBMISSIONS_ENABLED:${release.HERE_AND_NOW_SUBMISSIONS_ENABLED}`,
+          `FOUNDING_FRIEND_SUBMISSIONS_ENABLED:${release.FOUNDING_FRIEND_SUBMISSIONS_ENABLED}`,
+          `HUBSPOT_PORTAL_ID:${venue.HUBSPOT_PORTAL_ID}`,
+          `HUBSPOT_VENUE_FORM_GUID:${venue.HUBSPOT_VENUE_FORM_GUID}`,
+        ];
+        if (release.HERE_AND_NOW_SUBMISSIONS_ENABLED === 'true') {
+          expected.push(`HUBSPOT_HERE_AND_NOW_FORM_GUID:${hereAndNowGuid}`);
+        }
+        if (release.FOUNDING_FRIEND_SUBMISSIONS_ENABLED === 'true') {
+          expected.push(`HUBSPOT_FOUNDING_FRIEND_FORM_GUID:${foundingFriendGuid}`);
+        }
+        assert.deepEqual(vars, expected);
         assert.ok(!args.includes('--secrets-file'));
       } else {
         const file = args[args.indexOf('--secrets-file') + 1];
@@ -234,9 +248,13 @@ function mockWrangler(calls, failAt) {
           STRIPE_SECRET_KEY: payment.STRIPE_SECRET_KEY,
           PURCHASE_REFERENCE_SECRET: payment.PURCHASE_REFERENCE_SECRET,
         });
-        assert.ok(args.includes('PAYMENT_CREATION_ENABLED:false'));
-        assert.ok(args.includes('STRIPE_EXPECTED_LIVEMODE:true'));
-        assert.ok(args.includes('STRIPE_AUTOMATIC_TAX_ENABLED:false'));
+        assert.deepEqual(vars, [
+          `PAYMENT_CREATION_ENABLED:${release.PAYMENT_CREATION_ENABLED}`,
+          `STRIPE_PRICE_ID:${payment.STRIPE_PRICE_ID}`,
+          'STRIPE_EXPECTED_LIVEMODE:true',
+          'STRIPE_AUTOMATIC_TAX_ENABLED:false',
+          `PUBLIC_APP_ORIGIN:${payment.PUBLIC_APP_ORIGIN}`,
+        ]);
       }
       receipt = { type: 'version-upload', worker_name: name, worker_tag: tag, version_id: id };
     } else {
@@ -249,15 +267,15 @@ function mockWrangler(calls, failAt) {
 
 describe('production release', () => {
   it('requires both existing Worker identities and checks the deployed Venue alias and live Price', async () => {
-    await preflightProductionRelease(releaseEnv, providerFixture());
-    await assert.rejects(preflightProductionRelease(releaseEnv, providerFixture({
+    await preflightProductionRelease(allEnabled, providerFixture());
+    await assert.rejects(preflightProductionRelease(allEnabled, providerFixture({
       missing: workerNames['founding-friend-payment-worker'],
     })), /verify existing production Worker/);
-    await assert.rejects(preflightProductionRelease(releaseEnv, providerFixture({ legacy: hereAndNowGuid })),
+    await assert.rejects(preflightProductionRelease(allEnabled, providerFixture({ legacy: hereAndNowGuid })),
       /HUBSPOT_FORM_GUID conflicts/);
-    await assert.rejects(preflightProductionRelease(releaseEnv, providerFixture({ publicPreview: true })),
+    await assert.rejects(preflightProductionRelease(allEnabled, providerFixture({ publicPreview: true })),
       /public subdomain/);
-    await assert.rejects(preflightProductionRelease(releaseEnv, providerFixture({
+    await assert.rejects(preflightProductionRelease(allEnabled, providerFixture({
       binding: { name: 'HUBSPOT_VENUE_FORM_GUID', type: 'secret_text' },
     })), /binding type conflict/);
     await assert.rejects(preflightProductionRelease({
@@ -270,20 +288,87 @@ describe('production release', () => {
       binding: { name: 'HUBSPOT_HERE_AND_NOW_FORM_GUID', type: 'plain_text', text: foundingFriendGuid },
     })), /retained Here & Now form/);
     for (const override of [{ livemode: false }, { active: false }, { unit_amount: 100 }, { tax_behavior: 'exclusive' }]) {
-      await assert.rejects(preflightProductionRelease(releaseEnv, providerFixture({
+      await assert.rejects(preflightProductionRelease(allEnabled, providerFixture({
         price: { ...activePrice, ...override },
       })), /Production STRIPE_PRICE_ID/);
     }
   });
 
-  it('rejects automatic activation or missing production secrets before provider I/O', async () => {
+  it('requires every flag to be explicitly true or false before provider I/O', async () => {
     for (const flag of ['HERE_AND_NOW_SUBMISSIONS_ENABLED', 'FOUNDING_FRIEND_SUBMISSIONS_ENABLED', 'PAYMENT_CREATION_ENABLED']) {
-      await assert.rejects(preflightProductionRelease({ ...releaseEnv, [flag]: 'true' },
-        () => assert.fail('Provider I/O before authorization')), /explicit dispatch authorization/);
+      for (const value of [undefined, '', 'True', ' true']) {
+        await assert.rejects(preflightProductionRelease({ ...allEnabled, [flag]: value },
+          () => assert.fail('Provider I/O with invalid activation flag')), new RegExp(`${flag} must be exactly true or false`));
+      }
     }
+  });
+
+  it('requires matching manual authorization for each enabled capability', async () => {
+    const dispatch = { ...allEnabled, ...dispatchAuthorizations, GITHUB_EVENT_NAME: 'workflow_dispatch' };
+    await preflightProductionRelease(dispatch, providerFixture());
+    for (const authorization of Object.keys(dispatchAuthorizations)) {
+      for (const value of [undefined, 'false']) {
+        await assert.rejects(preflightProductionRelease({ ...dispatch, [authorization]: value },
+          () => assert.fail('Provider I/O before manual authorization')),
+        new RegExp(`requires explicit dispatch authorization: ${authorization}`));
+      }
+    }
+    await preflightProductionRelease({ ...releaseEnv, GITHUB_EVENT_NAME: 'workflow_dispatch' }, providerFixture());
+  });
+
+  it('rejects missing production credentials before provider I/O on an enabled push', async () => {
     await assert.rejects(preflightProductionRelease({
-      ...releaseEnv, CLOUDFLARE_API_TOKEN: '', CLOUDFLARE_WORKERS_API_TOKEN: 'sandbox-token',
+      ...allEnabled, CLOUDFLARE_API_TOKEN: '', CLOUDFLARE_WORKERS_API_TOKEN: 'sandbox-token',
     }, () => assert.fail('Provider I/O with missing production token')), /CLOUDFLARE_API_TOKEN/);
+    await assert.rejects(preflightProductionRelease({
+      ...allEnabled, STRIPE_SECRET_KEY: 'rk_test_fixture',
+    }, () => assert.fail('Provider I/O with a sandbox key')), /STRIPE_SECRET_KEY/);
+  });
+
+  it('blocks PRs, staging events and invalid or stale revisions before provider I/O or upload', async () => {
+    const options = {
+      fetchMetadata: () => assert.fail('Unexpected provider I/O'),
+      wrangler: () => assert.fail('Unexpected Worker change'),
+      checkRevision: () => {},
+    };
+    for (const event of ['pull_request', 'pull_request_target', 'workflow_call', undefined]) {
+      await assert.rejects(deployProductionWorkers({
+        ...allEnabled, ...dispatchAuthorizations, GITHUB_EVENT_NAME: event,
+      }, options), /requires a main push or workflow dispatch/);
+    }
+    for (const override of [
+      { GITHUB_REF: 'refs/heads/dev' },
+      { GITHUB_REF: 'refs/heads/dev', GITHUB_EVENT_NAME: 'workflow_dispatch' },
+      { GITHUB_REF: 'refs/pull/42/merge', GITHUB_EVENT_NAME: 'pull_request' },
+      { GITHUB_SHA: 'invalid' },
+    ]) {
+      await assert.rejects(deployProductionWorkers({ ...allEnabled, ...override }, options), /requires a main revision/);
+    }
+    await assert.rejects(deployProductionWorkers(allEnabled, {
+      ...options,
+      checkRevision: () => { throw new Error('Stale revision'); },
+    }), /Stale revision/);
+  });
+
+  it('deploys the exact configured state for every activation combination on a current main push', async (t) => {
+    const base = mkdtempSync(join(tmpdir(), 'production-release-test-'));
+    t.after(() => rmSync(base, { recursive: true, force: true }));
+    for (const mask of [0, 1, 2, 3, 4, 5, 6, 7]) {
+      const release = {
+        ...allEnabled,
+        HERE_AND_NOW_SUBMISSIONS_ENABLED: String(Boolean(mask & 1)),
+        FOUNDING_FRIEND_SUBMISSIONS_ENABLED: String(Boolean(mask & 2)),
+        PAYMENT_CREATION_ENABLED: String(Boolean(mask & 4)),
+        RUNNER_TEMP: base,
+      };
+      const calls = [];
+      await deployProductionWorkers(release, {
+        fetchMetadata: providerFixture(),
+        wrangler: mockWrangler(calls, release),
+        checkRevision: (sha) => assert.equal(sha, mainPush.GITHUB_SHA),
+      });
+      assert.equal(calls.length, 4);
+    }
   });
 
   it('uploads both versions before switching traffic and stops on the first failure or stale revision', async (t) => {
@@ -295,15 +380,15 @@ describe('production release', () => {
       ['venue-interest-worker', 'versions deploy'],
       ['founding-friend-payment-worker', 'versions deploy'],
     ];
-    for (const failAt of [undefined, 2, 3, 4, 'stale']) {
+    for (const failAt of [undefined, 1, 2, 3, 4, 'stale']) {
       const calls = [];
       let revisionChecks = 0;
       const deploy = deployProductionWorkers({
-        ...releaseEnv, RUNNER_TEMP: base, CLOUDFLARE_WORKERS_API_TOKEN: 'sandbox-token',
+        ...allEnabled, RUNNER_TEMP: base, CLOUDFLARE_WORKERS_API_TOKEN: 'sandbox-token',
         CLOUDFLARE_STAGING_SITE_API_TOKEN: 'site-token',
       }, {
         fetchMetadata: providerFixture(),
-        wrangler: mockWrangler(calls, failAt),
+        wrangler: mockWrangler(calls, allEnabled, failAt),
         checkRevision: (sha) => {
           assert.equal(sha, releaseEnv.GITHUB_SHA);
           revisionChecks += 1;
