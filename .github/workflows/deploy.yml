@@ -29,7 +29,9 @@ concurrency:
 jobs:
   checks:
     name: Validation
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/pr_checks.yml
 
   build:
@@ -105,9 +107,9 @@ jobs:
           HUBSPOT_FORM_GUID: ${{ vars.HUBSPOT_FORM_GUID }}
           HUBSPOT_HERE_AND_NOW_FORM_GUID: ${{ vars.HUBSPOT_HERE_AND_NOW_FORM_GUID }}
           HUBSPOT_FOUNDING_FRIEND_FORM_GUID: ${{ vars.HUBSPOT_FOUNDING_FRIEND_FORM_GUID }}
-          HERE_AND_NOW_SUBMISSIONS_ENABLED: ${{ vars.HERE_AND_NOW_SUBMISSIONS_ENABLED || 'false' }}
-          FOUNDING_FRIEND_SUBMISSIONS_ENABLED: ${{ vars.FOUNDING_FRIEND_SUBMISSIONS_ENABLED || 'false' }}
-          PAYMENT_CREATION_ENABLED: ${{ vars.PAYMENT_CREATION_ENABLED || 'false' }}
+          HERE_AND_NOW_SUBMISSIONS_ENABLED: ${{ vars.HERE_AND_NOW_SUBMISSIONS_ENABLED }}
+          FOUNDING_FRIEND_SUBMISSIONS_ENABLED: ${{ vars.FOUNDING_FRIEND_SUBMISSIONS_ENABLED }}
+          PAYMENT_CREATION_ENABLED: ${{ vars.PAYMENT_CREATION_ENABLED }}
           AUTHORIZE_HERE_AND_NOW_SUBMISSIONS: ${{ inputs.authorize_here_and_now_submissions }}
           AUTHORIZE_FOUNDING_FRIEND_SUBMISSIONS: ${{ inputs.authorize_founding_friend_submissions }}
           AUTHORIZE_PAYMENT_CREATION: ${{ inputs.authorize_payment_creation }}

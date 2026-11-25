@@ -41,6 +41,10 @@ export function readProductionWorkerConfig(project) {
 }
 
 export function checkProductionWorker(project, config, env) {
+  const event = env.GITHUB_EVENT_NAME;
+  if (env.GITHUB_REF !== 'refs/heads/main' || (event !== 'push' && event !== 'workflow_dispatch')) {
+    throw new Error('Production preflight requires a main push or workflow dispatch');
+  }
   const main = resolve(projectDirectory(project), 'src/index.ts');
   const target = targets[project];
   if (
@@ -66,12 +70,11 @@ export function checkProductionWorker(project, config, env) {
     if (!env[name]?.trim()) throw new Error(`Missing production configuration: ${name}`);
   }
   for (const [flag, authorization] of Object.entries(target.flags)) {
-    const value = env[flag] ?? 'false';
+    const value = env[flag];
     if (value !== 'true' && value !== 'false') {
       throw new Error(`${flag} must be exactly true or false`);
     }
-    if (value === 'true' &&
-        (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env[authorization] !== 'true')) {
+    if (event === 'workflow_dispatch' && value === 'true' && env[authorization] !== 'true') {
       throw new Error(`${flag}=true requires explicit dispatch authorization: ${authorization}`);
     }
   }
@@ -116,7 +119,7 @@ function checkLegacyVenueForm(canonical, legacy) {
 
 export function productionVars(project, env) {
   const flags = Object.fromEntries(
-    Object.keys(targets[project].flags).map((flag) => [flag, env[flag] ?? 'false']),
+    Object.keys(targets[project].flags).map((flag) => [flag, env[flag]]),
   );
   const keys = project === registration
     ? ['HUBSPOT_PORTAL_ID', 'HUBSPOT_VENUE_FORM_GUID']
