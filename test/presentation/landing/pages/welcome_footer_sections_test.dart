@@ -42,7 +42,7 @@ void main() {
       expect(find.text(label), findsNWidgets(2));
     }
     expect(find.text(LandingFooter.contactEmail), findsOneWidget);
-    expect(find.text('Privacy Policy'), findsOneWidget);
+    expect(find.text('Privacy Notice'), findsOneWidget);
   });
 
   for (final example in const [
@@ -382,7 +382,7 @@ void main() {
   });
 
   testWidgets(
-    'shows five functional legal controls in the approved order',
+    'shows the published legal controls',
     (
       tester,
     ) async {
@@ -390,28 +390,21 @@ void main() {
       await pumpLandingApp(tester);
 
       final footer = find.byType(LandingFooter);
-      for (final label in const [
-        'Privacy Policy',
-        'Terms of Use',
-        'Refund & Cancellation Policy',
-        'Cookie Policy',
-        'Cookie Banner',
-      ]) {
-        expect(
-          find.descendant(of: footer, matching: find.text(label)),
-          findsOneWidget,
-        );
-      }
+      expect(
+        find.descendant(of: footer, matching: find.text('Privacy Notice')),
+        findsOneWidget,
+      );
+      final privacy = find.byKey(const Key('footerPrivacyNoticeLink'));
+      final data = tester.getSemantics(privacy).getSemanticsData();
+      expect(data.linkUrl, Uri(fragment: '/privacy'));
+      expect(data.flagsCollection.isLink, isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
       for (final key in const [
-        Key('footerPrivacyNoticeLink'),
-        Key('footerTermsLink'),
         Key('footerRefundsLink'),
         Key('footerCookiePolicyLink'),
         Key('footerCookieBannerLink'),
       ]) {
-        final data = tester.getSemantics(find.byKey(key)).getSemanticsData();
-        expect(data.flagsCollection.isLink, isTrue);
-        expect(data.hasAction(SemanticsAction.tap), isTrue);
+        expect(find.byKey(key), findsNothing);
       }
     },
   );
@@ -521,7 +514,7 @@ void main() {
     final privacyLink = tester
         .getSemantics(find.byKey(const Key('footerPrivacyNoticeLink')))
         .getSemanticsData();
-    expect(privacyLink.label, 'Privacy Policy');
+    expect(privacyLink.label, 'Privacy Notice');
     expect(privacyLink.flagsCollection.isLink, isTrue);
     expect(privacyLink.flagsCollection.isButton, isFalse);
     expect(privacyLink.hasAction(SemanticsAction.tap), isTrue);

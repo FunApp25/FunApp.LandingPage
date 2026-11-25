@@ -22,6 +22,21 @@ void main() {
     repository = VenueLeadRepository(dataSource);
   });
 
+  test(
+    'rejects over-limit name and unsafe quantity before data-source I/O',
+    () async {
+      for (final lead in [
+        _validLead().copyWith(venueName: NonEmptySingleLineText('a' * 513)),
+        _validLead().copyWith(
+          venueCapacity: some(PositiveInteger('9007199254740992')),
+        ),
+      ]) {
+        expect((await repository.submitVenueLead(lead)).isLeft(), isTrue);
+      }
+      expect(dataSource.calls, 0);
+    },
+  );
+
   test('submits required-only values once and returns unit', () async {
     final result = await repository.submitVenueLead(_validLead());
 

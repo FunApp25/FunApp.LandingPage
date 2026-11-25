@@ -12,20 +12,18 @@ final class FoundingMemberCardRow extends StatelessWidget {
   final List<FoundingMemberCardContent> cards;
 
   @override
-  Widget build(BuildContext context) => IntrinsicHeight(
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var index = 0; index < cards.length; index++) ...[
-          if (index > 0) const SizedBox(width: foundingMemberCardGap),
-          Expanded(
-            child: FoundingMemberCardItem(
-              card: cards[index],
-              usesCoordinatedHeight: true,
-            ),
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (var index = 0; index < cards.length; index++) ...[
+        if (index > 0) const SizedBox(width: foundingMemberCardGap),
+        Expanded(
+          child: FoundingMemberCardItem(
+            card: cards[index],
+            usesCoordinatedHeight: true,
           ),
-        ],
+        ),
       ],
-    ),
+    ],
   );
 }

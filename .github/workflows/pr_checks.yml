@@ -3,17 +3,124 @@ name: PR Checks
 on:
   pull_request:
     branches:
+      - dev
       - main
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pr-checks-${{ github.event.pull_request.number }}
+  group: checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
+  worker:
+    name: Worker checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cloudflare/venue-interest-worker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/venue-interest-worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Validate Worker bundle
+        run: npm run wrangler:validate
+
+      - name: Validate staging Worker bundle
+        run: npm run wrangler:validate:staging
+
+      - name: Install fixed staging deployment tool
+        run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
+      - name: Test production registration Worker preflight
+        run: >-
+          node --test --test-name-pattern='^venue-interest-worker$'
+          ../../test/tool/production_worker_preflight.test.mjs
+
+      - name: Validate version upload with the release tool
+        run: node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" versions upload --dry-run --env="" --config wrangler.jsonc
+
+      - name: Test venue-interest-worker staging Wrangler upload metadata
+        env:
+          WORKER_PROJECT: venue-interest-worker
+        run: >-
+          node --test --test-name-pattern='^venue-interest-worker:'
+          ../../test/tool/staging_deployment.test.mjs
+
+  payment-worker:
+    name: Payment Worker checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cloudflare/founding-friend-payment-worker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/founding-friend-payment-worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Validate Worker bundle
+        run: npm run wrangler:validate
+
+      - name: Validate staging Worker bundle
+        run: npm run wrangler:validate:staging
+
+      - name: Install fixed staging deployment tool
+        run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
+      - name: Test production payment Worker preflight
+        run: >-
+          node --test --test-name-pattern='^founding-friend-payment-worker$'
+          ../../test/tool/production_worker_preflight.test.mjs
+
+      - name: Validate version upload with the release tool
+        run: node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" versions upload --dry-run --env="" --config wrangler.jsonc
+
+      - name: Test founding-friend-payment-worker staging Wrangler upload metadata
+        env:
+          WORKER_PROJECT: founding-friend-payment-worker
+        run: >-
+          node --test --test-name-pattern='^founding-friend-payment-worker:'
+          ../../test/tool/staging_deployment.test.mjs
+
   quality:
+    name: Flutter and staging site checks
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -50,6 +157,26 @@ jobs:
       - name: Test with coverage
         run: flutter test --coverage
 
+      - name: Test browser payment storage, country ordering, and links
+        run: >-
+          flutter test --platform chrome
+          test/data/founding_friend_payment/session_pending_founding_friend_payment_store_web_test.dart
+          test/presentation/user_sign_up/country_ordering_web_test.dart
+          test/presentation/legal/legal_link_navigation_web_test.dart
+          test/presentation/venue/venue_booking_web_test.dart
+
+      - name: Test configured Venue booking navigation
+        run: >-
+          flutter test --platform chrome
+          "--dart-define=FUN_APP_VENUE_BOOKING_URL=https://booking.example.test/team?slot=demo#week"
+          test/presentation/venue/venue_booking_web_test.dart
+
+      - name: Test malformed Venue booking navigation
+        run: >-
+          flutter test --platform chrome
+          "--dart-define=FUN_APP_VENUE_BOOKING_URL=https://[v1.foo:bar]:8443/team"
+          test/presentation/venue/venue_booking_web_test.dart
+
       - name: Upload coverage
         uses: actions/upload-artifact@v7
         with:
@@ -81,10 +208,69 @@ jobs:
 
       - name: Build production site
         run: >-
-          flutter build web
+          flutter build web --no-web-resources-cdn
           -t lib/main_prod.dart
 
       - name: Prepare production artifact
         run: >-
           dart run
           tool/prepare_intermediate_release_artifact.dart
+
+      - name: Verify production web resources
+        run: dart run tool/verify_web_resources.dart
+
+      - name: Build staging site
+        run: >-
+          flutter build web --no-web-resources-cdn
+          -t lib/main_staging.dart
+
+      - name: Prepare staging artifact
+        run: >-
+          dart run
+          tool/prepare_staging_release_artifact.dart
+
+      - name: Verify staging web resources
+        run: dart run tool/verify_web_resources.dart
+
+      - name: Set up Node.js for staging site Worker
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/staging-site-worker/package-lock.json
+
+      - name: Test localized country collation
+        run: node --test test/tool/country_ordering.test.mjs
+
+      - name: Install staging site Worker dependencies
+        working-directory: cloudflare/staging-site-worker
+        run: npm ci
+
+      - name: Typecheck staging site Worker
+        working-directory: cloudflare/staging-site-worker
+        run: npm run typecheck
+
+      - name: Test staging site Worker
+        working-directory: cloudflare/staging-site-worker
+        run: npm test
+
+      - name: Validate staging Static Assets Worker bundle
+        working-directory: cloudflare/staging-site-worker
+        run: npm run wrangler:validate
+
+      - name: Install fixed staging deployment tool
+        run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
+      - name: Test coordinated production release preflight and deployment order
+        run: >-
+          node --test --test-name-pattern='^production release$'
+          test/tool/production_worker_preflight.test.mjs
+
+      # Common deployment safety and Wrangler backport tests run once in this required job.
+      - name: Test staging deployment safety and Wrangler upload metadata
+        env:
+          WORKER_PROJECT: staging-site-worker
+        run: node --test test/tool/staging_deployment.test.mjs test/tool/staging_wrangler.test.mjs
+
+      - name: Verify staging artifact identity
+        run: bash tool/verify_staging_artifact.sh

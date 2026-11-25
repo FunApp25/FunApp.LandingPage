@@ -54,7 +54,11 @@ flutter:
     - assets/landing/welcome/
     - assets/fonts/manrope/
     - assets/fonts/instrument_serif/
-    - assets/legal/
+    - assets/fonts/roboto/LICENSE.txt
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/roboto/Roboto-Regular.ttf
   generate: true
   uses-material-design: true
 

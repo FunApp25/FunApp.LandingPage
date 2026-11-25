@@ -1,8 +1,6 @@
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
 import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher_stub.dart'
     if (dart.library.js_interop) 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher_web.dart';
-
-/// Opens one approved external link from the Privacy Notice.
-void launchPrivacyNoticeLink(Uri uri) => launchPrivacyNoticeLinkImpl(uri);
 
 /// Opens an approved contact link in the current browser context.
 void launchContactLink(Uri uri) => launchContactLinkImpl(uri);
@@ -13,8 +11,15 @@ Uri privacyNoticeUrlFor(Uri base) => Uri(
   host: base.host,
   port: base.hasPort ? base.port : null,
   path: '/',
-  fragment: '/privacy',
+  fragment: LegalRoutes.privacy,
 );
 
 /// Opens an approved public destination in another browser context.
 void launchExternalLinkInNewTab(Uri uri) => launchExternalLinkInNewTabImpl(uri);
+
+/// Identifies links whose existing Flutter callbacks own browser navigation.
+const managedLegalLinkIdentifier = 'funapp-managed-legal-link';
+
+/// Prevents a semantics anchor from also replacing a form's current tab.
+void Function() installLegalLinkNavigation() =>
+    installLegalLinkNavigationImpl(managedLegalLinkIdentifier);

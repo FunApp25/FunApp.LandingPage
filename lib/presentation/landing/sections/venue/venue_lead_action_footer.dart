@@ -1,42 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:fun_app_landing_page/core/config/venue_booking_url.dart';
 import 'package:fun_app_landing_page/presentation/core/extensions/build_context_localizations_extension.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_action_button.dart';
+import 'package:fun_app_landing_page/presentation/privacy/utils/privacy_notice_link_launcher.dart';
 
-/// Action and submission status kept visible below the scrolling venue form.
-final class VenueLeadActionFooter extends StatelessWidget {
-  /// Creates the current venue dialog action area.
+/// Independent booking and waitlist actions for the routed Venue form.
+final class VenueLeadActionFooter extends StatefulWidget {
+  /// Creates the Venue action area.
   const VenueLeadActionFooter({
     required this.isSubmitting,
-    required this.submissionSucceeded,
     required this.hasSubmissionFailure,
-    required this.onClose,
     required this.onSubmit,
-    this.constrainFailureHeight = true,
-    this.alignWithVenuePageDesign = false,
     super.key,
   });
 
   /// Whether a repository submission is in flight.
   final bool isSubmitting;
 
-  /// Whether the current draft was submitted successfully.
-  final bool submissionSucceeded;
-
   /// Whether the latest settled submission failed operationally.
   final bool hasSubmissionFailure;
-
-  /// Dismisses the successful dialog.
-  final VoidCallback? onClose;
 
   /// Dispatches a form submission attempt.
   final VoidCallback onSubmit;
 
-  /// Whether failure copy should flex within the legacy dialog footer.
-  final bool constrainFailureHeight;
+  @override
+  State<VenueLeadActionFooter> createState() => _VenueLeadActionFooterState();
+}
 
-  /// Whether to use the approved routed Venue-page Send treatment.
-  final bool alignWithVenuePageDesign;
+final class _VenueLeadActionFooterState extends State<VenueLeadActionFooter> {
+  bool _bookingUnavailable = false;
+
+  void _bookCall() {
+    final uri = venueBookingUrl;
+    if (uri != null) {
+      try {
+        launchExternalLinkInNewTab(uri);
+      } on Object {
+        setState(() => _bookingUnavailable = true);
+      }
+    } else {
+      setState(() => _bookingUnavailable = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,64 +51,83 @@ final class VenueLeadActionFooter extends StatelessWidget {
       key: const Key('venueLeadActionFooter'),
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 12,
       children: [
-        if (submissionSucceeded)
-          FilledButton(
-            key: const Key('venueLeadSuccessCloseButton'),
-            onPressed: onClose,
-            child: Text(l10n.landingDialogClose),
-          )
-        else ...[
-          if (hasSubmissionFailure) ...[
-            if (constrainFailureHeight)
-              Flexible(child: _failureMessage(context))
-            else
-              _failureMessage(context),
-            const SizedBox(height: 12),
-          ],
-          if (isSubmitting) ...[
-            Semantics(
-              key: const Key('venueLeadSubmissionProgress'),
-              container: true,
-              liveRegion: true,
-              label: l10n.venueLeadSubmitting,
-              child: const LinearProgressIndicator(
-                color: AppColors.energeticPlum,
-                backgroundColor: AppColors.beigeAccent,
-              ),
+        if (widget.hasSubmissionFailure)
+          _errorMessage(
+            context,
+            l10n.venueLeadSubmissionFailure,
+            key: const Key('venueLeadSubmissionFailure'),
+          ),
+        if (widget.isSubmitting)
+          Semantics(
+            key: const Key('venueLeadSubmissionProgress'),
+            container: true,
+            liveRegion: true,
+            label: l10n.venueLeadSubmitting,
+            child: const LinearProgressIndicator(
+              color: AppColors.energeticPlum,
+              backgroundColor: AppColors.beigeAccent,
             ),
-            const SizedBox(height: 12),
-          ],
-          if (alignWithVenuePageDesign)
-            BrandedFormActionButton(
+          ),
+        if (_bookingUnavailable)
+          _errorMessage(context, l10n.venueLeadBookingUnavailable),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final booking = BrandedFormActionButton(
+              buttonKey: const Key('venueLeadBookingButton'),
+              arrowKey: const Key('venueLeadBookingArrow'),
+              label: l10n.venueLeadBookCall,
+              foregroundColor: AppColors.warmCharcoal,
+              expand: true,
+              onPressed: _bookCall,
+            );
+            final waitlist = BrandedFormActionButton(
               buttonKey: const Key('venueLeadSubmitButton'),
               arrowKey: const Key('venueLeadSubmitArrow'),
-              label: l10n.venueLeadSubmit,
-              onPressed: isSubmitting ? null : onSubmit,
-              disabledBackgroundColor: AppColors.warmOrange.withValues(
+              label: l10n.venueLeadJoinWaitlist,
+              backgroundColor: AppColors.blueMain,
+              disabledBackgroundColor: AppColors.blueMain.withValues(
                 alpha: 0.45,
               ),
-            )
-          else
-            FilledButton(
-              key: const Key('venueLeadSubmitButton'),
-              onPressed: isSubmitting ? null : onSubmit,
-              child: Text(l10n.venueLeadSubmit),
-            ),
-        ],
+              expand: true,
+              onPressed: widget.isSubmitting ? null : widget.onSubmit,
+            );
+            if (constraints.maxWidth >= 600) {
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: booking),
+                    const SizedBox(width: 16),
+                    Expanded(child: waitlist),
+                  ],
+                ),
+              );
+            } else {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  waitlist,
+                  const SizedBox(height: 12),
+                  booking,
+                ],
+              );
+            }
+          },
+        ),
       ],
     );
   }
 
-  Widget _failureMessage(BuildContext context) => SingleChildScrollView(
-    child: Semantics(
-      key: const Key('venueLeadSubmissionFailure'),
-      container: true,
-      liveRegion: true,
-      child: Text(
-        context.l10n.venueLeadSubmissionFailure,
-        style: TextStyle(color: Theme.of(context).colorScheme.error),
-      ),
-    ),
-  );
+  Widget _errorMessage(BuildContext context, String message, {Key? key}) =>
+      Semantics(
+        key: key,
+        container: true,
+        liveRegion: true,
+        child: Text(
+          message,
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+      );
 }

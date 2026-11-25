@@ -7,9 +7,10 @@ import {
 } from '../src/index';
 
 const endpoint = 'https://funapp.world/api/venue-interest';
+const localEndpoint = 'http://localhost:8787/api/venue-interest';
 const testEnv: Env = {
   HUBSPOT_PORTAL_ID: 'test-portal',
-  HUBSPOT_FORM_GUID: '00000000-0000-0000-0000-000000000000',
+  HUBSPOT_VENUE_FORM_GUID: '00000000-0000-0000-0000-000000000000',
 };
 
 const minimalVenueInterest = {
@@ -22,6 +23,149 @@ const minimalVenueInterest = {
 };
 
 describe('POST /api/venue-interest', () => {
+  it.each([
+    ['ASCII maximum', 'a'.repeat(512), 204],
+    ['ASCII over maximum', 'a'.repeat(513), 400],
+    ['empty', '', 400],
+    ['whitespace', ' '.repeat(512), 400],
+    ['multibyte maximum', '界'.repeat(512), 204],
+    ['multibyte over maximum', '界'.repeat(513), 400],
+    ['surrogate-pair maximum', '😀'.repeat(256), 204],
+    ['surrogate-pair over maximum', '😀'.repeat(256) + 'a', 400],
+    ['combining sequence', 'e\u0301'.repeat(256), 204],
+    ['international whitespace preserved', '  Café Київ 東京  ', 204],
+  ])('venue name boundary: %s', async (_, venueName, status) => {
+    const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await post({ ...minimalVenueInterest, venueName }, upstream);
+    expect(response.status).toBe(status);
+    if (status === 204) {
+      const sent = JSON.parse(upstream.mock.calls[0]?.[1]?.body as string);
+      expect(sent.fields).toContainEqual({ name: 'your_venue_s_name', value: venueName });
+    } else {
+      expect(upstream).not.toHaveBeenCalled();
+    }
+  });
+
+  it.each([1, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 1, 0, -1, 1.5, 'many', 1e100])(
+    'quantity boundary %s', async (quantity) => {
+      const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+      const response = await post({ ...minimalVenueInterest, chainStatus: 'Part of chain', venueCount: quantity, venueCapacity: quantity }, upstream);
+      const valid = typeof quantity === 'number' && Number.isSafeInteger(quantity) && quantity > 0;
+      expect(response.status).toBe(valid ? 204 : 400);
+      if (valid) {
+        const sent = JSON.parse(upstream.mock.calls[0]?.[1]?.body as string);
+        expect(sent.fields).toContainEqual({ name: 'if_chain__number_of_venues', value: String(quantity) });
+        expect(sent.fields).toContainEqual({ name: 'your_venue_s_capacity', value: String(quantity) });
+      } else {
+        expect(upstream).not.toHaveBeenCalled();
+      }
+    },
+  );
+
+  it.each(['venueType', 'firstName', 'lastName', 'role'])('preserves the existing %s limit', async (field) => {
+    for (const length of [256, 257]) {
+      const response = await post({ ...minimalVenueInterest, [field]: '界'.repeat(length) }, successfulUpstreamFetch);
+      expect(response.status).toBe(length === 256 ? 204 : 400);
+    }
+  });
+
+  it.each([320, 321])('Venue email boundary %s', async (length) => {
+    const email = `${'a'.repeat(64)}@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(63)}.${'e'.repeat(length === 320 ? 63 : 59)}${length === 321 ? '.test' : ''}`;
+    expect(email.length).toBe(length);
+    expect((await post({ ...minimalVenueInterest, email }, successfulUpstreamFetch)).status).toBe(length === 320 ? 204 : 400);
+  });
+
+  it('accepts simultaneous multibyte text maxima below the UTF-8 body limit', async () => {
+    const body = {
+      ...minimalVenueInterest,
+      venueName: '界'.repeat(512),
+      venueType: '界'.repeat(256),
+      firstName: '界'.repeat(256),
+      lastName: '界'.repeat(256),
+      role: '界'.repeat(256),
+      website: 'example.com/' + '界'.repeat(2048 - 12),
+      phoneNumber: '0'.repeat(64),
+      chainStatus: 'Part of chain',
+      venueCount: Number.MAX_SAFE_INTEGER,
+      venueCapacity: Number.MAX_SAFE_INTEGER,
+    };
+    expect(new TextEncoder().encode(JSON.stringify(body)).length).toBeLessThan(16 * 1024);
+    expect((await post(body, successfulUpstreamFetch)).status).toBe(204);
+    expect((await post({ ...body, website: body.website + 'a' }, successfulUpstreamFetch)).status).toBe(400);
+    expect((await post({ ...body, phoneNumber: body.phoneNumber + '0' }, successfulUpstreamFetch)).status).toBe(400);
+  });
+
+  it('counts UTF-8 body bytes independently of string length', async () => {
+    const body = JSON.stringify({ ...minimalVenueInterest, venueName: '界'.repeat(6000) });
+    expect(body.length).toBeLessThan(16 * 1024);
+    expect(new TextEncoder().encode(body).length).toBeGreaterThan(16 * 1024);
+    const upstream = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await rawRequest(new Request(endpoint, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body,
+    }), upstream);
+    expect(response.status).toBe(400);
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      'only the legacy binding',
+      { HUBSPOT_FORM_GUID: '11111111-1111-1111-1111-111111111111' },
+      '11111111-1111-1111-1111-111111111111',
+    ],
+    [
+      'only the canonical binding',
+      { HUBSPOT_VENUE_FORM_GUID: '22222222-2222-2222-2222-222222222222' },
+      '22222222-2222-2222-2222-222222222222',
+    ],
+    [
+      'matching bindings with different case',
+      {
+        HUBSPOT_FORM_GUID: 'aaaaaaaa-3333-3333-3333-333333333333',
+        HUBSPOT_VENUE_FORM_GUID: 'AAAAAAAA-3333-3333-3333-333333333333',
+      },
+      'AAAAAAAA-3333-3333-3333-333333333333',
+    ],
+  ])('uses the expected Venue form with %s', async (_, formBindings, expectedGuid) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      { HUBSPOT_PORTAL_ID: 'test-portal', ...formBindings },
+      upstreamFetch,
+    );
+
+    expect(response.status).toBe(204);
+    expect(upstreamFetch).toHaveBeenCalledWith(
+      new URL(
+        `https://api.hsforms.com/submissions/v3/integration/submit/test-portal/${expectedGuid}`,
+      ),
+      expect.any(Object),
+    );
+  });
+
+  it.each([
+    {},
+    { HUBSPOT_VENUE_FORM_GUID: 'invalid' },
+    {
+      HUBSPOT_FORM_GUID: '44444444-4444-4444-4444-444444444444',
+      HUBSPOT_VENUE_FORM_GUID: '',
+    },
+    {
+      HUBSPOT_FORM_GUID: '44444444-4444-4444-4444-444444444444',
+      HUBSPOT_VENUE_FORM_GUID: '55555555-5555-5555-5555-555555555555',
+    },
+  ])('fails closed with missing, invalid or conflicting Venue bindings %j', async (bindings) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      { HUBSPOT_PORTAL_ID: 'test-portal', ...bindings },
+      upstreamFetch,
+    );
+
+    await expectError(response, 500, 'unexpected');
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
   it('maps a valid full submission to the exact HubSpot payload', async () => {
     let capturedInput: RequestInfo | URL | undefined;
     let capturedInit: RequestInit | undefined;
@@ -229,6 +373,47 @@ describe('POST /api/venue-interest', () => {
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['missing mock settings', {}],
+    ['only the local origin', { LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'http://localhost:7357' }],
+    ['only the mock scenario', { HUBSPOT_MOCK_SCENARIO: 'success' }],
+    [
+      'an invalid local origin',
+      {
+        LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'https://funapp.world',
+        HUBSPOT_MOCK_SCENARIO: 'success',
+      },
+    ],
+  ])('fails closed locally with %s without provider I/O', async (_, mockEnv) => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      { ...testEnv, ...mockEnv },
+      upstreamFetch,
+      localEndpoint,
+    );
+
+    await expectError(response, 500, 'unexpected');
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
+  it('serves a valid local Venue mock without provider I/O', async () => {
+    const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
+    const response = await postWithEnv(
+      minimalVenueInterest,
+      {
+        ...testEnv,
+        LOCAL_DEVELOPMENT_ALLOWED_ORIGIN: 'http://localhost:7357',
+        HUBSPOT_MOCK_SCENARIO: 'success',
+      },
+      upstreamFetch,
+      localEndpoint,
+    );
+
+    expect(response.status).toBe(204);
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
   it('maps HubSpot 200 to 204 without exposing its response body', async () => {
     const response = await post(
       minimalVenueInterest,
@@ -336,6 +521,23 @@ async function post(
     }),
     upstreamFetch,
     submissionTimeoutMs,
+  );
+}
+
+async function postWithEnv(
+  body: Record<string, unknown>,
+  env: Env,
+  upstreamFetch: UpstreamFetch,
+  requestEndpoint = endpoint,
+): Promise<Response> {
+  return handleVenueInterestRequest(
+    new Request(requestEndpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
+    }),
+    env,
+    { upstreamFetch },
   );
 }
 

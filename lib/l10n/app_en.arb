@@ -44,61 +44,13 @@
   "@privacyNoticeNavigationLabel": {
     "description": "Navigation label for the hosted Privacy Notice page."
   },
-  "landingFooterPrivacyPolicy": "Privacy Policy",
-  "@landingFooterPrivacyPolicy": {
-    "description": "Footer label for the authoritative hosted Privacy Notice destination."
-  },
   "landingFooterTermsOfUse": "Terms of Use",
   "@landingFooterTermsOfUse": {
-    "description": "Presentation-only footer label; no authoritative destination exists yet."
-  },
-  "landingFooterRefundCancellationPolicy": "Refund & Cancellation Policy",
-  "@landingFooterRefundCancellationPolicy": {
-    "description": "Presentation-only footer label; no authoritative destination exists yet."
-  },
-  "landingFooterCookiePolicy": "Cookie Policy",
-  "@landingFooterCookiePolicy": {
-    "description": "Presentation-only footer label; no authoritative destination exists yet."
-  },
-  "landingFooterCookieBanner": "Cookie Banner",
-  "@landingFooterCookieBanner": {
-    "description": "Presentation-only footer label; no cookie-consent behavior exists yet."
-  },
-  "legalPlaceholderDraftStatus": "Draft placeholder — content awaiting approval.",
-  "@legalPlaceholderDraftStatus": {
-    "description": "Prominent status shown on unfinished legal-document review pages."
-  },
-  "legalPlaceholderReviewOnlyBody": "This page is for interface review only and does not contain an approved legal document.",
-  "@legalPlaceholderReviewOnlyBody": {
-    "description": "Trust notice shared by unfinished legal-document review pages."
-  },
-  "legalPlaceholderReleaseBlocker": "This placeholder must be replaced or removed before production deployment.",
-  "@legalPlaceholderReleaseBlocker": {
-    "description": "Release warning shown on every legal placeholder page."
-  },
-  "cookieBannerPlaceholderBody": "Cookie preferences are not yet available. This review-only page does not save consent or control cookies.",
-  "@cookieBannerPlaceholderBody": {
-    "description": "Nonfunctional status shown on the Cookie Banner review page."
-  },
-  "privacyNoticeLoadError": "The Privacy Notice could not be loaded. Please try again.",
-  "@privacyNoticeLoadError": {
-    "description": "Error shown when the canonical Privacy Notice asset cannot be loaded."
+    "description": "Footer navigation label for the published Website Terms of Use."
   },
   "legalDocumentLoadError": "The document could not be loaded. Please try again.",
   "@legalDocumentLoadError": {
-    "description": "Error shown when a legal Markdown asset cannot be loaded."
-  },
-  "cookiePolicyPrivacyExcerptStatus": "Approved Privacy Policy excerpt — standalone Cookie Policy approval remains pending.",
-  "@cookiePolicyPrivacyExcerptStatus": {
-    "description": "Status explaining that the Cookie Policy route reuses approved Privacy Notice text while a standalone policy remains unapproved."
-  },
-  "landingInterestedUserComingSoonTitle": "Coming soon",
-  "@landingInterestedUserComingSoonTitle": {
-    "description": "Title of the presentation-only prospective-user dialog."
-  },
-  "landingInterestedUserComingSoonBody": "We’re preparing this part of Fun App. Check back soon.",
-  "@landingInterestedUserComingSoonBody": {
-    "description": "Supporting text in the presentation-only prospective-user dialog."
+    "description": "Error shown when a published legal document cannot be loaded or validated."
   },
   "venuePageEyebrow": "Life is tough for people. Life is tough for venues. Fun App is arriving to help.",
   "@venuePageEyebrow": {
@@ -115,22 +67,6 @@
   "venuePageIntroSecond": "Tell us who you are, what you’re doing and Fun App will be thrilled to tell you how it is going to change the world – and welcome your venue to an exciting new future.",
   "@venuePageIntroSecond": {
     "description": "Second introductory paragraph on the dedicated Venue sign-up page."
-  },
-  "venueLeadDialogTitle": "Tell us about your venue",
-  "@venueLeadDialogTitle": {
-    "description": "Title of the functional venue-interest dialog."
-  },
-  "venueLeadDialogBody": "Share your venue and contact details to start the conversation.",
-  "@venueLeadDialogBody": {
-    "description": "Supporting text above the venue-interest form."
-  },
-  "venueLeadVenueDetailsHeading": "Venue details",
-  "@venueLeadVenueDetailsHeading": {
-    "description": "Heading above the venue fields."
-  },
-  "venueLeadContactDetailsHeading": "Contact details",
-  "@venueLeadContactDetailsHeading": {
-    "description": "Heading above the venue contact fields."
   },
   "venueLeadRequiredFieldLabel": "{field} (required)",
   "@venueLeadRequiredFieldLabel": {
@@ -274,9 +210,17 @@
   "@venueLeadValidationPositiveInteger": {
     "description": "Validation message for a non-positive venue quantity."
   },
-  "venueLeadSubmit": "Send",
-  "@venueLeadSubmit": {
-    "description": "Venue-interest form submission action."
+  "venueLeadBookCall": "Book a call with the Fun App team",
+  "@venueLeadBookCall": {
+    "description": "Label for the Venue action that opens the call scheduler."
+  },
+  "venueLeadJoinWaitlist": "Register for the waitlist now",
+  "@venueLeadJoinWaitlist": {
+    "description": "Label for the Venue waitlist form submit button."
+  },
+  "venueLeadBookingUnavailable": "Call booking is unavailable right now. Please try again later.",
+  "@venueLeadBookingUnavailable": {
+    "description": "Live feedback when the Venue call scheduler cannot be opened."
   },
   "venueLeadSubmitting": "Sending…",
   "@venueLeadSubmitting": {
@@ -285,18 +229,6 @@
   "venueLeadSubmissionFailure": "We couldn't submit the form right now. Please try again later.",
   "@venueLeadSubmissionFailure": {
     "description": "Generic retry-later message after an operational venue submission failure."
-  },
-  "venueLeadSuccessTitle": "Form Submitted",
-  "@venueLeadSuccessTitle": {
-    "description": "Heading for the venue-interest submission confirmation."
-  },
-  "venueLeadSuccessBody": "Thank you for reaching out, we'll be in touch shortly.",
-  "@venueLeadSuccessBody": {
-    "description": "Body of the venue-interest submission confirmation."
-  },
-  "venueLeadSuccessSignOff": "The Fun App team.",
-  "@venueLeadSuccessSignOff": {
-    "description": "Sign-off of the venue-interest submission confirmation."
   },
   "venueSuccessEyebrow": "The Fun App team",
   "@venueSuccessEyebrow": {
@@ -514,13 +446,13 @@
   "@landingMembershipHereNowDescription": {
     "description": "Description of the Here & Now membership tier."
   },
-  "landingMembershipLifetimeDescription": "Pay once, keep full access forever, and never deal with a monthly renewal again",
+  "landingMembershipLifetimeDescription": "Support Fun App’s vision from the start, keep privileged access forever and never deal with a monthly renewal again",
   "@landingMembershipLifetimeDescription": {
     "description": "Desktop description of the Founding Friend membership tier."
   },
-  "landingMembershipLifetimeMobileDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape",
+  "landingMembershipLifetimeMobileDescription": "For testing early builds, sharing honest thoughts, and watching the app take shape. Support Fun App’s vision from the start, keep privileged access forever and never deal with a monthly renewal again",
   "@landingMembershipLifetimeMobileDescription": {
-    "description": "Mobile description of the Founding Friend membership tier."
+    "description": "Mobile description of the Founding Friend membership tier, retaining early-build participation and the shared vision and lifetime-access message."
   },
   "landingMembershipFreeBenefitBeta": "All of the core functionality that makes Fun App so much fun",
   "@landingMembershipFreeBenefitBeta": {
@@ -650,7 +582,7 @@
   "@landingFoundingMemberRecognisedTitle": {
     "description": "Title of the first Founding Friend benefit card."
   },
-  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed Fun App from the start",
+  "landingFoundingMemberRecognisedBody": "A clean profile badge showing you backed Fun App’s vision from the start",
   "@landingFoundingMemberRecognisedBody": {
     "description": "Body of the first Founding Friend benefit card."
   },
@@ -778,7 +710,7 @@
   "@landingFaqCancelAnswer1": {
     "description": "First paragraph answering the cancellation question."
   },
-  "landingFaqCancelAnswer2": "You can cancel your free membership or Here & Now subscription at any point. We just ask that you give 14 days’ notice so that Fun App can keep all its administration in-line.",
+  "landingFaqCancelAnswer2": "You can cancel your free membership or Here & Now subscription at any point. We just ask that you give 48 hours’ notice so that Fun App can keep all its administration in-line.",
   "@landingFaqCancelAnswer2": {
     "description": "Second paragraph answering the cancellation question."
   },
@@ -926,7 +858,7 @@
   "@landingFaqGroupsQuestion": {
     "description": "FAQ question about saving profiles into groups."
   },
-  "landingFaqGroupsAnswer1": "Fun App is built around doing different things with different people. You might have someone you love running with, someone you visit galleries with, and someone who will actually discuss the book instead of saying, “Yeah, I started it.”",
+  "landingFaqGroupsAnswer1": "Fun App is built around doing different things with different people. You might have someone you love running with, someone you visit galleries with and someone who will actually discuss the book instead of saying “Yeah, I started it.”",
   "@landingFaqGroupsAnswer1": {
     "description": "First paragraph answering the saved groups question."
   },
@@ -938,7 +870,7 @@
   "@landingFaqHarassmentQuestion": {
     "description": "FAQ question about harassment and hate speech."
   },
-  "landingFaqHarassmentAnswer1": "Fun App has no tolerance for harassment, threats, discriminatory abuse, or hate speech targeting people based on identity or protected characteristics.",
+  "landingFaqHarassmentAnswer1": "Fun App has no tolerance for harassment, threats, discriminatory abuse or hate speech targeting people based on identity or protected characteristics.",
   "@landingFaqHarassmentAnswer1": {
     "description": "First paragraph answering the harassment question."
   },
@@ -954,12 +886,12 @@
   "@userSignUpHereAndNowEyebrow": {"description":"Eyebrow identifying the Here & Now membership sign-up page."},
   "userSignUpFoundingFriendEyebrow": "Founding Friend",
   "@userSignUpFoundingFriendEyebrow": {"description":"Eyebrow identifying the Founding Friend sign-up page."},
-  "userSignUpHereAndNowIntroduction": "Thank you for interest in joining Fun App with a 6 month free trial of Here & Now membership",
-  "@userSignUpHereAndNowIntroduction": {"description":"Exact approved English Here & Now introduction heading. The source wording intentionally omits your after."},
+  "userSignUpHereAndNowIntroduction": "Thank you for your interest in joining Fun App with a free trial of Here & Now membership for 6 months from launch",
+  "@userSignUpHereAndNowIntroduction": {"description":"Approved Here & Now introduction heading; the free trial lasts 6 months from launch."},
   "userSignUpHereAndNowIntroductionBody": "Sign up by entering your details on this form and secure your place in the queue. We'll stay in touch as Fun App moves towards launch. Welcome!",
   "@userSignUpHereAndNowIntroductionBody": {"description":"Exact approved English Here & Now introduction body."},
   "userSignUpHereAndNowHeadingEmphasis": "Here & Now membership",
-  "@userSignUpHereAndNowHeadingEmphasis": {"description":"Italicized final phrase within the Here & Now introduction heading."},
+  "@userSignUpHereAndNowHeadingEmphasis": {"description":"Italicized phrase within the Here & Now introduction heading; text may precede and follow it."},
   "userSignUpFoundingFriendIntroduction": "Thank you for your interest in becoming a Fun App Founding Friend",
   "@userSignUpFoundingFriendIntroduction": {"description":"Exact approved English Founding Friend introduction heading."},
   "userSignUpFoundingFriendIntroductionBody": "Sign up by entering your details below and get ready for an exciting journey as you gain Founding Friend status and help Fun App to change the world. Welcome!",
@@ -990,6 +922,8 @@
   "@userSignUpCountryLabel": {"description":"Required country label on the Founding Friend form."},
   "userSignUpCountryPlaceholder": "Select Your Country",
   "@userSignUpCountryPlaceholder": {"description":"Unselected country dropdown value on the Founding Friend form."},
+  "userSignUpCountryNoResults": "No countries found",
+  "@userSignUpCountryNoResults": {"description":"Message shown and announced when a Founding Friend country search has no matches."},
   "userSignUpGenderLabel": "Gender",
   "@userSignUpGenderLabel": {"description":"Optional gender label shared by the user sign-up forms."},
   "userSignUpGenderPlaceholder": "Select Your Gender",
@@ -1000,9 +934,9 @@
   "@userSignUpFoundingFriendUsageReasonLabel": {"description":"Optional usage-reason label on the Founding Friend form."},
   "userSignUpUsageReasonPlaceholder": "Enter Your Message",
   "@userSignUpUsageReasonPlaceholder": {"description":"Optional usage-reason input placeholder shared by the user sign-up forms."},
-  "userSignUpHereAndNowMarketingConsent": "Yes, I'd like to receive occasional emails from Fun App about the upcoming app, including launch updates and exciting news.",
+  "userSignUpHereAndNowMarketingConsent": "Yes, I’d like to receive occasional emails from Fun App about the upcoming app, including launch updates and exciting news.",
   "@userSignUpHereAndNowMarketingConsent": {"description":"Exact optional Here & Now marketing opt-in copy."},
-  "userSignUpFoundingFriendMarketingConsent": "Yes, I'd like to receive emails from Fun App about the upcoming app, including launch updates, exciting news and exclusive Founding Friend communication",
+  "userSignUpFoundingFriendMarketingConsent": "Yes, I’d like to receive occasional emails from Fun App about the upcoming app, including launch updates, exciting news and exclusive Founding Friend communication",
   "@userSignUpFoundingFriendMarketingConsent": {"description":"Exact optional Founding Friend marketing opt-in copy."},
   "userSignUpHereAndNowCta": "Join Here & Now Waitlist",
   "@userSignUpHereAndNowCta": {"description":"Exact Here & Now form action label. Production action remains disabled until integration."},
@@ -1032,6 +966,200 @@
   "@userSignUpHereAndNowSuccessHeadingEmphasis": {"description":"Italic orange phrase within the confirmed Here & Now heading."},
   "userSignUpHereAndNowSuccessBody": "Fun App will be launching soon and we look forward to welcoming you as an early member",
   "@userSignUpHereAndNowSuccessBody": {"description":"Exact approved body after a confirmed Here & Now submission."},
-  "userSignUpCountryOptionsSource": "Afghanistan\tAfghanistan\nAlbania\tAlbania\nAntarctica\tAntarctica\nÅland Islands\tÅland Islands\nAlgeria\tAlgeria\nAmerican Samoa\tAmerican Samoa\nAndorra\tAndorra\nAngola\tAngola\nAnguilla\tAnguilla\nAntigua and Barbuda\tAntigua and Barbuda\nAruba\tAruba\nAsia/Pacific Region\tAsia/Pacific Region\nAzerbaijan\tAzerbaijan\nArgentina\tArgentina\nArmenia\tArmenia\nAustralia\tAustralia\nAustria\tAustria\nBahamas\tBahamas\nBahrain\tBahrain\nBangladesh\tBangladesh\nBarbados\tBarbados\nBelgium\tBelgium\nBhutan\tBhutan\nBolivia\tBolivia\nBosnia and Herzegovina\tBosnia and Herzegovina\nBotswana\tBotswana\nBouvet Island\tBouvet Island\nBrazil\tBrazil\nCaribbean Netherlands\tCaribbean Netherlands\nBelize\tBelize\nSolomon Islands\tSolomon Islands\nBrunei\tBrunei\nBulgaria\tBulgaria\nBurundi\tBurundi\nBelarus\tBelarus\nBermuda\tBermuda\nCambodia\tCambodia\nCayman Islands\tCayman Islands\nCameroon\tCameroon\nCanada\tCanada\nCape Verde\tCape Verde\nCentral African Republic\tCentral African Republic\nCuba\tCuba\nCuraçao\tCuraçao\nSri Lanka\tSri Lanka\nChad\tChad\nChile\tChile\nChina\tChina\nChristmas Island\tChristmas Island\nCocos (Keeling) Islands\tCocos (Keeling) Islands\nColombia\tColombia\nComoros\tComoros\nCongo\tCongo\nDemocratic Republic of the Congo\tDemocratic Republic of the Congo\nCook Islands\tCook Islands\nCosta Rica\tCosta Rica\nCroatia\tCroatia\nCyprus\tCyprus\nCzech Republic\tCzech Republic\nBenin\tBenin\nDenmark\tDenmark\nDominica\tDominica\nDominican Republic\tDominican Republic\nEcuador\tEcuador\nEl Salvador\tEl Salvador\nEquatorial Guinea\tEquatorial Guinea\nEthiopia\tEthiopia\nEritrea\tEritrea\nEstonia\tEstonia\nEurope\tEurope\nSouth Georgia and the South Sandwich Islands\tSouth Georgia and the South Sandwich Islands\nFiji\tFiji\nFinland\tFinland\nFrance\tFrance\nFalkland Islands\tFalkland Islands\nFaroe Islands\tFaroe Islands\nFrench Polynesia\tFrench Polynesia\nFrench Southern and Antarctic Lands\tFrench Southern and Antarctic Lands\nDjibouti\tDjibouti\nGabon\tGabon\nGeorgia\tGeorgia\nGambia\tGambia\nGermany\tGermany\nGhana\tGhana\nGreenland\tGreenland\nGuadeloupe\tGuadeloupe\nGuernsey\tGuernsey\nKiribati\tKiribati\nGreece\tGreece\nGrenada\tGrenada\nGuam\tGuam\nGuatemala\tGuatemala\nGuinea\tGuinea\nGuyana\tGuyana\nFrench Guiana\tFrench Guiana\nGibraltar\tGibraltar\nHaiti\tHaiti\nHeard Island and McDonald Islands\tHeard Island and McDonald Islands\nVatican City\tVatican City\nHonduras\tHonduras\nHungary\tHungary\nHong Kong\tHong Kong\nIsle of Man\tIsle of Man\nIran\tIran\nJersey\tJersey\nMacau\tMacau\nMartinique\tMartinique\nMontserrat\tMontserrat\nMyanmar (Burma)\tMyanmar (Burma)\nNorth Korea\tNorth Korea\nPalestine\tPalestine\nPuerto Rico\tPuerto Rico\nRéunion\tRéunion\nSaint Barthélemy\tSaint Barthélemy\nSaint Martin\tSaint Martin\nSint Maarten\tSint Maarten\nSouth Sudan\tSouth Sudan\nSudan\tSudan\nSyria\tSyria\nTaiwan\tTaiwan\nTurks and Caicos Islands\tTurks and Caicos Islands\nU.S. Virgin Islands\tU.S. Virgin Islands\nIceland\tIceland\nIndia\tIndia\nIndonesia\tIndonesia\nIraq\tIraq\nIreland\tIreland\nIsrael\tIsrael\nItaly\tItaly\nBritish Indian Ocean Territory\tBritish Indian Ocean Territory\nCote d'Ivoire\tCote d'Ivoire\nJamaica\tJamaica\nJapan\tJapan\nKazakhstan\tKazakhstan\nJordan\tJordan\nKenya\tKenya\nSouth Korea\tSouth Korea\nKosovo\tKosovo\nKuwait\tKuwait\nKyrgyzstan\tKyrgyzstan\nLaos\tLaos\nLebanon\tLebanon\nLesotho\tLesotho\nLatvia\tLatvia\nLiberia\tLiberia\nLibya\tLibya\nLiechtenstein\tLiechtenstein\nLithuania\tLithuania\nLuxembourg\tLuxembourg\nMadagascar\tMadagascar\nMalawi\tMalawi\nMalaysia\tMalaysia\nMaldives\tMaldives\nMali\tMali\nMalta\tMalta\nMauritania\tMauritania\nMauritius\tMauritius\nMayotte\tMayotte\nMexico\tMexico\nMonaco\tMonaco\nMongolia\tMongolia\nMoldova\tMoldova\nMontenegro\tMontenegro\nMorocco\tMorocco\nMozambique\tMozambique\nOman\tOman\nNamibia\tNamibia\nNauru\tNauru\nNepal\tNepal\nNetherlands\tNetherlands\nNew Caledonia\tNew Caledonia\nVanuatu\tVanuatu\nNetherlands Antilles\tNetherlands Antilles\nNew Zealand\tNew Zealand\nNicaragua\tNicaragua\nNiger\tNiger\nNigeria\tNigeria\nNiue\tNiue\nNorfolk Island\tNorfolk Island\nNorway\tNorway\nNorthern Mariana Islands\tNorthern Mariana Islands\nUnited States Minor Outlying Islands\tUnited States Minor Outlying Islands\nMicronesia\tMicronesia\nMarshall Islands\tMarshall Islands\nPalau\tPalau\nPakistan\tPakistan\nPanama\tPanama\nPapua New Guinea\tPapua New Guinea\nParaguay\tParaguay\nPeru\tPeru\nPhilippines\tPhilippines\nPitcairn Islands\tPitcairn Islands\nPoland\tPoland\nPortugal\tPortugal\nGuinea-Bissau\tGuinea-Bissau\nEast Timor\tEast Timor\nQatar\tQatar\nRomania\tRomania\nRussia\tRussia\nRwanda\tRwanda\nSaint Helena\tSaint Helena\nSaint Kitts and Nevis\tSaint Kitts and Nevis\nSaint Lucia\tSaint Lucia\nSaint Pierre and Miquelon\tSaint Pierre and Miquelon\nSaint Vincent and the Grenadines\tSaint Vincent and the Grenadines\nSan Marino\tSan Marino\nSao Tome and Principe\tSao Tome and Principe\nSaudi Arabia\tSaudi Arabia\nSenegal\tSenegal\nSvalbard and Jan Mayen\tSvalbard and Jan Mayen\nSerbia\tSerbia\nSeychelles\tSeychelles\nSierra Leone\tSierra Leone\nSingapore\tSingapore\nSlovakia\tSlovakia\nVietnam\tVietnam\nWestern Sahara\tWestern Sahara\nSlovenia\tSlovenia\nSomalia\tSomalia\nSouth Africa\tSouth Africa\nZimbabwe\tZimbabwe\nSpain\tSpain\nSuriname\tSuriname\nSwaziland\tSwaziland\nSweden\tSweden\nSwitzerland\tSwitzerland\nTajikistan\tTajikistan\nThailand\tThailand\nTogo\tTogo\nTokelau\tTokelau\nTonga\tTonga\nTrinidad and Tobago\tTrinidad and Tobago\nUnited Arab Emirates\tUnited Arab Emirates\nTunisia\tTunisia\nTürkiye\tTürkiye\nTurkmenistan\tTurkmenistan\nTuvalu\tTuvalu\nUganda\tUganda\nUkraine\tUkraine\nNorth Macedonia\tNorth Macedonia\nEgypt\tEgypt\nUnited Kingdom\tUnited Kingdom\nTanzania\tTanzania\nUnited States\tUnited States\nBurkina Faso\tBurkina Faso\nUruguay\tUruguay\nUzbekistan\tUzbekistan\nVenezuela\tVenezuela\nBritish Virgin Islands\tBritish Virgin Islands\nWallis and Futuna\tWallis and Futuna\nSamoa\tSamoa\nYemen\tYemen\nZambia\tZambia\nCanary Islands\tCanary Islands",
-  "@userSignUpCountryOptionsSource": {"description":"Tab and newline delimited label and value pairs from the live HubSpot contact country property. English is the approved fallback until localization completion."}
+  "foundingFriendPaymentPreparingTitle": "Preparing secure Checkout",
+  "@foundingFriendPaymentPreparingTitle": {
+    "description": "Heading while a Founding Friend Checkout Session is being prepared."
+  },
+  "foundingFriendPaymentPreparingBody": "Your registration step is complete. We’re preparing Stripe-hosted Checkout for the one-time £249 GBP payment. Payment hasn’t been confirmed.",
+  "@foundingFriendPaymentPreparingBody": {
+    "description": "Explains what happens while Founding Friend Checkout is being prepared."
+  },
+  "foundingFriendPaymentRedirectingTitle": "Taking you to secure Checkout",
+  "@foundingFriendPaymentRedirectingTitle": {
+    "description": "Heading while opening Stripe Checkout."
+  },
+  "foundingFriendPaymentRedirectingBody": "You’ll complete payment on Stripe. Returning to this page is not proof of payment; Fun App verifies the payment separately.",
+  "@foundingFriendPaymentRedirectingBody": {
+    "description": "Explains the Stripe redirect and subsequent payment verification."
+  },
+  "foundingFriendPaymentPreparationFailedTitle": "We couldn't open checkout",
+  "@foundingFriendPaymentPreparationFailedTitle": {
+    "description": "Heading when Checkout preparation fails."
+  },
+  "foundingFriendPaymentPreparationFailedBody": "Your registration step is complete, but payment hasn't been confirmed. You can try again without filling in the form again in this browser tab.",
+  "@foundingFriendPaymentPreparationFailedBody": {
+    "description": "Explains how to retry after Checkout preparation fails."
+  },
+  "foundingFriendPaymentRetryCheckout": "Try checkout again",
+  "@foundingFriendPaymentRetryCheckout": {
+    "description": "Button label for retrying Checkout from this browser tab."
+  },
+  "foundingFriendPaymentCancelledTitle": "Checkout cancelled",
+  "@foundingFriendPaymentCancelledTitle": {
+    "description": "Heading on the Checkout cancellation return page."
+  },
+  "foundingFriendPaymentCancelledBody": "No completed payment has been confirmed. You can retry Checkout without submitting your registration again in this browser tab.",
+  "@foundingFriendPaymentCancelledBody": {
+    "description": "Explains payment status and retry on the Checkout cancellation page."
+  },
+  "foundingFriendPaymentVerifyingTitle": "Verifying your payment",
+  "@foundingFriendPaymentVerifyingTitle": {
+    "description": "Heading while the Checkout Session is being verified."
+  },
+  "foundingFriendPaymentVerifyingBody": "We’re checking the Checkout Session securely. The redirect alone does not confirm payment.",
+  "@foundingFriendPaymentVerifyingBody": {
+    "description": "Explains the verification performed after returning from Checkout."
+  },
+  "foundingFriendPaymentConfirmedTitle": "Payment confirmed",
+  "@foundingFriendPaymentConfirmedTitle": {
+    "description": "Heading for a verified Founding Friend payment."
+  },
+  "foundingFriendPaymentConfirmedBody": "Your Founding Friend purchase is confirmed. This does not activate a Fun App membership yet.",
+  "@foundingFriendPaymentConfirmedBody": {
+    "description": "Confirms the Founding Friend purchase and explains membership status."
+  },
+  "foundingFriendPaymentPendingTitle": "Payment pending",
+  "@foundingFriendPaymentPendingTitle": {
+    "description": "Heading when payment confirmation is pending."
+  },
+  "foundingFriendPaymentPendingBody": "Stripe has not confirmed available funds yet. You can check again safely without creating another Checkout Session.",
+  "@foundingFriendPaymentPendingBody": {
+    "description": "Explains how to check a pending payment again."
+  },
+  "foundingFriendPaymentExpiredTitle": "Checkout expired",
+  "@foundingFriendPaymentExpiredTitle": {
+    "description": "Heading when the Checkout Session has expired."
+  },
+  "foundingFriendPaymentExpiredBody": "This Checkout Session expired and is not proof of payment. You can retry Checkout without submitting your registration again in this browser tab.",
+  "@foundingFriendPaymentExpiredBody": {
+    "description": "Explains how to retry Checkout after the Session expires."
+  },
+  "foundingFriendPaymentRefundedTitle": "Payment refunded",
+  "@foundingFriendPaymentRefundedTitle": {
+    "description": "Heading for a refunded Founding Friend payment."
+  },
+  "foundingFriendPaymentRefundedBody": "This payment is recorded as refunded and does not currently qualify as a completed Founding Friend purchase.",
+  "@foundingFriendPaymentRefundedBody": {
+    "description": "Explains how a refund affects the Founding Friend purchase."
+  },
+  "foundingFriendPaymentDisputedTitle": "Payment disputed",
+  "@foundingFriendPaymentDisputedTitle": {
+    "description": "Heading for a disputed Founding Friend payment."
+  },
+  "foundingFriendPaymentDisputedBody": "This payment is recorded as disputed and cannot currently be confirmed as a qualifying purchase.",
+  "@foundingFriendPaymentDisputedBody": {
+    "description": "Explains why a disputed payment cannot be confirmed."
+  },
+  "foundingFriendPaymentInvalidTitle": "Payment could not be confirmed",
+  "@foundingFriendPaymentInvalidTitle": {
+    "description": "Heading when the Checkout Session does not match the expected payment."
+  },
+  "foundingFriendPaymentInvalidBody": "The Checkout Session did not match the expected one-time Founding Friend payment. Please contact support if you believe you paid.",
+  "@foundingFriendPaymentInvalidBody": {
+    "description": "Explains the Checkout Session mismatch and gives support guidance."
+  },
+  "foundingFriendPaymentUnableTitle": "Unable to verify payment",
+  "@foundingFriendPaymentUnableTitle": {
+    "description": "Heading when payment verification is unavailable."
+  },
+  "foundingFriendPaymentUnableBody": "Payment verification is temporarily unavailable. Please try again; this check will not create another payment.",
+  "@foundingFriendPaymentUnableBody": {
+    "description": "Explains what retrying payment verification does."
+  },
+  "foundingFriendAgeMinimum": "You must be 18 or older to register as a Founding Friend.",
+  "@foundingFriendAgeMinimum": {"description": "Minimum age validation for Founding Friend registration."},
+  "foundingFriendPaymentRecoveryTitle": "Continue your payment",
+  "@foundingFriendPaymentRecoveryTitle": {"description": "Heading for an existing payment attempt when reopening registration."},
+  "foundingFriendPaymentRecoveryBody": "This tab has a previous Founding Friend payment attempt. Check it before starting another payment.",
+  "@foundingFriendPaymentRecoveryBody": {"description": "Guidance before explicitly recovering an existing payment attempt."},
+  "foundingFriendPaymentRecoveryUnavailableBody": "This tab cannot safely recover the previous payment. Contact support for help before starting another payment.",
+  "@foundingFriendPaymentRecoveryUnavailableBody": {
+    "description": "Guidance when this tab lacks the details needed to retry Checkout."
+  },
+  "foundingFriendPaymentRetryVerification": "Check payment again",
+  "@foundingFriendPaymentRetryVerification": {
+    "description": "Button label for checking the payment status again."
+  },
+  "foundingFriendPaymentReferenceLabel": "Purchase reference",
+  "@foundingFriendPaymentReferenceLabel": {
+    "description": "Label next to the purchase reference for a verified payment."
+  },
+  "foundingFriendPaymentCopyReference": "Copy reference",
+  "@foundingFriendPaymentCopyReference": {
+    "description": "Button label for copying the purchase reference."
+  },
+  "foundingFriendPaymentReferenceCopied": "Purchase reference copied",
+  "@foundingFriendPaymentReferenceCopied": {
+    "description": "Feedback after the purchase reference is copied."
+  },
+  "foundingFriendPaymentSameEmailReminder": "When Fun App accounts become available, use the same email address as this purchase so your qualifying payment can be verified.",
+  "@foundingFriendPaymentSameEmailReminder": {
+    "description": "Reminder to use the purchase email for future account verification."
+  },
+  "validationMaxLength": "Use at most {maximumLength} characters (some symbols count as two).",
+  "venueLeadValidationQuantity": "Enter a whole number from 1 to {maximum}",
+  "@validationMaxLength": {
+    "description": "Text length limit matching the Worker UTF-16 contract.",
+    "placeholders": {
+      "maximumLength": {
+        "type": "int"
+      }
+    }
+  },
+  "@venueLeadValidationQuantity": {
+    "description": "Positive JavaScript-safe integer quantity range.",
+    "placeholders": {
+      "maximum": {
+        "type": "String"
+      }
+    }
+  },
+  "userSignUpCountryOptionsSource": "Afghanistan\tAfghanistan\nÅland Islands\tÅland Islands\nAlbania\tAlbania\nAlgeria\tAlgeria\nAmerican Samoa\tAmerican Samoa\nAndorra\tAndorra\nAngola\tAngola\nAnguilla\tAnguilla\nAntarctica\tAntarctica\nAntigua and Barbuda\tAntigua and Barbuda\nArgentina\tArgentina\nArmenia\tArmenia\nAruba\tAruba\nAsia/Pacific Region\tAsia/Pacific Region\nAustralia\tAustralia\nAustria\tAustria\nAzerbaijan\tAzerbaijan\nBahamas\tBahamas\nBahrain\tBahrain\nBangladesh\tBangladesh\nBarbados\tBarbados\nBelarus\tBelarus\nBelgium\tBelgium\nBelize\tBelize\nBenin\tBenin\nBermuda\tBermuda\nBhutan\tBhutan\nBolivia\tBolivia\nBosnia and Herzegovina\tBosnia and Herzegovina\nBotswana\tBotswana\nBouvet Island\tBouvet Island\nBrazil\tBrazil\nBritish Indian Ocean Territory\tBritish Indian Ocean Territory\nBritish Virgin Islands\tBritish Virgin Islands\nBrunei\tBrunei\nBulgaria\tBulgaria\nBurkina Faso\tBurkina Faso\nBurundi\tBurundi\nCambodia\tCambodia\nCameroon\tCameroon\nCanada\tCanada\nCanary Islands\tCanary Islands\nCape Verde\tCape Verde\nCaribbean Netherlands\tCaribbean Netherlands\nCayman Islands\tCayman Islands\nCentral African Republic\tCentral African Republic\nChad\tChad\nChile\tChile\nChina\tChina\nChristmas Island\tChristmas Island\nCocos (Keeling) Islands\tCocos (Keeling) Islands\nColombia\tColombia\nComoros\tComoros\nCongo\tCongo\nCook Islands\tCook Islands\nCosta Rica\tCosta Rica\nCote d'Ivoire\tCote d'Ivoire\nCroatia\tCroatia\nCuba\tCuba\nCuraçao\tCuraçao\nCyprus\tCyprus\nCzech Republic\tCzech Republic\nDemocratic Republic of the Congo\tDemocratic Republic of the Congo\nDenmark\tDenmark\nDjibouti\tDjibouti\nDominica\tDominica\nDominican Republic\tDominican Republic\nEast Timor\tEast Timor\nEcuador\tEcuador\nEgypt\tEgypt\nEl Salvador\tEl Salvador\nEquatorial Guinea\tEquatorial Guinea\nEritrea\tEritrea\nEstonia\tEstonia\nEthiopia\tEthiopia\nEurope\tEurope\nFalkland Islands\tFalkland Islands\nFaroe Islands\tFaroe Islands\nFiji\tFiji\nFinland\tFinland\nFrance\tFrance\nFrench Guiana\tFrench Guiana\nFrench Polynesia\tFrench Polynesia\nFrench Southern and Antarctic Lands\tFrench Southern and Antarctic Lands\nGabon\tGabon\nGambia\tGambia\nGeorgia\tGeorgia\nGermany\tGermany\nGhana\tGhana\nGibraltar\tGibraltar\nGreece\tGreece\nGreenland\tGreenland\nGrenada\tGrenada\nGuadeloupe\tGuadeloupe\nGuam\tGuam\nGuatemala\tGuatemala\nGuernsey\tGuernsey\nGuinea\tGuinea\nGuinea-Bissau\tGuinea-Bissau\nGuyana\tGuyana\nHaiti\tHaiti\nHeard Island and McDonald Islands\tHeard Island and McDonald Islands\nHonduras\tHonduras\nHong Kong\tHong Kong\nHungary\tHungary\nIceland\tIceland\nIndia\tIndia\nIndonesia\tIndonesia\nIran\tIran\nIraq\tIraq\nIreland\tIreland\nIsle of Man\tIsle of Man\nIsrael\tIsrael\nItaly\tItaly\nJamaica\tJamaica\nJapan\tJapan\nJersey\tJersey\nJordan\tJordan\nKazakhstan\tKazakhstan\nKenya\tKenya\nKiribati\tKiribati\nKosovo\tKosovo\nKuwait\tKuwait\nKyrgyzstan\tKyrgyzstan\nLaos\tLaos\nLatvia\tLatvia\nLebanon\tLebanon\nLesotho\tLesotho\nLiberia\tLiberia\nLibya\tLibya\nLiechtenstein\tLiechtenstein\nLithuania\tLithuania\nLuxembourg\tLuxembourg\nMacau\tMacau\nMadagascar\tMadagascar\nMalawi\tMalawi\nMalaysia\tMalaysia\nMaldives\tMaldives\nMali\tMali\nMalta\tMalta\nMarshall Islands\tMarshall Islands\nMartinique\tMartinique\nMauritania\tMauritania\nMauritius\tMauritius\nMayotte\tMayotte\nMexico\tMexico\nMicronesia\tMicronesia\nMoldova\tMoldova\nMonaco\tMonaco\nMongolia\tMongolia\nMontenegro\tMontenegro\nMontserrat\tMontserrat\nMorocco\tMorocco\nMozambique\tMozambique\nMyanmar (Burma)\tMyanmar (Burma)\nNamibia\tNamibia\nNauru\tNauru\nNepal\tNepal\nNetherlands\tNetherlands\nNetherlands Antilles\tNetherlands Antilles\nNew Caledonia\tNew Caledonia\nNew Zealand\tNew Zealand\nNicaragua\tNicaragua\nNiger\tNiger\nNigeria\tNigeria\nNiue\tNiue\nNorfolk Island\tNorfolk Island\nNorth Korea\tNorth Korea\nNorth Macedonia\tNorth Macedonia\nNorthern Mariana Islands\tNorthern Mariana Islands\nNorway\tNorway\nOman\tOman\nPakistan\tPakistan\nPalau\tPalau\nPalestine\tPalestine\nPanama\tPanama\nPapua New Guinea\tPapua New Guinea\nParaguay\tParaguay\nPeru\tPeru\nPhilippines\tPhilippines\nPitcairn Islands\tPitcairn Islands\nPoland\tPoland\nPortugal\tPortugal\nPuerto Rico\tPuerto Rico\nQatar\tQatar\nRéunion\tRéunion\nRomania\tRomania\nRussia\tRussia\nRwanda\tRwanda\nSaint Barthélemy\tSaint Barthélemy\nSaint Helena\tSaint Helena\nSaint Kitts and Nevis\tSaint Kitts and Nevis\nSaint Lucia\tSaint Lucia\nSaint Martin\tSaint Martin\nSaint Pierre and Miquelon\tSaint Pierre and Miquelon\nSaint Vincent and the Grenadines\tSaint Vincent and the Grenadines\nSamoa\tSamoa\nSan Marino\tSan Marino\nSao Tome and Principe\tSao Tome and Principe\nSaudi Arabia\tSaudi Arabia\nSenegal\tSenegal\nSerbia\tSerbia\nSeychelles\tSeychelles\nSierra Leone\tSierra Leone\nSingapore\tSingapore\nSint Maarten\tSint Maarten\nSlovakia\tSlovakia\nSlovenia\tSlovenia\nSolomon Islands\tSolomon Islands\nSomalia\tSomalia\nSouth Africa\tSouth Africa\nSouth Georgia and the South Sandwich Islands\tSouth Georgia and the South Sandwich Islands\nSouth Korea\tSouth Korea\nSouth Sudan\tSouth Sudan\nSpain\tSpain\nSri Lanka\tSri Lanka\nSudan\tSudan\nSuriname\tSuriname\nSvalbard and Jan Mayen\tSvalbard and Jan Mayen\nSwaziland\tSwaziland\nSweden\tSweden\nSwitzerland\tSwitzerland\nSyria\tSyria\nTaiwan\tTaiwan\nTajikistan\tTajikistan\nTanzania\tTanzania\nThailand\tThailand\nTogo\tTogo\nTokelau\tTokelau\nTonga\tTonga\nTrinidad and Tobago\tTrinidad and Tobago\nTunisia\tTunisia\nTürkiye\tTürkiye\nTurkmenistan\tTurkmenistan\nTurks and Caicos Islands\tTurks and Caicos Islands\nTuvalu\tTuvalu\nU.S. Virgin Islands\tU.S. Virgin Islands\nUganda\tUganda\nUkraine\tUkraine\nUnited Arab Emirates\tUnited Arab Emirates\nUnited Kingdom\tUnited Kingdom\nUnited States\tUnited States\nUnited States Minor Outlying Islands\tUnited States Minor Outlying Islands\nUruguay\tUruguay\nUzbekistan\tUzbekistan\nVanuatu\tVanuatu\nVatican City\tVatican City\nVenezuela\tVenezuela\nVietnam\tVietnam\nWallis and Futuna\tWallis and Futuna\nWestern Sahara\tWestern Sahara\nYemen\tYemen\nZambia\tZambia\nZimbabwe\tZimbabwe",
+  "@userSignUpCountryOptionsSource": {"description":"Tab and newline delimited label and value pairs from the live HubSpot contact country property. English is the approved fallback until localization completion."},
+  "legalDocumentsLabel": "Legal documents",
+  "@legalDocumentsLabel": {
+    "description": "Label for the group of legal document links."
+  },
+  "legalPurchaseTermsLabel": "Founding Friend Purchase Terms",
+  "@legalPurchaseTermsLabel": {
+    "description": "Link or heading label for the Founding Friend Purchase Terms."
+  },
+  "legalUserAgreementLabel": "User Agreement",
+  "@legalUserAgreementLabel": {
+    "description": "Link or heading label for the User Agreement."
+  },
+  "legalAcceptableUsePolicyLabel": "Acceptable Use Policy",
+  "@legalAcceptableUsePolicyLabel": {
+    "description": "Link or heading label for the Acceptable Use Policy."
+  },
+  "legalDocumentVersion": "Version: {version}",
+  "@legalDocumentVersion": {"description": "Displays the version of the selected legal document.", "placeholders": {"version": {"type": "String"}}},
+  "legalDocumentLanguage": "Document language: English (en-GB)",
+  "@legalDocumentLanguage": {
+    "description": "Displays the language of the published legal document."
+  },
+  "legalDocumentPublished": "Published: {timestamp}",
+  "@legalDocumentPublished": {"description": "Displays when the selected legal document was published.", "placeholders": {"timestamp": {"type": "String"}}},
+  "legalDocumentEffective": "Effective: {timestamp}",
+  "@legalDocumentEffective": {"description": "Displays when the selected legal document becomes effective.", "placeholders": {"timestamp": {"type": "String"}}},
+  "legalDocumentFutureEffective": "This published document is not yet effective. Publication does not determine which terms currently apply.",
+  "@legalDocumentFutureEffective": {
+    "description": "Notice for a published legal document whose effective date is in the future."
+  },
+  "legalDocumentEnglishOnly": "This legal document is available in English.",
+  "@legalDocumentEnglishOnly": {
+    "description": "Notice that the legal document is available in English."
+  },
+  "legalDocumentViewPdf": "View PDF (opens in a new tab)",
+  "@legalDocumentViewPdf": {
+    "description": "Link label for opening the legal document PDF in a new tab."
+  },
+  "legalDocumentLoading": "Loading legal document…",
+  "@legalDocumentLoading": {
+    "description": "Status while the selected legal document is loading."
+  },
+  "legalDocumentRetry": "Retry",
+  "@legalDocumentRetry": {
+    "description": "Button label for retrying a legal document load."
+  }
 }

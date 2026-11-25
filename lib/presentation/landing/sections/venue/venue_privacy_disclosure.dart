@@ -12,7 +12,6 @@ final class VenuePrivacyDisclosure extends StatefulWidget {
     required this.statement,
     required this.privacyNoticeLabel,
     required this.onPrivacyNoticeSelected,
-    this.showAcknowledgementCheckbox = false,
     super.key,
   });
 
@@ -24,9 +23,6 @@ final class VenuePrivacyDisclosure extends StatefulWidget {
 
   /// Opens the hosted Privacy Notice; null disables the link.
   final VoidCallback? onPrivacyNoticeSelected;
-
-  /// Whether to show the routed-page-only presentation acknowledgement.
-  final bool showAcknowledgementCheckbox;
 
   @override
   State<VenuePrivacyDisclosure> createState() => _VenuePrivacyDisclosureState();
@@ -73,25 +69,17 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
       linkStart + privacyNoticeLabel.length,
     );
     final mobile = MediaQuery.sizeOf(context).width < 600;
-    final bodyStyle = widget.showAcknowledgementCheckbox
-        ? AppTextStyles.bodyFontStyle(
-            fontSize: mobile ? 12 : 14,
-            fontWeight: FontWeight.w400,
-            height: mobile ? 20 / 12 : 22 / 14,
-            color: AppColors.bodyGray,
-          )
-        : Theme.of(context).textTheme.bodyMedium;
-    final linkStyle = bodyStyle?.copyWith(
-      color: widget.showAcknowledgementCheckbox
-          ? AppColors.bodyGray
-          : AppColors.energeticPlum,
-      fontWeight: widget.showAcknowledgementCheckbox
-          ? FontWeight.w400
-          : FontWeight.w700,
+    final bodyStyle = AppTextStyles.bodyFontStyle(
+      fontSize: mobile ? 12 : 14,
+      fontWeight: FontWeight.w400,
+      height: mobile ? 20 / 12 : 22 / 14,
+      color: AppColors.bodyGray,
+    );
+    final linkStyle = bodyStyle.copyWith(
+      color: AppColors.bodyGray,
+      fontWeight: FontWeight.w400,
       decoration: TextDecoration.underline,
-      decorationColor: widget.showAcknowledgementCheckbox
-          ? AppColors.bodyGray
-          : AppColors.energeticPlum,
+      decorationColor: AppColors.bodyGray,
       backgroundColor: _isFocused
           ? AppColors.energeticPlum.withValues(alpha: 0.12)
           : null,
@@ -124,7 +112,7 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
             children: [
               TextSpan(
                 text: beforeLink,
-                semanticsLabel: widget.showAcknowledgementCheckbox ? '' : null,
+                semanticsLabel: '',
               ),
               TextSpan(
                 text: privacyNoticeLabel,
@@ -138,7 +126,7 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
               ),
               TextSpan(
                 text: afterLink,
-                semanticsLabel: widget.showAcknowledgementCheckbox ? '' : null,
+                semanticsLabel: '',
               ),
             ],
           ),
@@ -146,14 +134,10 @@ final class _VenuePrivacyDisclosureState extends State<VenuePrivacyDisclosure> {
       ),
     );
 
-    if (widget.showAcknowledgementCheckbox) {
-      return VenuePrivacyAcknowledgementCheckbox(
-        key: const Key('venuePrivacyAcknowledgementRow'),
-        semanticLabel: statement,
-        label: linkedStatement,
-      );
-    } else {
-      return linkedStatement;
-    }
+    return VenuePrivacyAcknowledgementCheckbox(
+      key: const Key('venuePrivacyAcknowledgementRow'),
+      semanticLabel: statement,
+      label: linkedStatement,
+    );
   }
 }

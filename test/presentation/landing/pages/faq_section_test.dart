@@ -23,7 +23,8 @@ const _freeAnswerSecond =
 const _cancelAnswerFirst = 'Of course.';
 const _cancelAnswerSecond =
     'You can cancel your free membership or Here & Now subscription at any '
-    'point. We just ask that you give 14 days’ notice so that Fun App can keep '
+    'point. We just ask that you give 48 hours’ notice so that Fun App can '
+    'keep '
     'all its administration in-line.';
 const _cancelAnswerThird =
     'Founding Friends can get a refund of their membership fee within 14 days '
@@ -50,6 +51,44 @@ void main() {
     'Isn’t saving people into groups a little weird?',
     'What happens if someone harasses me or uses hate speech?',
   ];
+
+  test(
+    'cancellation notice and purchase window remain distinct in every locale',
+    () {
+      for (final entry in <String, (String, String)>{
+        'en': ('48 hours’ notice', '14 days of purchase'),
+        'es': ('48 horas de antelación', '14 días desde la compra'),
+        'cy': ('48 awr o rybudd', '14 diwrnod i brynu'),
+        'be': ('за 48 гадзін', '14 дзён з моманту пакупкі'),
+      }.entries) {
+        final l10n = lookupAppLocalizations(Locale(entry.key));
+        expect(l10n.landingFaqCancelAnswer2, contains(entry.value.$1));
+        expect(l10n.landingFaqCancelAnswer2, contains('Here & Now'));
+        expect(l10n.landingFaqCancelAnswer2, isNot(contains('14')));
+        expect(l10n.landingFaqCancelAnswer3, contains(entry.value.$2));
+        expect(l10n.landingFaqCancelAnswer3, contains('Founding Friends'));
+        expect(l10n.landingFaqCancelAnswer3, isNot(contains('48')));
+      }
+    },
+  );
+
+  test('approved groups and harassment punctuation is exact', () {
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    expect(
+      l10n.landingFaqGroupsAnswer1,
+      'Fun App is built around doing different things with different people. '
+      'You might have someone you love running with, someone you visit '
+      'galleries '
+      'with and someone who will actually discuss the book instead of saying '
+      '“Yeah, I started it.”',
+    );
+    expect(
+      l10n.landingFaqHarassmentAnswer1,
+      'Fun App has no tolerance for harassment, threats, discriminatory abuse '
+      'or hate speech targeting people based on identity or protected '
+      'characteristics.',
+    );
+  });
 
   testWidgets('renders all approved questions with only the first expanded', (
     tester,
@@ -153,7 +192,7 @@ void main() {
         'location during a meeting.';
     const harassmentAnswer =
         'Fun App has no tolerance for harassment, threats, discriminatory '
-        'abuse, '
+        'abuse '
         'or hate speech targeting people based on identity or protected '
         'characteristics.';
     for (final answer in [

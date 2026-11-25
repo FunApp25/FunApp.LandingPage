@@ -40,11 +40,11 @@ abstract final class AppAssets {
   static const String arrowUpRight = '$_landingHeroPath/arrow_up_right.svg';
 
   /// Masked photograph used by the landing-page hero.
-  static const String heroPeople = '$_landingHeroPath/hero_people.png';
+  static const String heroPeople = '$_landingHeroPath/hero_people.webp';
 
   /// Exact mobile composition from Figma image layer `2269:1504`.
   static const String heroPeopleMobile =
-      '$_landingHeroPath/hero_people_mobile.png';
+      '$_landingHeroPath/hero_people_mobile.webp';
 
   /// Five diagonal ovals reused by the problem-section eyebrow.
   static const String fiveDiagonalOvals =
@@ -56,7 +56,7 @@ abstract final class AppAssets {
 
   /// Figma-cropped group photograph used by the connection section.
   static const String connectionGroup =
-      '$_landingConnectionPath/connection_group.png';
+      '$_landingConnectionPath/connection_group.webp';
 
   /// Exact purple decorative glyph used by the FAQ eyebrow.
   static const String faqGlyph = '$_landingFaqPath/faq_glyph.svg';
@@ -109,10 +109,10 @@ abstract final class AppAssets {
 
   /// Masked photograph used by the Founding Friends promotional card.
   static const String foundingFriendsGroup =
-      '$_landingFoundingFriendsPath/founding_friends_group.png';
+      '$_landingFoundingFriendsPath/founding_friends_group.webp';
 
   /// Masked photograph used by the venue promotional card.
-  static const String venueGroup = '$_landingVenuesPath/venue_group.png';
+  static const String venueGroup = '$_landingVenuesPath/venue_group.webp';
 
   /// Exact 18×16 Shape 07 wrapper used by the mobile Venue-page eyebrow.
   static const String venuePageEyebrowMobile =

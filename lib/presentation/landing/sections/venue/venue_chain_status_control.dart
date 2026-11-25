@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
-import 'package:fun_app_landing_page/presentation/core/theme/app_sizes.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
 
 /// Optional two-choice presentation for the existing string-valued field.
-final class VenueChainStatusControl extends StatefulWidget {
+final class VenueChainStatusControl extends StatelessWidget {
   /// Creates the chain status control.
   const VenueChainStatusControl({
     required this.label,
@@ -12,8 +10,7 @@ final class VenueChainStatusControl extends StatefulWidget {
     required this.chainLabel,
     required this.selectedValue,
     required this.onSelected,
-    this.placeholder,
-    this.alignWithVenuePageDesign = false,
+    required this.placeholder,
     super.key,
   });
 
@@ -33,10 +30,7 @@ final class VenueChainStatusControl extends StatefulWidget {
   final ValueChanged<String> onSelected;
 
   /// Localized unselected prompt for the routed-page presentation.
-  final String? placeholder;
-
-  /// Whether to use the approved routed-page dropdown treatment.
-  final bool alignWithVenuePageDesign;
+  final String placeholder;
 
   /// Provider-neutral value sent through the existing BLoC event.
   static const independentValue = 'Independent';
@@ -45,153 +39,36 @@ final class VenueChainStatusControl extends StatefulWidget {
   static const chainValue = 'Part of chain';
 
   @override
-  State<VenueChainStatusControl> createState() =>
-      _VenueChainStatusControlState();
-}
-
-final class _VenueChainStatusControlState
-    extends State<VenueChainStatusControl> {
-  String? _focusedValue;
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.alignWithVenuePageDesign) {
-      return _buildFigmaControl(context);
-    } else {
-      return _buildLegacyControl(context);
-    }
-  }
-
-  Widget _buildFigmaControl(BuildContext context) =>
-      BrandedFormDropdown<String>(
-        key: const Key('venueLeadChainStatusControl'),
-        fieldKey: const Key('venueLeadChainStatusMenu'),
-        caretKey: const Key('venueLeadChainStatusCaret'),
-        label: widget.label,
-        semanticLabel: widget.label,
-        placeholder: widget.placeholder ?? widget.label,
-        value: widget.selectedValue,
-        options: [
-          (
-            value: VenueChainStatusControl.independentValue,
-            label: widget.independentLabel,
-          ),
-          (
-            value: VenueChainStatusControl.chainValue,
-            label: widget.chainLabel,
-          ),
-        ],
-        optionKeys: const {
-          VenueChainStatusControl.independentValue: Key(
-            'venueChainIndependentOption',
-          ),
-          VenueChainStatusControl.chainValue: Key(
-            'venueChainPartOfChainOption',
-          ),
-        },
-        onChanged: (value) {
-          if (value != null) {
-            widget.onSelected(value == widget.selectedValue ? '' : value);
-          }
-        },
-      );
-
-  Widget _buildLegacyControl(BuildContext context) {
-    final reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    return Column(
-      key: const Key('venueLeadChainStatusControl'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(widget.label, style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: 8),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.lightForeground,
-            border: Border.all(
-              color: AppColors.warmCharcoal.withValues(alpha: 0.4),
-            ),
-            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: Row(
-              children: [
-                _option(
-                  context,
-                  key: const Key('venueChainIndependentOption'),
-                  value: VenueChainStatusControl.independentValue,
-                  label: widget.independentLabel,
-                  reduceMotion: reduceMotion,
-                ),
-                _option(
-                  context,
-                  key: const Key('venueChainPartOfChainOption'),
-                  value: VenueChainStatusControl.chainValue,
-                  label: widget.chainLabel,
-                  reduceMotion: reduceMotion,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _option(
-    BuildContext context, {
-    required Key key,
-    required String value,
-    required String label,
-    required bool reduceMotion,
-  }) {
-    final selected = widget.selectedValue == value;
-    final focused = _focusedValue == value;
-    return Expanded(
-      child: Semantics(
-        key: key,
-        label: label,
-        button: true,
-        selected: selected,
-        onTap: () => widget.onSelected(selected ? '' : value),
-        child: ExcludeSemantics(
-          child: InkWell(
-            onTap: () => widget.onSelected(selected ? '' : value),
-            onFocusChange: (hasFocus) => setState(
-              () => _focusedValue = hasFocus ? value : null,
-            ),
-            borderRadius: BorderRadius.circular(AppSizes.cardRadius - 4),
-            child: AnimatedContainer(
-              duration: reduceMotion
-                  ? Duration.zero
-                  : const Duration(milliseconds: 170),
-              curve: Curves.easeOutCubic,
-              constraints: const BoxConstraints(minHeight: 48),
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              decoration: BoxDecoration(
-                color: selected ? AppColors.energeticPlum : Colors.transparent,
-                border: Border.all(
-                  color: focused ? AppColors.warmOrange : Colors.transparent,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(AppSizes.cardRadius - 4),
-              ),
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: selected
-                      ? AppColors.lightForeground
-                      : AppColors.textPrimary,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ),
+  Widget build(BuildContext context) => BrandedFormDropdown<String>(
+    key: const Key('venueLeadChainStatusControl'),
+    fieldKey: const Key('venueLeadChainStatusMenu'),
+    caretKey: const Key('venueLeadChainStatusCaret'),
+    label: label,
+    semanticLabel: label,
+    placeholder: placeholder,
+    value: selectedValue,
+    options: [
+      (
+        value: VenueChainStatusControl.independentValue,
+        label: independentLabel,
       ),
-    );
-  }
+      (
+        value: VenueChainStatusControl.chainValue,
+        label: chainLabel,
+      ),
+    ],
+    optionKeys: const {
+      VenueChainStatusControl.independentValue: Key(
+        'venueChainIndependentOption',
+      ),
+      VenueChainStatusControl.chainValue: Key(
+        'venueChainPartOfChainOption',
+      ),
+    },
+    onChanged: (value) {
+      if (value != null) {
+        onSelected(value == selectedValue ? '' : value);
+      }
+    },
+  );
 }

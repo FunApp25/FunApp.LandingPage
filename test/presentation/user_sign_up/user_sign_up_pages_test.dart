@@ -2,13 +2,26 @@ import 'dart:async';
 import 'dart:ui' show CheckedState;
 
 import 'package:auto_route/auto_route.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fun_app_landing_page/core/config/release_configuration.dart';
+import 'package:fun_app_landing_page/application/user_registration/founding_friend_registration_form_bloc/founding_friend_registration_form_bloc.dart';
+import 'package:fun_app_landing_page/application/user_registration/here_and_now_registration_form_bloc/here_and_now_registration_form_bloc.dart';
+import 'package:fun_app_landing_page/core/config/hubspot_registration_forms_config.dart';
+import 'package:fun_app_landing_page/data/user_registration/data_sources/hubspot_user_registration_data_source.dart';
+import 'package:fun_app_landing_page/data/user_registration/here_and_now_registration_repository.dart';
+import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
+import 'package:fun_app_landing_page/domain/core/value_objects/non_empty_single_line_text.dart';
+import 'package:fun_app_landing_page/domain/user_registration/entities/founding_friend_registration.dart';
+import 'package:fun_app_landing_page/domain/user_registration/entities/here_and_now_registration.dart';
+import 'package:fun_app_landing_page/domain/user_registration/founding_friend_registration_repository_interface.dart';
+import 'package:fun_app_landing_page/domain/user_registration/here_and_now_registration_repository_interface.dart';
 import 'package:fun_app_landing_page/l10n/app_localizations.dart';
 import 'package:fun_app_landing_page/presentation/core/app_widget.dart';
+import 'package:fun_app_landing_page/presentation/core/routing/app_route_dependencies.dart';
 import 'package:fun_app_landing_page/presentation/core/routing/app_router.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_colors.dart';
 import 'package:fun_app_landing_page/presentation/core/theme/app_theme.dart';
@@ -17,17 +30,603 @@ import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_for
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_dropdown.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/forms/branded_form_text_field.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/user_sign_up/models/user_sign_up.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/searchable_country_dropdown.dart';
+import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_marketing_consent.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/widgets/user_sign_up_success.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 import '../landing/landing_test_helpers.dart';
 
 void main() {
+  for (final locale in AppLocalizations.supportedLocales) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+        'marketing prominence, semantics and wrapping: $locale, ${scale}x',
+        (tester) async {
+          final semantics = tester.ensureSemantics();
+          final l10n = lookupAppLocalizations(locale);
+          for (final foundingFriend in [false, true]) {
+            final id = foundingFriend ? 'foundingFriend' : 'hereAndNow';
+            final label = foundingFriend
+                ? l10n.userSignUpFoundingFriendMarketingConsent
+                : l10n.userSignUpHereAndNowMarketingConsent;
+            for (final width in [320.0, 390.0, 900.0, 1440.0]) {
+              setTestSurface(tester, Size(width, 1000));
+              await _pumpPage(
+                tester,
+                foundingFriend
+                    ? const FoundingFriendPage()
+                    : const HereAndNowPage(),
+                locale: locale,
+                textScaleFactor: scale,
+              );
+              final checkbox = find.byKey(Key('marketingConsent-$id'));
+              final text = tester.widget<Text>(find.text(label));
+              expect(text.style!.fontSize, 18);
+              expect(text.style!.height, 28 / 18);
+              expect(text.style!.fontWeight, FontWeight.w500);
+              final paragraph = tester.renderObject<RenderParagraph>(
+                find.text(label),
+              );
+              expect(paragraph.didExceedMaxLines, isFalse);
+              expect(paragraph.size.height, greaterThan(28 * scale));
+              var data = tester.getSemantics(checkbox).getSemanticsData();
+              expect(data.label, label);
+              expect(data.flagsCollection.isChecked, CheckedState.isFalse);
+              final control = find.descendant(
+                of: checkbox,
+                matching: find.byType(InkWell),
+              );
+              expect(tester.getSize(control), const Size.square(44));
+              final labelCenter = tester.getCenter(find.text(label)).dy;
+              expect(tester.getCenter(control).dy, closeTo(labelCenter, 0.01));
+              expect(
+                tester
+                    .getCenter(find.byKey(Key('marketingConsentVisual-$id')))
+                    .dy,
+                closeTo(labelCenter, 0.01),
+              );
+              await tester.ensureVisible(checkbox);
+              tester
+                  .widget<Focus>(find.byKey(Key('marketingConsentFocus-$id')))
+                  .focusNode!
+                  .requestFocus();
+              await tester.pump();
+              await tester.sendKeyEvent(LogicalKeyboardKey.space);
+              await tester.pump();
+              data = tester.getSemantics(checkbox).getSemanticsData();
+              expect(data.flagsCollection.isChecked, CheckedState.isTrue);
+              await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+              await tester.pump();
+              expect(
+                tester
+                    .getSemantics(checkbox)
+                    .getSemanticsData()
+                    .flagsCollection
+                    .isChecked,
+                CheckedState.isFalse,
+              );
+              final introduction = find.byKey(Key('userSignUpHeading-$id'));
+              final heading =
+                  tester.widget<Text>(introduction).textSpan! as TextSpan;
+              final fullHeading = foundingFriend
+                  ? l10n.userSignUpFoundingFriendIntroduction
+                  : l10n.userSignUpHereAndNowIntroduction;
+              expect(heading.toPlainText(), fullHeading);
+              expectHeaderSemantics(
+                tester,
+                Key('userSignUpIntroduction-$id'),
+                fullHeading,
+              );
+              expect(
+                tester
+                    .renderObject<RenderParagraph>(introduction)
+                    .didExceedMaxLines,
+                isFalse,
+              );
+              expect(tester.takeException(), isNull);
+              await tester.pumpWidget(const SizedBox.shrink());
+            }
+          }
+          semantics.dispose();
+        },
+      );
+    }
+  }
+  testWidgets('single-line marketing labels remain vertically centered', (
+    tester,
+  ) async {
+    for (final width in [320.0, 1440.0]) {
+      for (final scale in [1.0, 2.0]) {
+        setTestSurface(tester, Size(width, 1000));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+              child: Scaffold(
+                body: UserSignUpMarketingConsent(
+                  semanticId: 'singleLine',
+                  label: 'Updates',
+                  value: false,
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        );
+        final label = find.text('Updates');
+        expect(tester.getSize(label).height, closeTo(28 * scale, 0.01));
+        expect(
+          tester
+              .getCenter(
+                find.byKey(const Key('marketingConsentVisual-singleLine')),
+              )
+              .dy,
+          closeTo(tester.getCenter(label).dy, 0.01),
+        );
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
+  for (final language in ['en', 'es', 'cy', 'be']) {
+    testWidgets(
+      'Founding Friend email limit feedback is localized in $language',
+      (tester) async {
+        final l10n = lookupAppLocalizations(Locale(language));
+        final repository = _FoundingFriendRepository(result: right(unit));
+        setTestSurface(tester, const Size(390, 1000));
+        final bloc = FoundingFriendRegistrationFormBloc(repository);
+        await _pumpPage(
+          tester,
+          FoundingFriendPage(createBloc: () => bloc),
+          locale: Locale(language),
+        );
+        for (final (name, value) in [
+          ('firstName', 'Taylor'),
+          ('lastName', 'Jones'),
+          ('age', '31'),
+        ]) {
+          await tester.enterText(
+            find.byKey(Key('${name}Field-foundingFriend')),
+            value,
+          );
+        }
+        bloc.add(
+          const FoundingFriendRegistrationFormEvent.countryChanged(
+            'Afghanistan',
+          ),
+        );
+        await tester.pump();
+        final field = find.byKey(const Key('emailField-foundingFriend'));
+        for (final length in [255, 261]) {
+          final email =
+              'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.'
+              '${'e' * (length == 255 ? 61 : 62)}'
+              "${length == 261 ? '.test' : ''}";
+          await tester.enterText(field, email);
+          await _tapSubmit(tester, 'foundingFriend');
+          expect(find.text(l10n.validationMaxLength(254)), findsOneWidget);
+          expect(repository.submissions, isEmpty);
+          expect(
+            _inputController(tester, 'email', 'foundingFriend').text,
+            email,
+          );
+        }
+        final email = 'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 60}';
+        await tester.enterText(field, email);
+        await _tapSubmit(tester, 'foundingFriend');
+        expect(repository.submissions.single.email.getOrCrash(), email);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final locale in AppLocalizations.supportedLocales) {
+    for (final width in [320.0, 390.0]) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets(
+          'complete validation feedback at $width px, $scale scale, $locale',
+          (tester) async {
+            setTestSurface(tester, Size(width, 1000));
+            final bloc = FoundingFriendRegistrationFormBloc(
+              _FoundingFriendRepository(),
+            );
+            await _pumpPage(
+              tester,
+              FoundingFriendPage(createBloc: () => bloc),
+              locale: locale,
+              textScaleFactor: scale,
+            );
+            final email = find.byKey(const Key('emailField-foundingFriend'));
+            await tester.enterText(
+              email,
+              'a@${'b' * 63}.${'c' * 63}.${'d' * 63}.${'e' * 61}',
+            );
+            final focus = tester
+                .widget<EditableText>(
+                  find.descendant(
+                    of: email,
+                    matching: find.byType(EditableText),
+                  ),
+                )
+                .focusNode;
+            bloc.add(const FoundingFriendRegistrationFormEvent.submitted());
+            await tester.pumpAndSettle();
+            final message = lookupAppLocalizations(locale)
+                .validationMaxLength(254);
+            final error = find.text(message);
+            final paragraph = tester.renderObject<RenderParagraph>(error);
+            expect(paragraph.didExceedMaxLines, isFalse);
+            expect(paragraph.maxLines, isNull);
+            final painter = TextPainter(
+              text: paragraph.text,
+              textScaler: paragraph.textScaler,
+              textDirection: TextDirection.ltr,
+            )..layout(maxWidth: paragraph.size.width);
+            expect(paragraph.size.height, closeTo(painter.height, 0.01));
+            painter.dispose();
+            expect(tester.getRect(error).left, greaterThanOrEqualTo(0));
+            expect(tester.getRect(error).right, lessThanOrEqualTo(width));
+            expect(
+              tester.getRect(error).bottom,
+              lessThan(
+                tester
+                    .getTopLeft(
+                      find.byKey(const Key('ageField-foundingFriend')),
+                    )
+                    .dy,
+              ),
+            );
+            expect(
+              tester
+                  .widget<EditableText>(
+                    find.descendant(
+                      of: email,
+                      matching: find.byType(EditableText),
+                    ),
+                  )
+                  .focusNode,
+              same(focus),
+            );
+            final submit = find.byKey(
+              const Key('userSignUpSubmit-foundingFriend'),
+            );
+            final scrollable = find
+                .ancestor(of: submit, matching: find.byType(Scrollable))
+                .first;
+            await tester.scrollUntilVisible(
+              submit,
+              300,
+              scrollable: scrollable,
+            );
+            await tester.pumpAndSettle();
+            expect(submit.hitTestable(), findsOneWidget);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+  }
+
+  for (final foundingFriend in [false, true]) {
+    final semanticId = foundingFriend ? 'foundingFriend' : 'hereAndNow';
+
+    for (final width in [390.0, 1440.0]) {
+      testWidgets('$semanticId Next advances one field at $width px', (
+        tester,
+      ) async {
+        setTestSurface(tester, Size(width, 1000));
+        await _pumpPage(
+          tester,
+          foundingFriend ? const FoundingFriendPage() : const HereAndNowPage(),
+        );
+        for (final fields in [
+          ('firstName', 'lastName'),
+          ('lastName', 'email'),
+          ('email', 'age'),
+        ]) {
+          await tester.showKeyboard(
+            find.byKey(Key('${fields.$1}Field-$semanticId')),
+          );
+          await tester.testTextInput.receiveAction(TextInputAction.next);
+          await tester.pumpAndSettle();
+          final next = tester.widget<EditableText>(
+            find.descendant(
+              of: find.byKey(Key('${fields.$2}Field-$semanticId')),
+              matching: find.byType(EditableText),
+            ),
+          );
+          expect(next.focusNode.hasPrimaryFocus, isTrue);
+        }
+      });
+    }
+
+    testWidgets('$semanticId gender selection preserves keyboard traversal', (
+      tester,
+    ) async {
+      setTestSurface(tester, const Size(390, 2000));
+      await _pumpPage(
+        tester,
+        foundingFriend ? const FoundingFriendPage() : const HereAndNowPage(),
+      );
+      final gender = find.byKey(Key('genderField-$semanticId'));
+      await tester.tap(gender);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Woman').last);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(Key('usageReasonField-$semanticId')),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .focusNode
+            .hasPrimaryFocus,
+        isTrue,
+      );
+      for (var i = 0; i < 2; i++) {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+      }
+      expect(
+        tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(
+                  Key(
+                    foundingFriend
+                        ? 'countryField-$semanticId'
+                        : 'ageField-$semanticId',
+                  ),
+                ),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .focusNode
+            .hasPrimaryFocus,
+        isTrue,
+      );
+    });
+
+    testWidgets(
+      '$semanticId retains rendered drafts across responsive changes',
+      (
+        tester,
+      ) async {
+        final hereAndNowRepository = _HereAndNowRepository();
+        final foundingFriendRepository = _FoundingFriendRepository();
+        Widget page() => foundingFriend
+            ? FoundingFriendPage(
+                createBloc: () => FoundingFriendRegistrationFormBloc(
+                  foundingFriendRepository,
+                ),
+              )
+            : HereAndNowPage(
+                createBloc: () => HereAndNowRegistrationFormBloc(
+                  hereAndNowRepository,
+                ),
+              );
+        setTestSurface(tester, const Size(1440, 1000));
+        await _pumpPage(tester, page());
+        if (foundingFriend) {
+          await _enterFoundingFriendRequiredFields(tester);
+        }
+        final inputs = <String, String>{
+          'firstName': 'Alex',
+          'lastName': 'Morgan',
+          'email': 'alex@example.com',
+          'age': '029',
+          'usageReason': 'Meet local people\nand join activities',
+        };
+        for (final entry in inputs.entries) {
+          await tester.enterText(
+            find.byKey(Key('${entry.key}Field-$semanticId')),
+            entry.value,
+          );
+        }
+        await tester.pump();
+        final emailController = _inputController(tester, 'email', semanticId)
+          ..selection = const TextSelection.collapsed(offset: 4);
+
+        for (final width in [390.0, 1440.0]) {
+          tester.view.physicalSize = Size(width, 1000);
+          await tester.pumpAndSettle();
+          for (final entry in inputs.entries) {
+            expect(
+              _inputController(tester, entry.key, semanticId).text,
+              entry.value,
+            );
+          }
+          expect(
+            _inputController(tester, 'email', semanticId),
+            emailController,
+          );
+          expect(emailController.selection.baseOffset, 4);
+          if (width == 390) {
+            inputs['email'] = 'alex.updated@example.com';
+            await tester.showKeyboard(
+              find.byKey(Key('emailField-$semanticId')),
+            );
+            final editingValue = TextEditingValue(
+              text: inputs['email']!,
+              selection: const TextSelection.collapsed(offset: 4),
+              composing: const TextRange(start: 0, end: 4),
+            );
+            tester.testTextInput.updateEditingValue(editingValue);
+            await tester.pump();
+            expect(emailController.value, editingValue);
+          }
+        }
+
+        await tester.enterText(
+          find.byKey(Key('firstNameField-$semanticId')),
+          '',
+        );
+        await _tapSubmit(tester, semanticId);
+        expect(find.text('Required field'), findsOneWidget);
+        expect(hereAndNowRepository.submissions, isEmpty);
+        expect(foundingFriendRepository.submissions, isEmpty);
+        await tester.enterText(
+          find.byKey(Key('firstNameField-$semanticId')),
+          inputs['firstName']!,
+        );
+        await _tapSubmit(tester, semanticId);
+        await tester.pumpAndSettle();
+        final submitted = foundingFriend
+            ? [
+                foundingFriendRepository.submissions.single.firstName
+                    .getOrCrash(),
+                foundingFriendRepository.submissions.single.lastName
+                    .getOrCrash(),
+                foundingFriendRepository.submissions.single.email.getOrCrash(),
+                foundingFriendRepository.submissions.single.age.getOrCrash(),
+                foundingFriendRepository.submissions.single.usageReason
+                    .toNullable(),
+              ]
+            : [
+                hereAndNowRepository.submissions.single.firstName.getOrCrash(),
+                hereAndNowRepository.submissions.single.lastName.getOrCrash(),
+                hereAndNowRepository.submissions.single.email.getOrCrash(),
+                hereAndNowRepository.submissions.single.age.getOrCrash(),
+                hereAndNowRepository.submissions.single.usageReason
+                    .toNullable(),
+              ];
+        expect(submitted, [
+          inputs['firstName'],
+          inputs['lastName'],
+          inputs['email'],
+          int.parse(inputs['age']!),
+          inputs['usageReason'],
+        ]);
+        for (final entry in inputs.entries) {
+          expect(
+            _inputController(tester, entry.key, semanticId).text,
+            entry.value,
+          );
+        }
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await _pumpPage(tester, page());
+        for (final field in inputs.keys) {
+          expect(_inputController(tester, field, semanticId).text, isEmpty);
+        }
+        await _tapSubmit(tester, semanticId);
+        expect(
+          find.text('Required field'),
+          findsNWidgets(foundingFriend ? 5 : 4),
+        );
+      },
+    );
+
+    testWidgets(
+      '$semanticId displays initial and external BLoC draft updates',
+      (
+        tester,
+      ) async {
+        final hereAndNowBloc = HereAndNowRegistrationFormBloc(
+          _HereAndNowRepository(),
+        );
+        final foundingFriendBloc = FoundingFriendRegistrationFormBloc(
+          _FoundingFriendRepository(),
+        );
+        if (foundingFriend) {
+          addTearDown(hereAndNowBloc.close);
+        } else {
+          addTearDown(foundingFriendBloc.close);
+        }
+        void updateDraft(
+          String name,
+          String lastName,
+          String email,
+          String age,
+          String reason,
+        ) {
+          if (foundingFriend) {
+            foundingFriendBloc
+              ..add(FoundingFriendRegistrationFormEvent.firstNameChanged(name))
+              ..add(
+                FoundingFriendRegistrationFormEvent.lastNameChanged(lastName),
+              )
+              ..add(FoundingFriendRegistrationFormEvent.emailChanged(email))
+              ..add(FoundingFriendRegistrationFormEvent.ageChanged(age))
+              ..add(
+                FoundingFriendRegistrationFormEvent.usageReasonChanged(reason),
+              );
+          } else {
+            hereAndNowBloc
+              ..add(HereAndNowRegistrationFormEvent.firstNameChanged(name))
+              ..add(HereAndNowRegistrationFormEvent.lastNameChanged(lastName))
+              ..add(HereAndNowRegistrationFormEvent.emailChanged(email))
+              ..add(HereAndNowRegistrationFormEvent.ageChanged(age))
+              ..add(HereAndNowRegistrationFormEvent.usageReasonChanged(reason));
+          }
+        }
+
+        updateDraft(
+          'Alex',
+          'Morgan',
+          'invalid-email',
+          'invalid-age',
+          'Meet people',
+        );
+        await tester.pump();
+        await _pumpPage(
+          tester,
+          foundingFriend
+              ? FoundingFriendPage(createBloc: () => foundingFriendBloc)
+              : HereAndNowPage(createBloc: () => hereAndNowBloc),
+        );
+        expect(_inputController(tester, 'firstName', semanticId).text, 'Alex');
+        expect(_inputController(tester, 'lastName', semanticId).text, 'Morgan');
+        expect(
+          _inputController(tester, 'email', semanticId).text,
+          'invalid-email',
+        );
+        expect(_inputController(tester, 'age', semanticId).text, 'invalid-age');
+        expect(
+          _inputController(tester, 'usageReason', semanticId).text,
+          'Meet people',
+        );
+        updateDraft('', 'Updated', 'updated@example.com', '32', '');
+        await tester.pump();
+        await tester.pump();
+        expect(_inputController(tester, 'firstName', semanticId).text, isEmpty);
+        expect(
+          _inputController(tester, 'lastName', semanticId).text,
+          'Updated',
+        );
+        expect(
+          _inputController(tester, 'email', semanticId).text,
+          'updated@example.com',
+        );
+        expect(_inputController(tester, 'age', semanticId).text, '32');
+        expect(
+          _inputController(tester, 'usageReason', semanticId).text,
+          isEmpty,
+        );
+        for (final invalidAge in ['9007199254740992', '9007199254740993']) {
+          updateDraft('', 'Updated', 'updated@example.com', invalidAge, '');
+          await tester.pump();
+          await tester.pump();
+          expect(_inputController(tester, 'age', semanticId).text, invalidAge);
+        }
+      },
+    );
+  }
+
   const hereAndNowIntroduction =
-      'Thank you for interest in joining Fun App with a 6 month free trial '
-      'of Here & Now membership';
+      'Thank you for your interest in joining Fun App with a free trial of '
+      'Here & Now membership for 6 months from launch';
   const hereAndNowIntroductionBody =
       'Sign up by entering your details on this form and secure your place '
       "in the queue. We'll stay in touch as Fun App moves towards launch. "
@@ -39,10 +638,11 @@ void main() {
       'journey as you gain Founding Friend status and help Fun App to change '
       'the world. Welcome!';
   const hereAndNowMarketing =
-      "Yes, I'd like to receive occasional emails from Fun App about the "
+      'Yes, I’d like to receive occasional emails from Fun App about the '
       'upcoming app, including launch updates and exciting news.';
   const foundingFriendMarketing =
-      "Yes, I'd like to receive emails from Fun App about the upcoming app, "
+      'Yes, I’d like to receive occasional emails from Fun App about the '
+      'upcoming app, '
       'including launch updates, exciting news and exclusive Founding Friend '
       'communication';
 
@@ -51,9 +651,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(
-        releaseConfiguration: ReleaseConfiguration.preview(),
-      ),
+      _testApp(),
     );
     await tester.pump();
 
@@ -117,9 +715,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(
-        releaseConfiguration: ReleaseConfiguration.preview(),
-      ),
+      _testApp(),
     );
     await tester.pump();
     unawaited(
@@ -143,9 +739,7 @@ void main() {
   ) async {
     setTestSurface(tester, const Size(1440, 1000));
     await tester.pumpWidget(
-      const FunAppLandingPageApp(
-        releaseConfiguration: ReleaseConfiguration.preview(),
-      ),
+      _testApp(),
     );
     await tester.pump();
     unawaited(
@@ -221,7 +815,7 @@ void main() {
     final submit = tester.widget<FilledButton>(
       find.byKey(const Key('userSignUpSubmit-hereAndNow')),
     );
-    expect(submit.onPressed, isNull);
+    expect(submit.onPressed, isNotNull);
     expect(find.byType(UserSignUpSuccess), findsNothing);
     _expectHint(
       tester,
@@ -319,7 +913,7 @@ void main() {
       final submit = tester.widget<FilledButton>(
         find.byKey(const Key('userSignUpSubmit-foundingFriend')),
       );
-      expect(submit.onPressed, isNull);
+      expect(submit.onPressed, isNotNull);
       expect(find.byType(UserSignUpSuccess), findsNothing);
       _expectHint(
         tester,
@@ -336,16 +930,18 @@ void main() {
   testWidgets('Here & Now validates locally and preserves the entered draft', (
     tester,
   ) async {
-    UserSignUpDraft? submitted;
+    final repository = _HereAndNowRepository(result: right(unit));
     setTestSurface(tester, const Size(390, 1000));
     await _pumpPage(
       tester,
-      HereAndNowPage(onSubmit: (draft) => submitted = draft),
+      HereAndNowPage(
+        createBloc: () => HereAndNowRegistrationFormBloc(repository),
+      ),
     );
 
     await _tapSubmit(tester, 'hereAndNow');
     expect(find.text('Required field'), findsNWidgets(4));
-    expect(submitted, isNull);
+    expect(repository.submissions, isEmpty);
 
     await tester.enterText(
       find.byKey(const Key('firstNameField-hereAndNow')),
@@ -365,23 +961,29 @@ void main() {
     );
     expect(
       tester
-          .widget<TextFormField>(
-            find.byKey(const Key('ageField-hereAndNow')),
+          .widget<EditableText>(
+            find.descendant(
+              of: find.byKey(const Key('ageField-hereAndNow')),
+              matching: find.byType(EditableText),
+            ),
           )
           .controller
-          ?.text,
+          .text,
       '29',
     );
     await _tapSubmit(tester, 'hereAndNow');
     expect(find.text('Enter a valid email address'), findsOneWidget);
-    expect(submitted, isNull);
+    expect(repository.submissions, isEmpty);
     expect(
       tester
-          .widget<TextFormField>(
-            find.byKey(const Key('firstNameField-hereAndNow')),
+          .widget<EditableText>(
+            find.descendant(
+              of: find.byKey(const Key('firstNameField-hereAndNow')),
+              matching: find.byType(EditableText),
+            ),
           )
           .controller
-          ?.text,
+          .text,
       'Alex',
     );
 
@@ -390,25 +992,28 @@ void main() {
       'alex@example.com',
     );
     await _tapSubmit(tester, 'hereAndNow');
-    expect(submitted, isNotNull);
-    expect(submitted?.firstName, 'Alex');
-    expect(submitted?.lastName, 'Morgan');
-    expect(submitted?.age, 29);
-    expect(submitted?.gender, isNull);
-    expect(submitted?.usageReason, isNull);
-    expect(submitted?.marketingConsent, isFalse);
-    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(repository.submissions, hasLength(1));
+    final submitted = repository.submissions.single;
+    expect(submitted.firstName.getOrCrash(), 'Alex');
+    expect(submitted.lastName.getOrCrash(), 'Morgan');
+    expect(submitted.age.getOrCrash(), 29);
+    expect(submitted.gender, none<NonEmptySingleLineText>());
+    expect(submitted.usageReason, none<String>());
+    expect(submitted.marketingConsent, isFalse);
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
   });
 
   testWidgets('Founding Friend requires country and keeps consent optional', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    UserSignUpDraft? submitted;
+    final repository = _FoundingFriendRepository(result: right(unit));
     setTestSurface(tester, const Size(390, 1000));
     await _pumpPage(
       tester,
-      FoundingFriendPage(onSubmit: (draft) => submitted = draft),
+      FoundingFriendPage(
+        createBloc: () => FoundingFriendRegistrationFormBloc(repository),
+      ),
     );
 
     await tester.enterText(
@@ -429,13 +1034,20 @@ void main() {
     );
     await _tapSubmit(tester, 'foundingFriend');
     expect(find.text('Required field'), findsOneWidget);
-    expect(submitted, isNull);
+    expect(repository.submissions, isEmpty);
 
     final country = find.byKey(const Key('countryField-foundingFriend'));
     await tester.ensureVisible(country);
     await tester.tap(country);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Afghanistan').last);
+    await tester.enterText(
+      find.descendant(of: country, matching: find.byType(EditableText)),
+      'Afghanistan',
+    );
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(MenuItemButton, 'Afghanistan').hitTestable(),
+    );
     await tester.pumpAndSettle();
 
     final checkbox = find.byKey(
@@ -469,10 +1081,88 @@ void main() {
     );
 
     await _tapSubmit(tester, 'foundingFriend');
-    expect(submitted?.country, 'Afghanistan');
-    expect(submitted?.marketingConsent, isTrue);
+    await tester.pumpAndSettle();
+    expect(repository.submissions, hasLength(1));
+    expect(repository.submissions.single.country.getOrCrash(), 'Afghanistan');
+    expect(repository.submissions.single.marketingConsent, isTrue);
     expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(
+      find.byKey(const Key('foundingFriendCheckoutPanel')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('userSignUpForm-foundingFriend')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const Key('userSignUpSubmit-foundingFriend')),
+      findsNothing,
+    );
     semantics.dispose();
+  });
+
+  testWidgets('failed Here & Now submission remains editable and can retry', (
+    tester,
+  ) async {
+    final repository = _RetryHereAndNowRepository();
+    setTestSurface(tester, const Size(390, 1000));
+    await _pumpPage(
+      tester,
+      HereAndNowPage(
+        createBloc: () => HereAndNowRegistrationFormBloc(repository),
+      ),
+    );
+    await _enterHereAndNowRequiredFields(tester);
+
+    await _tapSubmit(tester, 'hereAndNow');
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('userSignUpSubmissionFailure-hereAndNow')),
+      findsOneWidget,
+    );
+    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(repository.submissions, hasLength(1));
+
+    await _tapSubmit(tester, 'hereAndNow');
+    await tester.pumpAndSettle();
+    expect(repository.submissions, hasLength(2));
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
+  });
+
+  testWidgets('failed Founding Friend submission can retry to confirmation', (
+    tester,
+  ) async {
+    final repository = _RetryFoundingFriendRepository();
+    setTestSurface(tester, const Size(390, 1000));
+    await _pumpPage(
+      tester,
+      FoundingFriendPage(
+        createBloc: () => FoundingFriendRegistrationFormBloc(repository),
+      ),
+    );
+    await _enterFoundingFriendRequiredFields(tester);
+
+    await _tapSubmit(tester, 'foundingFriend');
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('userSignUpSubmissionFailure-foundingFriend')),
+      findsOneWidget,
+    );
+    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(repository.submissions, hasLength(1));
+
+    await _tapSubmit(tester, 'foundingFriend');
+    await tester.pumpAndSettle();
+    expect(repository.submissions, hasLength(2));
+    expect(find.byType(UserSignUpSuccess), findsNothing);
+    expect(
+      find.byKey(const Key('foundingFriendCheckoutPanel')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('userSignUpSubmit-foundingFriend')),
+      findsNothing,
+    );
   });
 
   testWidgets('only injected Here & Now success shows approved confirmation', (
@@ -480,7 +1170,7 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const HereAndNowPage(showConfirmedSuccess: true),
+      const HereAndNowPage(createBloc: _successfulHereAndNowBloc),
     );
     expect(find.byType(UserSignUpSuccess), findsOneWidget);
     expect(
@@ -524,8 +1214,13 @@ void main() {
         find.byKey(const Key('userSignUpHeading-hereAndNow')),
       );
       final introductionSpan = introduction.textSpan! as TextSpan;
-      final introductionEmphasis =
-          introductionSpan.children!.single as TextSpan;
+      final introductionEmphasis = introductionSpan.children![1] as TextSpan;
+      expect(introductionSpan.toPlainText(), hereAndNowIntroduction);
+      expect(introductionEmphasis.text, 'Here & Now membership');
+      expect(
+        (introductionSpan.children!.last as TextSpan).text,
+        ' for 6 months from launch',
+      );
       expect(introductionSpan.style?.fontSize, width == 390 ? 36 : 60);
       expect(introductionEmphasis.style?.fontStyle, FontStyle.italic);
       expect(introductionEmphasis.style?.color, AppColors.warmOrange);
@@ -540,7 +1235,10 @@ void main() {
 
       await _pumpPage(
         tester,
-        const HereAndNowPage(showConfirmedSuccess: true),
+        HereAndNowPage(
+          key: ValueKey('successfulHereAndNow-$width'),
+          createBloc: _successfulHereAndNowBloc,
+        ),
       );
       final success = tester.widget<Text>(
         find.byKey(const Key('hereAndNowSuccessHeading')),
@@ -561,7 +1259,7 @@ void main() {
       setTestSurface(tester, Size(width, 1200));
       await _pumpPage(
         tester,
-        const HereAndNowPage(showConfirmedSuccess: true),
+        const HereAndNowPage(createBloc: _successfulHereAndNowBloc),
         textScaleFactor: 2,
       );
 
@@ -662,14 +1360,15 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('forms use shared branded controls with exact selector styling', (
+  testWidgets('forms retain branded controls with exact selector styling', (
     tester,
   ) async {
     setTestSurface(tester, const Size(1440, 1200));
     await _pumpPage(tester, const FoundingFriendPage());
 
     expect(find.byType(BrandedFormTextField), findsNWidgets(5));
-    expect(find.byType(BrandedFormDropdown<String>), findsNWidgets(2));
+    expect(find.byType(BrandedFormDropdown<String>), findsOneWidget);
+    expect(find.byType(SearchableCountryDropdown), findsOneWidget);
     expect(find.byType(BrandedFormCheckbox), findsOneWidget);
     expect(find.byType(BrandedFormActionButton), findsOneWidget);
 
@@ -729,6 +1428,43 @@ void main() {
       expect(tester.takeException(), isNull);
     }
   });
+
+  testWidgets('mocked HubSpot success drives the existing success UI', (
+    tester,
+  ) async {
+    late http.Request capturedRequest;
+    final config = HubSpotRegistrationFormsConfig(
+      portalId: '149114580',
+      hereAndNowFormGuid: '3284e6bc-e3a2-4d2e-9e21-684399126f3b',
+      foundingFriendFormGuid: '39f027d9-e786-4768-b532-54ed44e1f718',
+    );
+    final repository = HereAndNowRegistrationRepository(
+      HubSpotUserRegistrationDataSource(
+        client: MockClient((request) async {
+          capturedRequest = request;
+          return http.Response('', 200);
+        }),
+        config: config,
+      ),
+    );
+    setTestSurface(tester, const Size(1440, 1000));
+    await _pumpPage(
+      tester,
+      HereAndNowPage(
+        createBloc: () => HereAndNowRegistrationFormBloc(repository),
+      ),
+    );
+
+    await _enterHereAndNowRequiredFields(tester);
+    await _tapSubmit(tester, 'hereAndNow');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(UserSignUpSuccess), findsOneWidget);
+    expect(
+      capturedRequest.url,
+      config.submissionEndpoint(config.hereAndNowFormGuid),
+    );
+  });
 }
 
 Future<void> _pumpPage(
@@ -743,16 +1479,24 @@ Future<void> _pumpPage(
       theme: appTheme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      home: page,
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(
           context,
         ).copyWith(textScaler: TextScaler.linear(textScaleFactor)),
-        child: child!,
+        child: AppRouteDependencies(
+          createHereAndNowRegistrationFormBloc: () =>
+              HereAndNowRegistrationFormBloc(_HereAndNowRepository()),
+          createFoundingFriendRegistrationFormBloc: () =>
+              FoundingFriendRegistrationFormBloc(
+                _FoundingFriendRepository(),
+              ),
+          child: child!,
+        ),
       ),
-      home: page,
     ),
   );
-  await tester.pump();
+  await tester.pumpAndSettle();
 }
 
 void _expectHint(WidgetTester tester, Key key, String expected) {
@@ -762,12 +1506,77 @@ void _expectHint(WidgetTester tester, Key key, String expected) {
   );
 }
 
+TextEditingController _inputController(
+  WidgetTester tester,
+  String field,
+  String semanticId,
+) => tester
+    .widget<EditableText>(
+      find.descendant(
+        of: find.byKey(Key('${field}Field-$semanticId')),
+        matching: find.byType(EditableText),
+      ),
+    )
+    .controller;
+
 Future<void> _tapSubmit(WidgetTester tester, String semanticId) async {
   final submit = find.byKey(Key('userSignUpSubmit-$semanticId'));
-  await tester.ensureVisible(submit);
+  await tester.pumpAndSettle();
+  await Scrollable.ensureVisible(tester.element(submit), alignment: 0.5);
   await tester.pumpAndSettle();
   await tester.tap(submit);
   await tester.pump();
+}
+
+Future<void> _enterHereAndNowRequiredFields(WidgetTester tester) async {
+  await tester.enterText(
+    find.byKey(const Key('firstNameField-hereAndNow')),
+    'Alex',
+  );
+  await tester.enterText(
+    find.byKey(const Key('lastNameField-hereAndNow')),
+    'Morgan',
+  );
+  await tester.enterText(
+    find.byKey(const Key('emailField-hereAndNow')),
+    'alex@example.com',
+  );
+  await tester.enterText(
+    find.byKey(const Key('ageField-hereAndNow')),
+    '29',
+  );
+}
+
+Future<void> _enterFoundingFriendRequiredFields(WidgetTester tester) async {
+  await tester.enterText(
+    find.byKey(const Key('firstNameField-foundingFriend')),
+    'Taylor',
+  );
+  await tester.enterText(
+    find.byKey(const Key('lastNameField-foundingFriend')),
+    'Jones',
+  );
+  await tester.enterText(
+    find.byKey(const Key('emailField-foundingFriend')),
+    'taylor@example.com',
+  );
+  await tester.enterText(
+    find.byKey(const Key('ageField-foundingFriend')),
+    '31',
+  );
+  final country = find.byKey(const Key('countryField-foundingFriend'));
+  await tester.ensureVisible(country);
+  await tester.tap(country);
+  await tester.pumpAndSettle();
+  await tester.enterText(
+    find.descendant(of: country, matching: find.byType(EditableText)),
+    'Afghanistan',
+  );
+  await tester.pump();
+  await tester.tap(
+    find.widgetWithText(MenuItemButton, 'Afghanistan').hitTestable(),
+  );
+  await tester.pumpAndSettle();
 }
 
 void _expectOrdered(WidgetTester tester, List<Key> keys) {
@@ -776,5 +1585,95 @@ void _expectOrdered(WidgetTester tester, List<Key> keys) {
   ];
   for (var index = 1; index < positions.length; index++) {
     expect(positions[index], greaterThan(positions[index - 1]));
+  }
+}
+
+FunAppLandingPageApp _testApp() => FunAppLandingPageApp(
+  createHereAndNowRegistrationFormBloc: () =>
+      HereAndNowRegistrationFormBloc(_HereAndNowRepository()),
+  createFoundingFriendRegistrationFormBloc: () =>
+      FoundingFriendRegistrationFormBloc(_FoundingFriendRepository()),
+);
+
+HereAndNowRegistrationFormBloc _successfulHereAndNowBloc() {
+  final bloc =
+      HereAndNowRegistrationFormBloc(
+          _HereAndNowRepository(result: right(unit)),
+        )
+        ..add(const HereAndNowRegistrationFormEvent.firstNameChanged('Alex'))
+        ..add(const HereAndNowRegistrationFormEvent.lastNameChanged('Morgan'))
+        ..add(
+          const HereAndNowRegistrationFormEvent.emailChanged(
+            'alex@example.com',
+          ),
+        )
+        ..add(const HereAndNowRegistrationFormEvent.ageChanged('29'))
+        ..add(const HereAndNowRegistrationFormEvent.submitted());
+  return bloc;
+}
+
+final class _HereAndNowRepository
+    implements HereAndNowRegistrationRepositoryInterface {
+  _HereAndNowRepository({
+    this.result = const Left(AppFailure.serviceUnavailable()),
+  });
+
+  final Either<AppFailure, Unit> result;
+  final submissions = <HereAndNowRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitHereAndNowRegistration(
+    HereAndNowRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return result;
+  }
+}
+
+final class _FoundingFriendRepository
+    implements FoundingFriendRegistrationRepositoryInterface {
+  _FoundingFriendRepository({
+    this.result = const Left(AppFailure.serviceUnavailable()),
+  });
+
+  final Either<AppFailure, Unit> result;
+  final submissions = <FoundingFriendRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitFoundingFriendRegistration(
+    FoundingFriendRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return result;
+  }
+}
+
+final class _RetryHereAndNowRepository
+    implements HereAndNowRegistrationRepositoryInterface {
+  final submissions = <HereAndNowRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitHereAndNowRegistration(
+    HereAndNowRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return submissions.length == 1
+        ? left(const AppFailure.serviceUnavailable())
+        : right(unit);
+  }
+}
+
+final class _RetryFoundingFriendRepository
+    implements FoundingFriendRegistrationRepositoryInterface {
+  final submissions = <FoundingFriendRegistration>[];
+
+  @override
+  Future<Either<AppFailure, Unit>> submitFoundingFriendRegistration(
+    FoundingFriendRegistration registration,
+  ) async {
+    submissions.add(registration);
+    return submissions.length == 1
+        ? left(const AppFailure.serviceUnavailable())
+        : right(unit);
   }
 }

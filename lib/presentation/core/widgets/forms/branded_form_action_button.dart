@@ -13,6 +13,9 @@ final class BrandedFormActionButton extends StatelessWidget {
     required this.arrowKey,
     required this.label,
     required this.onPressed,
+    this.expand = false,
+    this.backgroundColor = AppColors.warmOrange,
+    this.foregroundColor = AppColors.lightForeground,
     this.disabledBackgroundColor = AppColors.warmOrange,
     super.key,
   });
@@ -29,96 +32,119 @@ final class BrandedFormActionButton extends StatelessWidget {
   /// Action callback, or null when the control is disabled.
   final VoidCallback? onPressed;
 
+  /// Fills the parent's allocated space and allows the label to wrap.
+  final bool expand;
+
+  /// Fill used when the action is enabled.
+  final Color backgroundColor;
+
+  /// Color of the label and decorative arrow.
+  final Color foregroundColor;
+
   /// Fill used when [onPressed] is null.
   final Color disabledBackgroundColor;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final expands = MediaQuery.sizeOf(context).width < 600;
-      final labelStyle = LandingTextStyles.heroCta.copyWith(
-        color: AppColors.lightForeground,
-      );
-      final labelPainter = TextPainter(
-        text: TextSpan(text: label, style: labelStyle),
-        textDirection: Directionality.of(context),
-        textScaler: MediaQuery.textScalerOf(context),
-        maxLines: 1,
-      )..layout();
-      // Keep a rounding allowance between TextPainter and RenderParagraph.
-      final contentWidth = labelPainter.width + 80 + 8 + 16 + 4;
-      final targetWidth = expands
-          ? constraints.maxWidth
-          : contentWidth.clamp(144.0, constraints.maxWidth);
-      final labelCanWrap = expands || contentWidth > constraints.maxWidth;
-      final labelText = Text(
-        label,
-        textAlign: TextAlign.center,
-        style: labelStyle,
-      );
-      final content = Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: labelCanWrap ? MainAxisSize.max : MainAxisSize.min,
-        children: [
-          if (labelCanWrap) Flexible(child: labelText) else labelText,
-          const SizedBox(width: 8),
-          SvgPicture.asset(
-            AppAssets.venueSendArrowUpRight,
-            key: arrowKey,
-            width: 16,
-            height: 16,
-            excludeFromSemantics: true,
-          ),
-        ],
-      );
-
-      return Align(
-        child: SizedBox(
-          width: targetWidth,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: FilledButton(
-              key: buttonKey,
-              onPressed: onPressed,
-              style: ButtonStyle(
-                minimumSize: const WidgetStatePropertyAll(Size(144, 48)),
-                padding: const WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                ),
-                backgroundColor: WidgetStateProperty.resolveWith<Color>((
-                  states,
-                ) {
-                  if (states.contains(WidgetState.disabled)) {
-                    return disabledBackgroundColor;
-                  } else {
-                    return AppColors.warmOrange;
-                  }
-                }),
-                foregroundColor: const WidgetStatePropertyAll(
-                  AppColors.lightForeground,
-                ),
-                overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                  if (states.contains(WidgetState.focused)) {
-                    return AppColors.energeticPlum.withValues(alpha: 0.16);
-                  } else if (states.contains(WidgetState.hovered)) {
-                    return AppColors.lightForeground.withValues(alpha: 0.08);
-                  } else {
-                    return null;
-                  }
-                }),
-                shape: const WidgetStatePropertyAll(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(AppSizes.pillRadius),
-                    ),
-                  ),
-                ),
+  Widget build(BuildContext context) => expand
+      ? _button(labelCanWrap: true)
+      : LayoutBuilder(
+          builder: (context, constraints) {
+            final expands = MediaQuery.sizeOf(context).width < 600;
+            final labelPainter = TextPainter(
+              text: TextSpan(text: label, style: LandingTextStyles.heroCta),
+              textDirection: Directionality.of(context),
+              textScaler: MediaQuery.textScalerOf(context),
+              maxLines: 1,
+            )..layout();
+            // Allow for rounding between TextPainter and RenderParagraph.
+            final contentWidth = labelPainter.width + 80 + 8 + 16 + 4;
+            labelPainter.dispose();
+            final targetWidth = expands
+                ? constraints.maxWidth
+                : contentWidth.clamp(144.0, constraints.maxWidth);
+            final labelCanWrap = expands || contentWidth > constraints.maxWidth;
+            return Align(
+              child: SizedBox(
+                width: targetWidth,
+                child: _button(labelCanWrap: labelCanWrap),
               ),
-              child: content,
+            );
+          },
+        );
+
+  Widget _button({required bool labelCanWrap}) {
+    final labelText = Text(
+      label,
+      textAlign: TextAlign.center,
+      style: LandingTextStyles.heroCta.copyWith(color: foregroundColor),
+    );
+    final content = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: labelCanWrap ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        if (labelCanWrap) Flexible(child: labelText) else labelText,
+        const SizedBox(width: 8),
+        SvgPicture.asset(
+          AppAssets.venueSendArrowUpRight,
+          key: arrowKey,
+          width: 16,
+          height: 16,
+          colorFilter: ColorFilter.mode(foregroundColor, BlendMode.srcIn),
+          excludeFromSemantics: true,
+        ),
+      ],
+    );
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: FilledButton(
+        key: buttonKey,
+        onPressed: onPressed,
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(144, 48)),
+          padding: WidgetStatePropertyAll(
+            EdgeInsets.symmetric(
+              horizontal: expand ? 20 : 40,
+              vertical: 12,
+            ),
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith<Color>((
+            states,
+          ) {
+            if (states.contains(WidgetState.disabled)) {
+              return disabledBackgroundColor;
+            } else {
+              return backgroundColor;
+            }
+          }),
+          foregroundColor: WidgetStatePropertyAll(foregroundColor),
+          side: expand
+              ? WidgetStateProperty.resolveWith<BorderSide?>((states) {
+                  if (states.contains(WidgetState.focused)) {
+                    return BorderSide(color: foregroundColor, width: 2);
+                  }
+                  return null;
+                })
+              : null,
+          overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.focused)) {
+              return AppColors.energeticPlum.withValues(alpha: 0.16);
+            } else if (states.contains(WidgetState.hovered)) {
+              return AppColors.lightForeground.withValues(alpha: 0.08);
+            } else {
+              return null;
+            }
+          }),
+          shape: const WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(AppSizes.pillRadius),
+              ),
             ),
           ),
         ),
-      );
-    },
-  );
+        child: content,
+      ),
+    );
+  }
 }

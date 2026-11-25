@@ -12,12 +12,35 @@ hash route, whose localized form preserves the established application and
 data workflow. That form shows the approved informational
 privacy acknowledgement with a presentation-local checkbox and links to the
 hosted Privacy Notice; it does not submit a consent field. The Here & Now and
-Founding Friend prospective-user field surfaces are preserved UI-only preview
-experiences at `/here-and-now` and `/founding-friend`. Intermediate production
-gates those routes and shows a localized Coming soon dialog from every existing
-entry point. The forms validate locally in explicitly configured preview builds
-but cannot submit until their Cloudflare-backed HubSpot workflow,
-age-eligibility policy, and consent semantics are approved and implemented.
+Founding Friend forms are public routes at `/here-and-now` and
+`/founding-friend`. Each has an independent domain model, provider-neutral
+repository contract, and application BLoC. Development can explicitly select
+temporary direct HubSpot testing or a first-party local Worker transport backed
+by deterministic mocks. The default development graph remains deferred.
+Production Here & Now uses the same-origin first-party registration endpoint,
+with forwarding controlled by its production release flag.
+
+After a confirmed Founding Friend registration, the implemented purchase
+workflow can prepare a separate one-time Stripe-hosted Checkout with a
+£249 GBP base price and Stripe Adaptive Pricing through
+`cloudflare/founding-friend-payment-worker/`. That Worker is independent of the existing forms Worker and is the only Stripe boundary. It
+stores the purchase reference and payment record in Stripe, verifies a
+specific Checkout Session before Flutter displays payment confirmation, and
+uses no D1 or other payment database. Local development is fully mocked. New
+payment creation and Founding Friend registration are controlled by their
+independent production release flags.
+
+The repository also prepares an isolated staging composition for
+`https://staging.funapp.world`. Staging keeps Venue submissions deterministic
+and local to Flutter, sends Here & Now and Founding Friend registration to a
+staging-only no-I/O Worker entrypoint, and sends payment requests to a separate
+Worker pinned to Stripe sandbox mode. Automated staging deployment succeeded;
+the operator reports successful registration, sandbox Checkout, and payment
+verification after correcting the purchase-reference secret behind the historical
+Checkout HTTP 500. See the [staging operational status in README](README.md#operational-configuration-and-rollback)
+for the verified GitHub run, incident history, and the distinction between deployed
+code and local audit changes. These runtime results have not been independently
+repeated in this audit.
 
 ## 2. Decision model
 
@@ -52,22 +75,27 @@ Current implementation is evidence of repository state, not automatically a perm
 - Dart analysis follows the main Fun App Flutter project's `very_good_analysis` policy.
 - Flutter generated localization supports complete application-UI catalogs for
   English, Spanish, Welsh, and Belarusian; English is the source and the
-  fallback for unsupported locales. The canonical Privacy Notice legal prose
-  remains English until separately approved legal translations are supplied.
+  fallback for unsupported locales. Published legal prose remains English (`en-GB`) until the legal publisher
+  supplies approved translations.
 - GitHub Pages is the production hosting and deployment target at `https://funapp.world`.
-- GitHub Pages builds Flutter through Puro and publishes `build/web` from the repository root at base href `/`.
-- The approved English Fun App Ltd Privacy Notice is hosted at
-  `https://funapp.world/#/privacy`. Its canonical website source is
-  `assets/legal/privacy_notice.md`; the hash route supports direct access,
-  refresh, and browser history without requiring a GitHub Pages rewrite.
-- Intermediate production footers expose only Privacy Policy. Terms of Use,
-  Refund & Cancellation Policy, Cookie Policy, and Cookie Banner are hidden and
-  their direct routes redirect to `/`. Explicit preview builds retain those
-  routes through one branded Markdown shell. Terms, refunds, and Cookie Banner
-  remain English review-only documents that do not save preferences or control
-  cookies. Cookie Policy reuses the self-contained cookie section from the
-  canonical approved Privacy Notice without duplicate legal copy. Approval of
-  a standalone Cookie Policy remains open.
+- GitHub Pages builds Flutter directly through `subosito/flutter-action@v2` and
+  publishes `build/web` from `main` at base href `/`. The build reads the optional
+  public booking URL from the `production` Environment. Local Flutter
+  and Dart commands continue to use Puro.
+- Legal document content, versions, metadata and publication are owned solely by
+  `FunApp.LegalDocumentation`. Flutter resolves the public production manifest at
+  `https://legal.funapp.world/manifest.json` and selected `en-GB` JSON assets.
+  Public hash routes are `/privacy`, `/terms`,
+  `/founding-friend/purchase-terms`, `/user-agreement`, and
+  `/acceptable-use-policy`. Footers expose all five. Refund/cookie placeholder
+  hashes remain redirects to `/`; they create no consent behavior.
+- Publication is distinct from effectiveness. The five initial releases were
+  published at `2026-11-08T11:57:22.034Z` and become effective at
+  `2026-11-14T00:00:00+01:00` (13 November 23:00 UTC). Future-effective
+  publications are labelled explicitly. This implementation does not authorize
+  production replacement before an approved applicability transition. The
+  service does not expose prior applicable versions; any requirement to retain
+  one needs an authoritative source and publication-contract decision.
 - Landing, form, success, Privacy, and legal-document pages use one reusable
   viewport-aware scrolling shell. When content is short, the shared footer
   rests at the bottom of the available viewport; longer or text-scaled content
@@ -75,7 +103,7 @@ Current implementation is evidence of repository state, not automatically a perm
   section, or clipping.
 - The landing and shared routed-page footers open the hosted Privacy Notice in
   the current app tab. The venue form shows
-  the approved English privacy acknowledgement immediately before submission,
+  its existing privacy acknowledgement immediately before submission,
   with an inline link that opens the same page in a new tab, preserving the
   current form draft. Its checkbox is presentation-local, optional, and
   non-persistent. This disclosure remains informational: no submitted consent
@@ -87,21 +115,59 @@ Current implementation is evidence of repository state, not automatically a perm
   request contract and has no HubSpot identifiers, fields, or direct endpoint.
 - `cloudflare/venue-interest-worker/` is the repository-controlled,
   independently testable Worker project targeting the existing
-  `funapp-venue-interest` Worker. Its active production boundary is
-  first-party `POST /api/venue-interest` on `https://funapp.world`, via a
-  dashboard-managed narrow Worker Route. It has no route, account ID, or zone
-  ID in repository configuration. Its source-controlled
-  GitHub Actions deployment is manual only and uses the GitHub `production`
-  Environment for runtime bindings and Cloudflare authentication. GitHub Pages
-  remains the web origin for every other path.
+  `funapp-registration-forms` Worker. Its code implements `POST
+  /api/venue-interest`, `POST /api/registrations/here-and-now`, and `POST
+  /api/registrations/founding-friend`. Venue operates independently of the two
+  registration activation controls. The production entrypoint forwards each
+  approved registration only while its flag is enabled. Routing is managed
+  in Cloudflare. The coordinated GitHub Actions release uses the GitHub
+  `production` Environment for Worker binding values and authentication.
+  GitHub Pages remains the web origin for non-API paths.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
-- The Here & Now and Founding Friend forms are responsive presentation-only
-  routes preserved behind the compile-time
-  `FUN_APP_ENABLE_UNFINISHED_PREVIEW=true` setting. The setting defaults to
-  false for both entrypoints. Intermediate production entry points open a
-  reusable localized Coming soon dialog, and protected routes redirect to `/`
-  before form widgets render. Preview form actions remain disabled and perform
-  no network, persistence, payment, or membership-status operation.
+- The Here & Now and Founding Friend forms are responsive public routes backed
+  by separate provider-neutral registration models, repository contracts, and
+  application BLoCs. Explicit development selection uses either the public
+  unauthenticated HubSpot Forms endpoint or the local mocked first-party Worker;
+  unconfigured development uses deferred repositories. Both production forms
+  submit through the same-origin Worker with independent server-side activation.
+  Here & Now retains its terminal waitlist success. Confirmed Founding Friend
+  registration leads into its independent Checkout workflow.
+- `cloudflare/founding-friend-payment-worker/` is a separate, independently
+  testable TypeScript Worker for Checkout creation and read-only session
+  verification. Flutter contains no Stripe SDK or credential. Creation is
+  disabled by default; verification remains independently available for
+  recovery. Venue uses its existing separate submission path and HubSpot form.
+- `lib/main_staging.dart` selects an isolated hosted dependency graph. It uses
+  `https://staging.funapp.world` for both first-party registration and payment
+  API families, uses no browser-side provider credential or arbitrary endpoint,
+  and does not change `lib/main_prod.dart`.
+- The existing registration Worker project has a named `staging` environment
+  deploying as `funapp-registration-forms-staging`. Its distinct `src/staging.ts`
+  entrypoint accepts only the two exact registration paths on the staging host,
+  requires exact staging enablement plus its rate-limit binding, and injects a
+  deterministic no-I/O adapter. It has no HubSpot portal or form identifier and
+  cannot fall back to HubSpot. The production entrypoint does not select this
+  adapter from a request or binding.
+- The payment Worker has a named `staging` environment deploying as
+  `funapp-founding-friend-payment-staging`. Its distinct `src/staging.ts`
+  entrypoint accepts only the two exact payment paths on the staging host,
+  requires `STRIPE_EXPECTED_LIVEMODE=false`, fixes the public origin to staging,
+  and rejects non-restricted or non-sandbox Stripe keys before provider I/O. The
+  source environment retains fail-closed Price/tax placeholders and a disabled
+  creation default for local validation. Automatic deployment removes those
+  defaults and explicitly supplies reviewed sandbox environment values, including
+  required creation enablement; automatic tax remains disabled.
+  Its rate-limit namespace is distinct from production and registration.
+- Staging hosting uses the independent Cloudflare Workers Static Assets project
+  in `cloudflare/staging-site-worker/`, deploying with Worker identity
+  `funapp-landing-staging`. It has SPA fallback for non-asset navigation and a
+  minimal Worker-first `/api` handler that returns `404` when no more-specific
+  API Worker Route exists. Its `workers.dev` and preview URLs are disabled, and
+  it declares no route or Custom Domain. The prepared staging artifact removes
+  the production `CNAME`, rejects bundled local legal assets, uses a staging
+  canonical URL, and adds HTML, robots, and response-header noindex controls.
+  Cloudflare Access remains the required access-control boundary; noindex is not
+  authorization.
 
 ### Open
 
@@ -114,8 +180,11 @@ Current implementation is evidence of repository state, not automatically a perm
 - Public Fun App product and brand communication.
 - Responsive Flutter Web presentation.
 - Deliberate public-web, accessibility, and SEO behavior throughout implementation and release work.
-- Approved UI-only Here & Now waitlist and Founding Friend sign-up fields,
-  copy, validation, and route navigation.
+- Approved Here & Now waitlist and Founding Friend sign-up fields, copy,
+  domain validation, application submission lifecycles, and route navigation.
+- One-time £249 GBP base-price Founding Friend Stripe-hosted Checkout preparation
+  with Stripe Adaptive Pricing, backend-verified payment status, purchase-reference confirmation, and fully
+  deterministic local mock behavior without external service configuration.
 
 ### Provisional
 
@@ -127,7 +196,7 @@ Current implementation is evidence of repository state, not automatically a perm
 - Any future submitted marketing-consent contract, analytics, and marketing behavior.
 - Prospective-user backend, API, authentication, retention, deletion, and
   error-handling contracts.
-- Approved Terms of Use, Refund & Cancellation Policy, and Cookie Policy copy,
+- Approved standalone Refund & Cancellation Policy and Cookie Policy copy,
   plus the production cookie-consent/preferences solution.
 
 ## 5. Repository shape
@@ -138,26 +207,41 @@ The repository is an active Flutter Web project:
   venue-lead domain/application/data foundation.
 - `lib/l10n/` contains committed ARB localization inputs; generated localization Dart files remain uncommitted.
 - `assets/branding/` contains reusable Fun App logos and decorative brand shapes.
-- `assets/legal/privacy_notice.md` is the canonical website representation of
-  the currently approved English Privacy Notice.
-- `assets/legal/` also contains explicitly review-only Markdown documents for
-  unresolved legal routes; the Cookie Policy route reads its copy from the
-  canonical Privacy Notice instead of a second document.
+- `assets/legal/` retains inactive, unbundled refund/cookie reference drafts.
+  No local legal Markdown is consumed at runtime. Exact public JSON fixtures
+  under `test/fixtures/legal/` are test data only.
 - `test/` contains tests for active Flutter behavior.
 - `web/` contains the Flutter Web host scaffold and canonical web-root static inputs, including `CNAME` and `robots.txt`.
 - `cloudflare/venue-interest-worker/` contains the isolated TypeScript
-  first-party venue-interest Worker and its focused tests; it is not part of
+  first-party forms Worker and its focused tests; it is not part of
   Flutter's `lib/` architecture.
+- `cloudflare/founding-friend-payment-worker/` contains the isolated Stripe
+  Checkout and payment-verification Worker, deterministic mocks, and focused
+  tests. It has no storage binding and is deployed separately, if authorized.
+- `cloudflare/staging-site-worker/` contains the staging-only Static Assets
+  hosting configuration and minimal fail-closed `/api` handler. It does not
+  contain either API integration and declares no route or Custom Domain.
 - `archive/astro_site/` contains the deprecated pre-Flutter Astro implementation for historical reference only; it is outside the active architecture.
-- `.github/workflows/deploy.yml` validates and builds Flutter through Puro, uploads `build/web`, and deploys it through GitHub Pages.
+- `.github/workflows/deploy.yml` validates and builds Flutter directly through
+  `subosito/flutter-action@v2`, uploads `build/web`, and deploys it through
+  GitHub Pages.
 
 Flutter code uses `presentation`, `application`, `domain`, `data`, and `core`
 areas only when active behavior needs them. `domain` is active for reusable
-validation and the provider-neutral venue-lead model. The narrow active
-`application/venue` surface owns the venue-lead form BLoC. `data/venue` owns one
-provider-neutral repository, its DTO, first-party request model, and
-environment-specific data sources. `core` owns typed environment selection and
-dependency composition. The landing-page repository
+validation and provider-neutral submission models. The active `application`
+surfaces own the Venue, Here & Now, and Founding Friend form BLoCs. `data/venue`
+owns one provider-neutral repository, its DTO, first-party request model, and
+environment-specific data sources. `data/user_registration` contains the two
+workflow repositories, direct HubSpot and first-party Worker development data
+sources and request mappings, and fail-closed repository implementations.
+`application/founding_friend_payment` owns separate Checkout preparation and
+reloadable payment-verification BLoCs. `domain/founding_friend_payment` defines
+provider-neutral contracts and statuses. `data/founding_friend_payment` owns
+the payment Worker client, deferred repository, and tab-scoped pending-attempt
+store.
+`core` owns typed
+environment selection, public development configuration, and dependency
+composition. The landing-page repository
 aligns architectural concepts with the main Fun App Flutter application where
 appropriate, but the repositories do not share source code or packages.
 
@@ -234,6 +318,16 @@ clipping rather than geometric distortion. Founding Friends artwork remains
 anchored to the trailing edge, while venue artwork remains anchored to the
 leading edge.
 
+Landing photography is encoded as quality-95 WebP with sRGB colors and
+lossless alpha encoding. Hero keeps its distinct mobile/desktop compositions;
+Hero and Connection retain source dimensions. Founding Friends and Venue use
+673 × 410 main assets with original-resolution 1346 × 820 `2.0x/` variants,
+selected by Flutter's standard density-aware asset resolution. Their maximum
+painted dimensions are 673 × 410, so DPR 1 has lower transfer/decoded costs
+while DPR 2/3 retains the existing source resolution. PNG originals remain in
+Git history and are not bundled. Aspect ratios, logical dimensions, cropping,
+semantic labels, breakpoints, and eager section loading remain unchanged.
+
 Below a 600px outer viewport width, Founding Friends and Venue use vertical,
 centered promotional cards with 16px internal horizontal bounds, an 80px
 content/artwork rhythm, and full-width visual-only CTAs. Their artwork
@@ -249,14 +343,19 @@ offer, Founding Friend explanation, Founding Friends, Venue, Welcome Statement,
 FAQ, and Footer. The Header remains fixed outside the primary scrolling
 content. Membership presents static Free, Here & Now, and Founding Friend
 pricing cards. Those cards and the Founding Friend descriptions are approved
-marketing presentation only; subscription, payment, cancellation, entitlement,
-badge, and other business behavior is not implemented. The pricing controls
-retain their approved appearance; production opens Coming soon while explicit
-preview builds restore their `/here-and-now` and `/founding-friend` routes.
+marketing presentation. They do not themselves prove payment, entitlement, or
+membership activation. The Founding Friend form can continue to the separately
+implemented one-time £249 GBP base-price purchase workflow with Stripe Adaptive
+Pricing; subscriptions, immediate entitlement, badges, and other membership behavior remain unimplemented. The
+pricing controls retain their approved appearance and navigate to the public
+`/here-and-now` and `/founding-friend` routes.
 Pricing cards use three, two,
 or one column based on usable card width, and Founding Friend benefit cards
 similarly reflow from the desktop intro-plus-three-card composition without
-forcing desktop heights onto narrow single-column layouts.
+forcing desktop heights onto narrow single-column layouts. Multi-column benefit
+cards share a height derived from the tallest localized, text-scaled content,
+including the third card in the two-column layout. Single-column cards fill the
+available width while retaining content-driven heights.
 
 Header and footer section navigation scrolls within the single landing page
 while the header remains fixed above the scrolling content. The header and
@@ -281,14 +380,17 @@ enough time to accelerate, travel, and decelerate while nearby targets remain
 responsive.
 Brief hover interpolation applies only to internal navigation backgrounds;
 keyboard focus remains immediate. Navigation movement and hover interpolation
-become immediate when reduced motion is requested. In intermediate production,
-the localized header/mobile-menu queue action, Limited Offer queue CTA, Free
-Membership CTA, Here & Now membership CTA, Lifetime Membership CTA, and
-Founding Friends prospective-user CTA open one localized Coming soon dialog
-without changing routes. Explicit preview builds restore the established
-`/here-and-now` and `/founding-friend` mappings. Those preserved routes collect
-no information because their submission/payment controls are disabled until
-integration. The venue CTA
+become immediate when reduced motion is requested. The localized
+header/mobile-menu queue action, Limited Offer queue CTA, Free Membership CTA,
+Here & Now membership CTA, Lifetime Membership CTA, and Founding Friends
+prospective-user CTA navigate to their established `/here-and-now` or
+`/founding-friend` mappings. The routes contain the implemented registration
+workflows. Production Here & Now targets its first-party endpoint; production
+Founding Friend registration remains disabled. A confirmed Founding
+Friend registration proceeds to Checkout preparation, while a return redirect
+is verified through `/founding-friend/payment` and cancellation renders
+`/founding-friend/payment/cancelled`. Reloading either payment route never
+creates another Checkout Session. The venue CTA
 navigates to the dedicated `/venues` page. A fresh
 `VenueLeadFormBloc` owns each Venue route lifecycle and submits through the
 established environment-selected venue repository/data-source graph. Shared
@@ -333,8 +435,9 @@ Below a 600px outer viewport width, Problem, Membership, Limited Offer, Welcome,
 and FAQ opt into the approved mobile 16px page bounds and section-specific
 Figma rhythm and type roles. Membership remains a one-column, naturally sized
 pricing-card stack with its approved reveal unchanged. Its Founding Friend
-supporting line follows the distinct approved mobile copy. FAQ retains its
-existing independent expansion, semantics, focus, and motion behavior while using its
+supporting line retains the distinct mobile early-build participation copy and
+includes the shared vision and lifetime privileged-access message. FAQ retains
+its existing independent expansion, semantics, focus, and motion behavior while using its
 mobile-specific spacing and type. Marketing copy remains shared across
 responsive layouts unless product or design explicitly changes it.
 
@@ -354,10 +457,40 @@ above, logo/navigation and
 email/legal content form the two approved desktop rows around the full-width
 divider;
 intermediate widths stack those groups without fixed heights or horizontal
-overflow. Privacy Policy opens the authoritative hosted Privacy Notice and is
-the only legal control visible in intermediate production. Explicit preview
-builds also show Terms of Use, Refund & Cancellation Policy, Cookie Policy, and
-Cookie Banner for review; their presence establishes no consent behavior.
+overflow. The five published-document links wrap using the shared legal controls.
+Footer navigation uses typed same-tab routes. Contextual registration links open
+separate current-origin hash pages so form drafts survive. They are informational,
+not acceptance controls. The purchase document is available before initial
+Founding Friend submission and in Checkout retry/cancellation presentation.
+Refund/cookie hashes remain restricted.
+
+Legal pages reuse the branded card and viewport-aware shell. A small domain
+repository contract and one HTTP data implementation resolve each selected
+`en-GB` publication; no BLoC is needed. Requests validate production schema,
+metadata, strict offset timestamps/calendar dates, MIME, strict UTF-8 and exact
+manifest-derived HTTPS paths on `legal.funapp.world`. Redirects are rejected.
+The entire load has a 15-second deadline, with 256 KiB manifest and 1 MiB JSON
+limits. One re-resolution handles a disappearing/mismatched asset. Hashes must
+match between manifest and JSON; no independent runtime digest recomputation is
+claimed. There is no persisted cache or bundled fallback. HTTP cache revalidation
+remains publisher-owned; a route retains its loaded snapshot until retry or exit.
+Historical asset availability is not guaranteed. PDF navigation is independent
+of JSON rendering and may return 404 after a later publication.
+
+The exact title is the page H1. Legal H2 and H3 headings use Instrument Serif
+with distinct sizes and spacing; legal body text remains Manrope.
+Original Markdown paragraphs, heading levels,
+list ordering, emphasis and hard breaks remain intact. Text is selectable and
+links support keyboard focus and activation. HTTPS and mailto destinations are
+validated; raw HTML, images, unsafe URLs and unsupported constructs fail explicitly.
+The UI labels version, `en-GB`, publication/effective timestamps with their source
+offsets and future-effective status. All four UI locales retain English legal
+prose and show a language explanation outside English. There is no automatic
+effective-date version selection or invented legal translation.
+
+The cancellation FAQ asks for 48 hours' notice for the ongoing Here & Now
+subscription; the existing Founding Friend
+14-day purchase refund statement remains unchanged.
 
 The approved FAQ contains 13 independently expandable items. Expansion state
 is local to the presentation widget, the first item starts expanded, and the
@@ -410,26 +543,67 @@ capabilities as implemented.
   gender and usage reason are optional. The Founding Friend UI adds required
   country while keeping gender and usage reason optional. Both forms expose a
   separate optional marketing-consent checkbox that starts unchecked and does
-  not block local validation.
-- Presentation validation rejects blank required names, structurally invalid
-  email, non-integer age input, and a missing Founding Friend country. It does
-  not invent an age threshold. This validation is usability only and does not
-  authorize production collection without matching backend validation.
+  not block local validation. These two marketing labels use 18px medium text
+  with 28px line height; the shared checkbox retains its 44px hit target and
+  other checkbox typography remains unchanged.
+- Domain validation rejects blank required names, structurally invalid email,
+  non-integer age input, and a missing Founding Friend country. The Founding
+  Friend aggregate and registration Worker require a self-declared age of
+  at least 18. Localized feedback appears after a submit attempt. Here & Now
+  retains the shared integer-age rule. The form collects neither date of birth
+  nor verified identity. Checkout creation accepts an email and attempt ID
+  without evidence of an eligible registration.
+- Founding Friend domain validation additionally caps email at 254 UTF-16 code
+  units before registration so the unchanged Checkout preparation contract can
+  accept it. Structural validation and original casing/whitespace are preserved;
+  Here & Now and the shared email value object retain their broader contract.
+- Venue domain validation matches existing Worker text limits in UTF-16 code
+  units (`String.length` in Dart and JavaScript): venue name 512, venue type,
+  contact first/last name and role 256, website 2048, email 320, phone 64.
+  The form reports length errors without truncating or normalizing text.
+  The Worker retains its separate 16 KiB UTF-8 JSON body limit; Checkout retains
+  its 4 KiB limit. Field length is distinct from encoded request size.
 - Current live HubSpot contact properties are `firstname`, `lastname`,
   `email`, `age`, `gender`, `country`, `usage_reason`, and
   `marketing_consent`. Gender stores `Man`, `Woman`, `Non-binary`, or
   `Prefer not to answer`. The Founding Friend country control uses the complete
   live `country` property label/value set captured in the English localization
-  source rather than a shortened list.
-- Future integration references portal `149114580`, Here & Now form
+  source rather than a shortened list. Its localized labels are searchable by
+  case-insensitive partial name while selection retains the stable live value.
+  Each locale's catalog orders countries by the displayed name using locale
+  collation, including accents and Welsh digraphs. Changing locale selects that
+  catalog's ordering; filtering preserves it. Full-ICU Node.js tests protect
+  collation independently of browsers that lack Welsh collation data. Chrome
+  tests cover locale changes and interaction. All 254 canonical values remain.
+- Development integration references portal `149114580`, Here & Now form
   `3284e6bc-e3a2-4d2e-9e21-684399126f3b`, and Founding Friend form
-  `39f027d9-e786-4768-b532-54ed44e1f718`. These documented identifiers do not
-  appear in Flutter submission code, and no browser-to-HubSpot path exists.
-- Production supplies no submit callback to either user form. A small
-  presentation draft and injected callback exist only for isolated UI tests and
-  previews. The approved Here & Now success copy is reachable only through an
-  explicitly injected confirmed-success state; no Founding Friend success copy
-  or payment state exists.
+  `39f027d9-e786-4768-b532-54ed44e1f718`. The identifiers are public and are
+  supplied to development builds through `FUN_APP_HUBSPOT_PORTAL_ID`,
+  `FUN_APP_HUBSPOT_HERE_AND_NOW_FORM_GUID`, and
+  `FUN_APP_HUBSPOT_FOUNDING_FRIEND_FORM_GUID`; no private HubSpot credential is
+  present in Flutter source or the browser bundle.
+- `HereAndNowRegistration` and `FoundingFriendRegistration` are independent
+  provider-neutral domain aggregates. Each has its own repository contract and
+  form BLoC so the workflows can evolve without sharing payment, membership,
+  or transport behavior. They reuse established name, email, single-line text,
+  failure, and value-object foundations. `Age` requires only an integer and
+  deliberately applies no eligibility threshold.
+- Both BLoCs own editable drafts, validation-attempt visibility, pending state,
+  semantic success/failure, retry, duplicate in-flight suppression, and stale
+  completion rejection. Optional gender, usage reason, and marketing opt-in do
+  not block submission. Founding Friend additionally requires country.
+- Development resolves direct-HubSpot repositories only when that transport is
+  explicitly selected and all three public identifiers are valid. It resolves
+  the Worker-backed repositories only when the local Worker transport and a
+  valid loopback origin are explicitly selected. Otherwise it resolves deferred
+  repositories that return service unavailable without I/O. Production always
+  resolves both Worker-backed registration repositories and ignores development
+  transport settings.
+  Confirmed Here & Now success replaces the submitted form with its established
+  branded membership-specific confirmation. Confirmed Founding Friend
+  registration does not render the prior terminal registration acknowledgement;
+  it starts the separate Checkout-preparation BLoC with the validated email and
+  a new opaque attempt ID. Payment recovery never resubmits HubSpot registration.
 
 - The prospective-venue lead contract is provider-neutral and lives in
   `domain`. It uses `dartz` `Either` for validation results and `Option` for
@@ -443,7 +617,8 @@ capabilities as implemented.
 - Domain validation does not trim, lowercase, rewrite, or otherwise normalize
   submitted text. Phone numbers are stored as strings, preserve leading zeroes,
   and, when present, accept decimal digits only. Venue count and venue capacity
-  are optional positive integral quantities with no established upper bound.
+  are optional positive integers from 1 through 9007199254740991, matching
+  the Worker JavaScript-safe integer contract.
 - `VenueLead` requires venue name, website, contact first name, contact last
   name, role, and email. Venue type, independent/chain status, venue count,
   venue capacity, and phone number are optional.
@@ -454,10 +629,10 @@ capabilities as implemented.
   is cleared when switching away. Venue count and capacity controls accept
   digits only while domain validation still enforces positive integers.
   The conditional venue count expands and collapses with reduced-motion support,
-  and its visible label is "Number of venues" in English.
-  The venue information group and text inputs retain their established styling
-  while the routed page shell is aligned separately. Detailed form-control
-  restyling remains deferred to the dedicated Venue form pass.
+  and its visible label is "If chain, number of venues" in English.
+  The routed form uses shared branded fields and an optional chain dropdown,
+  with responsive rows and the presentation-local privacy acknowledgement.
+  The obsolete Venue dialog and its alternate form presentation are removed.
 - Generated Auto Route, Freezed, and Injectable source is regenerated locally
   and in CI and remains uncommitted.
 - `VenueInterestRequest` is a data-layer first-party request model. It emits
@@ -490,9 +665,15 @@ capabilities as implemented.
   same approved `mailto:info@funapp.world` behavior as the shared footer.
   Operational failure
   keeps the form open and editable for retry, with a concise retry-later
-  message above Send.
-  While submission is pending, Send is visibly disabled and an indeterminate
-  linear progress indicator appears immediately above it.
+  message above the actions. While a submission is pending, the blue waitlist
+  button is disabled and an indeterminate progress indicator appears above it.
+- The independent orange booking action opens the configured HTTPS destination
+  in a new tab without opener access. It preserves the draft and does not
+  validate or submit the form. The optional public
+  `FUN_APP_VENUE_BOOKING_URL` is a compile-time value. Missing or invalid
+  configuration produces localized live-region feedback when clicked. Wide
+  layouts place booking to the left of waitlist; narrow layouts put waitlist
+  first.
 - The application suppresses concurrent submit events while one repository call
   is in flight. This is client workflow protection, not server idempotency,
   deduplication, or duplicate-lead prevention.
@@ -523,6 +704,30 @@ capabilities as implemented.
   map to their matching `AppFailure` categories. Unclassified exceptions map to
   `AppFailure.unexpected`. Data-source exceptions do not cross the domain
   repository boundary.
+- The development-only registration data source posts JSON directly to
+  `https://api.hsforms.com/submissions/v3/integration/submit/{portalId}/{formGuid}`
+  without authentication. It maps `firstname`, `lastname`, `email`, numeric
+  `age`, optional `gender`, Founding Friend `country`, optional `usage_reason`,
+  and boolean `marketing_consent` to the Forms API's string-valued field entries.
+  Absent optional values are omitted. Marketing opt-in is a contact property,
+  not processing consent; the request deliberately contains no
+  `legalConsentOptions`, tracking cookie, page context, or submitted timestamp.
+- Direct registration submissions use one abortable 15-second deadline and no
+  automatic retry. A 200 response succeeds; 400 is submission rejected; 429,
+  every 5xx response, transport failures, and timeout aborts are service
+  unavailable; other statuses are unexpected. Response bodies and submitted
+  personal data are neither parsed nor logged.
+- `HereAndNowRegistrationRequest` and `FoundingFriendRegistrationRequest` are
+  first-party request models. Both emit required `firstName`, `lastName`,
+  `email`, integer `age`, and boolean `marketingConsent`; absent `gender` and
+  `usageReason` are omitted. Founding Friend additionally emits required
+  canonical `country`. They contain no portal/form identifier or HubSpot field
+  name.
+- `WorkerUserRegistrationDataSource` posts those models to exact Worker paths `/api/registrations/here-and-now` and
+  `/api/registrations/founding-friend`. It uses one abortable 15-second deadline
+  and no retry. A 204 succeeds; 400/422 are submission rejected; 429/503 and
+  transport/deadline failures are service unavailable; 500 and unrecognised
+  statuses are unexpected. It neither parses nor logs response bodies.
 - GetIt and Injectable own composition now that environment-dependent
   implementations exist. `VenueLeadFormBloc` is a factory registration, the
   repository is a provider-neutral lazy singleton, and core composition
@@ -530,33 +735,243 @@ capabilities as implemented.
   Application and data classes use constructor injection rather than reading
   GetIt or importing application configuration.
 - Environment selection is structural: `lib/main_dev.dart` passes the typed
-  `AppEnvironment.development` value into bootstrap and resolves deterministic
-  development dependencies, while `lib/main_prod.dart` passes
-  `AppEnvironment.production` and resolves the first-party production graph. No
-  environment-selection dart-define or string parsing is used.
+  `AppEnvironment.development` value into bootstrap, while `lib/main_prod.dart`
+  passes `AppEnvironment.production`. Development additionally requires an
+  explicit `FUN_APP_REGISTRATION_TRANSPORT` selection (`deferred`,
+  `direct_hubspot`, or `local_worker`); omission selects deferred. The local
+  Worker selection accepts only an HTTP(S) loopback origin. Production ignores
+  every development registration selection. Both registration endpoints resolve
+  against the browser origin.
 - Flutter production needs no Venue submission runtime configuration. A local
   production browser run resolves the same-origin endpoint to localhost and
   therefore cannot reach the deployed Worker without separate local routing;
   development remains the deterministic fake path.
-- The repository-controlled Cloudflare Worker validates the untrusted Fun App
-  request, maps it to HubSpot only at its provider boundary, and obtains its
-  public provider identifiers from Worker environment bindings. It does not log
-  submitted form content or HubSpot response bodies. The deployed narrow route
-  owns `/api/venue-interest`; GitHub Pages remains the origin for all other
-  paths. The Worker reads at most 16 KiB per request and makes one upstream
-  attempt with a 10-second deadline; it does not automatically retry.
-
-### Provisional
-
-- The user forms will eventually submit through a Fun App-owned Cloudflare
-  boundary following the established Venue integration pattern.
-- Flutter should remain decoupled from backend implementation through interfaces, repositories, data sources, DTO/boundary mapping, and configuration.
+  Payment configuration instead targets fixed `https://funapp.world` endpoints,
+  including in local production-mode runs, subject to browser CORS restrictions.
+- The repository-controlled Cloudflare Worker performs exact route dispatch,
+  validates each untrusted Fun App request independently, maps to HubSpot only
+  at its provider boundary, and obtains public provider identifiers from Worker
+  bindings. It rejects unknown properties, malformed JSON, non-JSON content,
+  non-safe-integer ages, unsupported canonical gender/country values, and
+  requests over 16 KiB. The Flutter Worker transport applies the same exact
+  JavaScript integer-serialization and UTF-8 total-body boundaries before I/O.
+  Founding Friend requests with an integer age below 18 are rejected before
+  provider I/O, including in the staging mock. The Worker applies no extra
+  registration field-length constraints beyond the total-body limit.
+- Production forwarding requires the exact string `true` on the respective
+  flag, `HERE_AND_NOW_SUBMISSIONS_ENABLED` or
+  `FOUNDING_FRIEND_SUBMISSIONS_ENABLED`. Each defaults to `false` and requires a
+  numeric portal ID, its own approved HubSpot form GUID, and the
+  `REGISTRATION_RATE_LIMITER` binding when enabled. The Founding Friend form
+  GUID must differ from the Venue and Here & Now form GUIDs. Missing or
+  malformed configuration fails closed for the affected form. The shared
+  local flag still governs loopback mocks. Staging uses its isolated mock
+  entrypoint without HubSpot I/O. The rate-limit binding
+  provides approximate, Cloudflare-location-local protection targeting 10
+  attempts per 60 seconds per route and connecting-IP key, not a strict
+  globally consistent quota. It is an abuse control, not authentication:
+  shared IPs may group unrelated users into collective throttling, and requests
+  handled in different Cloudflare locations may exceed the nominal aggregate
+  rate.
+- `HUBSPOT_VENUE_FORM_GUID` is canonical. The Worker temporarily accepts the
+  legacy `HUBSPOT_FORM_GUID` when the canonical binding is absent. It rejects
+  conflicting identifiers before forwarding. Production preflight requires the
+  canonical GitHub variable and checks any retained legacy binding for agreement.
+  Venue remains independent of registration enablement, form IDs, and rate
+  limiting. Provider calls use one attempt with a 10-second deadline. Responses
+  and logs exclude provider bodies, submitted values, headers and cookies.
+- Local Wrangler development requires an explicit localhost origin plus one of
+  six deterministic mock scenarios. Missing, partial, or invalid local mock
+  configuration fails closed, and loopback Venue and registration requests
+  never contact HubSpot. Non-loopback execution rejects either local-only
+  setting. Local-only CORS responses support the fixed Flutter dev origin;
+  production remains same-origin and emits no CORS allowance.
+- Founding Friend payment uses the separate first-party Worker endpoints `POST
+  /api/founding-friend-payments/checkout-sessions` and `POST
+  /api/founding-friend-payments/checkout-sessions/verify`. Request bodies are
+  exact-schema JSON and limited to 4 KiB. Creation accepts only validated
+  `email` and UUID v4 `attemptId`; verification accepts only a specific
+  Checkout `sessionId`. There is no public email-lookup or enumeration API.
+- The production payment entrypoint accepts only Stripe-backed requests on
+  `https://funapp.world` with that exact configured return origin, live mode
+  explicitly set to `true`, a restricted live `rk_live_` key, a syntactically
+  valid `price_…` ID, explicit automatic tax `true` or `false`, a valid
+  purchase-reference secret, and the `PAYMENT_RATE_LIMITER` binding. The secret
+  must be independently generated, at least 32 characters, and free of
+  surrounding whitespace, CR/LF, and NUL. The public local mock secret is
+  rejected. Checkout creation defaults to disabled and requires the exact
+  string `true`. Read-only verification remains available with valid
+  live configuration while creation is disabled. The staging entrypoint
+  remains sandbox-only and the local mock remains loopback-only.
+- Checkout parameters are server-owned. The Worker first retrieves and validates
+  the configured active one-time Stripe Price, including the expected live/test
+  environment, GBP currency, fixed 24900 minor-unit amount, tax-inclusive
+  behavior, and absence of custom unit amounts. It then requests exactly one
+  line item, quantity 1, in `payment` mode, prefills the validated registration
+  email, requires `customer_creation=always`, explicitly sends the configured
+  automatic-tax boolean, and supplies only fixed return/cancel URLs derived
+  from `PUBLIC_APP_ORIGIN`. With the pinned `2026-08-26.dahlia` API it sends
+  `payment_method_types[0]=card`. Stripe can present Apple Pay and Google Pay
+  for eligible customers based on browser, device, wallet and account settings.
+  Klarna, bank debit, bank transfer and other delayed methods are excluded.
+  The client cannot select a Price, amount, currency, quantity, mode, payment
+  method, tax setting, or redirect.
+- The Worker generates a non-email purchase reference in `FF-...` form with a
+  server-only HMAC secret and the attempt ID. It records that reference in
+  Stripe `client_reference_id`, Checkout Session metadata, and PaymentIntent
+  metadata. It also stores the explicit automatic-tax choice in Session and
+  PaymentIntent metadata, allowing future verification to validate the
+  per-purchase setting independently of a later configuration change. Stripe
+  holds the purchase record; no D1, KV, Durable Object, or other payment
+  database is used.
+- Checkout creation uses the attempt-derived Stripe idempotency key
+  `founding-friend-checkout-v1-{attemptId}`. After registration Flutter stores
+  the email, attempt ID and creation start in current-tab session storage.
+  Creation requires that snapshot to be readable. When creation returns,
+  Flutter saves the validated hosted URL with the Session ID. Reopening the
+  registration route with a pending record offers explicit recovery and blocks
+  new registration. Unreadable tab state goes to support guidance.
+- When a creation response is missing, explicit recovery may replay the same
+  attempt for one hour from the original start and then verify the recovered
+  Session. Missing, invalid, future or expired timestamps cannot authorize
+  replay, including older records with no timestamp. Stripe API v1 retains
+  keys for at least 24 hours and can cache errors. Repeated failures preserve
+  the same key and timestamp. Recovery never treats an unknown outcome as
+  a confirmed failure. This is a browser-local safeguard. Lost, duplicated,
+  or independent tab state and direct API calls can still produce duplicate
+  purchases. Stripe holds the purchase record for manual reconciliation.
+  [Stripe idempotency](https://docs.stripe.com/api/idempotent_requests).
+- Stripe Adaptive Pricing remains enabled in Stripe settings. The Worker does
+  not override it or calculate FX. £249 GBP (24900 minor units) is the original
+  tax-inclusive, one-time Price contract; Stripe may collect its localized
+  equivalent. Checkout creation still validates the configured active GBP Price
+  and requires the creation response to have GBP/24900 totals; no localized
+  creation response has been verified. Quantity, tax, references, idempotency,
+  fixed redirects, and all creation safeguards remain in place.
+- The read-only verification endpoint retrieves the named Checkout Session with
+  expanded line items, original Price, PaymentIntent, and latest charge using
+  the pinned `Stripe-Version: 2026-08-26.dahlia`. It requires the exact configured
+  original GBP/24900 one-time per-unit inclusive Price, quantity 1, the expected
+  environment, Customer creation mode, and matching stored automatic-tax choice
+  and purchase references. It accepts GBP/24900 Session and payment totals,
+  with optional Stripe `presentment_details` describing the localized payment.
+  It also accepts localized Session totals when `adaptive_pricing.enabled` is
+  true, with the original expanded GBP/24900 Price. Session, sole line item,
+  PaymentIntent, and captured charge must agree in that localized currency
+  and amount.
+  All amounts must be safe integers; totals must be positive, use a recognized
+  ISO currency, and reconcile without discounts, shipping, or additional items.
+  Inclusive line-item tax must match Session tax; disabled automatic tax cannot
+  introduce tax. Every supplied presentment amount/currency must be valid and
+  agree across Session, PaymentIntent, and charge; for localized Sessions it
+  must also agree with Session totals. Missing or contradictory required data
+  and legacy non-null `currency_conversion` shapes fail closed. No exchange
+  rate or fixed converted price is assumed.
+- A paid outcome additionally requires a valid Customer and an expanded
+  successful PaymentIntent with the full amount received, matching Customer,
+  livemode, purchase reference, and stored tax choice. Its successful paid,
+  captured charge must reference that intent, match the Customer/environment,
+  and reconcile the full captured amount. Refund/dispute fields must be valid;
+  disputes, full refunds, and partial refunds retain their provider-neutral
+  statuses. Other results remain `pending`, `expired`, or `invalid`; only a
+  complete, paid Session can return `confirmed` and its purchase reference.
+  An unpaid Session can have no PaymentIntent yet or a matching processing
+  intent. Refund/dispute checks remain a current-status best effort, not a
+  durable event ledger.
+- Contract evidence (2026-10-29): Stripe's [Adaptive Pricing
+  guide](https://docs.stripe.com/payments/checkout/localize-prices/adaptive-pricing?payment-ui=stripe-hosted)
+  and [presentment-details changelog](https://docs.stripe.com/changelog/basil/2025-03-31/add_presentment_details)
+  describe integration-currency Session/PaymentIntent totals with separate
+  presentment details. A read-only connected Fun App sandbox retrieval instead
+  showed EUR/29900 throughout Session, line item, PaymentIntent and captured
+  charge, `adaptive_pricing.enabled=true`, the original GBP/24900 inclusive
+  Price, and no `presentment_details`. The connector advertised a
+  `2026-09-30.preview` operation schema and cannot override the request's API
+  version; that is not proof of the pinned Dahlia response. Local tests assert
+  the outgoing Dahlia header and cover both representations. A direct pinned-
+  version sandbox GET and hosted validation remain unperformed. Neither this
+  investigation nor the tests create a Stripe payment or mutate Stripe.
+- The return route verifies its exact `session_id` through the Worker and
+  shows a purchase reference only when payment is confirmed. A retry on the
+  expired return route requires a matching stored Session. Cancellation stays
+  inert until explicit retry. A known Session is always verified through a
+  read-only lookup regardless of its attempt age. Open/unpaid verification
+  carries `canResumeCheckout: true` when the client opts in with
+  `Accept: application/json; checkout-recovery=1`. It can resume from the
+  valid URL saved with that Session. A legacy record lacking the URL can still
+  show verified status and directs the user to support if it cannot resume.
+  Only verified unpaid expiry without evidence of in-flight payment permits
+  a new attempt. Pending non-resumable, confirmed, refunded, disputed, invalid,
+  and unavailable verification do not authorize a replacement. Missing or
+  mismatched tab state gives support guidance. Success confirms payment for
+  future benefits and does not create an account or activate membership.
+- Stripe automatic payment receipts use the Customer email supplied by hosted
+  Checkout. Enabling **Successful payments** and verifying actual delivery are
+  production prerequisites. The MVP uses manual reconciliation and includes
+  no webhook fulfillment, paid invoice creation, custom email delivery, or
+  automatic HubSpot payment synchronization.
+  [Stripe automatic receipts](https://docs.stripe.com/receipts#automatic).
+- Flutter accepts Checkout redirects only from exact HTTPS
+  `checkout.stripe.com`, or from its exact configured loopback origin in local
+  mock mode. Checkout creation uses a 25-second browser deadline for two
+  sequential Stripe calls with independent 10-second Worker deadlines and
+  5 seconds of transport/processing allowance. Verification retains its separate
+  15-second browser deadline for one Stripe lookup. These deadlines include
+  response-body reads; a browser abort does not prove that Stripe creation was
+  cancelled, so ambiguous failures retain the original attempt for recovery.
+  Errors remain provider-neutral. Verification exposes neither hosted Checkout
+  URLs nor personal or provider payment details. Checkout URLs from successful
+  creation are kept only in tab storage for recovery.
+- Checkout recovery rejects disposed asynchronous completions before storage
+  changes or follow-up calls. A newer stored attempt or Session takes precedence
+  over an older workflow. Public form text-field validation messages wrap
+  completely and expand at narrow widths and increased text scales.
+- Staging Checkout-creation HTTP 500 responses log only the response's generated
+  request ID, a fixed allowlisted execution stage, and either
+  `configuration_invalid` or `runtime_unexpected`. Exception messages/stacks,
+  attempt IDs, purchase references, headers, cookies, and sensitive values are
+  excluded. Only the staging entrypoint supplies this logger; production,
+  verification, successful creation, and other HTTP statuses emit no additional
+  diagnostics. Logging failure cannot change the payment response or contract.
+- Payment creation is enabled only when `PAYMENT_CREATION_ENABLED` is exactly
+  `true`. Production also requires a valid server-only Stripe key, configured
+  tax-inclusive Price, declared expected live/test mode, exact
+  `STRIPE_AUTOMATIC_TAX_ENABLED=true|false`, exact HTTPS public origin,
+  purchase-reference secret, and `PAYMENT_RATE_LIMITER`; incomplete or
+  incompatible configuration fails closed. The Worker always sends the tax
+  value and never inherits Stripe's account-level Checkout default.
+  Verification is deliberately not coupled to the creation flag, so an
+  existing payment can still be recovered after sales are stopped.
+- Loopback mock mode requires a matching local Flutter origin and one of the
+  deterministic scenarios `created`, `paid`, `pending`, `cancelled`, `expired`,
+  `provider_validation_failure`, `payment_mismatch`, `network_failure`,
+  `provider_unavailable`, `timeout`, `duplicate_attempt`, `refunded`, or
+  `disputed`. It never performs Stripe I/O. Any mock setting in non-loopback
+  execution fails closed. `duplicate_attempt` deterministically returns the
+  same mock Checkout result for repeated identical attempt IDs and a different
+  result for a different attempt; it does not claim durable exactly-once
+  behavior.
+- The MVP uses Stripe-hosted Checkout and intentionally adds no Flutter Stripe
+  SDK, subscription, webhook-driven entitlement, automatic HubSpot payment
+  synchronization, account creation, or immediate membership provisioning.
+  There is no payment-triggered side effect to fulfill. Any later delayed
+  payment method, automatic fulfillment, or asynchronous side effect requires
+  a separately approved event/webhook design before launch.
 
 ### Open
 
+- Approval of the pre-effective-date legal transition; historical applicability
+  cannot be inferred from the manifest. Existing Venue disclosure catalogs contain
+  localized text despite earlier English-only documentation; translation approval
+  is not established or changed by this integration.
 - An approved consent/privacy field contract and any corresponding HubSpot
   `legalConsentOptions` payload. Consent is not fabricated or submitted by the
   current implementation.
+- Independent confirmation of each published registration form's required-field
+  set, included fields, legal-consent configuration, and direct-submission test
+  result. The former public form-definition lookup returns 404, so this requires
+  authorized HubSpot portal inspection or an explicitly authorized synthetic
+  submission.
 - The current venue privacy acknowledgement is approved informational copy,
   not a consent field. Its optional checkbox state lives only in the routed
   presentation and adds no BLoC state, domain value, DTO property, repository
@@ -565,17 +980,23 @@ capabilities as implemented.
 - Whether a future approved chain selection makes venue count conditionally
   required. The current domain contract deliberately has no chain/count
   cross-field invariant.
-- Prospective-user API endpoints and DTOs, and venue-lead retention/deletion
-  requirements.
-- The minimum/maximum age eligibility policy and corresponding backend rule.
+- Prospective-user retention/deletion requirements.
+- Legal alignment of the strict Founding Friend registration rule with the
+  exception wording in Purchase Terms clause 3.1, and of the receipt-only MVP
+  with the emailed order confirmation described in clause 4.6.
 - Whether approved display labels should differ from the confirmed HubSpot
   gender values, and any explicit reversible mapping if they do.
 - Ongoing synchronization of the HubSpot country option source before
   integration and release.
-- The Founding Friend payment provider, checkout ordering, payment status, and
-  success behavior.
-- Timing and authorized deployment of the Cloudflare Worker, its narrow route,
-  and the later Flutter data-source switch to the first-party endpoint.
+- Approved tax treatment, the corresponding explicit automatic-tax setting,
+  Stripe Tax configuration and registrations if enabled, Refund & Cancellation
+  Policy, Terms of Use, dispute/support process, and
+  the exact legal copy required around purchase. The implementation does not
+  invent these terms.
+- The later main Fun App backend contract for matching a qualifying Stripe
+  purchase to an authenticated account's verified email and granting benefits.
+- Operational verification of the deployed registration and payment routes,
+  provider configuration, and controlled live Checkout verification.
 
 Backend implementation must be driven by an actual approved contract rather than inferred from the main mobile application. Do not copy `/profiles`, Entra, OIDC, user-profile, onboarding, or other mobile-app contracts into this project without an explicit landing-page requirement.
 
@@ -589,19 +1010,22 @@ Backend implementation must be driven by an actual approved contract rather than
 - Treat every value embedded in Flutter Web as publicly recoverable, including values injected by CI.
 - Client-side validation improves usability but is not a security boundary; backend validation and authorization must exist where applicable.
 - Do not include personal information in logs, analytics, diagnostics, crash reports, fixtures, or examples without explicit, justified handling.
-- The venue-interest Worker must not log request bodies, submitted field values,
+- The first-party forms Worker must not log request bodies, submitted field values,
   HubSpot payloads, HubSpot response bodies, or request headers/cookies. It
   returns only provider-neutral response codes and opaque request IDs.
+- The payment Worker must not log emails, names, request bodies, Checkout URLs,
+  billing or payment details, Stripe credentials, or complete Stripe responses.
+  Its public responses remain provider-neutral and expose a purchase reference
+  only after verified payment.
 - Use HTTPS for production backend communication.
 - Validate untrusted backend responses at data boundaries.
 - Avoid unnecessary third-party scripts and SDKs.
 - Do not add analytics, advertising, non-essential cookies, session replay,
   marketing pixels, or visitor-profiling telemetry while the approved Privacy
   Notice states that those technologies are not currently used.
-- The approved Privacy Notice legal prose is maintained in
-  `assets/legal/privacy_notice.md`. It must not be changed casually. A future
-  approved notice must replace or update that canonical source from the newly
-  approved document without independent rewriting or translation.
+- The legal repository/service owns legal prose. Never rewrite or translate it
+  independently, log document responses with user information, or silently use
+  old bundled wording as a current legal fallback.
 - Evaluate dependency changes for supply-chain, maintenance, privacy, and data-handling impact.
 - Settle consent, retention, and deletion requirements before collecting the corresponding personal data.
 - Never introduce client secrets into this public web application.
@@ -622,7 +1046,7 @@ The redesign must deliberately address, as appropriate:
 - Appropriate page/document semantics and Flutter web semantics.
 - Keyboard operation, focus visibility, reduced motion, meaningful links, and meaningful controls.
 
-The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The intermediate public routes are `/`, `/venues`, and `/privacy`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Protected user-form and draft-legal hashes redirect to `/` in production and exist only in an explicitly configured preview artifact. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
+The Flutter production shell establishes a static Fun App title, neutral description, canonical root URL, root indexing policy, branded icons, and manifest identity. The public routes are `/`, `/venues`, `/privacy`, `/terms`, `/founding-friend/purchase-terms`, `/user-agreement`, `/acceptable-use-policy`, `/here-and-now`, `/founding-friend`, `/founding-friend/payment`, and `/founding-friend/payment/cancelled`. Flutter Web retains their hash-based deployed form, including `https://funapp.world/#/privacy`. Refund/cookie placeholder hashes redirect to `/` while the public form and payment-return hashes support direct access, refresh, and browser history. Because each route is carried in the URL fragment, GitHub Pages serves the existing root document for direct access and refresh while `auto_route` and Router 2 own typed in-app and browser-history navigation. Unknown hash routes render the landing page. Richer social metadata, sitemap strategy, and redesigned crawlable content remain future implementation and release concerns.
 
 ## 11. Tooling and verification
 
@@ -651,50 +1075,230 @@ puro flutter gen-l10n
 puro flutter pub run build_runner build
 puro flutter analyze
 puro flutter test
-puro flutter build web -t lib/main_prod.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_dev.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart
+puro dart run tool/prepare_staging_release_artifact.dart
+puro dart run tool/verify_web_resources.dart
+puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart
 puro dart run tool/prepare_intermediate_release_artifact.dart
-puro flutter build web -t lib/main_dev.dart \
-  --dart-define=FUN_APP_ENABLE_UNFINISHED_PREVIEW=true
+puro dart run tool/verify_web_resources.dart
+
+cd cloudflare/staging-site-worker
+npm ci
+npm run typecheck
+npm test
+npm run wrangler:validate
+
+cd ../venue-interest-worker
+npm ci
+npm run typecheck
+npm test
+npm run wrangler:validate
+npm run wrangler:validate:staging
+
+cd ../founding-friend-payment-worker
+npm ci
+npm run typecheck
+npm test
+npm run wrangler:validate
+npm run wrangler:validate:staging
 ```
 
-The active widget test suite covers the landing surface and its durable responsive and interaction contracts. Verification should grow with implemented behavior rather than speculative tooling.
+The active suites cover the landing surface and its durable responsive and
+interaction contracts, registration-to-Checkout orchestration, payment return
+and cancellation states, fail-closed dependency injection, payment Worker
+contracts, deterministic Stripe scenarios, idempotency, and sensitive-response
+boundaries. Verification should grow with implemented behavior rather than
+speculative tooling.
 
-The project tracks Flutter stable through Puro rather than establishing a permanent exact Flutter version pin.
+Local development tracks Flutter stable through Puro. Hosted workflows install
+their documented Flutter version directly through `subosito/flutter-action@v2`.
 
 ## 12. Deployment
 
 ### Established
 
-- GitHub Pages is the production deployment target.
-- GitHub Pages remains the web origin. Its active `/api/venue-interest`
-  exception is a dashboard-managed narrow Cloudflare Worker Route to the
-  repository-controlled `funapp-venue-interest` Worker. The
-  `deploy-venue-interest-worker.yml` workflow provides manual-only source
-  deployment of that existing Worker after Worker validation. It uses the
-  GitHub `production` Environment for public HubSpot and Cloudflare account
-  configuration and the Cloudflare API-token secret; it does not configure the
-  route.
-- Pull requests targeting `main` run read-only formatting, generation,
-  analysis, full-suite coverage, and production-entrypoint compile checks.
-  Pull-request checks do not deploy; pushes to `main` remain the production
-  Pages deployment trigger.
-- The production custom domain is `https://funapp.world` and uses root `/` deployment.
-- The active workflow installs Puro 1.5.0, creates the named `fun-app-landing`
-  environment from Flutter stable, generates localizations and Dart sources,
-  analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`
-  without browser-side HubSpot configuration or the unfinished-preview define.
-  It then removes the three review-only legal Markdown files from `build/web`.
-  The production artifact therefore uses the default gated feature set and
-  does not publish those draft source documents as static assets.
-- Only pushes to `main` and manual dispatches run the Pages deployment. The
-  `dev` branch has no separate deployment workflow or Pages environment.
+- The production release promotes a staged, reviewed `dev` revision through a
+  separate PR to `main`. A push to `main` or an authorized current-`main` dispatch
+  runs **Deploy Production**. It calls credential-free PR checks, prepares and
+  validates the Flutter Web artifact, and preflights both existing API Workers
+  in the GitHub `production` Environment. It uses the release SHA throughout.
+- The Worker job uploads both versions using the locked Wrangler wrapper
+  before deploying either to traffic. Existing Worker identity and disabled
+  public previews are required. Version operations leave Cloudflare routes,
+  Custom Domains and DNS under external management. Production routes are
+  `funapp.world/api/venue-interest*` and `funapp.world/api/registrations/*` for
+  `funapp-registration-forms`, and `funapp.world/api/founding-friend-payments/*`
+  for `funapp-founding-friend-payment`. The source declares rate limiters in
+  namespaces `1001` and `1002`. GitHub Pages publishes only after both deployments
+  succeed. The workflow serializes production runs and rejects superseded
+  revisions before Worker changes and Pages publication. Traffic changes are
+  sequential. See the [production runbook](README.md#production-release).
+- Independent `HERE_AND_NOW_SUBMISSIONS_ENABLED`,
+  `FOUNDING_FRIEND_SUBMISSIONS_ENABLED`, and `PAYMENT_CREATION_ENABLED` flags
+  must each be exactly `true` or `false` in the `production` Environment.
+  The reviewed merge to `main` authorizes applying those values on the current
+  `main` push. A manual dispatch requires matching authorization for every flag
+  set to `true`. Missing or malformed flags fail preflight before Worker upload.
+  Venue and payment verification remain independently available with valid bindings.
+- The production payment preflight verifies the live Price with a read-only
+  Stripe lookup under the Worker's pinned API version. It requires the active
+  one-time tax-inclusive £249 GBP Price and automatic tax disabled. Wrangler
+  uploads the restricted live Stripe key and the independent purchase-reference
+  secret in the same version as the code.
+  The Stripe business account is approved. Controlled live Checkout test
+  payments require authorization for those transactions.
+- Both site artifacts include the approved full wordmark as a transparent PNG
+  at `/email/fun-app-logo.png`. Verify anonymous access on production after
+  publication. Staging keeps its existing Access boundary.
+- Pull requests targeting `dev` or `main` run the staging site Worker's typechecking,
+  tests, and dry-run validation, both API Worker projects' typechecking, tests,
+  and root/staging dry-run validation, both production Worker preflight suites,
+  plus Flutter formatting, generation,
+  analysis, full-suite coverage, Chrome session-storage and country-ordering tests,
+  and production/staging compile checks. Common deployment-safety tests and Wrangler
+  backport regressions execute once in **Flutter and staging site checks**, with
+  the site upload test. Each API Worker job runs only its own upload-metadata
+  test from the deployment suite; all three checks remain required validation
+  jobs without failure suppression.
+  Pull-request checks validate without deployment credentials.
+- The production custom domain is `https://funapp.world` at root `/`. The
+  production build uses Flutter 3.47.2 with `lib/main_prod.dart`, keeps
+  provider credentials outside Flutter, and rejects local legal documents in
+  `build/web`. Publishing uses the `github-pages` Environment.
+- Pushes to `dev`, including PR merges, run `deploy-staging-site.yml` (**Deploy
+  Staging**), calling credential-free `pr_checks.yml` through `workflow_call`.
+  GitHub `staging` stays restricted to `dev`, and `production` to `main`.
+- Both release workflows install `tool/staging-wrangler/` with `npm ci`. Its lock pins
+  Wrangler 4.155.0 and its postinstall applies the route-category backport from
+  cloudflare/workers-sdk PR #16531, revision
+  `416ed05ea788852c9c06784c370d77603ee10936`. Exact original and patched bundle
+  SHA-256 checks, no-fuzz patching, and invocation-time version/hash validation
+  fail closed on incompatible tools. There is no mutable prerelease fetch or
+  maintained fork. All staging publishes, generated-config dry runs, and upload
+  tests use this wrapper. Production uses it for version upload and deployment.
+- The fix omits route/Custom Domain metadata reads only when those categories
+  are absent from deployment; explicitly configured categories still require
+  authorization. Versions upload does not compare unrelated routes. Normal
+  metadata, configuration-diff safeguards, and Worker identity checks remain.
+  As checked on 2026-11-01, upstream PR #16531 is open and stable 4.156.0 still
+  contains the unconditional reads. Remove the backport only after verifying a
+  stable implementation and upstream tests, pinning it, and passing CLI
+  permission/strict-diff/identity and upload-preservation regressions.
+- PR events target `dev` and `main` and validate only. They never reference the
+  staging environment, inherit deployment secrets, or invoke a deployment job.
+  Stable PR check names are **Worker checks**, **Payment Worker checks**, and
+  **Flutter and staging site checks**. No path filter skips these checks.
+- The three prior staging workflows are consolidated into one push-only
+  workflow; the individual manual staging API deployment workflows and payment
+  enablement checkbox are retired. The publishing job uses a shared
+  concurrency lock without cancelling an active publish and checks the revision
+  against current `dev` HEAD under that lock, rejecting superseded queued jobs/reruns.
+- After credential-free checks pass, a build job in the `staging` Environment
+  packages the same revision with its public booking URL and verifies it before
+  upload. The publishing job in the same Environment checks artifact identity
+  after download. Flutter builds never receive deployment credentials.
+  Both API Workers publish before the site; publishing is sequential, not atomic.
+- Read-only preflight validates complete environment configuration and all three
+  existing staging identities with their own tokens before writing deployable
+  files or publishing. Required GETs cover service identity; actual internal
+  environment bindings, subdomain and metadata; script schedules, settings and
+  deployments; and Worker metadata used by trigger publishing. Multi-version
+  deployments also require their version reads. Payment secret-name reads reject
+  collisions with public variables. Required deployed binding types, registration
+  mock enablement, and consistent settings/environment inventories are checked.
+  No route or Custom Domain metadata permission is required. Requests reject
+  redirects, have 30-second deadlines including body reads, and never log bodies,
+  configuration values, or credentials. Denied reads, missing identities or
+  malformed required data fail before any publish without provisioning resources
+  or broadening permissions. Successful reads cannot guarantee write access or
+  atomic publication. Generated configs retain fixed staging identities and
+  entrypoints with no routes or Custom Domains.
+- `keep_vars` alone preserves only plain/JSON variables, not every binding.
+  Generated configs use Wrangler `unsafe.metadata.keep_bindings` with every
+  currently deployed binding type plus plain/JSON and encrypted-secret types.
+  They omit source rate-limit declarations so deployed namespaces/limits and
+  other dashboard bindings survive. Tests inspect the locked Wrangler upload
+  metadata. Source defaults remain useful for dry-run checks; they are not
+  deployed over working dashboard configuration. Dashboard settings must remain
+  stable during the short preflight/publish interval.
+- Required staging variables are `CLOUDFLARE_ACCOUNT_ID`,
+  `STAGING_PAYMENT_CREATION_ENABLED`, `STRIPE_SANDBOX_PRICE_ID`, and
+  `STRIPE_SANDBOX_AUTOMATIC_TAX_ENABLED`. Required secrets are
+  `CLOUDFLARE_STAGING_SITE_API_TOKEN`, `CLOUDFLARE_WORKERS_API_TOKEN`,
+  `STRIPE_SANDBOX_RESTRICTED_KEY`, and `STAGING_PURCHASE_REFERENCE_SECRET`.
+  The site token remains distinct from the two-API-Worker token. Existing
+  least-privilege credentials need required metadata read and deployment access
+  to their respective Workers, with no added DNS, route, or Access permissions.
+- `STAGING_PAYMENT_CREATION_ENABLED` is a required exact boolean string and is
+  explicitly mapped to `PAYMENT_CREATION_ENABLED`, with no silent fallback.
+  The current environment has sandbox creation enabled. Automatic tax must
+  remain false, expected live mode is pinned false, the origin is fixed to
+  staging, and the key must be restricted/sandbox. The five public payment
+  variables are supplied explicitly; neither Price/tax placeholders nor the
+  source disabled default are carried into deployment.
+- Both existing encrypted payment secrets are supplied atomically with code
+  using `--secrets-file` from a mode-0600 `RUNNER_TEMP` file, cleaned on every
+  outcome. Secrets are not written to source, web bundles, artifacts, or logs.
+  Canonical mappings remain `STRIPE_SANDBOX_RESTRICTED_KEY` → `STRIPE_SECRET_KEY`
+  and `STAGING_PURCHASE_REFERENCE_SECRET` → `PURCHASE_REFERENCE_SECRET`.
+  Preflight and runtime both require a purchase-reference secret of at least
+  32 characters without CR/LF; invalid preflight values fail before metadata
+  reads or deployment-file writes. Operators must privately verify the existing
+  values agree before the first restored run;
+  existence of both secret names does not establish synchronization. No rotation
+  is part of the repair.
+- The staging site uses `build/web` as its Static Assets directory with SPA
+  fallback. Its script runs first for `/api` and `/api/*` and returns `404`,
+  preventing an absent or mistyped API Route from returning the SPA document
+  with `200`.
+- The exact local staging site sequence is
+  `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`,
+  `puro dart run tool/prepare_staging_release_artifact.dart`,
+  `puro dart run tool/verify_web_resources.dart`, `bash
+  tool/verify_staging_artifact.sh`, then from `cloudflare/staging-site-worker/`,
+  `npm ci`, `npm run typecheck`, `npm test`, and `npm run wrangler:validate`.
+  These commands validate only. Automatic publishing uses generated staging
+  configs after complete preflight, rather than deploying source placeholders.
+- A normal rollback reverts code through a PR to `dev`, then validates and
+  republishes with current environment secrets. For an emergency version rollback,
+  disable the staging workflow, cancel queued runs, let any active publish
+  settle, and restore known-good versions on the affected staging Workers in
+  Cloudflare. Review version-bound variables/secrets first: an older version may
+  restore pre-rotation secrets. See the README operational procedure. No
+  rollback automatically changes routing or production resources.
+- Dashboard-managed staging routes remain only
+  `staging.funapp.world/api/registrations/*` to the staging registration Worker
+  and `staging.funapp.world/api/founding-friend-payments/*` to the staging
+  payment Worker. The existing site Worker Custom Domain, Cloudflare-created DNS record
+  and certificate, those routes, and hostname-based Access remain externally
+  managed and must be preserved. The Access application must cover the exact
+  hostname with no Path value. Hostname-based Access is
+  required to cover requests handled by all three Workers; site-Worker Access
+  alone does not cover the separate API Workers. No staging route belongs on
+  `funapp.world`, and the existing
+  `funapp.world/api/venue-interest*` route is unchanged.
 - The production artifact is `build/web`.
+- Every staging/production Flutter build uses `--no-web-resources-cdn`; the
+  generated loader selects same-origin `canvaskit/` resources. The declared
+  genuine Roboto Regular asset supplies the engine default font with its
+  Apache 2.0 license and bootstrap license registration. Application Manrope
+  and Instrument Serif typography remains unchanged. Artifact checks require
+  both CanvasKit variants and the local Roboto manifest entry and license.
+  Renderer files keep host cache revalidation rather than immutable caching.
+  Existing Static Assets routing and exact-artifact deployment are unchanged.
+- Dynamic glyph fallback remains enabled at Flutter's default
+  `https://fonts.gstatic.com/s/`; local renderer/default-font loading does not
+  mean all fonts are self-hosted. Manrope and Roboto cover all characters in
+  the four current UI catalogs. Instrument Serif lacks Belarusian glyphs and
+  continues to use engine fallback. Arbitrary input, emoji, or future copy can
+  still require remote fonts; an incomplete local fallback URL must not replace
+  this working behavior.
 - `web/CNAME` and `web/robots.txt` are copied into the production artifact by the Flutter Web build.
-- Preview builds include the legal Markdown asset directory. Production
-  artifact preparation preserves the canonical Privacy Notice but removes the
-  three review-only Markdown files; protected hashes redirect without a Pages
-  rewrite or `404.html` fallback. Client-side routing remains neither backend
-  authorization nor a security boundary.
+- Production/staging builds exclude local legal assets and reject stale bundled
+  legal directories during artifact preparation; unpublished refund/cookie
+  hashes redirect without a Pages rewrite or `404.html` fallback. Client-side
+  routing remains neither backend authorization nor a security boundary.
 - The archived Astro project is not built or deployed.
 
 ### Provisional

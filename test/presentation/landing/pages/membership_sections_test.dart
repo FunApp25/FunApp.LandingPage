@@ -15,11 +15,11 @@ const _membershipBody =
 const _freeDescription = 'Free access from day one';
 const _hereNowDescription = 'Full access from day one, you get EVERY feature';
 const _lifetimeDescription =
-    'Pay once, keep full access forever, and never deal with a monthly renewal '
-    'again';
+    'Support Fun App’s vision from the start, keep privileged access forever '
+    'and never deal with a monthly renewal again';
 const _lifetimeMobileDescription =
     'For testing early builds, sharing honest thoughts, and watching the app '
-    'take shape';
+    'take shape. $_lifetimeDescription';
 const _futurePrivilegesBenefit =
     'A lifetime of other Fun App privileges - there are some very, very '
     'exciting plans to come…';

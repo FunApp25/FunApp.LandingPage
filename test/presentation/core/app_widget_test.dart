@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_app_landing_page/application/venue/venue_lead_form_bloc/venue_lead_form_bloc.dart';
-import 'package:fun_app_landing_page/core/config/release_configuration.dart';
 import 'package:fun_app_landing_page/domain/core/failures/app_failure.dart';
 import 'package:fun_app_landing_page/domain/venue/entities/venue_lead.dart';
 import 'package:fun_app_landing_page/domain/venue/venue_lead_repository_interface.dart';
@@ -18,7 +17,8 @@ import 'package:fun_app_landing_page/presentation/core/utils/app_assets.dart';
 import 'package:fun_app_landing_page/presentation/core/utils/document_language.dart';
 import 'package:fun_app_landing_page/presentation/core/widgets/branding/fun_app_logo.dart';
 import 'package:fun_app_landing_page/presentation/landing/pages/landing_page.dart';
-import 'package:fun_app_landing_page/presentation/legal/pages/legal_placeholder_page.dart';
+import 'package:fun_app_landing_page/presentation/legal/legal_routes.dart';
+import 'package:fun_app_landing_page/presentation/legal/pages/legal_document_page.dart';
 import 'package:fun_app_landing_page/presentation/privacy/pages/privacy_notice_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/founding_friend_page.dart';
 import 'package:fun_app_landing_page/presentation/user_sign_up/pages/here_and_now_page.dart';
@@ -349,55 +349,21 @@ void main() {
     );
   });
 
-  testWidgets('journey C supports consecutive legal Back and Forward', (
+  testWidgets('journey C keeps unfinished legal routes inaccessible', (
     tester,
   ) async {
     await _pumpApp(tester, const Locale('en'));
     final router = tester.element(find.byType(LandingPage)).router;
     _expectRouteState(router, [LandingRoute.name], '/');
 
-    unawaited(router.push(const TermsRoute()));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    _expectRouteState(
-      router,
-      [LandingRoute.name, TermsRoute.name],
-      LegalPlaceholderPage.termsRouteName,
-    );
-
-    unawaited(router.push(const CookiePolicyRoute()));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    _expectRouteState(
-      router,
-      [LandingRoute.name, TermsRoute.name, CookiePolicyRoute.name],
-      LegalPlaceholderPage.cookiesRouteName,
-    );
-
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    _expectRouteState(
-      router,
-      [LandingRoute.name, TermsRoute.name],
-      LegalPlaceholderPage.termsRouteName,
-    );
-
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    _expectRouteState(router, [LandingRoute.name], '/');
-
-    expect(
-      await tester.binding.handlePushRoute(
-        LegalPlaceholderPage.termsRouteName,
-      ),
-      isTrue,
-    );
-    await tester.pumpAndSettle();
-    _expectRouteState(
-      router,
-      [LandingRoute.name, TermsRoute.name],
-      LegalPlaceholderPage.termsRouteName,
-    );
+    for (final path in const [
+      LegalRoutes.cookies,
+    ]) {
+      expect(await tester.binding.handlePushRoute(path), isTrue);
+      await tester.pumpAndSettle();
+      _expectRouteState(router, [LandingRoute.name], '/');
+      expect(find.byType(LegalDocumentPage), findsNothing);
+    }
   });
 
   testWidgets('journey D preserves direct-load history without a root prefix', (
@@ -512,8 +478,6 @@ void main() {
 Future<void> _pumpApp(
   WidgetTester tester,
   Locale locale, {
-  ReleaseConfiguration releaseConfiguration =
-      const ReleaseConfiguration.preview(),
   VenueLeadFormBlocFactory? createVenueLeadFormBloc,
 }) async {
   tester.binding.platformDispatcher.localesTestValue = <Locale>[locale];
@@ -521,7 +485,6 @@ Future<void> _pumpApp(
 
   await tester.pumpWidget(
     FunAppLandingPageApp(
-      releaseConfiguration: releaseConfiguration,
       createVenueLeadFormBloc: createVenueLeadFormBloc,
     ),
   );

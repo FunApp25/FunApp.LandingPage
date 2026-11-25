@@ -5,10 +5,11 @@ import 'package:fun_app_landing_page/presentation/landing/sections/footer/footer
 typedef FooterLegalItemData = ({
   Key semanticKey,
   String label,
+  Uri url,
   VoidCallback onSelected,
 });
 
-/// Footer legal labels in their approved Figma display order.
+/// Responsive group of public legal navigation controls.
 final class FooterLegalItems extends StatelessWidget {
   /// Creates the legal-label group.
   const FooterLegalItems({
@@ -18,7 +19,7 @@ final class FooterLegalItems extends StatelessWidget {
     super.key,
   });
 
-  /// Five functional controls in the approved Figma display order.
+  /// Functional controls in the website navigation order.
   final List<FooterLegalItemData> items;
 
   /// Horizontal spacing between labels.
@@ -39,6 +40,7 @@ final class FooterLegalItems extends StatelessWidget {
         FooterLegalLink(
           semanticKey: item.semanticKey,
           label: item.label,
+          url: item.url,
           onSelected: item.onSelected,
         ),
     ],

@@ -1,0 +1,24 @@
+{
+  "name": "funapp-founding-friend-payment-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev --local --port 8788",
+    "dev:mock": "wrangler dev --local --port 8788 --var PAYMENT_CREATION_ENABLED:true --var STRIPE_AUTOMATIC_TAX_ENABLED:false --var STRIPE_MOCK_SCENARIO:paid --var LOCAL_DEVELOPMENT_ALLOWED_ORIGIN:http://localhost:7357 --var PUBLIC_APP_ORIGIN:http://localhost:7357 --var PURCHASE_REFERENCE_SECRET:local-development-only-reference-secret",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "wrangler:validate": "wrangler deploy --dry-run --env=\"\"",
+    "wrangler:validate:staging": "wrangler deploy --dry-run --env staging"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.2.2",
+    "typescript": "^7.0.2",
+    "vitest": "4.1.12",
+    "wrangler": "^4.136.2"
+  }
+}

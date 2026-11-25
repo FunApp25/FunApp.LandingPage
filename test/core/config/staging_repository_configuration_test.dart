@@ -1,0 +1,441 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('production and staging builds retain local web resources', () {
+    for (final path in [
+      '.github/workflows/deploy.yml',
+      '.github/workflows/pr_checks.yml',
+      '.github/workflows/deploy-staging-site.yml',
+    ]) {
+      final workflow = File(path).readAsStringSync();
+      final builds = RegExp(r'flutter build web[^\n]*').allMatches(workflow);
+      expect(builds, isNotEmpty, reason: path);
+      for (final build in builds) {
+        expect(
+          build.group(0),
+          contains('--no-web-resources-cdn'),
+          reason: path,
+        );
+      }
+      expect(
+        workflow,
+        contains('tool/verify_web_resources.dart'),
+        reason: path,
+      );
+    }
+    final deploy = File(
+      '.github/workflows/deploy-staging-site.yml',
+    ).readAsStringSync();
+    final buildJob = deploy.split('\n  deploy:\n').first;
+    final deployJob = deploy.split('\n  deploy:\n').last;
+    expect(buildJob, contains('environment: staging'));
+    expect(buildJob, contains('vars.FUN_APP_VENUE_BOOKING_URL'));
+    expect(buildJob, contains('actions/upload-artifact'));
+    expect(deployJob, contains('actions/download-artifact'));
+    expect(deployJob, contains('tool/verify_staging_artifact.sh'));
+    expect(deployJob, isNot(contains('flutter build web')));
+  });
+
+  test('Wrangler keeps production and staging Worker identities isolated', () {
+    final site = _readJsonc(
+      'cloudflare/staging-site-worker/wrangler.jsonc',
+    );
+    final registration = _readJsonc(
+      'cloudflare/venue-interest-worker/wrangler.jsonc',
+    );
+    final payment = _readJsonc(
+      'cloudflare/founding-friend-payment-worker/wrangler.jsonc',
+    );
+    final registrationStaging = _stagingEnvironment(registration);
+    final paymentStaging = _stagingEnvironment(payment);
+
+    expect(site['name'], 'funapp-landing-staging');
+    expect(site['main'], 'src/index.ts');
+    expect(registration['name'], 'funapp-registration-forms');
+    expect(registration['main'], 'src/index.ts');
+    expect(
+      registrationStaging['name'],
+      'funapp-registration-forms-staging',
+    );
+    expect(registrationStaging['main'], 'src/staging.ts');
+    expect(payment['name'], 'funapp-founding-friend-payment');
+    expect(payment['main'], 'src/index.ts');
+    expect(
+      paymentStaging['name'],
+      'funapp-founding-friend-payment-staging',
+    );
+    expect(paymentStaging['main'], 'src/staging.ts');
+
+    final registrationVars = _objectMap(registrationStaging['vars']);
+    expect(registrationVars, {
+      'STAGING_REGISTRATION_MOCK_ENABLED': 'true',
+    });
+    expect(
+      registrationVars.keys.any((key) => key.startsWith('HUBSPOT_')),
+      false,
+    );
+
+    final paymentVars = _objectMap(paymentStaging['vars']);
+    expect(paymentVars['PAYMENT_CREATION_ENABLED'], 'false');
+    expect(paymentVars['STRIPE_EXPECTED_LIVEMODE'], 'false');
+    expect(
+      paymentVars['PUBLIC_APP_ORIGIN'],
+      'https://staging.funapp.world',
+    );
+    expect(paymentVars.containsKey('STRIPE_SECRET_KEY'), false);
+    expect(paymentVars.containsKey('PURCHASE_REFERENCE_SECRET'), false);
+    for (final config in [
+      site,
+      registration,
+      registrationStaging,
+      payment,
+      paymentStaging,
+    ]) {
+      expect(config.containsKey('route'), false);
+      expect(config.containsKey('routes'), false);
+      expect(config['workers_dev'], false);
+      expect(config['preview_urls'], false);
+    }
+
+    final assets = _objectMap(site['assets']);
+    expect(assets['directory'], '../../build/web');
+    expect(assets['binding'], 'ASSETS');
+    expect(assets['not_found_handling'], 'single-page-application');
+    expect(assets['run_worker_first'], ['/api', '/api/*']);
+
+    expect(_rateLimitNamespace(registration), '1001');
+    expect(_rateLimitNamespace(payment), '1002');
+    expect(_rateLimitNamespace(registrationStaging), '2001');
+    expect(_rateLimitNamespace(paymentStaging), '2002');
+  });
+
+  test('production Pages requires both Workers at the current main SHA', () {
+    final workflow = File('.github/workflows/deploy.yml').readAsStringSync();
+    final jobs = workflow.split('\njobs:\n').last;
+    final checks = jobs.split('\n  build:\n').first;
+    final workers = jobs
+        .split('\n  workers:\n')
+        .last
+        .split('\n  pages:\n')
+        .first;
+    final pages = jobs.split('\n  pages:\n').last;
+    expect(workflow, contains('push:\n    branches:\n      - main'));
+    expect(workflow, contains('workflow_dispatch:'));
+    expect(workflow, contains('group: funapp-production-deployment'));
+    expect(workflow, contains('cancel-in-progress: false'));
+    expect(
+      checks.replaceFirst('if: >-', 'if:').replaceAll(RegExp(r'\s+'), ' '),
+      contains(
+        "if: github.ref == 'refs/heads/main' && "
+        "(github.event_name == 'push' || "
+        "github.event_name == 'workflow_dispatch')",
+      ),
+    );
+    expect(jobs, contains('uses: ./.github/workflows/pr_checks.yml'));
+    expect(jobs, contains('needs: checks'));
+    expect(workers, contains('needs: build'));
+    expect(workers, contains('environment: production'));
+    expect(workers, contains('node tool/deploy_production_workers.mjs'));
+    expect(workers, contains(r'${{ secrets.CLOUDFLARE_API_TOKEN }}'));
+    expect(workers, contains(r'${{ vars.HUBSPOT_VENUE_FORM_GUID }}'));
+    expect(workflow, isNot(contains('CLOUDFLARE_WORKERS_API_TOKEN')));
+    expect(workflow, isNot(contains('CLOUDFLARE_STAGING_SITE_API_TOKEN')));
+    expect(workflow, isNot(contains('STRIPE_SANDBOX')));
+    expect(workflow.split('\n  workers:\n').first, isNot(contains('secrets.')));
+    expect(pages, contains('needs: workers'));
+    expect(pages, contains('name: github-pages'));
+    expect(pages, contains('git ls-remote --exit-code origin refs/heads/main'));
+    expect(pages, contains('exit 1'));
+    expect(pages, contains('actions/deploy-pages@v4'));
+    expect(pages, isNot(contains('secrets.')));
+    expect(workflow, isNot(contains('continue-on-error')));
+    expect(workflow, isNot(contains('always()')));
+    expect(
+      RegExp(r'ref: \$\{\{ github.sha \}\}').allMatches(jobs),
+      hasLength(3),
+    );
+    for (final path in [
+      '.github/workflows/deploy-venue-interest-worker.yml',
+      '.github/workflows/deploy-founding-friend-payment-worker.yml',
+    ]) {
+      expect(File(path).existsSync(), false);
+    }
+  });
+
+  test(
+    'local launch profiles select their intended registration and payment',
+    () {
+      final launch = _readJsonc('.vscode/launch.json');
+      final configurations = (launch['configurations']! as List<dynamic>)
+          .map(_objectMap)
+          .toList();
+      const development = 'Fun App Landing — Development';
+      expect(configurations.first['name'], development);
+      expect(configurations.first['toolArgs'], ['--no-web-resources-cdn']);
+
+      final profiles = {
+        for (final configuration in configurations)
+          configuration['name']! as String: configuration,
+      };
+      for (final (name, registration, payment) in [
+        ('Booking .env', 'deferred', 'deferred'),
+        ('Direct HubSpot', 'direct_hubspot', 'deferred'),
+        ('Mock Registration', 'local_worker', 'deferred'),
+        ('Mock Registration + Payment', 'local_worker', 'local_worker'),
+      ]) {
+        final args = profiles['$development ($name)']!['toolArgs']! as List;
+        expect(args, contains('--dart-define-from-file=.env'));
+        expect(
+          args.where((arg) => (arg as String).startsWith('--dart-define=')),
+          unorderedEquals([
+            '--dart-define=FUN_APP_REGISTRATION_TRANSPORT=$registration',
+            '--dart-define=FUN_APP_PAYMENT_TRANSPORT=$payment',
+          ]),
+          reason: name,
+        );
+        if (registration == 'local_worker') {
+          expect(args, contains('--web-port=7357'), reason: name);
+        }
+      }
+
+      final compounds = (launch['compounds']! as List<dynamic>).map(_objectMap);
+      expect(
+        compounds.map((compound) => compound['configurations']),
+        unorderedEquals([
+          [
+            'Fun App Registration Worker — Local Mock',
+            '$development (Mock Registration)',
+          ],
+          [
+            'Fun App Registration Worker — Local Mock',
+            'Fun App Payment Worker — Local Mock',
+            '$development (Mock Registration + Payment)',
+          ],
+        ]),
+      );
+      for (final compound in compounds) {
+        expect(
+          (compound['configurations']! as List).every(profiles.containsKey),
+          isTrue,
+        );
+        expect(compound['stopAll'], isTrue);
+      }
+    },
+  );
+
+  test('PR validation has no deployment credentials or environment', () {
+    final workflow = File(
+      '.github/workflows/pr_checks.yml',
+    ).readAsStringSync();
+
+    expect(workflow, contains('pull_request:'));
+    expect(workflow, contains('      - dev'));
+    expect(workflow, contains('      - main'));
+    expect(workflow, contains('workflow_call:'));
+    expect(workflow, contains('contents: read'));
+    expect(workflow, isNot(contains('secrets.')));
+    expect(workflow, isNot(contains('secrets:')));
+    expect(workflow, isNot(contains('environment: staging')));
+    expect(workflow, isNot(contains('wrangler-action')));
+  });
+
+  test('required Flutter check runs focused Chrome regressions', () {
+    final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    final quality = workflow.split('\n  quality:\n').last;
+    const stepName =
+        '      - name: Test browser payment storage, country '
+        'ordering, and links\n';
+    expect(quality, contains(stepName));
+    final browserStep = quality
+        .split(stepName)
+        .last
+        .split('\n      - name:')
+        .first;
+    expect(browserStep, contains('flutter test --platform chrome'));
+    expect(
+      browserStep,
+      contains(
+        'test/data/founding_friend_payment/'
+        'session_pending_founding_friend_payment_store_web_test.dart',
+      ),
+    );
+    expect(
+      browserStep,
+      contains('test/presentation/user_sign_up/country_ordering_web_test.dart'),
+    );
+    expect(
+      browserStep,
+      contains('test/presentation/venue/venue_booking_web_test.dart'),
+    );
+    for (final bypass in ['continue-on-error', 'if:', '||', '--coverage']) {
+      expect(browserStep, isNot(contains(bypass)));
+    }
+    expect(quality, isNot(contains('continue-on-error')));
+    expect(
+      quality,
+      contains('run: node --test test/tool/country_ordering.test.mjs'),
+    );
+    expect(quality, contains('run: flutter test --coverage'));
+    expect(quality, contains('threshold=90'));
+    expect(quality, contains("' coverage/lcov.info"));
+  });
+
+  test('deployment test matrix runs common safety once and every upload', () {
+    final workflow = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    final jobs = workflow.split('\njobs:\n').last;
+    for (final entry in {
+      'worker': 'venue-interest-worker',
+      'payment-worker': 'founding-friend-payment-worker',
+      'quality': 'staging-site-worker',
+    }.entries) {
+      final job = jobs
+          .split('\n  ${entry.key}:\n')
+          .last
+          .split(
+            RegExp(r'\n  [\w-]+:\n'),
+          )
+          .first;
+      expect(job, contains('WORKER_PROJECT: ${entry.value}'));
+      expect(
+        RegExp('staging_deployment.test.mjs').allMatches(job),
+        hasLength(1),
+      );
+      final uploadStep = job
+          .split('      - name:')
+          .singleWhere(
+            (step) => step.contains('WORKER_PROJECT: ${entry.value}\n'),
+          );
+      if (entry.key == 'quality') {
+        expect(uploadStep, isNot(contains('--test-name-pattern')));
+        expect(uploadStep, contains('test/tool/staging_wrangler.test.mjs'));
+      } else {
+        expect(
+          uploadStep,
+          contains("node --test --test-name-pattern='^${entry.value}:'"),
+        );
+        expect(job, isNot(contains('staging_wrangler.test.mjs')));
+      }
+      for (final bypass in ['continue-on-error', '||']) {
+        expect(job, isNot(contains(bypass)));
+      }
+      expect(uploadStep, isNot(contains('if:')));
+    }
+  });
+
+  test('validated dev pushes publish staging with the isolated fixed tool', () {
+    final workflow = File(
+      '.github/workflows/deploy-staging-site.yml',
+    ).readAsStringSync();
+    final jobs = workflow.split('\njobs:\n').last;
+    expect(
+      RegExp(
+        r'^  ([A-Za-z_][A-Za-z0-9_-]*):$',
+        multiLine: true,
+      ).allMatches(jobs).map((match) => match.group(1)).toList(),
+      ['checks', 'build', 'deploy'],
+    );
+    final deploy = jobs.split('\n  deploy:\n').last;
+    expect(deploy, contains('needs: build'));
+    expect(
+      deploy,
+      contains(
+        "    if: github.event_name == 'push' && "
+        "github.ref == 'refs/heads/dev'\n",
+      ),
+    );
+    expect(deploy, contains('npm ci --prefix tool/staging-wrangler'));
+    expect(deploy, isNot(contains('npx --no-install wrangler')));
+    expect(
+      RegExp('tool/staging-wrangler/wrangler.mjs').allMatches(deploy),
+      hasLength(4),
+    );
+    expect(
+      RegExp("if: steps.revision.outputs.current == 'true'").allMatches(deploy),
+      hasLength(3),
+    );
+    expect(workflow, isNot(contains('diagnostic')));
+    expect(workflow, isNot(contains('secrets.CLOUDFLARE_API_TOKEN')));
+    expect(workflow, isNot(contains('secrets.STRIPE_SECRET_KEY')));
+    expect(workflow, isNot(contains('secrets.PURCHASE_REFERENCE_SECRET')));
+    expect(workflow, isNot(contains(r'${{ false }}')));
+    expect(workflow, contains('permissions:\n  contents: read\n\n'));
+
+    final checks = File('.github/workflows/pr_checks.yml').readAsStringSync();
+    expect(checks, isNot(contains('name: staging-web-')));
+    expect(checks, isNot(contains('diagnostic')));
+    expect(checks, contains('staging_wrangler.test.mjs'));
+    expect(
+      RegExp('npm ci --prefix').allMatches(checks),
+      hasLength(3),
+    );
+
+    for (final expected in [
+      'push:',
+      '      - dev',
+      'uses: ./.github/workflows/pr_checks.yml',
+      'needs: checks',
+      "if: github.event_name == 'push' && github.ref == 'refs/heads/dev'",
+      'environment: staging',
+      'group: funapp-staging-deployment',
+      'cancel-in-progress: false',
+      'git ls-remote --exit-code origin refs/heads/dev',
+      'CLOUDFLARE_STAGING_SITE_API_TOKEN',
+      'CLOUDFLARE_WORKERS_API_TOKEN',
+      'vars.STAGING_PAYMENT_CREATION_ENABLED',
+      'vars.STRIPE_SANDBOX_PRICE_ID',
+      'secrets.STRIPE_SANDBOX_RESTRICTED_KEY',
+      'secrets.STAGING_PURCHASE_REFERENCE_SECRET',
+      'node tool/prepare_staging_deployment.mjs',
+      'bash tool/verify_staging_artifact.sh',
+    ]) {
+      expect(workflow, contains(expected));
+    }
+    expect(workflow, isNot(contains('workflow_dispatch:')));
+    expect(workflow, isNot(contains('pull_request:')));
+    expect(workflow, isNot(contains('environment: production')));
+    expect(workflow, isNot(contains('enable_payment_creation')));
+    expect(workflow, isNot(contains('pages deploy')));
+    expect(workflow, isNot(contains('funapp.world/api/venue-interest')));
+    expect(workflow, isNot(contains('secrets: inherit')));
+    for (final retired in [
+      '.github/workflows/deploy-staging-registration-worker.yml',
+      '.github/workflows/deploy-staging-payment-worker.yml',
+    ]) {
+      expect(File(retired).existsSync(), false);
+    }
+  });
+
+  test('staging artifact preparation removes production host metadata', () {
+    final tool = File(
+      'tool/prepare_staging_release_artifact.dart',
+    ).readAsStringSync();
+
+    expect(tool, contains('CNAME'));
+    expect(tool, contains('https://staging.funapp.world/'));
+    expect(tool, contains('noindex, nofollow, noarchive'));
+    expect(tool, contains('Disallow: /'));
+    expect(tool, contains('X-Robots-Tag'));
+  });
+}
+
+Map<String, Object?> _readJsonc(String path) {
+  final source = File(path).readAsLinesSync().where(
+    (line) => !line.trimLeft().startsWith('//'),
+  );
+  return (jsonDecode(source.join('\n')) as Map<String, dynamic>)
+      .cast<String, Object?>();
+}
+
+Map<String, Object?> _stagingEnvironment(Map<String, Object?> config) =>
+    _objectMap(_objectMap(config['env'])['staging']);
+
+Map<String, Object?> _objectMap(Object? value) =>
+    (value! as Map<String, dynamic>).cast<String, Object?>();
+
+String _rateLimitNamespace(Map<String, Object?> config) {
+  final rateLimits = config['ratelimits']! as List<dynamic>;
+  return _objectMap(rateLimits.single)['namespace_id']! as String;
+}
