@@ -17,16 +17,24 @@ const required = ['/bindings', '/subdomain', '/environments/production', '/sched
 
 // Exercise the installed CLI and its real preUploadApiChecks, not a copy of the fix.
 // Every Cloudflare API request goes to this loopback server; unexpected requests fail.
-async function runMockDeployment({ routes, failure, command = 'deploy', conflict = false, matchTag } = {}) {
+async function runMockDeployment({ routes, failure, command = 'deploy', conflict = false, matchTag,
+  missingWorker = false } = {}) {
   verifyToolchain();
   const directory = mkdtempSync(resolve(tmpdir(), 'staging-wrangler-'));
   const calls = [];
+  const deployments = [];
   const unexpected = [];
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, 'http://localhost').pathname;
     const method = request.method;
     calls.push([method, request.url]);
-    request.resume();
+    if (method === 'POST' && path.endsWith('/deployments')) {
+      let body = '';
+      for await (const chunk of request) body += chunk;
+      deployments.push(JSON.parse(body));
+    } else {
+      request.resume();
+    }
     let result;
     let status = 200;
     if ((failure && path.endsWith(failure)) || path.endsWith('/routes') || path.endsWith('/domains/records')) {
@@ -34,8 +42,12 @@ async function runMockDeployment({ routes, failure, command = 'deploy', conflict
     } else if (path === '/user/tokens/verify') {
       status = 403;
     } else if (method === 'GET' && path.endsWith(`/services/${worker}`)) {
-      result = { id: worker, default_environment: { environment: 'production',
-        script: { last_deployed_from: 'dash', tag: 'worker-tag', tags: [] } } };
+      if (missingWorker) {
+        status = 404;
+      } else {
+        result = { id: worker, default_environment: { environment: 'production',
+          script: { last_deployed_from: 'dash', tag: 'worker-tag', tags: [] } } };
+      }
     } else if (method === 'GET' && path.endsWith(`/workers/workers/${worker}`)) {
       result = { subdomain: { enabled: false, previews_enabled: false } };
     } else if (method === 'GET' && path.endsWith('/bindings')) {
@@ -52,6 +64,9 @@ async function runMockDeployment({ routes, failure, command = 'deploy', conflict
       result = [];
     } else if (method === 'GET' && path.endsWith('/deployments')) {
       result = { deployments: [] };
+    } else if (method === 'GET' && path.endsWith(`/versions/${versionId}`)) {
+      result = { id: versionId, metadata: { created_on: '2026-11-01T00:00:00Z' },
+        resources: { script_runtime: {} } };
     } else if (method === 'POST' && path.endsWith('/versions')) {
       result = { id: versionId, resources: { script: { etag: 'test-etag' } }, metadata: { has_preview: false }, startup_time_ms: 1 };
     } else if (method === 'POST' && path.endsWith('/subdomain')) {
@@ -66,7 +81,7 @@ async function runMockDeployment({ routes, failure, command = 'deploy', conflict
     }
     response.writeHead(status, { 'Content-Type': 'application/json' });
     response.end(JSON.stringify({ success: status === 200, result,
-      errors: status === 200 ? [] : [{ code: 10000, message: 'Mock permission denied' }] }));
+      errors: status === 200 ? [] : [{ code: status === 404 ? 10007 : 10000, message: 'Mock API failure' }] }));
   });
   try {
     await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
@@ -78,13 +93,15 @@ async function runMockDeployment({ routes, failure, command = 'deploy', conflict
     const childEnv = Object.fromEntries(Object.entries(process.env)
       .filter(([name]) => !/^(CF_|CLOUDFLARE_|WRANGLER_|STRIPE_)/.test(name)));
     const output = await new Promise((resolveResult, reject) => {
-      const child = spawn(process.execPath, [wrapper, ...command.split(' '), '--strict', '--env=',
+      const strict = command.startsWith('versions deploy') ? [] : ['--strict'];
+      const child = spawn(process.execPath, [wrapper, ...command.split(' '), ...strict, '--env=',
         '--config', resolve(directory, 'wrangler.json')], {
         cwd: directory, env: {
           ...childEnv, CI: 'true', CLOUDFLARE_ACCOUNT_ID: account, CLOUDFLARE_API_TOKEN: 'mock-token',
           CLOUDFLARE_API_BASE_URL: `http://127.0.0.1:${server.address().port}`,
           CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: 'false', WRANGLER_SEND_METRICS: 'false',
           WRANGLER_LOG_SANITIZE: 'true', WRANGLER_LOG_PATH: resolve(directory, 'wrangler.log'),
+          WRANGLER_OUTPUT_FILE_PATH: resolve(directory, 'receipts.jsonl'),
           ...(matchTag && { WRANGLER_CI_MATCH_TAG: matchTag }),
         }, stdio: ['ignore', 'pipe', 'pipe'],
       });
@@ -96,7 +113,10 @@ async function runMockDeployment({ routes, failure, command = 'deploy', conflict
       child.on('exit', (code) => { clearTimeout(timeout); resolveResult({ code, stdout, stderr }); });
     });
     assert.deepEqual(unexpected, [], output.stderr);
-    return { ...output, calls };
+    const receipts = output.code === 0
+      ? readFileSync(resolve(directory, 'receipts.jsonl'), 'utf8').trim().split('\n').map(JSON.parse)
+      : [];
+    return { ...output, calls, deployments, receipts };
   } finally {
     await new Promise((resolve) => server.close(resolve));
     rmSync(directory, { recursive: true, force: true });
@@ -145,6 +165,33 @@ test('versions upload ignores configured routes without bypassing strict configu
   assert.ok(published(result.calls));
   assert.ok(!queried(result.calls, '/routes'));
   assert.ok(!queried(result.calls, '/domains/records'));
+});
+
+test('versions upload never creates a missing Worker', async () => {
+  const result = await runMockDeployment({ command: 'versions upload', missingWorker: true });
+  assert.notEqual(result.code, 0);
+  assert.match(result.stderr, /does not yet exist/);
+  assert.ok(!result.calls.some(([method]) => method !== 'GET'));
+});
+
+test('versioned publishing switches only the approved version to traffic without managing routes', async () => {
+  const upload = await runMockDeployment({ command: 'versions upload' });
+  assert.equal(upload.code, 0, upload.stderr + upload.stdout);
+  assert.deepEqual(upload.deployments, []);
+  assert.ok(upload.receipts.some((entry) => entry.type === 'version-upload' &&
+    entry.worker_name === worker && entry.worker_tag === 'worker-tag' && entry.version_id === versionId));
+
+  const result = await runMockDeployment({ command: `versions deploy ${versionId}@100% --yes` });
+  assert.equal(result.code, 0, result.stderr + result.stdout);
+  assert.deepEqual(result.deployments.map(({ versions }) => versions), [[
+    { version_id: versionId, percentage: 100 },
+  ]]);
+  assert.deepEqual(result.calls.filter(([method]) => method !== 'GET').map(([method, url]) =>
+    [method, url.split('/').at(-1)]), [['POST', 'deployments']]);
+  assert.ok(!queried(result.calls, '/routes'));
+  assert.ok(!queried(result.calls, '/domains/records'));
+  assert.ok(result.receipts.some((entry) => entry.type === 'version-deploy' &&
+    entry.worker_name === worker && entry.deployment_id === 'mock-deployment'));
 });
 
 test('destructive dashboard diff and mismatched CI Worker identity remain blocked', async () => {

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 export const targets = {
   'staging-site-worker': 'funapp-landing-staging',
-  'venue-interest-worker': 'funapp-venue-interest-staging',
+  'venue-interest-worker': 'funapp-registration-forms-staging',
   'founding-friend-payment-worker': 'funapp-founding-friend-payment-staging',
 };
 

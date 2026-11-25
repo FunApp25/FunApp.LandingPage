@@ -1,6 +1,11 @@
 import {
+  expectedAmount,
+  expectedCurrency,
   invalidProductionPaymentBinding,
+  matchesCheckoutPrice,
   productionAppOrigin,
+  stripeApiVersion,
+  type StripePrice,
 } from './production-config';
 
 export interface RateLimiter {
@@ -84,19 +89,6 @@ interface VerifyCheckoutRequest {
   sessionId: string;
 }
 
-interface StripePrice {
-  id?: unknown;
-  object?: unknown;
-  active?: unknown;
-  currency?: unknown;
-  livemode?: unknown;
-  type?: unknown;
-  unit_amount?: unknown;
-  billing_scheme?: unknown;
-  custom_unit_amount?: unknown;
-  tax_behavior?: unknown;
-}
-
 interface StripeCheckoutSession {
   id?: unknown;
   object?: unknown;
@@ -125,15 +117,12 @@ const createEndpointPath =
   '/api/founding-friend-payments/checkout-sessions';
 const verifyEndpointPath =
   '/api/founding-friend-payments/checkout-sessions/verify';
-const expectedCurrency = 'gbp';
-const expectedAmount = 24_900;
 const currencies = new Set(Intl.supportedValuesOf('currency').map(
   (currency) => currency.toLowerCase(),
 ));
 const maxRequestBodyBytes = 4 * 1024;
 const stripeTimeoutMs = 10_000;
 const stripeApiOrigin = 'https://api.stripe.com';
-const stripeApiVersion = '2026-08-26.dahlia';
 const createFields = new Set(['email', 'attemptId']);
 const verifyFields = new Set(['sessionId']);
 const emailPattern = /^(?!.*\.\.)(?!\.)[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}(?<!\.)@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
@@ -682,19 +671,7 @@ function assertValidPrice(
   price: StripePrice,
   config: { priceId: string; expectedLivemode: boolean },
 ): void {
-  if (
-    price.object !== 'price' ||
-    price.id !== config.priceId ||
-    price.active !== true ||
-    price.currency !== expectedCurrency ||
-    price.livemode !== config.expectedLivemode ||
-    price.type !== 'one_time' ||
-    price.unit_amount !== expectedAmount ||
-    price.billing_scheme !== 'per_unit' ||
-    price.tax_behavior !== 'inclusive' ||
-    (price.custom_unit_amount !== null &&
-      price.custom_unit_amount !== undefined)
-  ) {
+  if (!matchesCheckoutPrice(price, config.priceId, config.expectedLivemode)) {
     throw new StripeProviderError('invalid');
   }
 }

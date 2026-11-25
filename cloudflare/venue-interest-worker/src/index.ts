@@ -6,8 +6,8 @@ export interface RateLimiter {
 
 export interface Env {
   HUBSPOT_PORTAL_ID?: string;
-  HUBSPOT_FORM_GUID?: string;
   HUBSPOT_VENUE_FORM_GUID?: string;
+  HUBSPOT_FORM_GUID?: string;
   HUBSPOT_HERE_AND_NOW_FORM_GUID?: string;
   HUBSPOT_FOUNDING_FRIEND_FORM_GUID?: string;
   REGISTRATION_SUBMISSIONS_ENABLED?: string;
@@ -396,10 +396,15 @@ function registrationFormGuid(
 }
 
 function venueFormGuid(env: Env): string | null {
-  const formGuid = env.HUBSPOT_FORM_GUID ?? env.HUBSPOT_VENUE_FORM_GUID;
-  return typeof formGuid === 'string' && formGuid.trim().length > 0
-    ? formGuid
-    : null;
+  const canonical = env.HUBSPOT_VENUE_FORM_GUID;
+  const legacy = env.HUBSPOT_FORM_GUID;
+  const formGuid = canonical ?? legacy;
+  if (canonical !== undefined && legacy !== undefined &&
+      (typeof canonical !== 'string' || typeof legacy !== 'string' ||
+        canonical.toLowerCase() !== legacy.toLowerCase())) {
+    return null;
+  }
+  return typeof formGuid === 'string' && guidPattern.test(formGuid) ? formGuid : null;
 }
 
 function hasValidPortalId(value: string | undefined): value is string {

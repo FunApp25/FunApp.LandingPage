@@ -1,4 +1,37 @@
 export const productionAppOrigin = 'https://funapp.world';
+export const expectedCurrency = 'gbp';
+export const expectedAmount = 24_900;
+export const stripeApiVersion = '2026-08-26.dahlia';
+
+export interface StripePrice {
+  id?: unknown;
+  object?: unknown;
+  active?: unknown;
+  currency?: unknown;
+  livemode?: unknown;
+  type?: unknown;
+  unit_amount?: unknown;
+  billing_scheme?: unknown;
+  custom_unit_amount?: unknown;
+  tax_behavior?: unknown;
+}
+
+export function matchesCheckoutPrice(
+  price: StripePrice,
+  priceId: string,
+  expectedLivemode: boolean,
+): boolean {
+  return price.object === 'price' &&
+    price.id === priceId &&
+    price.active === true &&
+    price.currency === expectedCurrency &&
+    price.livemode === expectedLivemode &&
+    price.type === 'one_time' &&
+    price.unit_amount === expectedAmount &&
+    price.billing_scheme === 'per_unit' &&
+    price.tax_behavior === 'inclusive' &&
+    (price.custom_unit_amount === null || price.custom_unit_amount === undefined);
+}
 
 /** Returns only the name of the first invalid binding, never its value. */
 export function invalidProductionPaymentBinding(env: {

@@ -291,7 +291,7 @@ its existing site protection.
 | Production-mode local run/build | Compile or inspect the exact production composition without deploying it. | Run: `puro flutter run -d chrome -t lib/main_prod.dart`; build: `puro flutter build web --no-web-resources-cdn -t lib/main_prod.dart`, then `puro dart run tool/prepare_intermediate_release_artifact.dart`. | **Fun App Landing — Production (Local Inspection)** | Localhost when run; `build/web` when built. | Venue and both registrations resolve to localhost. Payment routes target `https://funapp.world`, subject to browser CORS. Builds make no requests. |
 | Staging artifact build | Compile the staging composition and produce an upload-safe artifact. This is a build, not a supported local integration runtime. | `puro flutter build web --no-web-resources-cdn -t lib/main_staging.dart`, then `puro dart run tool/prepare_staging_release_artifact.dart`. | No extra launch configuration; use the terminal tasks above to avoid implying localhost is staging. | `build/web` only. The preparation tool removes `CNAME`, rejects bundled local legal assets, and adds staging canonical/noindex metadata. | Booking configuration is optional. No provider credential is required. Registration and payment requests target `https://staging.funapp.world`. |
 | Hosted staging | Protected staging UI, mocked registration, and optionally real Stripe sandbox Checkout. | Pushes to `dev` validate, then automatically publish the two staging API Workers and staging site. | Not launched by Run; GitHub `staging` permits deployments from `dev` only. | `https://staging.funapp.world` on Workers Static Assets Worker `funapp-landing-staging`. | GitHub `staging` Environment, Cloudflare Workers credentials, Stripe sandbox configuration, custom domain, routes, and Access. Existing resources and environment configuration are maintained externally; CI does not provision them. |
-| Hosted production | Current public site and existing Venue flow. | `.github/workflows/deploy.yml` builds `lib/main_prod.dart`; both production Worker workflows deploy only when manually dispatched on `main`. | **Fun App Landing — Production (Local Inspection)** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | Each registration workflow and Checkout creation default to disabled and require authorized Worker configuration and exact routes. |
+| Hosted production | Current public site and existing Venue flow. | **Deploy Production** validates the `main` revision, builds `lib/main_prod.dart`, and deploys both API Workers before publishing Pages. | **Fun App Landing — Production (Local Inspection)** is local inspection only. | GitHub Pages at `https://funapp.world`; the existing narrow Venue Worker route is externally managed. | Each registration workflow and Checkout creation default to disabled and require authorized Worker configuration and exact routes. |
 
 The standalone Worker commands are also supported execution modes:
 
@@ -317,8 +317,8 @@ The standalone Worker commands are also supported execution modes:
 | Local mocked Worker integration | In-memory fake success | Local registration Worker | Mocked, no upstream call | Local payment Worker | Mocked, no upstream call | No | No | Implemented; deterministic. |
 | Production-mode local run | Same-origin localhost request | Both registrations resolve to localhost | Requires separate local routing | Fixed `https://funapp.world` payment endpoints, subject to browser CORS | Production payment service boundary | No during build; runtime payment routes can attempt production requests | Payment requests target production | Use local mocked Worker integration for payment development. |
 | Staging artifact build | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No runtime activity | No | No | Implemented build path; artifact is not deployed. |
-| Hosted staging | In-memory fake success; no staging Venue API route | `funapp-venue-interest-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Automated deployment verified; registration, sandbox Checkout and verification reported successful by the operator. See [operational status](#operational-configuration-and-rollback). |
-| Hosted production | Existing `funapp-venue-interest` route may submit to HubSpot | Both forms are Worker-backed and require independent activation | Venue and each registration's approved form after activation | Production-capable Worker with Checkout creation disabled by default | Live-mode configuration required | Venue can create HubSpot records. Registration and payment need authorized setup. | This is production | Founding Friend purchasing has not been launched. |
+| Hosted staging | In-memory fake success; no staging Venue API route | `funapp-registration-forms-staging` staging-only adapter | Mocked, with no HubSpot identifiers or fallback | `funapp-founding-friend-payment-staging` | Stripe **sandbox only**; creation follows the required `STAGING_PAYMENT_CREATION_ENABLED` environment variable | Can create sandbox Checkout/Customer/payment records while enabled; never HubSpot records | No, when the documented identities/routes/Environment are used | Automated deployment verified; registration, sandbox Checkout and verification reported successful by the operator. See [operational status](#operational-configuration-and-rollback). |
+| Hosted production | `funapp-registration-forms` keeps the existing Venue submission path to HubSpot | Both forms are Worker-backed and require independent activation | Venue and each registration's approved form after activation | Production-capable Worker with Checkout creation disabled by default | Live-mode configuration required | Venue can create HubSpot records. Registration and payment need authorized setup. | This is production | Founding Friend purchasing has not been launched. |
 
 ### Trigger matrix
 
@@ -330,17 +330,15 @@ The standalone Worker commands are also supported execution modes:
 | Run any local `flutter build web --no-web-resources-cdn` command | Compiles the selected entrypoint into `build/web`. | Nothing | Build commands perform no provider I/O. Run the matching artifact preparation command before upload. |
 | Push a feature branch other than `dev` or `main` | No repository workflow is triggered solely by the push. | Nothing | No staging Worker uses Cloudflare Git integration or an automatic repository trigger. |
 | Open or update a PR targeting `dev` or `main` | `pr_checks.yml` formats, generates, analyzes, tests, dry-runs the site Worker and both API Workers, and builds production plus staging artifacts. | Nothing | Hosted CI validation only. |
-| Push a commit to `main` | `deploy.yml` regenerates, analyzes, tests, and builds production. | **Deploys production GitHub Pages** | Existing production behavior is intentionally preserved. It does not deploy either Worker or staging. |
-| Manually dispatch `deploy.yml` | Same production validation/build when dispatched on `main`. | **Deploys production GitHub Pages** | Production action; unrelated to staging. |
-| Manually dispatch either production Worker workflow on `main` | Validates the selected root Worker and production settings. | **Deploys that production Worker identity** | Uses GitHub `production`. Each enabled capability requires its matching dispatch authorization. Cloudflare routes are managed separately. |
+| Merge a reviewed PR to `main` | Reuses `pr_checks.yml`, builds the production artifact, and preflights both Workers. | **Deploys both production API Workers, then GitHub Pages** | All three activation flags must be disabled for the automatic run. |
+| Manually dispatch **Deploy Production** on `main` | Runs the same coordinated validation, build and preflight. | **Deploys both production API Workers, then GitHub Pages** | Each enabled capability requires its matching dispatch authorization. |
 | Push a commit to `dev` (including a PR merge) | Reuses every `pr_checks.yml` validation, including production/staging builds and all three Worker suites. | **Deploys staging registration, sandbox payment, then site** | `deploy-staging-site.yml` uses GitHub `staging` after all checks pass, complete read-only preflight, and the dev-HEAD check under the publishing lock. |
 
 The staging workflow has no manual or PR deployment trigger. The former
 individual staging API deployment workflows have been retired so there is one
 validation gate and no manual checkbox that resets payment creation. Production
-Worker workflows remain manual-only and use the GitHub `production` environment.
-The production Pages build uses the `production` Environment. Publishing
-continues through `github-pages`.
+build and Worker jobs use the GitHub `production` Environment. Pages publishes
+through `github-pages` after the Worker job.
 
 ### Staging architecture and routing
 
@@ -367,7 +365,7 @@ Custom Domain, the intended dashboard-managed Worker Routes are:
 
 ```text
 staging.funapp.world/api/registrations/*
-  -> funapp-venue-interest-staging
+  -> funapp-registration-forms-staging
 
 staging.funapp.world/api/founding-friend-payments/*
   -> funapp-founding-friend-payment-staging
@@ -399,7 +397,7 @@ Public, source-controlled staging configuration:
   `cloudflare/staging-site-worker/src/index.ts`, asset directory `build/web`,
   SPA fallback enabled, `/api` fallback blocked, `workers.dev` disabled, preview
   URLs disabled, and no route or custom domain in source.
-- Registration Worker: `funapp-venue-interest-staging`, staging entrypoint,
+- Registration Worker: `funapp-registration-forms-staging`, staging entrypoint,
   deterministic mock enabled, rate namespace `2001`, no HubSpot identifiers.
 - Payment Worker: `funapp-founding-friend-payment-staging`,
   `STRIPE_EXPECTED_LIVEMODE=false`, staging return/cancel origin, and source
@@ -475,7 +473,7 @@ failure can still leave a partial release.
 with `npm ci --prefix tool/staging-wrangler`; invoke it with
 `node tool/staging-wrangler/wrangler.mjs` from the repository root. All staging
 publishing, generated-config dry runs, and upload-metadata tests use this wrapper.
-Production Worker deployments use the Wrangler version locked in each Worker project.
+Production reuses the same locked wrapper for version upload and traffic deployment.
 
 The package locks Wrangler **4.155.0** with npm integrity checks. Its postinstall
 backports [workers-sdk PR #16531](https://github.com/cloudflare/workers-sdk/pull/16531)
@@ -572,9 +570,7 @@ repeated in this audit. Registration remains mocked without HubSpot I/O; payment
 uses Stripe sandbox only. The staging diagnostics remain available for future
 failures; the incident is not a current unresolved blocker.
 
-The `general_audit` changes after that deployed revision, including the local
-audit fixes and A08 image optimizations, are not covered by that deployment
-evidence. The A09/A10 CI and documentation edits are also local and undeployed.
+That run predates the registration Worker rename. Verify the renamed target in the first post-merge staging run.
 The Stripe business account has been approved. The production-capable code in
 this repository defaults Founding Friend registration and Checkout creation to
 disabled. Approved legal applicability, production configuration, controlled
@@ -841,7 +837,7 @@ a potential future optimization; no lazy-loading framework is added.
 ## Cloudflare Worker development
 
 `cloudflare/venue-interest-worker/` is the isolated TypeScript project for the
-existing `funapp-venue-interest` Worker. It preserves `POST
+existing `funapp-registration-forms` Worker. It preserves `POST
 /api/venue-interest` and implements exact dispatch for `POST
 /api/registrations/here-and-now` and `POST
 /api/registrations/founding-friend`. Both registrations use the same first-party
@@ -894,10 +890,18 @@ unknown route, `405` unsupported method, `422` provider validation rejection,
 configuration. Provider bodies and submitted personal data are never returned
 or logged.
 
-The Worker uses `HUBSPOT_PORTAL_ID` and the authoritative
-`HUBSPOT_FORM_GUID` for Venue (`HUBSPOT_VENUE_FORM_GUID` is a fallback when
-the authoritative binding is absent). Production registration requires a
-numeric portal ID and the source-declared `REGISTRATION_RATE_LIMITER`.
+The Worker uses `HUBSPOT_PORTAL_ID` and the canonical
+`HUBSPOT_VENUE_FORM_GUID` for Venue. Existing deployments can use
+`HUBSPOT_FORM_GUID` when the canonical binding is absent. If both exist they
+must match as GUIDs, ignoring hex case. A conflict or invalid selected GUID
+fails before any Venue forwarding. Production preflight requires the canonical
+GitHub variable and checks it against the deployed legacy binding before upload.
+The release preserves the legacy binding. Retire the compatibility fallback
+only after confirming the canonical binding is deployed and deciding how to
+handle any rollback to a legacy version.
+
+Production registration requires a numeric portal ID and the source-declared
+`REGISTRATION_RATE_LIMITER`.
 `HERE_AND_NOW_SUBMISSIONS_ENABLED=true` requires a valid
 `HUBSPOT_HERE_AND_NOW_FORM_GUID`. `FOUNDING_FRIEND_SUBMISSIONS_ENABLED=true`
 requires a valid `HUBSPOT_FOUNDING_FRIEND_FORM_GUID` for its own approved form,
@@ -914,34 +918,17 @@ HubSpot attempt with a 10-second timeout. Loopback requests require
 `LOCAL_DEVELOPMENT_ALLOWED_ORIGIN` and a supported `HUBSPOT_MOCK_SCENARIO`.
 The deployed Worker rejects local mock settings.
 
-The manual `deploy-venue-interest-worker.yml` workflow on `main` targets
-`funapp-venue-interest`. It preflights the production entrypoint, rate-limit
-namespace `1001`, Cloudflare account and token, numeric `HUBSPOT_PORTAL_ID`,
-and `HUBSPOT_FORM_GUID`. Set each enabled flag and its form GUID in the GitHub
-`production` Environment and select the matching dispatch authorization.
-Preflight rejects unauthorized enablement and requires each registration form
-GUID only when that workflow is enabled.
-
-After installing both API Worker projects, run the production preflights
-against synthetic settings from the repository root with
-`node --test test/tool/production_worker_preflight.test.mjs`.
-
-For Workers last deployed from the Cloudflare dashboard, the locked production
-Wrangler version also reads route and Custom Domain metadata before uploading.
-Confirm the production deployment token can perform the required metadata reads.
-
-Before an authorized rollout, verify the approved forms and their field and
-consent settings, and arrange the exact dashboard-managed routes
-`funapp.world/api/registrations/here-and-now` and
-`funapp.world/api/registrations/founding-friend` as applicable. Verify Worker
-routing before publishing the corresponding Pages build. Roll back forwarding
-by setting the affected flag to `false` and redeploying the forms Worker.
+The coordinated [production release](#production-release) installs the
+registration Worker configuration. Confirm the approved HubSpot forms and
+their field and consent settings before authorizing either new registration.
+The existing dashboard routing sends
+`funapp.world/api/venue-interest*` and `funapp.world/api/registrations/*` to
+`funapp-registration-forms`. The Worker handles the exact paths above.
 
 ### Founding Friend payment Worker
 
-`cloudflare/founding-friend-payment-worker/` is a separate Worker project. It
-does not modify, share deployment with, or add bindings to the existing Venue
-Worker. It owns two first-party JSON endpoints:
+`cloudflare/founding-friend-payment-worker/` has its own code, bindings, and
+Cloudflare deployment. It owns two first-party JSON endpoints:
 
 - `POST /api/founding-friend-payments/checkout-sessions` accepts exactly a
   validated `email` and UUID v4 `attemptId`. When creation is enabled, the
@@ -1105,26 +1092,14 @@ contract in SPECIFICATIONS.md](SPECIFICATIONS.md) for details and the documented
 API-version evidence limit: the read-only sandbox showed localized totals, but
 the connector cannot make a GET pinned to the Worker's Dahlia version.
 
-`.github/workflows/deploy-founding-friend-payment-worker.yml` is manual on
-`main` and targets `funapp-founding-friend-payment`. Supply these settings
-through the GitHub `production` Environment for an authorized deployment.
-
-| Setting | Production requirement |
-| --- | --- |
-| `PAYMENT_CREATION_ENABLED` | Defaults to `false`. `true` also requires the dispatch authorization for live Checkout creation. |
-| `STRIPE_EXPECTED_LIVEMODE` | Exactly `true`. |
-| `STRIPE_SECRET_KEY` | Encrypted Stripe restricted live key with the `rk_live_` prefix and the operation permissions below. |
-| `STRIPE_PRICE_ID` | A syntactically valid `price_…` ID for the active live £249 GBP, one-time, tax-inclusive Price. |
-| `STRIPE_AUTOMATIC_TAX_ENABLED` | Explicit `true` or `false`, based on the separately approved tax setting. |
-| `PUBLIC_APP_ORIGIN` | Exactly `https://funapp.world`. |
-| `PURCHASE_REFERENCE_SECRET` | Encrypted, independently generated high-entropy secret of at least 32 characters, with no surrounding whitespace, CR/LF, or NUL. Keep it stable across deploys. |
-| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | Target account ID and encrypted production deployment token. |
-
-Preflight checks the same Stripe settings as the production entrypoint and the
-source-declared `PAYMENT_RATE_LIMITER` in namespace `1002`. Wrangler uploads
-both payment secrets with the Worker code using a protected temporary file.
-The production entrypoint pins Stripe-backed requests to `https://funapp.world`.
-Staging remains sandbox-only and the local mock remains loopback-only.
+The [production release](#production-release) installs the payment bindings
+on `funapp-founding-friend-payment`. Preflight verifies the source-declared
+`PAYMENT_RATE_LIMITER` in namespace `1002`, validates binding values, and uses
+the restricted live key for a read-only lookup of the configured Price under
+the same pinned Stripe API version as the Worker. Wrangler uploads both
+payment secrets and the code in the same version. The production entrypoint
+pins Stripe-backed requests to `https://funapp.world`. Staging uses the sandbox
+and the local mock stays on loopback.
 
 Provision the restricted key for Price read (`GET /v1/prices/{id}`), Checkout
 Sessions Write (`POST /v1/checkout/sessions`), which includes permission to
@@ -1137,7 +1112,7 @@ are assigned in Stripe. [Restricted API keys](https://docs.stripe.com/keys/restr
 [Checkout creation](https://docs.stripe.com/api/checkout/sessions/create),
 [Checkout retrieval](https://docs.stripe.com/api/checkout/sessions/retrieve).
 
-Arrange external route attachment for exactly the two payment paths above.
+Preserve the dashboard-managed route `funapp.world/api/founding-friend-payments/*`.
 Keep creation disabled while validating deployment and read-only verification
 with valid production configuration. For a controlled live Checkout test,
 restrict access to the creation route to authorized testers and obtain
@@ -1149,11 +1124,9 @@ retaining verification routing, the live key's read access, and the applicable
 Price and secret bindings.
 Already-issued Stripe Checkout Sessions continue their existing lifecycle.
 
-Before activation, approve the tax treatment and then set
-`STRIPE_AUTOMATIC_TAX_ENABLED` deliberately. Enabling it also requires the
-business's confirmed Stripe Tax settings, origin address, applicable active
-registrations, and approved Product tax code; the code does not choose any of
-those legal or business inputs. Approve the refund/cancellation policy,
+This release requires `STRIPE_AUTOMATIC_TAX_ENABLED=false`. Any later automatic
+tax activation requires an approved tax configuration and a release-policy
+change. Approve the refund/cancellation policy,
 dispute/support handling, and applicable terms before launch.
 
 Enable **Successful payments** under Stripe's **Customer emails** in the live
@@ -1205,9 +1178,7 @@ cloudflare/founding-friend-payment-worker/ Separate Stripe payment Worker
 cloudflare/staging-site-worker/ Staging-only Workers Static Assets site host
 l10n.yaml                    Flutter localization generation configuration
 archive/astro_site/          Deprecated pre-Flutter historical reference
-.github/workflows/deploy.yml Flutter GitHub Pages workflow
-.github/workflows/deploy-venue-interest-worker.yml Manual Worker deployment
-.github/workflows/deploy-founding-friend-payment-worker.yml Manual payment Worker deployment
+.github/workflows/deploy.yml Coordinated production Workers and GitHub Pages release
 SPECIFICATIONS.md            Authoritative project decisions
 AGENTS.md                    Coding-agent working rules
 ```
@@ -1253,27 +1224,94 @@ legal-link and Venue booking browser navigation, and production/staging builds
 through the credential-free `PR Checks` workflow. Pushes to `dev` reuse these
 checks before the [staging release sequence](#staging-validation-and-deployment).
 
-Pushes to `main` and manual dispatches on `main` run the GitHub Pages workflow.
-The `dev` branch deploys to Cloudflare staging and has no Pages environment.
-Hosted CI installs Flutter 3.47.2 directly through
-`subosito/flutter-action@v2`, then generates localizations and Dart sources,
-analyzes, tests, and explicitly builds `lib/main_prod.dart` without browser-side
-provider configuration. Local development continues to use Puro. The workflow
-then rejects bundled local legal assets before it uploads
-`build/web` and deploys to
-[https://funapp.world](https://funapp.world).
+### Production release
 
-The custom domain remains configured in GitHub Pages. `web/CNAME` records the
-repository's active domain declaration and is copied into the Flutter artifact.
+Merge the feature into `dev`, verify the [staging release](#staging-validation-and-deployment)
+at the reviewed revision, then open a separate `dev` → `main` PR. Protect `main`
+with the required PR checks and review. Settle any in-flight legacy production
+Worker workflow runs before the first coordinated release.
+
+**Deploy Production** runs on a push to `main` or a manual dispatch on `main`.
+It calls credential-free PR checks, builds and validates `lib/main_prod.dart`
+using Flutter 3.47.2, rejects bundled local legal assets, and uploads the
+Pages artifact for that run. The `production` job preflights both existing
+Workers and uploads both versions before switching traffic to either.
+The `github-pages` job publishes the artifact from the same run only after
+both Worker deployments succeed. The workflow serializes releases and
+checks current `main` HEAD before each Worker change and before Pages.
+The production custom domain remains configured in GitHub Pages, with
+`web/CNAME` copied into the Flutter artifact.
+
+Keep GitHub `production` restricted to `main`, `staging` restricted to `dev`,
+and the Pages source set to GitHub Actions with its deployment environment
+configured for releases from `main`.
+Use environment reviewers or equivalent repository approval controls and
+limit dispatch rights to authorized operators.
+
+| GitHub `production` setting | Value or requirement |
+| --- | --- |
+| Variable `CLOUDFLARE_ACCOUNT_ID` | Account owning both existing production Workers. |
+| Secret `CLOUDFLARE_API_TOKEN` | Existing production token with metadata reads, version upload, and deployment for both production Workers. Keep the name. |
+| Variables `HUBSPOT_PORTAL_ID`, `HUBSPOT_VENUE_FORM_GUID` | Numeric portal ID and approved Venue form GUID. Add the canonical variable using the current Venue form. |
+| Variable `HUBSPOT_FORM_GUID` | Optional legacy GitHub value during migration. If present it must match the canonical value. Retain the deployed legacy binding. |
+| Variables `HUBSPOT_HERE_AND_NOW_FORM_GUID`, `HUBSPOT_FOUNDING_FRIEND_FORM_GUID` | Approved form GUID required and installed when its corresponding registration is enabled. Founding Friend uses a distinct form. |
+| Variables `HERE_AND_NOW_SUBMISSIONS_ENABLED`, `FOUNDING_FRIEND_SUBMISSIONS_ENABLED`, `PAYMENT_CREATION_ENABLED` | Independent flags. Set to `false` or leave unset for the initial release. An enabled flag requires separate dispatch authorization. |
+| Variables `STRIPE_PRICE_ID`, `STRIPE_EXPECTED_LIVEMODE`, `STRIPE_AUTOMATIC_TAX_ENABLED`, `PUBLIC_APP_ORIGIN` | Active live one-time tax-inclusive £249 GBP Price ID, exactly `true`, exactly `false`, and exactly `https://funapp.world`, respectively. |
+| Secret `STRIPE_SECRET_KEY` | Restricted live Stripe key with the permissions described above. |
+| Secret `PURCHASE_REFERENCE_SECRET` | Independent production-only secret. Use at least 32 high-entropy characters, without surrounding whitespace, CR/LF, or NUL. Keep stable to preserve purchase recovery. |
+| Variable `FUN_APP_VENUE_BOOKING_URL` | Optional public production booking URL, the only environment setting injected into the web build. |
+
+The release checks both Worker identities and disabled public previews,
+binding types, the retained legacy Venue form, and the live Price before
+upload. Registration and payment rate limiters use namespaces `1001` and
+`1002`, respectively. Routes, Custom Domains and DNS are managed in Cloudflare.
+The version uploads use a protected temporary secrets file, which is cleaned
+up with the Wrangler logs and receipts. The workflow prints only sanitized
+failure context and version IDs.
+
+A push with any production flag set to `true` fails preflight before any
+Worker upload. After explicit authorization, set only the approved flags to
+`true` and run **Deploy Production** on current `main`. Select the matching
+checkbox for every flag set to `true`, including any enabled by a previous
+release. A later release with enabled flags requires the same dispatch
+authorization. An unauthorized push leaves the running release in place.
+Venue and payment verification operate independently of the flags. Keep the
+verification route, Price, live key and purchase-reference secret available
+when stopping new Checkout creation. Approve legal applicability, the form
+contracts, and controlled live verification before public activation.
+
+Worker traffic switches and Pages publication are sequential. A failure after
+one switch may leave a mixed Worker release while Pages stays at its previous
+artifact. Compare the workflow's version IDs and current deployments before
+retrying. Dispatch the full workflow on current `main` to recover a valid
+release, or revert the offending changes through a reviewed PR to `main`.
+To pause a feature, set its flag to `false` and dispatch current `main`, with
+authorization for any features that remain enabled.
+
+If the release path itself is unavailable, disable **Deploy Production**,
+clear pending runs and let active publication settle. With incident approval,
+restore known-good Cloudflare versions on the affected Workers. Check their
+activation and secret bindings first. Restore only a payment version that
+can verify any Sessions already issued. If Pages has already
+published, restore the matching known-good site through a reviewed revert and
+the coordinated release. Reconcile all component versions before
+re-enabling normal publication. Preserve the earlier workflows' retirement
+when reverting application code.
 
 ## Contributing
 
 Keep commits small and focused, preserve the documented decision status, and
 run verification appropriate to the files changed before requesting review.
-For staging automation changes, install each Worker's locked dependencies and
-the isolated staging tool with `npm ci --prefix tool/staging-wrangler`, prepare
-the staging artifact, and run `node --test test/tool/staging_wrangler.test.mjs
-test/tool/staging_deployment.test.mjs` from the repository root. This suite uses
-mock metadata responses, the actual CLI against a loopback API, and Wrangler dry runs, with no provider credentials or
-deployments. PRs to either long-lived branch validate only; a merge into `dev`
-starts automatic staging deployment after those checks pass.
+For release automation changes, install each Worker's locked dependencies and
+the pinned Wrangler wrapper, then prepare the staging artifact. Run from the
+repository root:
+
+```bash
+npm ci --prefix tool/staging-wrangler
+node --test test/tool/production_worker_preflight.test.mjs \
+  test/tool/staging_wrangler.test.mjs test/tool/staging_deployment.test.mjs
+```
+
+The suites use synthetic metadata, the actual CLI against a loopback API, and
+Wrangler dry runs. PRs to either long-lived branch validate only. A merge into
+`dev` starts automatic staging deployment after those checks pass.

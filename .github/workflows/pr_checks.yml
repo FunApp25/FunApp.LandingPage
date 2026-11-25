@@ -37,11 +37,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test production Venue Worker preflight
-        run: >-
-          node --test --test-name-pattern='^venue-interest-worker$'
-          ../../test/tool/production_worker_preflight.test.mjs
-
       - name: Typecheck
         run: npm run typecheck
 
@@ -56,6 +51,14 @@ jobs:
 
       - name: Install fixed staging deployment tool
         run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
+      - name: Test production registration Worker preflight
+        run: >-
+          node --test --test-name-pattern='^venue-interest-worker$'
+          ../../test/tool/production_worker_preflight.test.mjs
+
+      - name: Validate version upload with the release tool
+        run: node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" versions upload --dry-run --env="" --config wrangler.jsonc
 
       - name: Test venue-interest-worker staging Wrangler upload metadata
         env:
@@ -86,11 +89,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test production payment Worker preflight
-        run: >-
-          node --test --test-name-pattern='^founding-friend-payment-worker$'
-          ../../test/tool/production_worker_preflight.test.mjs
-
       - name: Typecheck
         run: npm run typecheck
 
@@ -105,6 +103,14 @@ jobs:
 
       - name: Install fixed staging deployment tool
         run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
+      - name: Test production payment Worker preflight
+        run: >-
+          node --test --test-name-pattern='^founding-friend-payment-worker$'
+          ../../test/tool/production_worker_preflight.test.mjs
+
+      - name: Validate version upload with the release tool
+        run: node "$GITHUB_WORKSPACE/tool/staging-wrangler/wrangler.mjs" versions upload --dry-run --env="" --config wrangler.jsonc
 
       - name: Test founding-friend-payment-worker staging Wrangler upload metadata
         env:
@@ -254,6 +260,11 @@ jobs:
 
       - name: Install fixed staging deployment tool
         run: npm ci --prefix "$GITHUB_WORKSPACE/tool/staging-wrangler"
+
+      - name: Test coordinated production release preflight and deployment order
+        run: >-
+          node --test --test-name-pattern='^production release$'
+          test/tool/production_worker_preflight.test.mjs
 
       # Common deployment safety and Wrangler backport tests run once in this required job.
       - name: Test staging deployment safety and Wrangler upload metadata
