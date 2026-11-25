@@ -54,11 +54,11 @@ void main() {
 
     expect(site['name'], 'funapp-landing-staging');
     expect(site['main'], 'src/index.ts');
-    expect(registration['name'], 'funapp-venue-interest');
+    expect(registration['name'], 'funapp-registration-forms');
     expect(registration['main'], 'src/index.ts');
     expect(
       registrationStaging['name'],
-      'funapp-venue-interest-staging',
+      'funapp-registration-forms-staging',
     );
     expect(registrationStaging['main'], 'src/staging.ts');
     expect(payment['name'], 'funapp-founding-friend-payment');
@@ -96,39 +96,64 @@ void main() {
     ]) {
       expect(config.containsKey('route'), false);
       expect(config.containsKey('routes'), false);
+      expect(config['workers_dev'], false);
+      expect(config['preview_urls'], false);
     }
 
-    expect(site['workers_dev'], false);
-    expect(site['preview_urls'], false);
     final assets = _objectMap(site['assets']);
     expect(assets['directory'], '../../build/web');
     expect(assets['binding'], 'ASSETS');
     expect(assets['not_found_handling'], 'single-page-application');
     expect(assets['run_worker_first'], ['/api', '/api/*']);
 
-    final namespaces = <String>{
-      _rateLimitNamespace(registration),
-      _rateLimitNamespace(registrationStaging),
-      _rateLimitNamespace(payment),
-      _rateLimitNamespace(paymentStaging),
-    };
-    expect(namespaces, hasLength(4));
+    expect(_rateLimitNamespace(registration), '1001');
+    expect(_rateLimitNamespace(payment), '1002');
+    expect(_rateLimitNamespace(registrationStaging), '2001');
+    expect(_rateLimitNamespace(paymentStaging), '2002');
   });
 
-  test('production deploy workflows explicitly select root Worker configs', () {
+  test('production Pages requires both Workers at the current main SHA', () {
+    final workflow = File('.github/workflows/deploy.yml').readAsStringSync();
+    final jobs = workflow.split('\njobs:\n').last;
+    final workers = jobs
+        .split('\n  workers:\n')
+        .last
+        .split('\n  pages:\n')
+        .first;
+    final pages = jobs.split('\n  pages:\n').last;
+    expect(workflow, contains('push:\n    branches:\n      - main'));
+    expect(workflow, contains('workflow_dispatch:'));
+    expect(workflow, contains('group: funapp-production-deployment'));
+    expect(workflow, contains('cancel-in-progress: false'));
+    expect(jobs, contains("if: github.ref == 'refs/heads/main'"));
+    expect(jobs, contains('uses: ./.github/workflows/pr_checks.yml'));
+    expect(jobs, contains('needs: checks'));
+    expect(workers, contains('needs: build'));
+    expect(workers, contains('environment: production'));
+    expect(workers, contains('node tool/deploy_production_workers.mjs'));
+    expect(workers, contains(r'${{ secrets.CLOUDFLARE_API_TOKEN }}'));
+    expect(workers, contains(r'${{ vars.HUBSPOT_VENUE_FORM_GUID }}'));
+    expect(workflow, isNot(contains('CLOUDFLARE_WORKERS_API_TOKEN')));
+    expect(workflow, isNot(contains('CLOUDFLARE_STAGING_SITE_API_TOKEN')));
+    expect(workflow, isNot(contains('STRIPE_SANDBOX')));
+    expect(workflow.split('\n  workers:\n').first, isNot(contains('secrets.')));
+    expect(pages, contains('needs: workers'));
+    expect(pages, contains('name: github-pages'));
+    expect(pages, contains('git ls-remote --exit-code origin refs/heads/main'));
+    expect(pages, contains('exit 1'));
+    expect(pages, contains('actions/deploy-pages@v4'));
+    expect(pages, isNot(contains('secrets.')));
+    expect(workflow, isNot(contains('continue-on-error')));
+    expect(workflow, isNot(contains('always()')));
+    expect(
+      RegExp(r'ref: \$\{\{ github.sha \}\}').allMatches(jobs),
+      hasLength(3),
+    );
     for (final path in [
       '.github/workflows/deploy-venue-interest-worker.yml',
       '.github/workflows/deploy-founding-friend-payment-worker.yml',
     ]) {
-      final workflow = File(path).readAsStringSync();
-
-      expect(workflow, contains('environment: production'), reason: path);
-      expect(
-        workflow,
-        contains('wrangler deploy --env="" --config wrangler.jsonc'),
-        reason: path,
-      );
-      expect(workflow, isNot(contains('wrangler deploy --env staging')));
+      expect(File(path).existsSync(), false);
     }
   });
 
@@ -270,12 +295,17 @@ void main() {
         RegExp('staging_deployment.test.mjs').allMatches(job),
         hasLength(1),
       );
+      final uploadStep = job
+          .split('      - name:')
+          .singleWhere(
+            (step) => step.contains('WORKER_PROJECT: ${entry.value}\n'),
+          );
       if (entry.key == 'quality') {
-        expect(job, isNot(contains('--test-name-pattern')));
-        expect(job, contains('test/tool/staging_wrangler.test.mjs'));
+        expect(uploadStep, isNot(contains('--test-name-pattern')));
+        expect(uploadStep, contains('test/tool/staging_wrangler.test.mjs'));
       } else {
         expect(
-          job,
+          uploadStep,
           contains("node --test --test-name-pattern='^${entry.value}:'"),
         );
         expect(job, isNot(contains('staging_wrangler.test.mjs')));
@@ -283,11 +313,6 @@ void main() {
       for (final bypass in ['continue-on-error', '||']) {
         expect(job, isNot(contains(bypass)));
       }
-      final uploadStep = job
-          .split('          WORKER_PROJECT: ${entry.value}\n')
-          .first
-          .split('      - name:')
-          .last;
       expect(uploadStep, isNot(contains('if:')));
     }
   });
@@ -324,6 +349,9 @@ void main() {
       hasLength(3),
     );
     expect(workflow, isNot(contains('diagnostic')));
+    expect(workflow, isNot(contains('secrets.CLOUDFLARE_API_TOKEN')));
+    expect(workflow, isNot(contains('secrets.STRIPE_SECRET_KEY')));
+    expect(workflow, isNot(contains('secrets.PURCHASE_REFERENCE_SECRET')));
     expect(workflow, isNot(contains(r'${{ false }}')));
     expect(workflow, contains('permissions:\n  contents: read\n\n'));
 

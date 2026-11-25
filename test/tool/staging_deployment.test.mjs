@@ -33,6 +33,17 @@ const remoteBindings = [
 const sourceConfig = (project) => JSON.parse(readFileSync(`cloudflare/${project}/wrangler.jsonc`, 'utf8')
   .replace(/^\s*\/\/.*$/gm, ''));
 
+test('staging preflight and generated upload target the existing registration Worker', () => {
+  const project = 'venue-interest-worker';
+  const worker = 'funapp-registration-forms-staging';
+  const source = sourceConfig(project);
+  assert.equal(targets[project], worker);
+  assert.equal(deploymentConfig(project, source, remoteBindings, {}).name, worker);
+  assert.throws(() => deploymentConfig(project, {
+    ...source, env: { staging: { ...source.env.staging, name: 'funapp-registration-forms' } },
+  }, remoteBindings, {}), /Invalid staging identity/);
+});
+
 test('payment enablement is explicit, sandbox-only, and never defaults', () => {
   const vars = paymentConfiguration(environment);
   assert.deepEqual(vars, {

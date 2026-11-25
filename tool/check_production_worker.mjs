@@ -2,13 +2,17 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
-import { invalidProductionPaymentBinding } from '../cloudflare/founding-friend-payment-worker/src/production-config.ts';
+import {
+  invalidProductionPaymentBinding,
+  matchesCheckoutPrice,
+  stripeApiVersion,
+} from '../cloudflare/founding-friend-payment-worker/src/production-config.ts';
 
 const registration = 'venue-interest-worker';
 const payment = 'founding-friend-payment-worker';
-const targets = {
+export const targets = {
   [registration]: {
-    name: 'funapp-venue-interest',
+    name: 'funapp-registration-forms',
     binding: 'REGISTRATION_RATE_LIMITER',
     namespace: '1001',
     flags: {
@@ -24,6 +28,7 @@ const targets = {
   },
 };
 const guid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const requireWrangler = createRequire(new URL('./staging-wrangler/package.json', import.meta.url));
 
 function projectDirectory(project) {
   if (!Object.hasOwn(targets, project)) throw new Error('Unknown production Worker project');
@@ -32,8 +37,7 @@ function projectDirectory(project) {
 
 export function readProductionWorkerConfig(project) {
   const config = resolve(projectDirectory(project), 'wrangler.jsonc');
-  const require = createRequire(config);
-  return require('wrangler').unstable_readConfig({ config, env: '' });
+  return requireWrangler('wrangler').unstable_readConfig({ config, env: '' });
 }
 
 export function checkProductionWorker(project, config, env) {
@@ -66,20 +70,28 @@ export function checkProductionWorker(project, config, env) {
     if (value !== 'true' && value !== 'false') {
       throw new Error(`${flag} must be exactly true or false`);
     }
-    if (value === 'true' && env[authorization] !== 'true') {
+    if (value === 'true' &&
+        (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env[authorization] !== 'true')) {
       throw new Error(`${flag}=true requires explicit dispatch authorization: ${authorization}`);
     }
   }
   if (project === payment) {
     const invalid = invalidProductionPaymentBinding(env);
     if (invalid !== null) throw new Error(`Invalid production payment configuration: ${invalid}`);
+    if ([env.STRIPE_SECRET_KEY, env.CLOUDFLARE_API_TOKEN].includes(env.PURCHASE_REFERENCE_SECRET)) {
+      throw new Error('PURCHASE_REFERENCE_SECRET must be independent of deployment and Stripe credentials');
+    }
+    if (env.STRIPE_AUTOMATIC_TAX_ENABLED !== 'false') {
+      throw new Error('STRIPE_AUTOMATIC_TAX_ENABLED must be false for this release');
+    }
   } else {
     if (!/^\d+$/.test(env.HUBSPOT_PORTAL_ID ?? '')) {
       throw new Error('HUBSPOT_PORTAL_ID must be numeric');
     }
-    if (!guid.test(env.HUBSPOT_FORM_GUID ?? '')) {
-      throw new Error('HUBSPOT_FORM_GUID must be a valid HubSpot form GUID');
+    if (!guid.test(env.HUBSPOT_VENUE_FORM_GUID ?? '')) {
+      throw new Error('HUBSPOT_VENUE_FORM_GUID must be a valid HubSpot form GUID');
     }
+    checkLegacyVenueForm(env.HUBSPOT_VENUE_FORM_GUID, env.HUBSPOT_FORM_GUID || undefined);
     if (env.HERE_AND_NOW_SUBMISSIONS_ENABLED === 'true' &&
         !guid.test(env.HUBSPOT_HERE_AND_NOW_FORM_GUID ?? '')) {
       throw new Error('Here & Now activation requires a valid HUBSPOT_HERE_AND_NOW_FORM_GUID');
@@ -87,7 +99,7 @@ export function checkProductionWorker(project, config, env) {
     if (env.FOUNDING_FRIEND_SUBMISSIONS_ENABLED === 'true') {
       const form = env.HUBSPOT_FOUNDING_FRIEND_FORM_GUID?.toLowerCase();
       if (!guid.test(form ?? '') ||
-          form === env.HUBSPOT_FORM_GUID.toLowerCase() ||
+          form === env.HUBSPOT_VENUE_FORM_GUID.toLowerCase() ||
           form === env.HUBSPOT_HERE_AND_NOW_FORM_GUID?.toLowerCase()) {
         throw new Error('Founding Friend activation requires a distinct valid HUBSPOT_FOUNDING_FRIEND_FORM_GUID');
       }
@@ -95,12 +107,97 @@ export function checkProductionWorker(project, config, env) {
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  try {
-    const project = process.argv[2];
-    checkProductionWorker(project, readProductionWorkerConfig(project), process.env);
-  } catch (error) {
-    console.error(`::error::${error.message}`);
-    process.exitCode = 1;
+function checkLegacyVenueForm(canonical, legacy) {
+  if (legacy !== undefined &&
+      (typeof legacy !== 'string' || canonical.toLowerCase() !== legacy.toLowerCase())) {
+    throw new Error('HUBSPOT_FORM_GUID conflicts with HUBSPOT_VENUE_FORM_GUID');
   }
+}
+
+export function productionVars(project, env) {
+  const flags = Object.fromEntries(
+    Object.keys(targets[project].flags).map((flag) => [flag, env[flag] ?? 'false']),
+  );
+  const keys = project === registration
+    ? ['HUBSPOT_PORTAL_ID', 'HUBSPOT_VENUE_FORM_GUID']
+    : ['STRIPE_PRICE_ID', 'STRIPE_EXPECTED_LIVEMODE', 'STRIPE_AUTOMATIC_TAX_ENABLED', 'PUBLIC_APP_ORIGIN'];
+  if (flags.HERE_AND_NOW_SUBMISSIONS_ENABLED === 'true') keys.push('HUBSPOT_HERE_AND_NOW_FORM_GUID');
+  if (flags.FOUNDING_FRIEND_SUBMISSIONS_ENABLED === 'true') keys.push('HUBSPOT_FOUNDING_FRIEND_FORM_GUID');
+  return { ...flags, ...Object.fromEntries(keys.map((key) => [key, env[key]])) };
+}
+
+export async function preflightProductionRelease(env, fetchMetadata = fetch) {
+  for (const project of Object.keys(targets)) {
+    checkProductionWorker(project, readProductionWorkerConfig(project), env);
+  }
+  async function read(url, headers, failure) {
+    try {
+      const response = await fetchMetadata(url, {
+        method: 'GET', headers, redirect: 'error', signal: AbortSignal.timeout(30_000),
+      });
+      if (response.ok) return await response.json();
+    } catch {
+      // Provider responses and request details can contain protected configuration.
+    }
+    throw new Error(failure);
+  }
+  const tags = {};
+  const base = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_ACCOUNT_ID)}/workers`;
+  const headers = { Authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}` };
+  for (const [project, { name }] of Object.entries(targets)) {
+    const failure = `Cannot verify existing production Worker or bindings: ${name}`;
+    const readWorker = async (path) => {
+      const body = await read(`${base}/${path}`, headers, failure);
+      if (body?.success !== true || body.result == null) throw new Error(failure);
+      return body.result;
+    };
+    const service = await readWorker(`services/${name}`);
+    const tag = service.default_environment?.script?.tag;
+    if (service.id !== name || typeof tag !== 'string' || !tag.trim()) {
+      throw new Error(failure);
+    }
+    tags[project] = tag;
+    const metadata = await readWorker(`workers/${name}`);
+    if (metadata.subdomain?.enabled !== false || metadata.subdomain?.previews_enabled !== false) {
+      throw new Error(`Unexpected public subdomain or previews for ${name}`);
+    }
+    const settings = await readWorker(`scripts/${name}/settings`);
+    if (!Array.isArray(settings.bindings) ||
+        settings.bindings.some((binding) => !binding?.name || !binding.type)) {
+      throw new Error(failure);
+    }
+    const vars = productionVars(project, env);
+    for (const binding of settings.bindings) {
+      if ((Object.hasOwn(vars, binding.name) && binding.type !== 'plain_text') ||
+          (project === payment &&
+           ['STRIPE_SECRET_KEY', 'PURCHASE_REFERENCE_SECRET'].includes(binding.name) &&
+           binding.type !== 'secret_text')) {
+        throw new Error(`Deployed binding type conflict for ${name}`);
+      }
+      if (['LOCAL_DEVELOPMENT_ALLOWED_ORIGIN', 'HUBSPOT_MOCK_SCENARIO', 'STRIPE_MOCK_SCENARIO'].includes(binding.name)) {
+        throw new Error(`Unexpected local mock binding for ${name}`);
+      }
+      if (project === registration && binding.name === 'HUBSPOT_FORM_GUID') {
+        if (binding.type !== 'plain_text' || typeof binding.text !== 'string') {
+          throw new Error('Cannot reconcile the deployed legacy HUBSPOT_FORM_GUID binding');
+        }
+        checkLegacyVenueForm(env.HUBSPOT_VENUE_FORM_GUID, binding.text);
+      }
+      if (project === registration && vars.FOUNDING_FRIEND_SUBMISSIONS_ENABLED === 'true' &&
+          binding.name === 'HUBSPOT_HERE_AND_NOW_FORM_GUID' && !Object.hasOwn(vars, binding.name) &&
+          (binding.type !== 'plain_text' || typeof binding.text !== 'string' ||
+            binding.text.toLowerCase() === vars.HUBSPOT_FOUNDING_FRIEND_FORM_GUID.toLowerCase())) {
+        throw new Error('Cannot verify that the Founding Friend form differs from the retained Here & Now form');
+      }
+    }
+  }
+  const price = await read(
+    `https://api.stripe.com/v1/prices/${encodeURIComponent(env.STRIPE_PRICE_ID)}`,
+    { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, 'Stripe-Version': stripeApiVersion },
+    'Cannot read the production Stripe Price with the restricted live key',
+  );
+  if (price === null || typeof price !== 'object' || !matchesCheckoutPrice(price, env.STRIPE_PRICE_ID, true)) {
+    throw new Error('Production STRIPE_PRICE_ID must identify the active live £249 GBP one-time inclusive Price');
+  }
+  return tags;
 }

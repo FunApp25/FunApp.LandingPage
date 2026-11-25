@@ -115,16 +115,14 @@ Current implementation is evidence of repository state, not automatically a perm
   request contract and has no HubSpot identifiers, fields, or direct endpoint.
 - `cloudflare/venue-interest-worker/` is the repository-controlled,
   independently testable Worker project targeting the existing
-  `funapp-venue-interest` Worker. Its code implements `POST
+  `funapp-registration-forms` Worker. Its code implements `POST
   /api/venue-interest`, `POST /api/registrations/here-and-now`, and `POST
-  /api/registrations/founding-friend`. Only the Venue endpoint is currently
-  documented as routed and active in production. Here & Now is eligible for
-  separate activation through its exact route. The production entrypoint in
-  this repository rejects Founding Friend submissions. It has no route,
-  account ID, or zone ID in repository configuration. Its source-controlled
-  GitHub Actions deployment is manual only and uses the GitHub `production`
-  Environment for runtime bindings and Cloudflare authentication. GitHub Pages
-  remains the web origin for every other path.
+  /api/registrations/founding-friend`. Venue operates independently of the two
+  registration activation controls. The production entrypoint forwards each
+  approved registration only while its flag is enabled. Routing is managed
+  in Cloudflare. The coordinated GitHub Actions release uses the GitHub
+  `production` Environment for Worker binding values and authentication.
+  GitHub Pages remains the web origin for non-API paths.
 - The deprecated pre-Flutter Astro implementation is archived under `archive/astro_site/` for historical reference only. It is not active application code, built by CI, or deployed.
 - The Here & Now and Founding Friend forms are responsive public routes backed
   by separate provider-neutral registration models, repository contracts, and
@@ -144,7 +142,7 @@ Current implementation is evidence of repository state, not automatically a perm
   API families, uses no browser-side provider credential or arbitrary endpoint,
   and does not change `lib/main_prod.dart`.
 - The existing registration Worker project has a named `staging` environment
-  deploying as `funapp-venue-interest-staging`. Its distinct `src/staging.ts`
+  deploying as `funapp-registration-forms-staging`. Its distinct `src/staging.ts`
   entrypoint accepts only the two exact registration paths on the staging host,
   requires exact staging enablement plus its rate-limit binding, and injects a
   deterministic no-I/O adapter. It has no HubSpot portal or form identifier and
@@ -775,12 +773,13 @@ capabilities as implemented.
   shared IPs may group unrelated users into collective throttling, and requests
   handled in different Cloudflare locations may exceed the nominal aggregate
   rate.
-- The Worker preserves the current `HUBSPOT_FORM_GUID` Venue binding as
-  authoritative and accepts `HUBSPOT_VENUE_FORM_GUID` only as a fallback alias
-  when the established binding is absent. Venue remains
-  independent of registration enablement, form IDs, and rate limiting. Every
-  provider call is a single attempt with a 10-second deadline. Provider bodies,
-  submitted values, request headers, and cookies are not returned or logged.
+- `HUBSPOT_VENUE_FORM_GUID` is canonical. The Worker temporarily accepts the
+  legacy `HUBSPOT_FORM_GUID` when the canonical binding is absent. It rejects
+  conflicting identifiers before forwarding. Production preflight requires the
+  canonical GitHub variable and checks any retained legacy binding for agreement.
+  Venue remains independent of registration enablement, form IDs, and rate
+  limiting. Provider calls use one attempt with a 10-second deadline. Responses
+  and logs exclude provider bodies, submitted values, headers and cookies.
 - Local Wrangler development requires an explicit localhost origin plus one of
   six deterministic mock scenarios. Missing, partial, or invalid local mock
   configuration fails closed, and loopback Venue and registration requests
@@ -1120,43 +1119,40 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
 
 ### Established
 
-- GitHub Pages is the production deployment target.
-- GitHub Pages remains the web origin. Its active `/api/venue-interest`
-  exception is a dashboard-managed narrow Cloudflare Worker Route to the
-  repository-controlled `funapp-venue-interest` Worker. The
-  `deploy-venue-interest-worker.yml` workflow provides manual-only source
-  deployment on `main` of that existing Worker after Worker validation. It uses the
-  GitHub `production` Environment for public HubSpot and Cloudflare account
-  configuration and the Cloudflare API-token secret; it does not configure the
-  route.
-- Both production registration workflows default to disabled. The manual
-  forms workflow validates the root Worker identity, source-declared rate
-  limiter in namespace `1001`, and Venue identifiers. Each enabled
-  registration requires its own dispatch authorization and form GUID.
-  Deployment prerequisites include the exact dashboard-managed routes
-  `funapp.world/api/registrations/here-and-now` and
-  `funapp.world/api/registrations/founding-friend` as applicable, approved form
-  and consent settings, and controlled verification. Venue operates
-  independently of those flags.
+- The production release promotes a staged, reviewed `dev` revision through a
+  separate PR to `main`. A push to `main` or an authorized current-`main` dispatch
+  runs **Deploy Production**. It calls credential-free PR checks, prepares and
+  validates the Flutter Web artifact, and preflights both existing API Workers
+  in the GitHub `production` Environment. It uses the release SHA throughout.
+- The Worker job uploads both versions using the locked Wrangler wrapper
+  before deploying either to traffic. Existing Worker identity and disabled
+  public previews are required. Version operations leave Cloudflare routes,
+  Custom Domains and DNS under external management. Production routes are
+  `funapp.world/api/venue-interest*` and `funapp.world/api/registrations/*` for
+  `funapp-registration-forms`, and `funapp.world/api/founding-friend-payments/*`
+  for `funapp-founding-friend-payment`. The source declares rate limiters in
+  namespaces `1001` and `1002`. GitHub Pages publishes only after both deployments
+  succeed. The workflow serializes production runs and rejects superseded
+  revisions before Worker changes and Pages publication. Traffic changes are
+  sequential. See the [production runbook](README.md#production-release).
+- Independent `HERE_AND_NOW_SUBMISSIONS_ENABLED`,
+  `FOUNDING_FRIEND_SUBMISSIONS_ENABLED`, and `PAYMENT_CREATION_ENABLED` flags
+  default to `false`. A release requesting any `true` flag requires
+  matching per-flag authorization in a manual dispatch. A push with an enabled
+  flag fails before upload and leaves the active release in place. Venue and
+  payment verification remain independently available with valid bindings.
+- The production payment preflight verifies the live Price with a read-only
+  Stripe lookup under the Worker's pinned API version. It requires the active
+  one-time tax-inclusive £249 GBP Price and automatic tax disabled. Wrangler
+  uploads the restricted live Stripe key and the independent purchase-reference
+  secret in the same version as the code.
+  The Stripe business account is approved. Deploy with creation disabled first.
+  Controlled live Checkout testing and public launch require separate
+  authorization, with the legal applicability transition approved before public
+  launch. Founding Friend purchasing has not been launched.
 - Both site artifacts include the approved full wordmark as a transparent PNG
   at `/email/fun-app-logo.png`. Verify anonymous access on production after
   publication. Staging keeps its existing Access boundary.
-- The payment Worker has a separate manual-only
-  `deploy-founding-friend-payment-worker.yml` workflow on `main`. It validates
-  the root Worker identity, live configuration described above, and the rate
-  limiter in namespace `1002`. It defaults `PAYMENT_CREATION_ENABLED` to
-  `false` and requires matching dispatch authorization for live creation.
-  Wrangler uploads the payment secrets with the Worker code. The historical
-  staging Checkout HTTP 500 is resolved according to the operator. Current
-  evidence and local undeployed changes are recorded in
-  [README's operational status](README.md#operational-configuration-and-rollback).
-  The Stripe business account is approved. External setup requires the live
-  Price, scoped Stripe permissions for Price retrieval and Checkout Session
-  creation and expanded retrieval, encrypted Stripe and purchase-reference
-  secrets, and exact routing for both payment endpoints. Deploy and verify with
-  creation disabled first. Controlled live Checkout testing and public launch
-  require separate authorization, with the legal applicability transition
-  approved before public launch. Founding Friend purchasing has not been launched.
 - Pull requests targeting `dev` or `main` run the staging site Worker's typechecking,
   tests, and dry-run validation, both API Worker projects' typechecking, tests,
   and root/staging dry-run validation, both production Worker preflight suites,
@@ -1167,30 +1163,22 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   the site upload test. Each API Worker job runs only its own upload-metadata
   test from the deployment suite; all three checks remain required validation
   jobs without failure suppression.
-  Pull-request checks do not deploy; pushes to `main` remain the production
-  Pages deployment trigger.
-- The production custom domain is `https://funapp.world` and uses root `/` deployment.
-- The active workflow installs Flutter 3.47.2 directly through
-  `subosito/flutter-action@v2`, generates localizations and Dart sources,
-  analyzes, tests, and explicitly builds Flutter Web from `lib/main_prod.dart`
-  without browser-side HubSpot configuration. Local development continues to
-  use Puro. The workflow then rejects bundled local legal content in `build/web`. No
-  local legal document is published as a static landing asset.
-- Pushes to `main` and manual dispatches on `main` run the production Pages
-  deployment. Publishing uses the `github-pages` environment. Production
-  Worker deployment workflows remain manual-only and manage code and bindings.
-  Routes are externally managed, with workers.dev and preview URLs disabled.
+  Pull-request checks validate without deployment credentials.
+- The production custom domain is `https://funapp.world` at root `/`. The
+  production build uses Flutter 3.47.2 with `lib/main_prod.dart`, keeps
+  provider credentials outside Flutter, and rejects local legal documents in
+  `build/web`. Publishing uses the `github-pages` Environment.
 - Pushes to `dev`, including PR merges, run `deploy-staging-site.yml` (**Deploy
   Staging**), calling credential-free `pr_checks.yml` through `workflow_call`.
   GitHub `staging` stays restricted to `dev`, and `production` to `main`.
-- Staging alone installs `tool/staging-wrangler/` with `npm ci`. Its lock pins
+- Both release workflows install `tool/staging-wrangler/` with `npm ci`. Its lock pins
   Wrangler 4.155.0 and its postinstall applies the route-category backport from
   cloudflare/workers-sdk PR #16531, revision
   `416ed05ea788852c9c06784c370d77603ee10936`. Exact original and patched bundle
   SHA-256 checks, no-fuzz patching, and invocation-time version/hash validation
   fail closed on incompatible tools. There is no mutable prerelease fetch or
   maintained fork. All staging publishes, generated-config dry runs, and upload
-  tests use this same wrapper. Production uses its existing Wrangler tooling.
+  tests use this wrapper. Production uses it for version upload and deployment.
 - The fix omits route/Custom Domain metadata reads only when those categories
   are absent from deployment; explicitly configured categories still require
   authorization. Versions upload does not compare unrelated routes. Normal
@@ -1291,7 +1279,7 @@ their documented Flutter version directly through `subosito/flutter-action@v2`.
   required to cover requests handled by all three Workers; site-Worker Access
   alone does not cover the separate API Workers. No staging route belongs on
   `funapp.world`, and the existing
-  `funapp.world/api/venue-interest` route is unchanged.
+  `funapp.world/api/venue-interest*` route is unchanged.
 - The production artifact is `build/web`.
 - Every staging/production Flutter build uses `--no-web-resources-cdn`; the
   generated loader selects same-origin `canvaskit/` resources. The declared

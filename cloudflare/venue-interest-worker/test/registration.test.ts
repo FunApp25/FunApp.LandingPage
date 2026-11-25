@@ -24,7 +24,7 @@ const foundingFriendFormGuid = '22222222-2222-2222-2222-222222222222';
 
 const enabledEnv: Env = {
   HUBSPOT_PORTAL_ID: '123456789',
-  HUBSPOT_FORM_GUID: '00000000-0000-0000-0000-000000000000',
+  HUBSPOT_VENUE_FORM_GUID: '00000000-0000-0000-0000-000000000000',
   HUBSPOT_HERE_AND_NOW_FORM_GUID: hereAndNowFormGuid,
   HERE_AND_NOW_SUBMISSIONS_ENABLED: 'true',
 };
@@ -135,7 +135,7 @@ describe('registration routes', () => {
     expect(formGuids).toEqual([
       ...(hereAndNow === 'true' ? [hereAndNowFormGuid] : []),
       ...(foundingFriend === 'true' ? [foundingFriendFormGuid] : []),
-      enabledEnv.HUBSPOT_FORM_GUID,
+      enabledEnv.HUBSPOT_VENUE_FORM_GUID,
     ]);
     expect(rateLimiter.limit).toHaveBeenCalledTimes(formGuids.length - 1);
     if (foundingFriend === 'true') {
@@ -162,7 +162,7 @@ describe('registration routes', () => {
     ['true', undefined, 500, 'unexpected'],
     ['true', 'not-a-guid', 500, 'unexpected'],
     ['true', hereAndNowFormGuid, 500, 'unexpected'],
-    ['true', enabledEnv.HUBSPOT_FORM_GUID, 500, 'unexpected'],
+    ['true', enabledEnv.HUBSPOT_VENUE_FORM_GUID, 500, 'unexpected'],
   ])('fails closed with Founding Friend flag %s and form %s', async (flag, guid, status, code) => {
     const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
     const rateLimiter = { limit: vi.fn(async () => ({ success: true })) };

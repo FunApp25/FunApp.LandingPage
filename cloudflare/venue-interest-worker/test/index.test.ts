@@ -10,7 +10,7 @@ const endpoint = 'https://funapp.world/api/venue-interest';
 const localEndpoint = 'http://localhost:8787/api/venue-interest';
 const testEnv: Env = {
   HUBSPOT_PORTAL_ID: 'test-portal',
-  HUBSPOT_FORM_GUID: '00000000-0000-0000-0000-000000000000',
+  HUBSPOT_VENUE_FORM_GUID: '00000000-0000-0000-0000-000000000000',
 };
 
 const minimalVenueInterest = {
@@ -109,30 +109,22 @@ describe('POST /api/venue-interest', () => {
 
   it.each([
     [
-      'only the established binding',
+      'only the legacy binding',
       { HUBSPOT_FORM_GUID: '11111111-1111-1111-1111-111111111111' },
       '11111111-1111-1111-1111-111111111111',
     ],
     [
-      'only the optional alias',
+      'only the canonical binding',
       { HUBSPOT_VENUE_FORM_GUID: '22222222-2222-2222-2222-222222222222' },
       '22222222-2222-2222-2222-222222222222',
     ],
     [
-      'identical bindings',
+      'matching bindings with different case',
       {
-        HUBSPOT_FORM_GUID: '33333333-3333-3333-3333-333333333333',
-        HUBSPOT_VENUE_FORM_GUID: '33333333-3333-3333-3333-333333333333',
+        HUBSPOT_FORM_GUID: 'aaaaaaaa-3333-3333-3333-333333333333',
+        HUBSPOT_VENUE_FORM_GUID: 'AAAAAAAA-3333-3333-3333-333333333333',
       },
-      '33333333-3333-3333-3333-333333333333',
-    ],
-    [
-      'conflicting bindings',
-      {
-        HUBSPOT_FORM_GUID: '44444444-4444-4444-4444-444444444444',
-        HUBSPOT_VENUE_FORM_GUID: '55555555-5555-5555-5555-555555555555',
-      },
-      '44444444-4444-4444-4444-444444444444',
+      'AAAAAAAA-3333-3333-3333-333333333333',
     ],
   ])('uses the expected Venue form with %s', async (_, formBindings, expectedGuid) => {
     const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
@@ -151,11 +143,22 @@ describe('POST /api/venue-interest', () => {
     );
   });
 
-  it('fails closed when both Venue form bindings are missing', async () => {
+  it.each([
+    {},
+    { HUBSPOT_VENUE_FORM_GUID: 'invalid' },
+    {
+      HUBSPOT_FORM_GUID: '44444444-4444-4444-4444-444444444444',
+      HUBSPOT_VENUE_FORM_GUID: '',
+    },
+    {
+      HUBSPOT_FORM_GUID: '44444444-4444-4444-4444-444444444444',
+      HUBSPOT_VENUE_FORM_GUID: '55555555-5555-5555-5555-555555555555',
+    },
+  ])('fails closed with missing, invalid or conflicting Venue bindings %j', async (bindings) => {
     const upstreamFetch = vi.fn<UpstreamFetch>(successfulUpstreamFetch);
     const response = await postWithEnv(
       minimalVenueInterest,
-      { HUBSPOT_PORTAL_ID: 'test-portal' },
+      { HUBSPOT_PORTAL_ID: 'test-portal', ...bindings },
       upstreamFetch,
     );
 
